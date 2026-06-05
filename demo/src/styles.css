@@ -983,8 +983,24 @@ body {
     top: 12px;
   }
 
+  /* The sliding pages are absolutely stacked, so on desktop the section needs a
+     fixed height. On mobile the content is taller and varies per tab, so let the
+     active page sit in normal flow and drive the section height instead — that
+     way the background cards grow to their content rather than overflowing a
+     fixed frame. The inactive page stays an absolute, clipped overlay for the
+     cross-fade. */
   .examples-section {
-    min-height: 464px;
+    min-height: 0;
+  }
+
+  .t-page-slide .t-page {
+    overflow: hidden;
+  }
+
+  .t-page-slide[data-page='1'] .t-page[data-page-id='1'],
+  .t-page-slide[data-page='2'] .t-page[data-page-id='2'] {
+    position: relative;
+    overflow: visible;
   }
 
   .example-row-full {
