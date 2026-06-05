@@ -2,11 +2,17 @@ import type { CSSProperties, ReactNode, HTMLAttributes } from 'react';
 
 /**
  * Size/type preset for the border beam effect
+ *
+ * Rotate family (traveling/spinning beam):
  * - 'sm': Small button-sized with compact glow
  * - 'md': Medium card-sized with full border glow
  * - 'line': Bottom-only traveling glow with breathe and spike animations
+ *
+ * Pulse family (breathing glow, no rotation):
+ * - 'pulse-outside': Glow blooms OUTWARD beyond the element (uncropped halo)
+ * - 'pulse-inner': Glow breathes contained within the element's border
  */
-export type BorderBeamSize = 'sm' | 'md' | 'line';
+export type BorderBeamSize = 'sm' | 'md' | 'line' | 'pulse-outside' | 'pulse-inner';
 
 /**
  * Theme mode for adapting beam colors to background
@@ -41,6 +47,14 @@ export interface ThemeColors {
   bloomOpacity: number;
   innerShadow: string;
   saturation: number;
+  /** Optional per-type default brightness (used by pulse types). Falls back to 1.3. */
+  brightness?: number;
+  /**
+   * Optional opacity of the 1px hairline border that frames the element.
+   * Used by 'pulse-outside' so the colored stroke rides a subtle outline,
+   * matching the v5 prototype. Falls back to 0 (no hairline).
+   */
+  hairlineOpacity?: number;
 }
 
 /**
@@ -52,9 +66,8 @@ export interface BorderBeamProps extends Omit<HTMLAttributes<HTMLDivElement>, 'c
 
   /**
    * Size/type preset
-   * - 'sm': Small button-sized with compact glow
-   * - 'md': Medium card-sized with full border glow (default)
-   * - 'line': Bottom-only traveling glow with breathe and spike animations
+   * Rotate family: 'sm' (compact), 'md' (full border, default), 'line' (bottom traveling).
+   * Pulse family: 'pulse-outside' (outward bloom), 'pulse-inner' (contained breathe).
    * @default 'md'
    */
   size?: BorderBeamSize;
@@ -102,7 +115,8 @@ export interface BorderBeamProps extends Omit<HTMLAttributes<HTMLDivElement>, 'c
   borderRadius?: number;
 
   /**
-   * Brightness multiplier for the glow effect
+   * Brightness multiplier for the glow effect.
+   * Falls back to the type's preset default (1.3 for most types).
    * @default 1.3
    */
   brightness?: number;

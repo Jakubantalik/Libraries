@@ -1,4 +1,4 @@
-import { useState, useCallback, useId } from 'react';
+import { useState, useCallback, useId, useRef, useLayoutEffect, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BorderBeam, type BorderBeamSize, type BorderBeamColorVariant } from 'border-beam';
 
@@ -57,6 +57,14 @@ function ArrowUpIcon() {
     <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.5">
       <line x1="12" y1="19" x2="12" y2="5" />
       <polyline points="5 12 12 5 19 12" />
+    </svg>
+  );
+}
+
+function TaskCircleIcon() {
+  return (
+    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 17.5 17.5" fill="none">
+      <circle cx="8.75" cy="8.75" r="8" stroke="#818181" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="3 3" />
     </svg>
   );
 }
@@ -142,6 +150,39 @@ function MockChatInput() {
   );
 }
 
+const WORKING_TASKS = [
+  'Generate website color palettes',
+  'Recommend font pairings',
+  'Create layout templates',
+  'Build section engine',
+  'Generate hero section variants',
+  'Produce responsive mobile layouts',
+];
+
+function MockWorkingCard() {
+  return (
+    <div className="mock-working" role="img" aria-label="Agent task list UI example with border beam effect">
+      <div className="mock-working-header t-shimmer" data-text="Working...">Working...</div>
+      <div className="mock-working-list">
+        {WORKING_TASKS.map((task) => (
+          <div className="mock-working-row" key={task}>
+            <TaskCircleIcon />
+            <span>{task}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MockSubscribeButton() {
+  return (
+    <div className="mock-subscribe" role="img" aria-label="Subscribe button UI example with border beam effect">
+      Subscribe
+    </div>
+  );
+}
+
 function MockIconButton() {
   return (
     <div className="mock-icon-btn" role="img" aria-label="Icon button UI example with border beam effect">
@@ -161,11 +202,33 @@ function MockSearchBar() {
   );
 }
 
-const SIZE_OPTIONS: { value: BorderBeamSize; label: string }[] = [
+type BeamFamily = 'rotate' | 'pulse';
+
+const FAMILY_OPTIONS: { value: BeamFamily; label: string }[] = [
+  { value: 'rotate', label: 'Rotate' },
+  { value: 'pulse', label: 'Pulse' },
+];
+
+const ROTATE_SIZE_OPTIONS: { value: BorderBeamSize; label: string }[] = [
   { value: 'md', label: 'Large' },
   { value: 'sm', label: 'Small' },
   { value: 'line', label: 'Line' },
 ];
+
+const PULSE_SIZE_OPTIONS: { value: BorderBeamSize; label: string }[] = [
+  { value: 'pulse-inner', label: 'Pulse Inner' },
+  { value: 'pulse-outside', label: 'Pulse Outside' },
+];
+
+const SIZE_OPTIONS_BY_FAMILY: Record<BeamFamily, { value: BorderBeamSize; label: string }[]> = {
+  rotate: ROTATE_SIZE_OPTIONS,
+  pulse: PULSE_SIZE_OPTIONS,
+};
+
+const DEFAULT_SIZE_BY_FAMILY: Record<BeamFamily, BorderBeamSize> = {
+  rotate: 'md',
+  pulse: 'pulse-inner',
+};
 
 const COLOR_OPTIONS: { value: BorderBeamColorVariant; label: string }[] = [
   { value: 'colorful', label: 'Colorful' },
@@ -175,13 +238,58 @@ const COLOR_OPTIONS: { value: BorderBeamColorVariant; label: string }[] = [
 ];
 
 export default function App() {
+  const [family, setFamily] = useState<BeamFamily>('rotate');
   const [playgroundActive, setPlaygroundActive] = useState(true);
   const [playgroundSize, setPlaygroundSize] = useState<BorderBeamSize>('md');
   const [playgroundColorVariant, setPlaygroundColorVariant] = useState<BorderBeamColorVariant>('colorful');
-  const [playgroundDuration, setPlaygroundDuration] = useState(1.96);
   const [playgroundStrength, setPlaygroundStrength] = useState(70);
-  const durationId = useId();
   const strengthId = useId();
+
+  const sizeOptions = SIZE_OPTIONS_BY_FAMILY[family];
+  const isPulse = family === 'pulse';
+  const rotateTabActive = family === 'rotate';
+  const pulseTabActive = family === 'pulse';
+
+  const handleFamilyChange = useCallback((next: BeamFamily) => {
+    setFamily(next);
+    setPlaygroundSize(DEFAULT_SIZE_BY_FAMILY[next]);
+  }, []);
+
+  // Sliding tab pill (transitions.dev — tabs sliding). animate=false snaps
+  // without a transition (first paint / resize); animate=true tweens.
+  const tabListRef = useRef<HTMLElement>(null);
+  const tabPillRef = useRef<HTMLSpanElement>(null);
+  const tabPillReady = useRef(false);
+
+  const moveTabPill = useCallback((animate: boolean) => {
+    const pill = tabPillRef.current;
+    const list = tabListRef.current;
+    if (!pill || !list) return;
+    const activeTab = list.querySelector<HTMLButtonElement>('.tab-btn[data-active="true"]');
+    if (!activeTab) return;
+    if (!animate) {
+      const prev = pill.style.transition;
+      pill.style.transition = 'none';
+      pill.style.transform = `translateX(${activeTab.offsetLeft}px)`;
+      pill.style.width = `${activeTab.offsetWidth}px`;
+      void pill.offsetWidth; // force reflow before restoring
+      pill.style.transition = prev;
+    } else {
+      pill.style.transform = `translateX(${activeTab.offsetLeft}px)`;
+      pill.style.width = `${activeTab.offsetWidth}px`;
+    }
+  }, []);
+
+  useLayoutEffect(() => {
+    moveTabPill(tabPillReady.current);
+    tabPillReady.current = true;
+  }, [family, moveTabPill]);
+
+  useEffect(() => {
+    const onResize = () => moveTabPill(false);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [moveTabPill]);
 
   const installCmd = 'npm install border-beam';
   const usageCode = `import { BorderBeam } from 'border-beam';
@@ -189,9 +297,60 @@ export default function App() {
 <BorderBeam>
   <YourCard>Content</YourCard>
 </BorderBeam>`;
-  const playgroundCode = `<BorderBeam size="${playgroundSize}" colorVariant="${playgroundColorVariant}" duration={${playgroundDuration}}${playgroundStrength < 100 ? ` strength={${playgroundStrength / 100}}` : ''}>
+  const playgroundCode = `<BorderBeam size="${playgroundSize}" colorVariant="${playgroundColorVariant}"${playgroundStrength < 100 ? ` strength={${playgroundStrength / 100}}` : ''}>
   <Card>Content</Card>
 </BorderBeam>`;
+
+  const rotateExamples = (
+    <>
+      <div className="example-row-full">
+        <BorderBeam size="md" colorVariant="colorful" theme="dark" active={rotateTabActive}>
+          <MockChatInput />
+        </BorderBeam>
+      </div>
+      <div className="example-row-split">
+        <div className="example-cell">
+          <BorderBeam size="sm" colorVariant="colorful" theme="dark" active={rotateTabActive}>
+            <MockIconButton />
+          </BorderBeam>
+        </div>
+        <div className="example-cell">
+          <BorderBeam
+            size="line"
+            colorVariant="colorful"
+            theme="dark"
+            active={rotateTabActive}
+            duration={3.1}
+            borderRadius={20}
+          >
+            <MockSearchBar />
+          </BorderBeam>
+        </div>
+      </div>
+    </>
+  );
+
+  const pulseExamples = (
+    <>
+      <div className="example-row-full">
+        <BorderBeam size="pulse-inner" colorVariant="colorful" theme="dark" active={pulseTabActive}>
+          <MockWorkingCard />
+        </BorderBeam>
+      </div>
+      <div className="example-row-split">
+        <div className="example-cell">
+          <BorderBeam size="pulse-inner" colorVariant="colorful" theme="dark" active={pulseTabActive}>
+            <MockSubscribeButton />
+          </BorderBeam>
+        </div>
+        <div className="example-cell">
+          <BorderBeam size="pulse-outside" colorVariant="colorful" theme="dark" active={pulseTabActive}>
+            <MockChatInput />
+          </BorderBeam>
+        </div>
+      </div>
+    </>
+  );
 
   return (
     <>
@@ -214,30 +373,40 @@ export default function App() {
           <p className="subtitle-sm">Animated border beam component</p>
         </header>
 
-        <section className="examples-section" aria-label="Effect demonstrations">
-          <div className="example-row-full">
-            <BorderBeam size="md" colorVariant="colorful" theme="dark" active>
-              <MockChatInput />
-            </BorderBeam>
+        <nav className="tab-nav" role="tablist" aria-label="Effect family" ref={tabListRef}>
+          <span className="tab-nav-pill" aria-hidden="true" ref={tabPillRef} />
+          {FAMILY_OPTIONS.map(({ value, label }) => (
+            <button
+              key={value}
+              className="tab-btn"
+              role="tab"
+              aria-selected={family === value}
+              data-active={family === value}
+              onClick={() => handleFamilyChange(value)}
+            >
+              {label}
+            </button>
+          ))}
+        </nav>
+
+        <section
+          className="examples-section t-page-slide"
+          data-page={family === 'rotate' ? '1' : '2'}
+          aria-label="Effect demonstrations"
+        >
+          <div
+            className="t-page examples-page examples-page--rotate"
+            data-page-id="1"
+            aria-hidden={family !== 'rotate'}
+          >
+            {rotateExamples}
           </div>
-          <div className="example-row-split">
-            <div className="example-cell">
-              <BorderBeam size="sm" colorVariant="colorful" theme="dark" active>
-                <MockIconButton />
-              </BorderBeam>
-            </div>
-            <div className="example-cell">
-              <BorderBeam
-                size="line"
-                colorVariant="colorful"
-                theme="dark"
-                active
-                duration={2.4}
-                borderRadius={20}
-              >
-                <MockSearchBar />
-              </BorderBeam>
-            </div>
+          <div
+            className="t-page examples-page examples-page--pulse"
+            data-page-id="2"
+            aria-hidden={family !== 'pulse'}
+          >
+            {pulseExamples}
           </div>
         </section>
 
@@ -264,17 +433,14 @@ export default function App() {
             <div className="control-group" role="radiogroup" aria-label="Effect type">
               <span className="control-label">Type</span>
               <div className="control-options">
-                {SIZE_OPTIONS.map(({ value, label }) => (
+                {sizeOptions.map(({ value, label }) => (
                   <button
                     key={value}
                     className="tab-btn"
                     role="radio"
                     aria-checked={playgroundSize === value}
                     data-active={playgroundSize === value}
-                    onClick={() => {
-                      setPlaygroundSize(value);
-                      setPlaygroundDuration(value === 'line' ? 2.4 : 1.96);
-                    }}
+                    onClick={() => setPlaygroundSize(value)}
                   >
                     {label}
                   </button>
@@ -297,23 +463,6 @@ export default function App() {
                     {label}
                   </button>
                 ))}
-              </div>
-            </div>
-
-            <div className="control-group">
-              <label className="control-label" htmlFor={durationId}>Duration</label>
-              <div className="control-options">
-                <input
-                  id={durationId}
-                  type="number"
-                  className="duration-input"
-                  value={playgroundDuration}
-                  onChange={(e) => setPlaygroundDuration(parseFloat(e.target.value) || 1)}
-                  min={0.5}
-                  max={10}
-                  step={0.1}
-                  aria-label="Animation duration in seconds"
-                />
               </div>
             </div>
 
@@ -343,7 +492,7 @@ export default function App() {
           </div>
 
           <div
-            className="playground-preview"
+            className={`playground-preview${isPulse ? ' playground-preview--pulse' : ''}`}
             role="button"
             tabIndex={0}
             aria-pressed={playgroundActive}
@@ -361,7 +510,6 @@ export default function App() {
               colorVariant={playgroundColorVariant}
               theme="dark"
               active={playgroundActive}
-              duration={playgroundDuration}
               strength={playgroundStrength / 100}
             >
               <div className={`card ${playgroundSize === 'sm' ? 'card-sm' : 'card-md'}`}>

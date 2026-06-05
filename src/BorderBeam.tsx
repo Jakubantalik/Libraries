@@ -12,7 +12,8 @@ import {
   type MutableRefObject,
 } from 'react';
 import type { BorderBeamProps, BorderBeamTheme } from './types';
-import { sizePresets, sizeThemePresets, generateBeamCSS } from './styles';
+import { sizePresets, sizeThemePresets, generateBeamCSS, getPulseDriverConfig } from './styles';
+import { registerPulseInstance } from './pulseDriver';
 
 function useSystemTheme(): 'dark' | 'light' {
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -60,7 +61,7 @@ export const BorderBeam = forwardRef<HTMLDivElement, BorderBeamProps>(
       duration,
       active = true,
       borderRadius: customBorderRadius,
-      brightness = 1.3,
+      brightness: brightnessProp,
       saturation,
       hueRange = 30,
       strength = 1,
@@ -80,7 +81,9 @@ export const BorderBeam = forwardRef<HTMLDivElement, BorderBeamProps>(
 
     const [isActive, setIsActive] = useState(active);
     const [isFading, setIsFading] = useState(false);
+    const [isVisible, setIsVisible] = useState(true);
     const [detectedRadius, setDetectedRadius] = useState<number | null>(null);
+    const [pulseGlowScale, setPulseGlowScale] = useState<{ x: number; y: number }>({ x: 1, y: 1 });
 
     // Auto-detect child border radius when no explicit value is provided
     useEffect(() => {
@@ -114,6 +117,66 @@ export const BorderBeam = forwardRef<HTMLDivElement, BorderBeamProps>(
       }
     }, [active, isActive, isFading]);
 
+    // Pause the (paint-heavy) animations while the element is scrolled offscreen.
+    // This stops per-frame painting entirely for hidden instances without changing
+    // their logical active/fading state, so it never fires onActivate/onDeactivate.
+    useEffect(() => {
+      const el = internalRef.current;
+      if (!el || typeof IntersectionObserver === 'undefined') return;
+
+      const observer = new IntersectionObserver(
+        entries => {
+          for (const entry of entries) setIsVisible(entry.isIntersecting);
+        },
+        // Start animating slightly before the element scrolls into view.
+        { rootMargin: '256px' }
+      );
+
+      observer.observe(el);
+      return () => observer.disconnect();
+    }, []);
+
+    // Pulse Outside glow geometry is authored in fixed pixels for a reference
+    // element (~350x140). Measure the actual wrapped element and scale the glow
+    // per-axis so the halo grows/shrinks to fit any component it's applied to.
+    useEffect(() => {
+      if (size !== 'pulse-outside') {
+        setPulseGlowScale({ x: 1, y: 1 });
+        return;
+      }
+
+      const el = internalRef.current;
+      if (!el) return;
+
+      const REF_WIDTH = 350;
+      const REF_HEIGHT = 140;
+      // Allow the glow to both shrink (small buttons) and grow (large cards),
+      // with generous bounds to avoid degenerate geometry at the extremes.
+      const MIN_SCALE = 0.35;
+      const MAX_SCALE = 4;
+      const clamp = (value: number) => Math.max(MIN_SCALE, Math.min(MAX_SCALE, value));
+
+      const measure = () => {
+        const child = el.firstElementChild as HTMLElement | null;
+        if (!child) return;
+        const rect = child.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        const x = +clamp(rect.width / REF_WIDTH).toFixed(3);
+        const y = +clamp(rect.height / REF_HEIGHT).toFixed(3);
+        setPulseGlowScale(prev => (prev.x === x && prev.y === y ? prev : { x, y }));
+      };
+
+      measure();
+      if (typeof ResizeObserver === 'undefined') return;
+
+      const child = el.firstElementChild as HTMLElement | null;
+      if (!child) return;
+
+      const resizeObserver = new ResizeObserver(measure);
+      resizeObserver.observe(child);
+      return () => resizeObserver.disconnect();
+    }, [size, children]);
+
     const handleAnimationEnd = useCallback(
       (e: AnimationEvent<HTMLDivElement>) => {
         const animationName = e.animationName;
@@ -135,9 +198,12 @@ export const BorderBeam = forwardRef<HTMLDivElement, BorderBeamProps>(
     const themeConfig = sizeThemePresets[size][resolvedTheme];
     const sizeConfig = sizePresets[size];
 
+    const isPulse = size === 'pulse-inner' || size === 'pulse-outside';
+
     const finalBorderRadius = customBorderRadius ?? detectedRadius ?? sizeConfig.borderRadius;
-    const finalDuration = duration ?? (size === 'line' ? 2.4 : 1.96);
+    const finalDuration = duration ?? (size === 'line' ? 3.1 : isPulse ? 2.3 : 1.96);
     const finalSaturation = saturation ?? themeConfig.saturation;
+    const finalBrightness = brightnessProp ?? themeConfig.brightness ?? 1.3;
     const finalHueRange = size === 'line' ? Math.min(hueRange, 13) : hueRange;
     const finalStaticColors = colorVariant === 'mono' ? true : staticColors;
 
@@ -155,10 +221,11 @@ export const BorderBeam = forwardRef<HTMLDivElement, BorderBeamProps>(
           size,
           colorVariant,
           staticColors: finalStaticColors,
-          brightness,
+          brightness: finalBrightness,
           saturation: finalSaturation,
           hueRange: finalHueRange,
           theme: resolvedTheme,
+          hairlineOpacity: themeConfig.hairlineOpacity,
         }),
       [
         id,
@@ -169,15 +236,44 @@ export const BorderBeam = forwardRef<HTMLDivElement, BorderBeamProps>(
         themeConfig.innerOpacity,
         themeConfig.bloomOpacity,
         themeConfig.innerShadow,
+        themeConfig.hairlineOpacity,
         size,
         colorVariant,
         finalStaticColors,
-        brightness,
+        finalBrightness,
         finalSaturation,
         finalHueRange,
         resolvedTheme,
       ]
     );
+
+    // Runtime config for the JS breathing driver (null for non-pulse sizes).
+    const driverConfig = useMemo(
+      () =>
+        isPulse
+          ? getPulseDriverConfig(size, resolvedTheme, finalDuration, finalHueRange, finalStaticColors, id)
+          : null,
+      [isPulse, size, resolvedTheme, finalDuration, finalHueRange, finalStaticColors, id]
+    );
+
+    // Drive the Pulse breathing from the shared, fps-capped rAF loop while the
+    // instance is on, onscreen, and the user hasn't requested reduced motion.
+    useEffect(() => {
+      if (!driverConfig) return;
+      if (!(isActive || isFading) || !isVisible) return;
+
+      const el = internalRef.current;
+      if (!el) return;
+
+      if (
+        typeof window !== 'undefined' &&
+        window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+      ) {
+        return;
+      }
+
+      return registerPulseInstance(el, driverConfig);
+    }, [driverConfig, isActive, isFading, isVisible]);
 
     const setRefs = useCallback(
       (node: HTMLDivElement | null) => {
@@ -194,6 +290,9 @@ export const BorderBeam = forwardRef<HTMLDivElement, BorderBeamProps>(
     const mergedStyle = {
       ...(style ?? {}),
       '--beam-strength': Math.max(0, Math.min(1, strength)),
+      ...(size === 'pulse-outside'
+        ? { '--pulse-glow-sx': pulseGlowScale.x, '--pulse-glow-sy': pulseGlowScale.y }
+        : {}),
     } as CSSProperties;
 
     return (
@@ -205,6 +304,7 @@ export const BorderBeam = forwardRef<HTMLDivElement, BorderBeamProps>(
           data-beam={id}
           data-active={isActive && !isFading ? '' : undefined}
           data-fading={isFading ? '' : undefined}
+          data-paused={isActive && !isFading && !isVisible ? '' : undefined}
           className={className}
           style={mergedStyle}
           onAnimationEnd={handleAnimationEnd}
