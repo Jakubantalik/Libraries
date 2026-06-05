@@ -1026,16 +1026,28 @@ body {
     padding: 24px 20px;
   }
 
+  /* Let the beam wrappers shrink below their content so the cards' max-width
+     can cap them to the frame instead of overflowing on narrow phones. */
+  .example-row-full > *,
+  .example-cell > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* Widen the card mocks ~80px beyond their natural content width on mobile so
+     they fill more of the example frame. They inherit max-width:100% from their
+     base rules, so they still cap to the available width on the narrowest
+     phones. */
   .mock-chat {
-    width: 100%;
+    width: 273px;
   }
 
   .mock-working {
-    width: 100%;
+    width: 363px;
   }
 
   .mock-search {
-    width: 300px;
+    width: 380px;
     max-width: 100%;
     height: 48px;
     border-radius: 20px;
