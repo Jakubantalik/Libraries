@@ -203,6 +203,10 @@ body {
   position: relative;
   z-index: 1;
   height: 30px;
+  /* Equal width for every tab so the sliding pill only translates (constant
+     width) instead of resizing between differently-sized labels — otherwise the
+     width tween races the content reflow on mobile and reads as a jump. */
+  min-width: 72px;
   padding: 4px 12px;
   border-radius: 48px;
   background: transparent;
