@@ -230,6 +230,17 @@ const DEFAULT_SIZE_BY_FAMILY: Record<BeamFamily, BorderBeamSize> = {
   pulse: 'pulse-inner',
 };
 
+// URL <-> tab mapping. `/pulse` deep-links to the Pulse tab; everything else
+// (including `/`) is Rotate. GitHub Pages serves the SPA fallback (404.html)
+// so a direct visit to /pulse resolves before React mounts.
+function familyFromPath(pathname: string): BeamFamily {
+  return /\/pulse\/?$/i.test(pathname) ? 'pulse' : 'rotate';
+}
+
+function pathForFamily(family: BeamFamily): string {
+  return family === 'pulse' ? '/pulse' : '/';
+}
+
 const COLOR_OPTIONS: { value: BorderBeamColorVariant; label: string }[] = [
   { value: 'colorful', label: 'Colorful' },
   { value: 'mono', label: 'Mono' },
@@ -238,9 +249,11 @@ const COLOR_OPTIONS: { value: BorderBeamColorVariant; label: string }[] = [
 ];
 
 export default function App() {
-  const [family, setFamily] = useState<BeamFamily>('rotate');
+  const [family, setFamily] = useState<BeamFamily>(() => familyFromPath(window.location.pathname));
   const [playgroundActive, setPlaygroundActive] = useState(true);
-  const [playgroundSize, setPlaygroundSize] = useState<BorderBeamSize>('md');
+  const [playgroundSize, setPlaygroundSize] = useState<BorderBeamSize>(
+    () => DEFAULT_SIZE_BY_FAMILY[familyFromPath(window.location.pathname)]
+  );
   const [playgroundColorVariant, setPlaygroundColorVariant] = useState<BorderBeamColorVariant>('colorful');
   const [playgroundStrength, setPlaygroundStrength] = useState(70);
   const strengthId = useId();
@@ -253,6 +266,21 @@ export default function App() {
   const handleFamilyChange = useCallback((next: BeamFamily) => {
     setFamily(next);
     setPlaygroundSize(DEFAULT_SIZE_BY_FAMILY[next]);
+    const path = pathForFamily(next);
+    if (window.location.pathname !== path) {
+      window.history.pushState(null, '', path);
+    }
+  }, []);
+
+  // Keep the tab in sync with browser back/forward navigation.
+  useEffect(() => {
+    const onPopState = () => {
+      const next = familyFromPath(window.location.pathname);
+      setFamily(next);
+      setPlaygroundSize(DEFAULT_SIZE_BY_FAMILY[next]);
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
   // Sliding tab pill (transitions.dev — tabs sliding). animate=false snaps
