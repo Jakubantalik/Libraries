@@ -20,6 +20,17 @@
         }
       })(window.location);
     </script>
+    <!-- Apply the saved theme before first paint to avoid a flash of the wrong mode. -->
+    <script type="text/javascript">
+      (function () {
+        try {
+          var t = localStorage.getItem('theme');
+          document.documentElement.dataset.theme = t === 'light' ? 'light' : 'dark';
+        } catch (e) {
+          document.documentElement.dataset.theme = 'dark';
+        }
+      })();
+    </script>
     <title>Border Beam – Animated border beam component for React</title>
     <meta name="description" content="A lightweight React component that renders an animated glowing border beam effect. Supports multiple sizes, color variants, and themes." />
     <meta name="theme-color" content="#070707" />

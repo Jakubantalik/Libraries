@@ -1,0 +1,98 @@
+/* ────────────────────────────────────────────────────────────────────────
+   Showcase page (showcase.html) — a fixed 926×657 frame (Figma node 523:575)
+   centered on a dark page. Solid #070707 backdrop, a centered title, and the
+   demo's UI examples placed at their Figma coordinates, each carrying a pulse
+   beam. The frame clips its content and scales to fit the viewport.
+   ──────────────────────────────────────────────────────────────────────── */
+
+.sc-root {
+  min-height: 100vh;
+  background: #070707;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow: hidden;
+}
+
+/* The frame: exact Figma size, solid backdrop, content-clipped, scaled to fit. */
+.sc-stage {
+  position: relative;
+  flex: none;
+  width: 926px;
+  height: 657px;
+  background: #070707;
+  overflow: hidden;
+  --sc-scale: 1;
+  transform: scale(var(--sc-scale));
+  transform-origin: center center;
+}
+
+/* ── Title (Figma 523:640) ───────────────────────────────────────────── */
+.sc-title {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 3px;
+  z-index: 2;
+}
+
+.sc-title-sub {
+  font-size: 26px;
+  font-weight: 500;
+  line-height: 1;
+  color: #ffffff;
+  opacity: 0.5;
+  transform: rotate(0.52deg);
+}
+
+.sc-title-main {
+  font-size: 43px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+}
+
+/* ── Item wrappers ───────────────────────────────────────────────────── */
+.sc-item {
+  position: absolute;
+  z-index: 1;
+}
+
+/* Working card is horizontally centered in the frame (Figma left calc(50%)). */
+.sc-item--working {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Narrower working card for the showcase (50px smaller than the demo's 295px). */
+.sc-stage .mock-working {
+  width: 245px;
+}
+
+/* ── Search input (Figma 524:691) ────────────────────────────────────── */
+.sc-search {
+  display: flex;
+  align-items: center;
+  gap: 11.5px;
+  width: 246px;
+  height: 57px;
+  padding: 0 19px;
+  border-radius: 65px;
+  background: #1d1d1d;
+  box-shadow: inset 0 0 50px 0 rgba(255, 255, 255, 0.02);
+}
+
+.sc-search-icon {
+  flex-shrink: 0;
+}
+
+.sc-search span {
+  font-size: 15px;
+  line-height: 18px;
+  color: #6d6d6d;
+  white-space: nowrap;
+}

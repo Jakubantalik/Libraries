@@ -1,10 +1,16 @@
 import { useState, useCallback, useId, useRef, useLayoutEffect, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { BorderBeam, type BorderBeamSize, type BorderBeamColorVariant } from 'border-beam';
+import {
+  MockChatInput,
+  MockWorkingCard,
+  MockSubscribeButton,
+  MockIconButton,
+  MockSearchBar,
+} from './mocks';
 
 function CopyIcon() {
   return (
-    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg className="icon-copy" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
     </svg>
@@ -13,8 +19,25 @@ function CopyIcon() {
 
 function CheckIcon() {
   return (
-    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg className="icon-check" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
+function PlayIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 16 16">
+      <path d="M4.5 2.5v11l9-5.5z" />
+    </svg>
+  );
+}
+
+function PauseIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 16 16">
+      <rect x="4" y="3" width="3" height="10" rx="1" />
+      <rect x="9" y="3" width="3" height="10" rx="1" />
     </svg>
   );
 }
@@ -35,45 +58,26 @@ function XIcon() {
   );
 }
 
-function AtSignIcon() {
+function MoonIcon({ className }: { className?: string }) {
   return (
-    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.5">
-      <circle cx="12" cy="12" r="4" />
-      <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94" />
+    <svg className={className} aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path fill="currentColor" d="M6.04458 1.60806C6.1589 1.35528 6.10472 1.05812 5.90855 0.861947C5.71237 0.665775 5.41522 0.611597 5.16244 0.725914C2.51258 1.92428 0.666626 4.59176 0.666626 7.69181C0.666626 11.9121 4.08786 15.3334 8.30817 15.3334C11.4082 15.3334 14.0757 13.4874 15.2741 10.8375C15.3884 10.5848 15.3342 10.2876 15.138 10.0914C14.9419 9.89526 14.6447 9.84108 14.3919 9.9554C13.6009 10.3131 12.7225 10.5126 11.7956 10.5126C8.31168 10.5126 5.4874 7.6883 5.4874 4.20438C5.4874 3.27752 5.68686 2.39905 6.04458 1.60806Z" />
     </svg>
   );
 }
 
-function ChevronDownIcon() {
+function SunIcon({ className }: { className?: string }) {
   return (
-    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" style={{ transform: 'rotate(90deg)' }}>
-      <polyline points="9 18 15 12 9 6" />
-    </svg>
-  );
-}
-
-function ArrowUpIcon() {
-  return (
-    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.5">
-      <line x1="12" y1="19" x2="12" y2="5" />
-      <polyline points="5 12 12 5 19 12" />
-    </svg>
-  );
-}
-
-function TaskCircleIcon() {
-  return (
-    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 17.5 17.5" fill="none">
-      <circle cx="8.75" cy="8.75" r="8" stroke="#818181" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="3 3" />
-    </svg>
-  );
-}
-
-function SearchIcon() {
-  return (
-    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="11" cy="11" r="8" />
-      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    <svg className={className} aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path fill="currentColor" d="M8.66663 1.33333C8.66663 0.965143 8.36815 0.666666 7.99996 0.666666C7.63177 0.666666 7.33329 0.965143 7.33329 1.33333V2.66667C7.33329 3.03486 7.63177 3.33333 7.99996 3.33333C8.36815 3.33333 8.66663 3.03486 8.66663 2.66667V1.33333Z" />
+      <path fill="currentColor" d="M8.66663 13.3333C8.66663 12.9651 8.36815 12.6667 7.99996 12.6667C7.63177 12.6667 7.33329 12.9651 7.33329 13.3333V14.6667C7.33329 15.0349 7.63177 15.3333 7.99996 15.3333C8.36815 15.3333 8.66663 15.0349 8.66663 14.6667V13.3333Z" />
+      <path fill="currentColor" d="M0.666626 8C0.666626 7.63181 0.965103 7.33333 1.33329 7.33333H2.66663C3.03482 7.33333 3.33329 7.63181 3.33329 8C3.33329 8.36819 3.03482 8.66667 2.66663 8.66667H1.33329C0.965103 8.66667 0.666626 8.36819 0.666626 8Z" />
+      <path fill="currentColor" d="M3.73797 2.7952C3.47762 2.53485 3.05551 2.53485 2.79516 2.7952C2.53481 3.05555 2.53481 3.47766 2.79516 3.73801L3.73797 4.68081C3.99831 4.94116 4.42042 4.94116 4.68077 4.68081C4.94112 4.42046 4.94112 3.99836 4.68077 3.73801L3.73797 2.7952Z" />
+      <path fill="currentColor" d="M13.2048 2.7952C13.4651 3.05555 13.4651 3.47766 13.2048 3.73801L12.262 4.68081C12.0016 4.94116 11.5795 4.94116 11.3192 4.68081C11.0588 4.42046 11.0588 3.99836 11.3192 3.73801L12.262 2.7952C12.5223 2.53485 12.9444 2.53485 13.2048 2.7952Z" />
+      <path fill="currentColor" d="M4.68077 12.2647C4.94112 12.0043 4.94112 11.5822 4.68077 11.3219C4.42042 11.0615 3.99831 11.0615 3.73797 11.3219L2.79516 12.2647C2.53481 12.525 2.53481 12.9472 2.79516 13.2075C3.05551 13.4679 3.47762 13.4679 3.73797 13.2075L4.68077 12.2647Z" />
+      <path fill="currentColor" d="M11.3192 11.3219C11.5795 11.0615 12.0016 11.0615 12.262 11.3219L13.2048 12.2647C13.4651 12.525 13.4651 12.9472 13.2048 13.2075C12.9444 13.4679 12.5223 13.4679 12.262 13.2075L11.3192 12.2647C11.0588 12.0043 11.0588 11.5822 11.3192 11.3219Z" />
+      <path fill="currentColor" d="M13.3333 7.33333C12.9651 7.33333 12.6666 7.63181 12.6666 8C12.6666 8.36819 12.9651 8.66667 13.3333 8.66667H14.6666C15.0348 8.66667 15.3333 8.36819 15.3333 8C15.3333 7.63181 15.0348 7.33333 14.6666 7.33333H13.3333Z" />
+      <path fill="currentColor" d="M7.99996 4C5.79082 4 3.99996 5.79086 3.99996 8C3.99996 10.2091 5.79082 12 7.99996 12C10.2091 12 12 10.2091 12 8C12 5.79086 10.2091 4 7.99996 4Z" />
     </svg>
   );
 }
@@ -82,8 +86,15 @@ function HeaderIcon() {
   return (
     <div className="header-icon" aria-hidden="true">
       <img
-        className="header-icon-img"
+        className="header-icon-img header-icon-img--dark"
         src={`${import.meta.env.BASE_URL}icon-web.png`}
+        alt=""
+        width={207}
+        height={138}
+      />
+      <img
+        className="header-icon-img header-icon-img--light"
+        src={`${import.meta.env.BASE_URL}icon-web-light.png`}
         alt=""
         width={207}
         height={138}
@@ -92,113 +103,127 @@ function HeaderIcon() {
   );
 }
 
+// Copy button with a dual-icon (copy ⇄ check) crossfade and a "Copy code"
+// ⇄ "Copied" tooltip pill whose width tweens between the two labels. The
+// label widths are measured once after mount and exposed as --tt-w-a /
+// --tt-w-b CSS custom properties so the width transition is exact. Uses a
+// hidden-textarea execCommand fallback when navigator.clipboard isn't
+// available (insecure contexts / older mobile browsers).
 function CopyButton({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false);
+  const [swapState, setSwapState] = useState<'copy' | 'copied'>('copy');
+  const swapRef = useRef<HTMLSpanElement | null>(null);
+  const iconTimerRef = useRef<number | undefined>(undefined);
+  const swapTimerRef = useRef<number | undefined>(undefined);
 
-  const handleCopy = useCallback(() => {
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+  useLayoutEffect(() => {
+    const swap = swapRef.current;
+    if (!swap) return;
+    const labels = swap.querySelectorAll<HTMLElement>('.tt-label');
+    const widths: number[] = [];
+    labels.forEach((lbl) => {
+      const prevPos = lbl.style.position;
+      const prevDisp = lbl.style.display;
+      lbl.style.position = 'static';
+      lbl.style.display = 'inline-block';
+      widths.push(lbl.getBoundingClientRect().width);
+      lbl.style.position = prevPos;
+      lbl.style.display = prevDisp;
     });
+    if (widths.length >= 2) {
+      swap.style.setProperty('--tt-w-a', widths[0] + 'px');
+      swap.style.setProperty('--tt-w-b', widths[1] + 'px');
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      window.clearTimeout(iconTimerRef.current);
+      window.clearTimeout(swapTimerRef.current);
+    };
+  }, []);
+
+  const handleCopy = useCallback(async () => {
+    const writeText = async (value: string): Promise<boolean> => {
+      if (typeof navigator !== 'undefined' && navigator.clipboard && window.isSecureContext) {
+        try {
+          await navigator.clipboard.writeText(value);
+          return true;
+        } catch {
+          // fall through to the execCommand path
+        }
+      }
+      if (typeof document === 'undefined') return false;
+      const ta = document.createElement('textarea');
+      ta.value = value;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.top = '0';
+      ta.style.left = '0';
+      ta.style.width = '1px';
+      ta.style.height = '1px';
+      ta.style.padding = '0';
+      ta.style.border = 'none';
+      ta.style.opacity = '0';
+      ta.style.pointerEvents = 'none';
+      document.body.appendChild(ta);
+      const sel = document.getSelection();
+      const savedRange = sel && sel.rangeCount > 0 ? sel.getRangeAt(0) : null;
+      ta.focus();
+      ta.select();
+      ta.setSelectionRange(0, value.length);
+      let ok = false;
+      try {
+        ok = document.execCommand('copy');
+      } catch {
+        ok = false;
+      }
+      ta.remove();
+      if (savedRange && sel) {
+        sel.removeAllRanges();
+        sel.addRange(savedRange);
+      }
+      return ok;
+    };
+
+    const ok = await writeText(text);
+    if (!ok) return;
+    setCopied(true);
+    setSwapState('copied');
+    window.clearTimeout(iconTimerRef.current);
+    window.clearTimeout(swapTimerRef.current);
+    const isTouch =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(hover: none)').matches;
+    const dwell = isTouch ? 2000 : 1600;
+    iconTimerRef.current = window.setTimeout(() => {
+      setCopied(false);
+      swapTimerRef.current = window.setTimeout(() => {
+        setSwapState('copy');
+      }, 200);
+    }, dwell);
   }, [text]);
 
   return (
     <button
+      type="button"
       className="copy-btn"
       onClick={handleCopy}
+      data-copied={copied ? 'true' : 'false'}
       aria-label={copied ? 'Copied' : label}
     >
-      <AnimatePresence mode="popLayout" initial={false}>
-        <motion.div
-          key={copied ? 'check' : 'copy'}
-          initial={{ opacity: 0, scale: 0.25, filter: 'blur(4px)' }}
-          animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-          exit={{ opacity: 0, scale: 0.25, filter: 'blur(4px)' }}
-          transition={{ type: 'spring', duration: 0.3, bounce: 0 }}
-          className="copy-btn-icon"
-        >
-          {copied ? <CheckIcon /> : <CopyIcon />}
-        </motion.div>
-      </AnimatePresence>
+      <CopyIcon />
+      <CheckIcon />
+      <span className="copy-btn-tooltip" role="tooltip" aria-hidden="true">
+        <span className="tt-text">
+          <span className="tt-stem">Cop</span>
+          <span className="tt-swap" ref={swapRef} data-state={swapState}>
+            <span className="tt-label tt-a">y code</span>
+            <span className="tt-label tt-b">ied</span>
+          </span>
+        </span>
+      </span>
     </button>
-  );
-}
-
-function MockChatInput() {
-  return (
-    <div className="mock-chat" role="img" aria-label="Chat input UI example with border beam effect">
-      <div className="mock-chat-inner">
-        <div className="pill">
-          <AtSignIcon />
-        </div>
-        <div className="placeholder">Build anything...</div>
-        <div className="bottom-row">
-          <div className="tag">
-            Agent
-            <ChevronDownIcon />
-          </div>
-          <div className="tag">
-            Auto
-            <ChevronDownIcon />
-          </div>
-          <div className="send-btn">
-            <ArrowUpIcon />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-const WORKING_TASKS = [
-  'Generate website color palettes',
-  'Recommend font pairings',
-  'Create layout templates',
-  'Build section engine',
-  'Generate hero section variants',
-  'Produce responsive mobile layouts',
-];
-
-function MockWorkingCard() {
-  return (
-    <div className="mock-working" role="img" aria-label="Agent task list UI example with border beam effect">
-      <div className="mock-working-header t-shimmer" data-text="Working...">Working...</div>
-      <div className="mock-working-list">
-        {WORKING_TASKS.map((task) => (
-          <div className="mock-working-row" key={task}>
-            <TaskCircleIcon />
-            <span>{task}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function MockSubscribeButton() {
-  return (
-    <div className="mock-subscribe" role="img" aria-label="Subscribe button UI example with border beam effect">
-      Subscribe
-    </div>
-  );
-}
-
-function MockIconButton() {
-  return (
-    <div className="mock-icon-btn" role="img" aria-label="Icon button UI example with border beam effect">
-      <div className="mock-icon-btn-square" />
-    </div>
-  );
-}
-
-function MockSearchBar() {
-  return (
-    <div className="mock-search" role="img" aria-label="Search bar UI example with border beam effect">
-      <div className="mock-search-inner">
-        <SearchIcon />
-        <span>Search</span>
-      </div>
-    </div>
   );
 }
 
@@ -241,6 +266,22 @@ function pathForFamily(family: BeamFamily): string {
   return family === 'pulse' ? '/pulse' : '/';
 }
 
+type ThemeMode = 'dark' | 'light';
+
+// Light mode is a dev-only affordance: the live site ships dark-only, so the
+// toggle is hidden and the theme is forced to dark in production builds.
+const LIGHT_MODE_ENABLED = !import.meta.env.PROD;
+
+// Initial theme: respect the value the inline boot script already wrote to
+// <html data-theme> (avoids a flash), then localStorage, defaulting to dark.
+function getInitialTheme(): ThemeMode {
+  if (!LIGHT_MODE_ENABLED) return 'dark';
+  const fromAttr = document.documentElement.dataset.theme;
+  if (fromAttr === 'light' || fromAttr === 'dark') return fromAttr;
+  const stored = localStorage.getItem('theme');
+  return stored === 'light' ? 'light' : 'dark';
+}
+
 const COLOR_OPTIONS: { value: BorderBeamColorVariant; label: string }[] = [
   { value: 'colorful', label: 'Colorful' },
   { value: 'mono', label: 'Mono' },
@@ -256,7 +297,18 @@ export default function App() {
   );
   const [playgroundColorVariant, setPlaygroundColorVariant] = useState<BorderBeamColorVariant>('colorful');
   const [playgroundStrength, setPlaygroundStrength] = useState(70);
+  const [theme, setTheme] = useState<ThemeMode>(getInitialTheme);
   const strengthId = useId();
+
+  // Reflect the active theme on <html> and persist the choice.
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = useCallback(() => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  }, []);
 
   const sizeOptions = SIZE_OPTIONS_BY_FAMILY[family];
   const isPulse = family === 'pulse';
@@ -332,21 +384,22 @@ export default function App() {
   const rotateExamples = (
     <>
       <div className="example-row-full">
-        <BorderBeam size="md" colorVariant="colorful" theme="dark" active={rotateTabActive}>
+        <BorderBeam className="beam-host" size="md" colorVariant="colorful" theme={theme} active={rotateTabActive}>
           <MockChatInput />
         </BorderBeam>
       </div>
       <div className="example-row-split">
         <div className="example-cell">
-          <BorderBeam size="sm" colorVariant="colorful" theme="dark" active={rotateTabActive}>
+          <BorderBeam className="beam-host" size="sm" colorVariant="colorful" theme={theme} active={rotateTabActive}>
             <MockIconButton />
           </BorderBeam>
         </div>
         <div className="example-cell">
           <BorderBeam
+            className="beam-host"
             size="line"
             colorVariant="colorful"
-            theme="dark"
+            theme={theme}
             active={rotateTabActive}
             duration={3.1}
             borderRadius={20}
@@ -361,18 +414,18 @@ export default function App() {
   const pulseExamples = (
     <>
       <div className="example-row-full">
-        <BorderBeam size="pulse-inner" colorVariant="colorful" theme="dark" active={pulseTabActive}>
+        <BorderBeam className="beam-host beam-host--soft" size="pulse-inner" colorVariant="colorful" theme={theme} active={pulseTabActive}>
           <MockWorkingCard />
         </BorderBeam>
       </div>
       <div className="example-row-split">
         <div className="example-cell">
-          <BorderBeam size="pulse-inner" colorVariant="colorful" theme="dark" active={pulseTabActive}>
+          <BorderBeam className="beam-host beam-host--pill" size="pulse-inner" colorVariant="colorful" theme={theme} active={pulseTabActive}>
             <MockSubscribeButton />
           </BorderBeam>
         </div>
         <div className="example-cell">
-          <BorderBeam size="pulse-outside" colorVariant="colorful" theme="dark" active={pulseTabActive}>
+          <BorderBeam className="beam-host" size="pulse-outside" colorVariant="colorful" theme={theme} active={pulseTabActive}>
             <MockChatInput />
           </BorderBeam>
         </div>
@@ -389,6 +442,23 @@ export default function App() {
       <main id="main-content" className="app">
         <header className="header">
           <nav aria-label="External links" className="top-bar-links">
+            {LIGHT_MODE_ENABLED && (
+              <button
+                type="button"
+                className="icon-btn theme-toggle"
+                onClick={toggleTheme}
+                aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                <span
+                  className="theme-icon-stack"
+                  data-active={theme === 'dark' ? 'sun' : 'moon'}
+                  aria-hidden="true"
+                >
+                  <MoonIcon className="theme-icon theme-icon-moon" />
+                  <SunIcon className="theme-icon theme-icon-sun" />
+                </span>
+              </button>
+            )}
             <a className="icon-btn" href="https://github.com/Jakubantalik/border-beam" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
               <GitHubIcon />
             </a>
@@ -519,24 +589,11 @@ export default function App() {
             </div>
           </div>
 
-          <div
-            className={`playground-preview${isPulse ? ' playground-preview--pulse' : ''}`}
-            role="button"
-            tabIndex={0}
-            aria-pressed={playgroundActive}
-            aria-label={playgroundActive ? 'Pause animation' : 'Play animation'}
-            onClick={() => setPlaygroundActive(!playgroundActive)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                setPlaygroundActive(!playgroundActive);
-              }
-            }}
-          >
+          <div className={`playground-preview${isPulse ? ' playground-preview--pulse' : ''}`}>
             <BorderBeam
               size={playgroundSize}
               colorVariant={playgroundColorVariant}
-              theme="dark"
+              theme={theme}
               active={playgroundActive}
               strength={playgroundStrength / 100}
             >
@@ -546,6 +603,19 @@ export default function App() {
                 </p>
               </div>
             </BorderBeam>
+
+            <div className="playground-toolbar">
+              <button
+                type="button"
+                className="playground-toggle"
+                onClick={() => setPlaygroundActive((p) => !p)}
+                aria-pressed={playgroundActive}
+                aria-label={playgroundActive ? 'Pause animation' : 'Play animation'}
+                title={playgroundActive ? 'Pause' : 'Play'}
+              >
+                {playgroundActive ? <PauseIcon /> : <PlayIcon />}
+              </button>
+            </div>
           </div>
 
           <div className="code-block code-block--multi">

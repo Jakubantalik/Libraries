@@ -62,9 +62,12 @@ function frame(ts: number): void {
     }
 
     if (config.hue) {
-      const { prop, range, period } = config.hue;
-      // Drift between -range and +range over `period` seconds.
-      const value = -range + 2 * range * pingPong(tSec / period);
+      const { prop, range, period, continuous } = config.hue;
+      // `continuous` rotates a full circle (0→range, looping) so every color
+      // sweeps through every edge; otherwise drift between -range and +range.
+      const value = continuous
+        ? ((tSec / period) % 1) * range
+        : -range + 2 * range * pingPong(tSec / period);
       el.style.setProperty(prop, `${value.toFixed(2)}deg`);
     }
   });

@@ -846,7 +846,11 @@ function pulseTableGradientsStatic(
       const y = e.y ?? py;
       const m = c.color.match(/^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/);
       const rgb = m ? `${m[1]}, ${m[2]}, ${m[3]}` : '255, 255, 255';
-      return `radial-gradient(ellipse ${e.w}px ${e.h}px at ${x} ${y}, rgba(${rgb}, ${a}), transparent)`;
+      // Scale the blob to the measured element via `--pulse-glow-sx/sy` (same as
+      // the live stroke/core layers). The var only changes on resize, so the
+      // blurred bloom bitmap is still painted once and cached between resizes.
+      // Defaults to 1 (pulse-inner never sets it), leaving inner geometry as-is.
+      return `radial-gradient(ellipse calc(${e.w}px * var(--pulse-glow-sx, 1)) calc(${e.h}px * var(--pulse-glow-sy, 1)) at ${x} ${y}, rgba(${rgb}, ${a}), transparent)`;
     })
     .join(',\n    ');
 }
@@ -906,8 +910,13 @@ export interface PulseOscillatorDef {
 
 export interface PulseDriverConfig {
   oscillators: PulseOscillatorDef[];
-  /** Slow hue drift driven into `--beam-hue-<id>`; null when colors are static. */
-  hue: { prop: string; range: number; period: number } | null;
+  /**
+   * Hue motion driven into `--beam-hue-<id>`; null when colors are static.
+   * `continuous` rotates a full 360° loop over `period` (so every palette color
+   * cycles through every edge for a lively, ever-changing wash); otherwise it
+   * ping-pongs between -range and +range.
+   */
+  hue: { prop: string; range: number; period: number; continuous?: boolean } | null;
 }
 
 /** Theme/size/duration-tuned breathing parameters (shared by CSS + JS driver). */
@@ -923,7 +932,8 @@ function pulseParams(size: BorderBeamSize, theme: 'dark' | 'light', duration: nu
       bs: (isDark ? 1.9 : 2.6) * durScale,
       ss: (isDark ? 2.6 : 4.6) * durScale,
       ghs: (isDark ? 2.4 : 5.5) * durScale,
-      huePeriod: 12,
+      // Full hue revolution period (seconds) — colors continuously cycle.
+      huePeriod: 16,
     };
   }
   return {
@@ -934,7 +944,8 @@ function pulseParams(size: BorderBeamSize, theme: 'dark' | 'light', duration: nu
     bs: (isDark ? 2.3 : 3.7) * durScale,
     ss: (isDark ? 6.4 : 4.6) * durScale,
     ghs: (isDark ? 2.4 : 3.8) * durScale,
-    huePeriod: 8,
+    // Full hue revolution period (seconds) — colors continuously cycle.
+    huePeriod: 14,
   };
 }
 
@@ -978,7 +989,11 @@ export function getPulseDriverConfig(
   const p = pulseParams(size, theme, duration);
   return {
     oscillators: pulseOscillatorDefs(id, p),
-    hue: staticColors ? null : { prop: `--beam-hue-${id}`, range: hueRange, period: p.huePeriod },
+    // Pulse colors continuously rotate a full hue circle so the palette is never
+    // pinned to fixed edges (no more "always red top-right / green left").
+    hue: staticColors
+      ? null
+      : { prop: `--beam-hue-${id}`, range: 360, period: p.huePeriod, continuous: true },
   };
 }
 
@@ -1555,9 +1570,11 @@ function generatePulseInnerVariantCSS(options: GenerateStylesOptions): string {
   const ringAnim = staticColors
     ? `filter: brightness(${b}) saturate(${s});`
     : `filter: hue-rotate(var(--beam-hue-${id})) brightness(${b}) saturate(${s});`;
-  // Bloom is frozen: static gradients + static filter, so its heavily-blurred
-  // bitmap is rasterized once and cached instead of re-blurred every frame.
-  const bloomAnim = `filter: blur(${bloomBlur}px) brightness(${b}) saturate(${s});`;
+  // Bloom shares the SAME hue rotation as the ring so the wide glow and the tight
+  // ring stay color-synced. Gradients keep frozen opacity; only hue-rotate varies.
+  const bloomAnim = staticColors
+    ? `filter: blur(${bloomBlur}px) brightness(${b}) saturate(${s});`
+    : `filter: blur(${bloomBlur}px) hue-rotate(var(--beam-hue-${id})) brightness(${b}) saturate(${s});`;
 
   const ringGradients = pulseRingGradients(colorVariant, id);
   const innerGradients = pulseInnerGradients(colorVariant, id, isDark);
@@ -1722,9 +1739,12 @@ function generatePulseOuterVariantCSS(options: GenerateStylesOptions): string {
   const coreAnim = staticColors
     ? `filter: blur(${glowBlur}px) brightness(${b}) saturate(${s});`
     : `filter: blur(${glowBlur}px) hue-rotate(var(--beam-hue-${id})) brightness(${b}) saturate(${s});`;
-  // Bloom is frozen: static gradients + static filter so the blurred halo is
-  // rasterized once and cached instead of re-blurred every frame.
-  const bloomAnim = `filter: blur(${bloomBlur}px) brightness(${b}) saturate(${s});`;
+  // Bloom (large halo) shares the SAME hue rotation as the core/stroke so the
+  // wide glow and the tight glow stay in color sync (most visible on blue/green).
+  // Its gradients keep frozen opacity, so only the cheap hue-rotate varies.
+  const bloomAnim = staticColors
+    ? `filter: blur(${bloomBlur}px) brightness(${b}) saturate(${s});`
+    : `filter: blur(${bloomBlur}px) hue-rotate(var(--beam-hue-${id})) brightness(${b}) saturate(${s});`;
 
   const strokeGradients = pulseTableGradients(PULSE_OUTER_CORE, colorVariant, id);
   const coreGradients = pulseTableGradients(PULSE_OUTER_CORE, colorVariant, id);
