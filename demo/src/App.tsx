@@ -1,4 +1,5 @@
 import { useState, useCallback, useId, useRef, useLayoutEffect, useEffect } from 'react';
+import { highlightCode } from './utils';
 import { BorderBeam, type BorderBeamSize, type BorderBeamColorVariant } from 'border-beam';
 import {
   MockChatInput,
@@ -106,40 +107,33 @@ function HeaderIcon() {
 // Copy button with a dual-icon (copy ⇄ check) crossfade and a "Copy code"
 // ⇄ "Copied" tooltip pill whose width tweens between the two labels. The
 // label widths are measured once after mount and exposed as --tt-w-a /
-// --tt-w-b CSS custom properties so the width transition is exact. Uses a
-// hidden-textarea execCommand fallback when navigator.clipboard isn't
-// available (insecure contexts / older mobile browsers).
-function CopyButton({ text, label }: { text: string; label: string }) {
-  const [copied, setCopied] = useState(false);
-  const [swapState, setSwapState] = useState<'copy' | 'copied'>('copy');
-  const swapRef = useRef<HTMLSpanElement | null>(null);
-  const iconTimerRef = useRef<number | undefined>(undefined);
-  const swapTimerRef = useRef<number | undefined>(undefined);
+function ReactIcon() {
+  return (
+    <svg viewBox="0 0 122.88 109.43" style={{ width: '14px', height: '14px', fill: '#00D8FF', display: 'inline-block' }} aria-hidden="true">
+      <g>
+        <path fillRule="evenodd" clipRule="evenodd" d="M122.88,54.73c0-8.14-10.19-15.85-25.82-20.64c3.61-15.93,2-28.6-5.06-32.66c-1.63-0.95-3.53-1.4-5.61-1.4 v5.59c1.15,0,2.08,0.23,2.86,0.65c3.41,1.95,4.88,9.39,3.73,18.96c-0.28,2.35-0.73,4.83-1.28,7.36c-4.91-1.2-10.27-2.13-15.9-2.73 c-3.38-4.63-6.89-8.84-10.42-12.52C73.54,9.74,81.2,5.59,86.41,5.59V0l0,0c-6.89,0-15.9,4.91-25.02,13.43 C52.27,4.96,43.26,0.1,36.37,0.1v5.59c5.18,0,12.87,4.13,21.04,11.67c-3.51,3.68-7.01,7.86-10.34,12.5 c-5.66,0.6-11.02,1.53-15.93,2.75c-0.58-2.5-1-4.93-1.3-7.26c-1.18-9.57,0.28-17.01,3.66-18.99c0.75-0.45,1.73-0.65,2.88-0.65V0.13 l0,0c-2.1,0-4.01,0.45-5.66,1.4c-7.04,4.06-8.62,16.71-4.98,32.59C10.14,38.92,0,46.61,0,54.73c0,8.14,10.19,15.85,25.82,20.64c-3.61,15.93-2,28.6,5.06,32.66c1.63,0.95,3.53,1.4,5.64,1.4c6.89,0,15.9-4.91,25.02-13.43c9.12,8.47,18.13,13.33,25.02,13.33 c2.1,0,4.01-0.45,5.66-1.4c7.04-4.06,8.62-16.71,4.98-32.59C112.74,70.56,122.88,62.84,122.88,54.73L122.88,54.73z M72.86,54.73 c0-6.32-5.12-11.45-11.45-11.45c-6.32,0-11.45,5.12-11.45,11.45s5.12,11.45,11.45,11.45C67.74,66.17,72.86,61.05,72.86,54.73 L72.86,54.73z M36.34,0.1L36.34,0.1L36.34,0.1L36.34,0.1z M90.27,38.02c-0.93,3.23-2.08,6.56-3.38,9.89c-1.03-2-2.1-4.01-3.28-6.01 c-1.15-2-2.38-3.96-3.61-5.86C83.56,36.57,86.99,37.22,90.27,38.02L90.27,38.02z M78.8,64.7c-1.95,3.38-3.96,6.59-6.04,9.57 c-3.73,0.33-7.51,0.5-11.32,0.5c-3.78,0-7.56-0.18-11.27-0.48c-2.08-2.98-4.11-6.16-6.06-9.52c-1.9-3.28-3.63-6.61-5.21-9.97 c1.55-3.36,3.31-6.71,5.18-9.99c1.95-3.38,3.96-6.59,6.04-9.57c3.73-0.33,7.51-0.5,11.32-0.5c3.78,0,7.56,0.18,11.27,0.48 c2.08,2.98,4.11,6.16,6.06,9.52c1.9,3.28,3.63,6.61,5.21,9.97C82.4,58.06,80.68,61.41,78.8,64.7L78.8,64.7z M86.89,61.44 c1.35,3.36,2.5,6.71,3.46,9.97c-3.28,0.8-6.74,1.48-10.32,2c1.23-1.93,2.45-3.91,3.61-5.94C84.78,65.47,85.86,63.44,86.89,61.44 L86.89,61.44z M61.49,88.16c-2.33-2.4-4.66-5.08-6.96-8.01c2.25,0.1,4.56,0.18,6.89,0.18c2.35,0,4.68-0.05,6.96-0.18 C66.12,83.08,63.79,85.76,61.49,88.16L61.49,88.16z M42.86,73.41c-3.56-0.53-6.99-1.18-10.27-1.98c0.93-3.23,2.08-6.56,3.38-9.89 c1.03,2,2.1,4.01,3.28,6.01C40.43,69.56,41.63,71.51,42.86,73.41L42.86,73.41z M61.36,21.29c2.33,2.4,4.66,5.08,6.96,8.01 c-2.25-0.1-4.56-0.18-6.89-0.18c-2.35,0-4.68,0.05-6.96,0.18C56.73,26.37,59.06,23.69,61.36,21.29L61.36,21.29z M42.83,36.04 c-1.23,1.93-2.45,3.91-3.61,5.94c-1.15,2-2.23,4.01-3.26,6.01c-1.35-3.36-2.5-6.71-3.46-9.97C35.79,37.24,39.25,36.57,42.83,36.04 L42.83,36.04z M20.16,67.4c-8.87-3.78-14.6-8.74-14.6-12.67c0-3.93,5.74-8.92,14.6-12.67c2.15-0.93,4.51-1.75,6.94-2.53 c1.43,4.91,3.31,10.02,5.64,15.25c-2.3,5.21-4.16,10.29-5.56,15.18C24.7,69.18,22.34,68.33,20.16,67.4L20.16,67.4z M33.64,103.19 c-3.41-1.95-4.88-9.39-3.73-18.96c0.28-2.35,0.73-4.83,1.28-7.36c4.91,1.2,10.27,2.13,15.9,2.73c3.38,4.63,6.89,8.84,10.42,12.52 c-8.17,7.59-15.83,11.75-21.04,11.75C35.34,103.84,34.39,103.62,33.64,103.19L33.64,103.19z M93.05,84.11 c1.18,9.57-0.28,17.01-3.66,18.99c-0.75,0.45-1.73,0.65-2.88,0.65c-5.18,0-12.87-4.13-21.04-11.67c3.51-3.68,7.01-7.86,10.34-12.5 c5.66-0.6,11.02-1.53,15.93-2.76C92.32,79.35,92.77,81.78,93.05,84.11L93.05,84.11z M102.69,67.4c-2.15,0.93-4.51,1.75-6.94,2.53 c-1.43-4.91-3.31-10.02-5.64-15.25c2.3-5.21,4.16-10.29,5.56-15.18c2.48,0.78,4.83,1.63,7.04,2.55c8.87,3.78,14.6,8.74,14.6,12.67 C117.29,58.66,111.56,63.64,102.69,67.4L102.69,67.4z"/>
+      </g>
+    </svg>
+  );
+}
 
-  useLayoutEffect(() => {
-    const swap = swapRef.current;
-    if (!swap) return;
-    const labels = swap.querySelectorAll<HTMLElement>('.tt-label');
-    const widths: number[] = [];
-    labels.forEach((lbl) => {
-      const prevPos = lbl.style.position;
-      const prevDisp = lbl.style.display;
-      lbl.style.position = 'static';
-      lbl.style.display = 'inline-block';
-      widths.push(lbl.getBoundingClientRect().width);
-      lbl.style.position = prevPos;
-      lbl.style.display = prevDisp;
-    });
-    if (widths.length >= 2) {
-      swap.style.setProperty('--tt-w-a', widths[0] + 'px');
-      swap.style.setProperty('--tt-w-b', widths[1] + 'px');
-    }
-  }, []);
+function TerminalIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" style={{ width: '14px', height: '14px', display: 'inline-block' }} aria-hidden="true">
+      <path d="M6.96967 7.46967C7.26256 7.17678 7.73744 7.17678 8.03033 7.46967L12.0303 11.4697C12.3232 11.7626 12.3232 12.2374 12.0303 12.5303L8.03033 16.5303C7.73744 16.8232 7.26256 16.8232 6.96967 16.5303C6.67678 16.2374 6.67678 15.7626 6.96967 15.4697L10.4393 12L6.96967 8.53033C6.67678 8.23744 6.67678 7.76256 6.96967 7.46967Z" fill="currentColor" />
+      <path d="M11.5 15.25C11.0858 15.25 10.75 15.5858 10.75 16C10.75 16.4142 11.0858 16.75 11.5 16.75H16.5C16.9142 16.75 17.25 16.4142 17.25 16C17.25 15.5858 16.9142 15.25 16.5 15.25H11.5Z" fill="currentColor" />
+      <path fillRule="evenodd" clipRule="evenodd" d="M8.367 1.25H15.633C16.7251 1.24999 17.5906 1.24999 18.2883 1.30699C19.0017 1.36527 19.6053 1.48688 20.1565 1.76772C21.0502 2.22312 21.7769 2.94978 22.2323 3.84355C22.5131 4.39472 22.6347 4.99834 22.693 5.71173C22.75 6.40935 22.75 7.27484 22.75 8.36698V15.633C22.75 16.7252 22.75 17.5906 22.693 18.2883C22.6347 19.0017 22.5131 19.6053 22.2323 20.1565C21.7769 21.0502 21.0502 21.7769 20.1565 22.2323C19.6053 22.5131 19.0017 22.6347 18.2883 22.693C17.5906 22.75 16.7252 22.75 15.633 22.75H8.36698C7.27484 22.75 6.40935 22.75 5.71173 22.693C4.99834 22.6347 4.39472 22.5131 3.84355 22.2323C2.94978 21.7769 2.22312 21.0502 1.76772 20.1565C1.48688 19.6053 1.36527 19.0017 1.30699 18.2883C1.24999 17.5906 1.24999 16.7252 1.25 15.633V8.367C1.24999 7.27486 1.24999 6.40935 1.30699 5.71173C1.36527 4.99834 1.48688 4.39472 1.76772 3.84355C2.22312 2.94978 2.94978 2.22312 3.84355 1.76772C4.39472 1.48688 4.99834 1.36527 5.71173 1.30699C6.40935 1.24999 7.27486 1.24999 8.367 1.25ZM5.83388 2.80201C5.21325 2.85271 4.829 2.94909 4.52453 3.10423C3.913 3.41582 3.41582 3.913 3.10423 4.52453C2.94909 4.829 2.85271 5.21325 2.80201 5.83388C2.75058 6.46327 2.75 7.26752 2.75 8.4V15.6C2.75 16.7325 2.75058 17.5367 2.80201 18.1661C2.85271 18.7867 2.85271 19.171 3.10423 19.4755C3.41582 20.087 3.913 20.5842 4.52453 20.8958C4.829 21.0509 5.21325 21.1473 5.83388 21.198C6.46327 21.2494 7.26752 21.25 8.4 21.25H15.6C16.7325 21.25 17.5367 21.2494 18.1661 21.198C18.7867 21.1473 19.171 21.0509 19.4755 20.8958C20.087 20.5842 20.5842 20.087 20.8958 19.4755C21.0509 19.171 21.1473 18.7867 21.198 18.1661C21.2494 17.5367 21.25 16.7325 21.25 15.6V8.4C21.25 7.26752 21.2494 6.46327 21.198 5.83388C21.1473 5.21325 21.0509 4.829 20.8958 4.52453C20.5842 3.913 20.087 3.41582 19.4755 3.10423C19.171 2.94909 18.7867 2.85271 18.1661 2.80201C17.5367 2.75058 16.7325 2.75 15.6 2.75H8.4C7.26752 2.75 6.46327 2.75058 5.83388 2.80201Z" fill="currentColor"/>
+    </svg>
+  );
+}
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const timerRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     return () => {
-      window.clearTimeout(iconTimerRef.current);
-      window.clearTimeout(swapTimerRef.current);
+      if (timerRef.current) window.clearTimeout(timerRef.current);
     };
   }, []);
 
@@ -150,7 +144,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
           await navigator.clipboard.writeText(value);
           return true;
         } catch {
-          // fall through to the execCommand path
+          // fall through
         }
       }
       if (typeof document === 'undefined') return false;
@@ -167,8 +161,6 @@ function CopyButton({ text, label }: { text: string; label: string }) {
       ta.style.opacity = '0';
       ta.style.pointerEvents = 'none';
       document.body.appendChild(ta);
-      const sel = document.getSelection();
-      const savedRange = sel && sel.rangeCount > 0 ? sel.getRangeAt(0) : null;
       ta.focus();
       ta.select();
       ta.setSelectionRange(0, value.length);
@@ -179,29 +171,16 @@ function CopyButton({ text, label }: { text: string; label: string }) {
         ok = false;
       }
       ta.remove();
-      if (savedRange && sel) {
-        sel.removeAllRanges();
-        sel.addRange(savedRange);
-      }
       return ok;
     };
 
     const ok = await writeText(text);
     if (!ok) return;
     setCopied(true);
-    setSwapState('copied');
-    window.clearTimeout(iconTimerRef.current);
-    window.clearTimeout(swapTimerRef.current);
-    const isTouch =
-      typeof window.matchMedia === 'function' &&
-      window.matchMedia('(hover: none)').matches;
-    const dwell = isTouch ? 2000 : 1600;
-    iconTimerRef.current = window.setTimeout(() => {
+    if (timerRef.current) window.clearTimeout(timerRef.current);
+    timerRef.current = window.setTimeout(() => {
       setCopied(false);
-      swapTimerRef.current = window.setTimeout(() => {
-        setSwapState('copy');
-      }, 200);
-    }, dwell);
+    }, 2000);
   }, [text]);
 
   return (
@@ -209,20 +188,10 @@ function CopyButton({ text, label }: { text: string; label: string }) {
       type="button"
       className="copy-btn"
       onClick={handleCopy}
-      data-copied={copied ? 'true' : 'false'}
-      aria-label={copied ? 'Copied' : label}
+      aria-label={copied ? 'Copied' : 'Copy code'}
     >
-      <CopyIcon />
-      <CheckIcon />
-      <span className="copy-btn-tooltip" role="tooltip" aria-hidden="true">
-        <span className="tt-text">
-          <span className="tt-stem">Cop</span>
-          <span className="tt-swap" ref={swapRef} data-state={swapState}>
-            <span className="tt-label tt-a">y code</span>
-            <span className="tt-label tt-b">ied</span>
-          </span>
-        </span>
-      </span>
+      {copied ? <CheckIcon /> : <CopyIcon />}
+      <span>{copied ? 'Copied' : 'Copy code'}</span>
     </button>
   );
 }
@@ -510,17 +479,33 @@ export default function App() {
 
         <section className="section" aria-label="Installation">
           <h2 className="section-title">Installation</h2>
-          <div className="code-block">
-            <code>{installCmd}</code>
-            <CopyButton text={installCmd} label="Copy install command" />
+          <div className="code-explorer">
+            <div className="code-header">
+              <div className="code-tabs">
+                <TerminalIcon />
+                <span>Terminal</span>
+              </div>
+              <CopyButton text={installCmd} />
+            </div>
+            <div className="code-content">
+              <code dangerouslySetInnerHTML={{ __html: highlightCode(installCmd, 'bash') }} />
+            </div>
           </div>
         </section>
 
         <section className="section" aria-label="Usage">
           <h2 className="section-title section-title--muted">Usage</h2>
-          <div className="code-block code-block--multi">
-            <code>{usageCode}</code>
-            <CopyButton text={usageCode} label="Copy usage example" />
+          <div className="code-explorer">
+            <div className="code-header">
+              <div className="code-tabs">
+                <ReactIcon />
+                <span>React</span>
+              </div>
+              <CopyButton text={usageCode} />
+            </div>
+            <div className="code-content">
+              <code dangerouslySetInnerHTML={{ __html: highlightCode(usageCode, 'tsx') }} />
+            </div>
           </div>
         </section>
 
@@ -618,9 +603,17 @@ export default function App() {
             </div>
           </div>
 
-          <div className="code-block code-block--multi">
-            <code>{playgroundCode}</code>
-            <CopyButton text={playgroundCode} label="Copy playground code" />
+          <div className="code-explorer">
+            <div className="code-header">
+              <div className="code-tabs">
+                <ReactIcon />
+                <span>React</span>
+              </div>
+              <CopyButton text={playgroundCode} />
+            </div>
+            <div className="code-content">
+              <code dangerouslySetInnerHTML={{ __html: highlightCode(playgroundCode, 'tsx') }} />
+            </div>
           </div>
         </section>
 

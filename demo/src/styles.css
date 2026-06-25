@@ -53,6 +53,16 @@ html {
   --c-border: transparent;
   --c-code-text: #ffffff;
 
+  --code-bg: #121212;
+  --hl-keyword: #c678dd;
+  --hl-tag: #e06c75;
+  --hl-component: #e5c07b;
+  --hl-attr: #d19a66;
+  --hl-string: #98c379;
+  --hl-number: #d19a66;
+  --hl-comment: #7f848e;
+  --hl-punctuation: #abb2bf;
+
   --c-btn-bg: rgba(255, 255, 255, 0.03);
   --c-btn-bg-hover: rgba(255, 255, 255, 0.06);
   --c-btn-bg-press: rgba(255, 255, 255, 0.08);
@@ -119,6 +129,16 @@ html[data-theme='light'] {
   --c-panel: #f4f4f7;
   --c-border: #e3e3ec;
   --c-code-text: #1a1a22;
+
+  --code-bg: #ebebeb;
+  --hl-keyword: #d73a49;
+  --hl-tag: #22863a;
+  --hl-component: #6f42c1;
+  --hl-attr: #005cc5;
+  --hl-string: #032f62;
+  --hl-number: #e36209;
+  --hl-comment: #6a737d;
+  --hl-punctuation: #24292e;
 
   --c-btn-bg: rgba(17, 17, 17, 0.03);
   --c-btn-bg-hover: rgba(17, 17, 17, 0.06);
@@ -965,6 +985,119 @@ html[data-theme='light'] .code-block code {
   color: #3c3c3c;
 }
 
+/* Code Explorer styling */
+.code-explorer {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--code-bg);
+  border-radius: 16px;
+  padding: 6px;
+  gap: 4px;
+  width: 100%;
+}
+
+.code-explorer .code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 12px;
+}
+
+.code-explorer .code-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 6px;
+}
+
+.code-explorer .code-tabs span {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--c-muted);
+  user-select: none;
+}
+
+.code-explorer .code-content {
+  background-color: #09090b;
+  border-radius: 12px;
+  padding: 16px;
+  overflow-x: auto;
+  min-height: 48px;
+  display: flex;
+}
+
+html[data-theme="light"] .code-explorer .code-content {
+  background-color: #f6f6f6;
+}
+
+.code-explorer .code-content code {
+  font-family: "SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-size: 13px;
+  color: #a5d6ff;
+  line-height: 1.6;
+  white-space: pre;
+  overflow-x: auto;
+  min-width: 0;
+  flex: 1;
+}
+
+html[data-theme="light"] .code-explorer .code-content code {
+  color: #005cc5;
+}
+
+.code-explorer .copy-btn {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: auto;
+  height: 28px;
+  min-width: unset;
+  min-height: unset;
+  max-width: unset;
+  max-height: unset;
+  aspect-ratio: auto;
+  margin-right: 0;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 10px;
+  line-height: inherit;
+  background: transparent;
+  background-image: none;
+  color: var(--c-muted);
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.code-explorer .copy-btn:hover {
+  background-color: var(--c-btn-bg-hover);
+  color: var(--c-text);
+}
+
+.code-explorer .copy-btn svg {
+  position: static;
+  transform: none;
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  opacity: 1;
+  filter: none;
+  transition: none;
+  color: currentColor;
+}
+
+/* Syntax Highlighting Tokens */
+.hl-keyword { color: var(--hl-keyword); }
+.hl-tag { color: var(--hl-tag); }
+.hl-component { color: var(--hl-component); }
+.hl-attr { color: var(--hl-attr); }
+.hl-string { color: var(--hl-string); }
+.hl-number { color: var(--hl-number); }
+.hl-comment { color: var(--hl-comment); }
+.hl-punctuation { color: var(--hl-punctuation); }
+
+
 /* Copy button — ghost icon button with a dual-icon (copy ⇄ check)
    crossfade and a "Copy code" ⇄ "Copied" tooltip pill. */
 .copy-btn {
@@ -1706,6 +1839,11 @@ html[data-theme='light'] .playground-toggle:focus-visible {
   }
 
   .code-block code {
+    font-size: 12px;
+    line-height: 20px;
+  }
+
+  .code-explorer .code-content code {
     font-size: 12px;
     line-height: 20px;
   }
