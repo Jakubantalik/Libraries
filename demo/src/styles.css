@@ -862,6 +862,51 @@ html[data-theme='light'] .beam-host--pill {
     inset 0 0 0 1px rgba(196, 196, 196, 0.1);
 }
 
+/* Pulse-outside tuning preset (mirrors the subscribe controls defaults):
+   X=2px, Y=1px, core blur=7px, bloom blur=19px, glow opacity=200%. */
+.beam-host--pulse-outside-tuned {
+  /* Proportional boost on top of the component's measured per-element glow
+     scale — the Subscribe button (source of truth) uses measured 0.35 x 1.5
+     = 0.525, so every element gets the same 1.5x relative prominence. */
+  /* 1.5 base prominence, scaled 30% down on this larger card so the halo isn't
+     oversized (1.5 x 0.7 = 1.05). */
+  --pulse-glow-boost: 1.05;
+  --sub-glow-offset-x: 1px;
+  --sub-glow-offset-y: 0px;
+  --sub-core-blur: 10px;
+  --sub-bloom-blur: 19px;
+  --sub-glow-opacity-mul: 1.71;
+  /* How much bigger this element is than the Subscribe button (whose measured
+     glow scale is 0.35 = baseline 1). Halo reach and blur scale with it so
+     large cards keep the button's PROPORTIONAL prominence. The 0.7 factor
+     scales the halo 30% down to taste. */
+  --sub-glow-unit: calc(var(--pulse-glow-sx, 0.35) / 0.35 * 0.7);
+  /* Library hooks: scale the REAL layer opacity (unlike filter opacity(),
+     which clamps at 100%). */
+  --beam-inner-opacity: var(--sub-glow-opacity-mul);
+  --beam-bloom-opacity: var(--sub-glow-opacity-mul);
+  --beam-stroke-opacity: var(--sub-glow-opacity-mul);
+  /* Library glow-filter hooks — tune blur/brightness WITHOUT replacing the whole
+     `filter` (an external `filter: ... !important` drops the library's hue-rotate
+     term and desyncs the glow colors from the 1px stroke ring). */
+  --beam-core-blur: calc(var(--sub-core-blur) * var(--sub-glow-unit));
+  --beam-bloom-blur: calc(var(--sub-bloom-blur) * var(--sub-glow-unit));
+  --beam-glow-brightness: calc(1.3 * var(--sub-glow-opacity-mul));
+  --beam-glow-saturate: calc(1.2 * var(--sub-glow-opacity-mul));
+}
+
+.beam-host--pulse-outside-tuned[data-active]::before,
+.beam-host--pulse-outside-tuned[data-fading]::before {
+  inset: calc(-6px * var(--sub-glow-unit)) !important;
+  transform: translate(var(--sub-glow-offset-x), var(--sub-glow-offset-y)) !important;
+}
+
+.beam-host--pulse-outside-tuned[data-active] [data-beam-bloom],
+.beam-host--pulse-outside-tuned[data-fading] [data-beam-bloom] {
+  inset: calc(-14px * var(--sub-glow-unit)) !important;
+  transform: translate(var(--sub-glow-offset-x), var(--sub-glow-offset-y)) !important;
+}
+
 html[data-theme='light'] .mock-subscribe {
   color: #2b2b2b;
 }

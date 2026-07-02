@@ -1,4 +1,4 @@
-import { useState, useCallback, useId, useRef, useLayoutEffect, useEffect } from 'react';
+import { useState, useCallback, useId, useRef, useLayoutEffect, useEffect, type CSSProperties } from 'react';
 import { BorderBeam, type BorderBeamSize, type BorderBeamColorVariant } from 'border-beam';
 import {
   MockChatInput,
@@ -425,13 +425,22 @@ export default function App() {
           </BorderBeam>
         </div>
         <div className="example-cell">
-          <BorderBeam className="beam-host" size="pulse-outside" colorVariant="colorful" theme={theme} active={pulseTabActive}>
+          <BorderBeam className="beam-host beam-host--pulse-outside-tuned" size="pulse-outside" colorVariant="colorful" theme={theme} active={pulseTabActive}>
             <MockChatInput />
           </BorderBeam>
         </div>
       </div>
     </>
   );
+
+  // Keep pulse-outside tuning in sync with the subscribe control defaults.
+  const pulseOutsideTunedVars = {
+    '--sub-glow-offset-x': '1px',
+    '--sub-glow-offset-y': '0px',
+    '--sub-core-blur': '10px',
+    '--sub-bloom-blur': '19px',
+    '--sub-glow-opacity-mul': 1.71,
+  } as CSSProperties;
 
   return (
     <>
@@ -591,11 +600,13 @@ export default function App() {
 
           <div className={`playground-preview${isPulse ? ' playground-preview--pulse' : ''}`}>
             <BorderBeam
+              className={playgroundSize === 'pulse-outside' ? 'beam-host--pulse-outside-tuned' : undefined}
               size={playgroundSize}
               colorVariant={playgroundColorVariant}
               theme={theme}
               active={playgroundActive}
               strength={playgroundStrength / 100}
+              style={playgroundSize === 'pulse-outside' ? pulseOutsideTunedVars : undefined}
             >
               <div className={`card ${playgroundSize === 'sm' ? 'card-sm' : 'card-md'}`}>
                 <p className="card-text">

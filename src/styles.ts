@@ -769,7 +769,9 @@ function pulseGrad(
   // blob WIDTH/HEIGHT to the measured element size, so the glow fits any component.
   // Positions stay percentage-based, so blobs keep hugging the element's edges.
   // Defaults to 1 (e.g. pulse-inner never sets them), leaving geometry unchanged.
-  return `radial-gradient(ellipse calc(${w}px * var(--bw${region}-${id}) * var(--pulse-glow-sx, 1)) calc(${h}px * var(--bh${region}-${id}) * var(--bgh-${id}) * var(--pulse-glow-sy, 1)) at calc(${x} + var(--bx${region}-${id})) calc(${y} + var(--by${region}-${id})), ${withAlphaVar(color, quad, id)}, transparent)`;
+  // `--pulse-glow-boost` is a consumer hook: a relative multiplier on top of the
+  // measured scale, so the glow can be intensified proportionally on any element.
+  return `radial-gradient(ellipse calc(${w}px * var(--bw${region}-${id}) * var(--pulse-glow-sx, 1) * var(--pulse-glow-boost, 1)) calc(${h}px * var(--bh${region}-${id}) * var(--bgh-${id}) * var(--pulse-glow-sy, 1) * var(--pulse-glow-boost, 1)) at calc(${x} + var(--bx${region}-${id})) calc(${y} + var(--by${region}-${id})), ${withAlphaVar(color, quad, id)}, transparent)`;
 }
 
 // The 9-gradient perimeter ring (Card 4 ::after / Card 5 stroke share this) —
@@ -850,7 +852,7 @@ function pulseTableGradientsStatic(
       // the live stroke/core layers). The var only changes on resize, so the
       // blurred bloom bitmap is still painted once and cached between resizes.
       // Defaults to 1 (pulse-inner never sets it), leaving inner geometry as-is.
-      return `radial-gradient(ellipse calc(${e.w}px * var(--pulse-glow-sx, 1)) calc(${e.h}px * var(--pulse-glow-sy, 1)) at ${x} ${y}, rgba(${rgb}, ${a}), transparent)`;
+      return `radial-gradient(ellipse calc(${e.w}px * var(--pulse-glow-sx, 1) * var(--pulse-glow-boost, 1)) calc(${e.h}px * var(--pulse-glow-sy, 1) * var(--pulse-glow-boost, 1)) at ${x} ${y}, rgba(${rgb}, ${a}), transparent)`;
     })
     .join(',\n    ');
 }
@@ -1079,9 +1081,9 @@ function generateSmallVariantCSS(options: GenerateStylesOptions): string {
   
   const hueShiftKeyframes = staticColors ? '' : `
 @keyframes beam-hue-shift-${id} {
-  0% { filter: hue-rotate(-${hueRange}deg) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
-  50% { filter: hue-rotate(${hueRange}deg) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
-  100% { filter: hue-rotate(-${hueRange}deg) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
+  0% { filter: hue-rotate(calc(var(--beam-hue-base, 0deg) - ${hueRange}deg)) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
+  50% { filter: hue-rotate(calc(var(--beam-hue-base, 0deg) + ${hueRange}deg)) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
+  100% { filter: hue-rotate(calc(var(--beam-hue-base, 0deg) - ${hueRange}deg)) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
 }`;
 
   const isDark = theme === 'dark';
@@ -1223,7 +1225,7 @@ function generateSmallVariantCSS(options: GenerateStylesOptions): string {
   mask-composite: intersect, exclude;
   pointer-events: none;
   z-index: 2;
-  opacity: calc(var(--beam-opacity-${id}) * ${finalStrokeOpacity.toFixed(2)} * var(--beam-strength, 1));
+  opacity: calc(var(--beam-opacity-${id}) * ${finalStrokeOpacity.toFixed(2)} * var(--beam-stroke-opacity, 1) * var(--beam-strength, 1));
   ${hueShiftAnimation}
 }
 
@@ -1242,7 +1244,7 @@ function generateSmallVariantCSS(options: GenerateStylesOptions): string {
   mask-composite: add;
   pointer-events: none;
   z-index: 1;
-  opacity: calc(var(--beam-opacity-${id}) * ${finalInnerOpacity.toFixed(2)} * var(--beam-strength, 1));
+  opacity: calc(var(--beam-opacity-${id}) * ${finalInnerOpacity.toFixed(2)} * var(--beam-inner-opacity, 1) * var(--beam-strength, 1));
   ${hueShiftAnimation}
 }
 
@@ -1267,7 +1269,7 @@ function generateSmallVariantCSS(options: GenerateStylesOptions): string {
 [data-beam="${id}"][data-active] [data-beam-bloom],
 [data-beam="${id}"][data-fading] [data-beam-bloom] {
   display: block;
-  opacity: calc(var(--beam-opacity-${id}) * ${finalBloomOpacity.toFixed(2)} * var(--beam-strength, 1));
+  opacity: calc(var(--beam-opacity-${id}) * ${finalBloomOpacity.toFixed(2)} * var(--beam-bloom-opacity, 1) * var(--beam-strength, 1));
 }
 
 @keyframes beam-spin-${id} {
@@ -1319,9 +1321,9 @@ function generateBorderVariantCSS(options: GenerateStylesOptions): string {
   
   const hueShiftKeyframes = staticColors ? '' : `
 @keyframes beam-hue-shift-${id} {
-  0% { filter: hue-rotate(-${hueRange}deg) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
-  50% { filter: hue-rotate(${hueRange}deg) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
-  100% { filter: hue-rotate(-${hueRange}deg) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
+  0% { filter: hue-rotate(calc(var(--beam-hue-base, 0deg) - ${hueRange}deg)) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
+  50% { filter: hue-rotate(calc(var(--beam-hue-base, 0deg) + ${hueRange}deg)) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
+  100% { filter: hue-rotate(calc(var(--beam-hue-base, 0deg) - ${hueRange}deg)) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
 }`;
 
   const isDark = theme === 'dark';
@@ -1453,7 +1455,7 @@ function generateBorderVariantCSS(options: GenerateStylesOptions): string {
   mask-composite: intersect, exclude;
   pointer-events: none;
   z-index: 2;
-  opacity: calc(var(--beam-opacity-${id}) * ${finalStrokeOpacity.toFixed(2)} * var(--beam-strength, 1));
+  opacity: calc(var(--beam-opacity-${id}) * ${finalStrokeOpacity.toFixed(2)} * var(--beam-stroke-opacity, 1) * var(--beam-strength, 1));
   ${hueShiftAnimation}
 }
 
@@ -1491,7 +1493,7 @@ function generateBorderVariantCSS(options: GenerateStylesOptions): string {
   mask-composite: intersect, add;
   pointer-events: none;
   z-index: 1;
-  opacity: calc(var(--beam-opacity-${id}) * ${finalInnerOpacity.toFixed(2)} * var(--beam-strength, 1));
+  opacity: calc(var(--beam-opacity-${id}) * ${finalInnerOpacity.toFixed(2)} * var(--beam-inner-opacity, 1) * var(--beam-strength, 1));
   clip-path: inset(0 round ${borderRadius}px);
   ${hueShiftAnimation}
 }
@@ -1517,7 +1519,7 @@ function generateBorderVariantCSS(options: GenerateStylesOptions): string {
 [data-beam="${id}"][data-active] [data-beam-bloom],
 [data-beam="${id}"][data-fading] [data-beam-bloom] {
   display: block;
-  opacity: calc(var(--beam-opacity-${id}) * ${finalBloomOpacity.toFixed(2)} * var(--beam-strength, 1));
+  opacity: calc(var(--beam-opacity-${id}) * ${finalBloomOpacity.toFixed(2)} * var(--beam-bloom-opacity, 1) * var(--beam-strength, 1));
 }
 
 @keyframes beam-spin-${id} {
@@ -1569,12 +1571,12 @@ function generatePulseInnerVariantCSS(options: GenerateStylesOptions): string {
   // so the breathing layers no longer repaint at the display refresh rate.
   const ringAnim = staticColors
     ? `filter: brightness(${b}) saturate(${s});`
-    : `filter: hue-rotate(var(--beam-hue-${id})) brightness(${b}) saturate(${s});`;
+    : `filter: hue-rotate(calc(var(--beam-hue-base, 0deg) + var(--beam-hue-${id}))) brightness(${b}) saturate(${s});`;
   // Bloom shares the SAME hue rotation as the ring so the wide glow and the tight
   // ring stay color-synced. Gradients keep frozen opacity; only hue-rotate varies.
   const bloomAnim = staticColors
     ? `filter: blur(${bloomBlur}px) brightness(${b}) saturate(${s});`
-    : `filter: blur(${bloomBlur}px) hue-rotate(var(--beam-hue-${id})) brightness(${b}) saturate(${s});`;
+    : `filter: blur(${bloomBlur}px) hue-rotate(calc(var(--beam-hue-base, 0deg) + var(--beam-hue-${id}))) brightness(${b}) saturate(${s});`;
 
   const ringGradients = pulseRingGradients(colorVariant, id);
   const innerGradients = pulseInnerGradients(colorVariant, id, isDark);
@@ -1615,7 +1617,7 @@ ${pulseWrapperAnimation(id, 'beam-fade-out', 0.5)}
   pointer-events: none;
   z-index: 2;
   will-change: opacity, filter;
-  opacity: calc(var(--beam-opacity-${id}) * ${sStroke} * var(--beam-strength, 1));
+  opacity: calc(var(--beam-opacity-${id}) * ${sStroke} * var(--beam-stroke-opacity, 1) * var(--beam-strength, 1));
   ${ringAnim}
 }
 
@@ -1638,7 +1640,7 @@ ${pulseWrapperAnimation(id, 'beam-fade-out', 0.5)}
   pointer-events: none;
   z-index: 1;
   will-change: opacity, filter;
-  opacity: calc(var(--beam-opacity-${id}) * ${sInner} * var(--beam-strength, 1));
+  opacity: calc(var(--beam-opacity-${id}) * ${sInner} * var(--beam-inner-opacity, 1) * var(--beam-strength, 1));
   ${ringAnim}
 }
 
@@ -1663,7 +1665,7 @@ ${pulseWrapperAnimation(id, 'beam-fade-out', 0.5)}
 [data-beam="${id}"][data-active] [data-beam-bloom],
 [data-beam="${id}"][data-fading] [data-beam-bloom] {
   display: block;
-  opacity: calc(var(--beam-opacity-${id}) * ${sBloom} * var(--beam-strength, 1));
+  opacity: calc(var(--beam-opacity-${id}) * ${sBloom} * var(--beam-bloom-opacity, 1) * var(--beam-strength, 1));
   ${bloomAnim}
 }
 
@@ -1735,16 +1737,21 @@ function generatePulseOuterVariantCSS(options: GenerateStylesOptions): string {
   // Slow hue drift is driven into --beam-hue-<id> by the JS loop (capped fps).
   const strokeAnim = staticColors
     ? `filter: brightness(${b}) saturate(${s});`
-    : `filter: hue-rotate(var(--beam-hue-${id})) brightness(${b}) saturate(${s});`;
+    : `filter: hue-rotate(calc(var(--beam-hue-base, 0deg) + var(--beam-hue-${id}))) brightness(${b}) saturate(${s});`;
+  // Consumer hooks (--beam-core-blur / --beam-bloom-blur / --beam-glow-brightness /
+  // --beam-glow-saturate) let integrators tune the glow WITHOUT overriding the whole
+  // `filter` — replacing it externally would drop the hue-rotate term and desync the
+  // glow colors from the stroke ring.
+  const glowBright = `brightness(var(--beam-glow-brightness, ${b})) saturate(var(--beam-glow-saturate, ${s}))`;
   const coreAnim = staticColors
-    ? `filter: blur(${glowBlur}px) brightness(${b}) saturate(${s});`
-    : `filter: blur(${glowBlur}px) hue-rotate(var(--beam-hue-${id})) brightness(${b}) saturate(${s});`;
+    ? `filter: blur(var(--beam-core-blur, ${glowBlur}px)) ${glowBright};`
+    : `filter: blur(var(--beam-core-blur, ${glowBlur}px)) hue-rotate(calc(var(--beam-hue-base, 0deg) + var(--beam-hue-${id}))) ${glowBright};`;
   // Bloom (large halo) shares the SAME hue rotation as the core/stroke so the
   // wide glow and the tight glow stay in color sync (most visible on blue/green).
   // Its gradients keep frozen opacity, so only the cheap hue-rotate varies.
   const bloomAnim = staticColors
-    ? `filter: blur(${bloomBlur}px) brightness(${b}) saturate(${s});`
-    : `filter: blur(${bloomBlur}px) hue-rotate(var(--beam-hue-${id})) brightness(${b}) saturate(${s});`;
+    ? `filter: blur(var(--beam-bloom-blur, ${bloomBlur}px)) ${glowBright};`
+    : `filter: blur(var(--beam-bloom-blur, ${bloomBlur}px)) hue-rotate(calc(var(--beam-hue-base, 0deg) + var(--beam-hue-${id}))) ${glowBright};`;
 
   const strokeGradients = pulseTableGradients(PULSE_OUTER_CORE, colorVariant, id);
   const coreGradients = pulseTableGradients(PULSE_OUTER_CORE, colorVariant, id);
@@ -1809,7 +1816,7 @@ ${hairlineOpacity > 0 ? `
   pointer-events: none;
   z-index: 2;
   will-change: opacity, filter;
-  opacity: calc(var(--beam-opacity-${id}) * ${sStroke} * var(--beam-strength, 1));
+  opacity: calc(var(--beam-opacity-${id}) * ${sStroke} * var(--beam-stroke-opacity, 1) * var(--beam-strength, 1));
   ${strokeAnim}
 }
 
@@ -1824,7 +1831,7 @@ ${hairlineOpacity > 0 ? `
   transform: scale(${sw}, ${sh});
   pointer-events: none;
   will-change: opacity, filter;
-  opacity: calc(var(--beam-opacity-${id}) * ${sInner} * var(--beam-strength, 1));
+  opacity: calc(var(--beam-opacity-${id}) * ${sInner} * var(--beam-inner-opacity, 1) * var(--beam-strength, 1));
   ${coreAnim}
 }
 
@@ -1844,7 +1851,7 @@ ${hairlineOpacity > 0 ? `
 [data-beam="${id}"][data-active] [data-beam-bloom],
 [data-beam="${id}"][data-fading] [data-beam-bloom] {
   display: block;
-  opacity: calc(var(--beam-opacity-${id}) * ${sBloom} * var(--beam-strength, 1));
+  opacity: calc(var(--beam-opacity-${id}) * ${sBloom} * var(--beam-bloom-opacity, 1) * var(--beam-strength, 1));
   ${bloomAnim}
 }
 
@@ -1902,15 +1909,15 @@ function generateLineVariantCSS(options: GenerateStylesOptions): string {
   
   const hueShiftKeyframes = staticColors ? '' : `
 @keyframes beam-hue-shift-${id} {
-  0% { filter: hue-rotate(-${hueRange}deg) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
-  50% { filter: hue-rotate(${hueRange}deg) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
-  100% { filter: hue-rotate(-${hueRange}deg) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
+  0% { filter: hue-rotate(calc(var(--beam-hue-base, 0deg) - ${hueRange}deg)) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
+  50% { filter: hue-rotate(calc(var(--beam-hue-base, 0deg) + ${hueRange}deg)) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
+  100% { filter: hue-rotate(calc(var(--beam-hue-base, 0deg) - ${hueRange}deg)) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
 }
 
 @keyframes beam-hue-shift-bloom-${id} {
-  0% { filter: blur(8px) hue-rotate(-${hueRange + 10}deg) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
-  50% { filter: blur(8px) hue-rotate(${hueRange + 10}deg) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
-  100% { filter: blur(8px) hue-rotate(-${hueRange + 10}deg) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
+  0% { filter: blur(8px) hue-rotate(calc(var(--beam-hue-base, 0deg) - ${hueRange + 10}deg)) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
+  50% { filter: blur(8px) hue-rotate(calc(var(--beam-hue-base, 0deg) + ${hueRange + 10}deg)) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
+  100% { filter: blur(8px) hue-rotate(calc(var(--beam-hue-base, 0deg) - ${hueRange + 10}deg)) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
 }`;
 
   const whiteHighlight = isDark
@@ -2029,7 +2036,7 @@ function generateLineVariantCSS(options: GenerateStylesOptions): string {
   mask-composite: intersect, exclude;
   pointer-events: none;
   z-index: 2;
-  opacity: calc(var(--beam-opacity-${id}) * var(--beam-edge-${id}) * ${finalStrokeOpacity.toFixed(2)} * var(--beam-strength, 1));
+  opacity: calc(var(--beam-opacity-${id}) * var(--beam-edge-${id}) * ${finalStrokeOpacity.toFixed(2)} * var(--beam-stroke-opacity, 1) * var(--beam-strength, 1));
   ${hueShiftAnimation}
 }
 
@@ -2059,7 +2066,7 @@ function generateLineVariantCSS(options: GenerateStylesOptions): string {
   mask-composite: intersect, add;
   pointer-events: none;
   z-index: 1;
-  opacity: calc(var(--beam-opacity-${id}) * var(--beam-edge-${id}) * ${finalInnerOpacity.toFixed(2)} * var(--beam-strength, 1));
+  opacity: calc(var(--beam-opacity-${id}) * var(--beam-edge-${id}) * ${finalInnerOpacity.toFixed(2)} * var(--beam-inner-opacity, 1) * var(--beam-strength, 1));
   clip-path: inset(0 round ${borderRadius}px);
   ${hueShiftAnimation}
 }
@@ -2091,7 +2098,7 @@ function generateLineVariantCSS(options: GenerateStylesOptions): string {
 [data-beam="${id}"][data-active] [data-beam-bloom],
 [data-beam="${id}"][data-fading] [data-beam-bloom] {
   display: block;
-  opacity: calc(var(--beam-opacity-${id}) * var(--beam-edge-${id}) * ${finalBloomOpacity.toFixed(2)} * var(--beam-strength, 1));
+  opacity: calc(var(--beam-opacity-${id}) * var(--beam-edge-${id}) * ${finalBloomOpacity.toFixed(2)} * var(--beam-bloom-opacity, 1) * var(--beam-strength, 1));
   ${hueShiftBloomAnimation}
 }
 
