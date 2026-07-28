@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.0
+
+### Added
+- `colors` prop (web) and `colors:` parameter (BorderBeamKit) for custom brand palettes ([#4](https://github.com/Jakubantalik/border-beam/issues/4)). Pass an ordered list of colors; they cycle through the default palette's gradient stops while all hand-tuned geometry and per-stop alphas are preserved. Takes precedence over `colorVariant` and always renders with static colors so brand hues stay exact.
+- `customColors` section in `beam-spec.json` documenting the shared derivation rules (reference variant, forced static colors, line-bloom recolor map) so ports stay in sync.
+
 ## 1.1.0
 
 ### Changed

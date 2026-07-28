@@ -14,6 +14,9 @@ struct RotateBeamConfig {
     let saturation: Double?
     let hueRange: Double
     let strength: Double
+    /// Recolored palettes from the `colors:` parameter; replaces the
+    /// `variant` preset tables wholesale when present.
+    let customPalette: BeamCustomPalette?
 
     let spec = BeamSpec.shared
 
@@ -56,9 +59,9 @@ struct RotateBeamConfig {
     var strokeBlobs: [Float] {
         switch size {
         case .sm:
-            return blobFloats(spec.palettes.small[variant.rawValue]!.border)
+            return blobFloats(customPalette?.smallBorder ?? spec.palettes.small[variant.rawValue]!.border)
         default:
-            return blobFloats(spec.palettes.border[variant.rawValue]!.border)
+            return blobFloats(customPalette?.border ?? spec.palettes.border[variant.rawValue]!.border)
         }
     }
 
@@ -67,12 +70,12 @@ struct RotateBeamConfig {
     var innerBlobs: [Float] {
         switch size {
         case .sm:
-            return blobFloats(spec.palettes.small[variant.rawValue]!.inner)
+            return blobFloats(customPalette?.smallInner ?? spec.palettes.small[variant.rawValue]!.inner)
         default:
             let d = spec.rotate.innerGradientDerivation
             let alpha = variant == .mono ? d.monoAlpha : d.alpha
             return blobFloats(
-                spec.palettes.border[variant.rawValue]!.border,
+                customPalette?.border ?? spec.palettes.border[variant.rawValue]!.border,
                 sizeScale: d.sizeScale,
                 alphaOverride: alpha
             )
@@ -129,9 +132,17 @@ struct RotateBeamLayers: View {
         let hue = config.hueShiftDegrees(at: t)
         // Web parity: with staticColors the CSS stroke/inner layers have NO
         // filter at all — brightness/saturate exist only inside the hue-shift
-        // keyframes. Only the bloom keeps its (static) filter.
+        // keyframes. Only the bloom keeps its (static) filter. Custom
+        // palettes are the exception: they render "colorful with the hue
+        // pinned", i.e. the tuned brightness/saturate as a static filter.
         let filterMatrix: [Float] = config.staticColors
-            ? [1, 0, 0, 0, 1, 0, 0, 0, 1]
+            ? (config.customPalette != nil
+                ? BeamColorMatrix.composed(
+                    hueDegrees: 0,
+                    brightness: config.finalBrightness,
+                    saturation: config.finalSaturation
+                )
+                : [1, 0, 0, 0, 1, 0, 0, 0, 1])
             : BeamColorMatrix.composed(
                 hueDegrees: hue,
                 brightness: config.finalBrightness,

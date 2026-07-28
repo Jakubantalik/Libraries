@@ -86,6 +86,35 @@ Four color palettes are available:
 
 All variants except `mono` animate through a hue-shift cycle.
 
+## Custom colors
+
+Match the beam to your brand with an ordered list of colors:
+
+```tsx
+<BorderBeam colors={['#e63946', '#457b9d', '#2a9d8f']}>
+  <Card />
+</BorderBeam>
+```
+
+- Accepts hex (`#rgb`, `#rgba`, `#rrggbb`, `#rrggbbaa`) and `rgb()` / `rgba()`
+  with number or percentage channels. Alpha is ignored — the beam layers manage
+  their own opacity. Entries that fail to parse are skipped; if nothing parses,
+  `colorVariant` applies.
+- Colors cycle **in order** through the palette's gradient stops, so the first
+  color is the most prominent; a single color gives a monochrome brand beam.
+- All of the hand-tuned geometry (positions, sizes, per-stop alphas) of the
+  default palette is preserved — only the colors are swapped.
+- `colors` takes precedence over `colorVariant` and always renders with static
+  colors (like `mono`) so brand hues stay exact.
+- The same colors are used for both themes; `theme` still adapts the layer
+  opacities and saturation.
+
+Also available in the SwiftUI port:
+
+```swift
+Card().borderBeam(.md, colors: [.purple, .pink])
+```
+
 ## Theme
 
 Adapts beam colors for dark or light backgrounds:
@@ -127,6 +156,7 @@ const [active, setActive] = useState(true);
 | `children` | `ReactNode` | — | Content to wrap |
 | `size` | `'sm' \| 'md' \| 'line' \| 'pulse-outside' \| 'pulse-inner'` | `'md'` | Size/type preset |
 | `colorVariant` | `'colorful' \| 'mono' \| 'ocean' \| 'sunset'` | `'colorful'` | Color palette |
+| `colors` | `string[]` | — | Custom colors in display order; overrides `colorVariant`, always static |
 | `theme` | `'dark' \| 'light' \| 'auto'` | `'dark'` | Background adaptation |
 | `strength` | `number` | `1` | Effect opacity (0–1), only affects the beam layers |
 | `duration` | `number` | `1.96` / `3.1` / `2.3` | Animation cycle duration in seconds (rotate / line / pulse) |

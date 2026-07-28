@@ -327,12 +327,20 @@ const INSTALL_NOTE_BY_PLATFORM: Record<Platform, string | null> = {
   native: 'In beta \u2014 not yet published. Copy ports/react-native/border-beam-native from the repo, then install the two peer dependencies above.',
 };
 
-const COLOR_OPTIONS: { value: BorderBeamColorVariant; label: string }[] = [
+/** The four library variants plus "Custom", which drives the `colors` prop
+    with a user-editable ordered palette instead of a preset. */
+type PlaygroundColor = BorderBeamColorVariant | 'custom';
+
+const COLOR_OPTIONS: { value: PlaygroundColor; label: string }[] = [
   { value: 'colorful', label: 'Colorful' },
   { value: 'mono', label: 'Mono' },
   { value: 'ocean', label: 'Ocean' },
   { value: 'sunset', label: 'Sunset' },
+  { value: 'custom', label: 'Custom' },
 ];
+
+/** Seed palette for Custom — ordered; the first color is the most prominent. */
+const DEFAULT_CUSTOM_COLORS = ['#e63946', '#457b9d', '#2a9d8f'];
 
 export default function App() {
   const [family, setFamily] = useState<BeamFamily>(() => familyFromPath(window.location.pathname));
@@ -340,7 +348,8 @@ export default function App() {
   const [playgroundSize, setPlaygroundSize] = useState<BorderBeamSize>(
     () => DEFAULT_SIZE_BY_FAMILY[familyFromPath(window.location.pathname)]
   );
-  const [playgroundColorVariant, setPlaygroundColorVariant] = useState<BorderBeamColorVariant>('colorful');
+  const [playgroundColorVariant, setPlaygroundColorVariant] = useState<PlaygroundColor>('colorful');
+  const [playgroundCustomColors, setPlaygroundCustomColors] = useState<string[]>(DEFAULT_CUSTOM_COLORS);
   const [playgroundStrength, setPlaygroundStrength] = useState(70);
   const [platform, setPlatform] = useState<Platform>('react');
   const [theme, setTheme] = useState<ThemeMode>(getInitialTheme);
@@ -420,7 +429,12 @@ export default function App() {
   const installCmd = INSTALL_BY_PLATFORM[platform];
   const usageCode = USAGE_BY_PLATFORM[platform];
   const installNote = INSTALL_NOTE_BY_PLATFORM[platform];
-  const playgroundCode = `<BorderBeam size="${playgroundSize}" colorVariant="${playgroundColorVariant}"${playgroundStrength < 100 ? ` strength={${playgroundStrength / 100}}` : ''}>
+  const isCustomColor = playgroundColorVariant === 'custom';
+  const playgroundVariant: BorderBeamColorVariant = isCustomColor ? 'colorful' : playgroundColorVariant;
+  const playgroundColorProp = isCustomColor
+    ? ` colors={[${playgroundCustomColors.map((c) => `'${c}'`).join(', ')}]}`
+    : ` colorVariant="${playgroundColorVariant}"`;
+  const playgroundCode = `<BorderBeam size="${playgroundSize}"${playgroundColorProp}${playgroundStrength < 100 ? ` strength={${playgroundStrength / 100}}` : ''}>
   <Card>Content</Card>
 </BorderBeam>`;
 
@@ -631,6 +645,43 @@ export default function App() {
                   </button>
                 ))}
               </div>
+              {isCustomColor && (
+                <div className="custom-colors-row">
+                  {playgroundCustomColors.map((color, i) => (
+                    <input
+                      key={i}
+                      type="color"
+                      className="custom-color-swatch"
+                      value={color}
+                      aria-label={`Custom color ${i + 1}`}
+                      onChange={(e) =>
+                        setPlaygroundCustomColors((prev) =>
+                          prev.map((c, j) => (j === i ? e.target.value : c))
+                        )
+                      }
+                    />
+                  ))}
+                  <button
+                    type="button"
+                    className="tab-btn custom-color-btn"
+                    onClick={() => setPlaygroundCustomColors((prev) => prev.slice(0, -1))}
+                    disabled={playgroundCustomColors.length <= 1}
+                    aria-label="Remove last color"
+                  >
+                    −
+                  </button>
+                  <button
+                    type="button"
+                    className="tab-btn custom-color-btn"
+                    onClick={() => setPlaygroundCustomColors((prev) => [...prev, '#ffffff'])}
+                    disabled={playgroundCustomColors.length >= 5}
+                    aria-label="Add color"
+                  >
+                    +
+                  </button>
+                  <span className="custom-colors-hint">ordered · first is most prominent</span>
+                </div>
+              )}
             </div>
 
             <div className="control-group control-group--strength">
@@ -662,7 +713,8 @@ export default function App() {
             <BorderBeam
               className={playgroundSize === 'pulse-outside' ? 'beam-host--pulse-outside-tuned' : undefined}
               size={playgroundSize}
-              colorVariant={playgroundColorVariant}
+              colorVariant={playgroundVariant}
+              colors={isCustomColor ? playgroundCustomColors : undefined}
               theme={theme}
               active={playgroundActive}
               strength={playgroundStrength / 100}

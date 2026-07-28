@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import Testing
 @testable import BorderBeamKit
 
@@ -12,6 +13,121 @@ import Testing
         #expect(spec.pulse.inner["dark"]?.oscillators.count == 17)
         #expect(spec.sizeThemePresets["md"]?["dark"] != nil)
         #expect(spec.sizeThemePresets["pulse-outside"]?["light"] != nil)
+        #expect(spec.customColors.referenceVariant == "colorful")
+        #expect(spec.customColors.lineBloomColorMap == [0, 1, 0, 1, 2, 3, 4])
+    }
+
+    /// Five distinct single-channel colors make every cycling index and every
+    /// bloom-map entry byte-distinguishable — a swapped or collapsed mapping
+    /// in ANY family fails these assertions.
+    static let cycleColors: [(Double, Double, Double)] = [
+        (10, 0, 0), (0, 20, 0), (0, 0, 30), (40, 40, 0), (0, 50, 50),
+    ]
+
+    static func makeCyclePalette() -> BeamCustomPalette? {
+        BeamCustomPalette(
+            colors: cycleColors.map { Color(red: $0.0 / 255, green: $0.1 / 255, blue: $0.2 / 255) },
+            environment: EnvironmentValues()
+        )
+    }
+
+    /// Expected solid color string for cycle index i.
+    static func cycleCSS(_ i: Int) -> String {
+        let c = cycleColors[i % cycleColors.count]
+        return "rgb(\(Int(c.0)), \(Int(c.1)), \(Int(c.2)))"
+    }
+
+    @Test func customPaletteRecolorsReferenceGeometry() throws {
+        let palette = try #require(Self.makeCyclePalette())
+        let spec = BeamSpec.shared
+
+        // Border: colors cycle in order, geometry verbatim from the reference.
+        let ref = spec.palettes.border["colorful"]!.border
+        #expect(palette.border.count == ref.count)
+        for (i, blob) in palette.border.enumerated() {
+            #expect(blob.color == Self.cycleCSS(i))
+            #expect(blob.pos == ref[i].pos)
+            #expect(blob.size == ref[i].size)
+        }
+
+        // Small border/inner: cycling + per-stop alpha retention (inner refs
+        // are rgba; the custom color keeps the reference alpha exactly).
+        let refSmall = spec.palettes.small["colorful"]!
+        for (i, blob) in palette.smallBorder.enumerated() {
+            #expect(BeamRGBA(css: blob.color) == BeamRGBA(css: Self.cycleCSS(i)))
+        }
+        for (i, blob) in palette.smallInner.enumerated() {
+            let got = try #require(BeamRGBA(css: blob.color))
+            let refAlpha = try #require(BeamRGBA(css: refSmall.inner[i].color)?.a)
+            let want = try #require(BeamRGBA(css: Self.cycleCSS(i)))
+            #expect(got.r == want.r && got.g == want.g && got.b == want.b)
+            #expect(abs(got.a - refAlpha) < 1e-9)
+        }
+
+        // Line (both themes): cycling over each theme's own geometry.
+        for theme in ["dark", "light"] {
+            let refLine = spec.palettes.line["colorful"]![theme]!
+            let gotLine = try #require(palette.line[theme])
+            #expect(gotLine.count == refLine.count)
+            for (i, blob) in gotLine.enumerated() {
+                #expect(blob.color == Self.cycleCSS(i))
+                #expect(blob.sizeW == refLine[i].sizeW && blob.offsetX == refLine[i].offsetX)
+            }
+        }
+
+        // Line inner: cycling + alpha retention.
+        let refLineInner = spec.palettes.lineInner["colorful"]!
+        for (i, blob) in palette.lineInner.enumerated() {
+            let got = try #require(BeamRGBA(css: blob.color))
+            let want = try #require(BeamRGBA(css: Self.cycleCSS(i)))
+            let refAlpha = try #require(BeamRGBA(css: refLineInner[i].color)?.a)
+            #expect(got.r == want.r && got.g == want.g && got.b == want.b)
+            #expect(abs(got.a - refAlpha) < 1e-9)
+        }
+    }
+
+    /// The full lineBloomColorMap contract, both themes: every mapped
+    /// gradient's stops carry the mapped cycle color with the reference
+    /// alphas; every trailing gradient (glow dot, ambient, light shadow) is
+    /// untouched. Would fail for a swapped, collapsed, or truncated map.
+    @Test func customPaletteAppliesFullLineBloomMap() throws {
+        let palette = try #require(Self.makeCyclePalette())
+        let spec = BeamSpec.shared
+        let map = spec.customColors.lineBloomColorMap
+
+        for theme in ["dark", "light"] {
+            let ref = spec.line.bloomGradients["colorful"]![theme]!
+            let got = try #require(palette.lineBloom[theme])
+            #expect(got.count == ref.count)
+            for (i, gradient) in got.enumerated() {
+                if i < map.count {
+                    let want = try #require(BeamRGBA(css: Self.cycleCSS(map[i])))
+                    for (s, stop) in gradient.stops.enumerated() {
+                        #expect(stop.r == want.r * 255 && stop.g == want.g * 255 && stop.b == want.b * 255)
+                        #expect(stop.a == ref[i].stops[s].a)
+                        #expect(stop.pos == ref[i].stops[s].pos)
+                    }
+                } else {
+                    for (s, stop) in gradient.stops.enumerated() {
+                        let r = ref[i].stops[s]
+                        #expect(stop.r == r.r && stop.g == r.g && stop.b == r.b && stop.a == r.a)
+                    }
+                }
+            }
+        }
+    }
+
+    @Test func customPaletteSingleColorAndEmptyList() {
+        // A single color paints every stop (monochrome brand beam). The
+        // mid-tone channel values also pin sRGB (gamma) resolution — a
+        // linear-space mistake in cssString would shift 230 to ~201.
+        let single = BeamCustomPalette(
+            colors: [Color(red: 230 / 255, green: 57 / 255, blue: 70 / 255)],
+            environment: EnvironmentValues()
+        )
+        #expect(single?.border.allSatisfy { $0.color == "rgb(230, 57, 70)" } == true)
+        // An empty list fails so the preset variant applies.
+        #expect(BeamCustomPalette(colors: [], environment: EnvironmentValues()) == nil)
     }
 
     @Test func colorParsing() throws {

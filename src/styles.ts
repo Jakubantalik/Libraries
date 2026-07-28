@@ -295,29 +295,29 @@ export const smallColorPalettes = {
   },
 };
 
-function getSmallColorGradients(colorVariant: BorderBeamColorVariant): string {
-  const palette = smallColorPalettes[colorVariant];
+function getSmallColorGradients(colorVariant: BorderBeamColorVariant, custom?: CustomPaletteSet | null): string {
+  const palette = custom?.small ?? smallColorPalettes[colorVariant];
   return palette.border
     .map(c => `radial-gradient(ellipse ${c.size} at ${c.pos}, ${c.color}, transparent)`)
     .join(',\n    ');
 }
 
-function getSmallInnerGradients(colorVariant: BorderBeamColorVariant): string {
-  const palette = smallColorPalettes[colorVariant];
+function getSmallInnerGradients(colorVariant: BorderBeamColorVariant, custom?: CustomPaletteSet | null): string {
+  const palette = custom?.small ?? smallColorPalettes[colorVariant];
   return palette.inner
     .map(c => `radial-gradient(ellipse ${c.size} at ${c.pos}, ${c.color}, transparent)`)
     .join(',\n    ');
 }
 
-function getColorGradients(colorVariant: BorderBeamColorVariant): string {
-  const palette = colorPalettes[colorVariant];
+function getColorGradients(colorVariant: BorderBeamColorVariant, custom?: CustomPaletteSet | null): string {
+  const palette = custom?.border ?? colorPalettes[colorVariant];
   return palette.border
     .map(c => `radial-gradient(ellipse ${c.size} at ${c.pos}, ${c.color}, transparent)`)
     .join(',\n    ');
 }
 
-function getInnerGradients(colorVariant: BorderBeamColorVariant): string {
-  const palette = colorPalettes[colorVariant];
+function getInnerGradients(colorVariant: BorderBeamColorVariant, custom?: CustomPaletteSet | null): string {
+  const palette = custom?.border ?? colorPalettes[colorVariant];
   // Mono variant gets 50% lower opacity
   const baseOpacity = colorVariant === 'mono' ? 0.225 : 0.45;
   return palette.border
@@ -332,8 +332,8 @@ function getInnerGradients(colorVariant: BorderBeamColorVariant): string {
     .join(',\n    ');
 }
 
-function getSpikeColors(colorVariant: BorderBeamColorVariant, isDark: boolean) {
-  const palette = colorPalettes[colorVariant];
+function getSpikeColors(colorVariant: BorderBeamColorVariant, isDark: boolean, custom?: CustomPaletteSet | null) {
+  const palette = custom?.border ?? colorPalettes[colorVariant];
   return isDark ? palette.spike : palette.spikeLt;
 }
 
@@ -436,8 +436,13 @@ export const lineColorPalettes = {
   },
 };
 
-function getLineColorGradients(colorVariant: BorderBeamColorVariant, isDark: boolean, id: string): string {
-  const palette = lineColorPalettes[colorVariant][isDark ? 'dark' : 'light'];
+function getLineColorGradients(
+  colorVariant: BorderBeamColorVariant,
+  isDark: boolean,
+  id: string,
+  custom?: CustomPaletteSet | null
+): string {
+  const palette = (custom?.line ?? lineColorPalettes[colorVariant])[isDark ? 'dark' : 'light'];
   return palette
     .map(c => {
       const offsetXStr = c.offsetX === 0 ? '' : (c.offsetX > 0 ? ` + ${c.offsetX}px` : ` - ${Math.abs(c.offsetX)}px`);
@@ -495,8 +500,12 @@ export const lineInnerGradientData = {
   ],
 };
 
-function getLineInnerGradients(colorVariant: BorderBeamColorVariant, id: string): string {
-  const data = lineInnerGradientData[colorVariant];
+function getLineInnerGradients(
+  colorVariant: BorderBeamColorVariant,
+  id: string,
+  custom?: CustomPaletteSet | null
+): string {
+  const data = custom?.lineInner ?? lineInnerGradientData[colorVariant];
   return data
     .map(c => {
       const offsetXStr = c.offsetX === 0 ? '' : (c.offsetX > 0 ? ` + ${c.offsetX}px` : ` - ${Math.abs(c.offsetX)}px`);
@@ -605,9 +614,137 @@ function attenuateSpike(color: string, factor: number): string {
   return color;
 }
 
-function getLineBloomGradients(colorVariant: BorderBeamColorVariant, isDark: boolean, id: string): string {
-  const spikeColors = getSpikeColors(colorVariant, isDark);
-  const bloomData = lineBloomColors[colorVariant][isDark ? 'dark' : 'light'];
+/* ──────────────────────────────────────────────────────────────────────────
+ * Custom colors — user-supplied brand palettes (the `colors` prop).
+ *
+ * A custom palette keeps ALL of the hand-tuned geometry (positions, sizes,
+ * per-stop alphas) of the 'colorful' reference variant and only substitutes
+ * the colors, cycling through the user's list in order (stop i gets
+ * colors[i % n], so the first color is the most prominent). Alpha in the
+ * inputs is ignored — every layer manages its own opacity. Custom palettes
+ * always render with static colors so brand hues stay exact.
+ *
+ * The iOS port rebuilds the same palettes from the spec's reference tables
+ * (BeamCustomPalette.swift + the spec's `customColors` section) — keep the
+ * derivation rules in sync.
+ * ──────────────────────────────────────────────────────────────────────────*/
+
+/**
+ * A full recolored palette set covering all five palette families. Shapes
+ * match the preset tables so the CSS generators consume either transparently.
+ */
+export interface CustomPaletteSet {
+  border: (typeof colorPalettes)['colorful'];
+  small: (typeof smallColorPalettes)['colorful'];
+  line: (typeof lineColorPalettes)['colorful'];
+  lineInner: (typeof lineInnerGradientData)['colorful'];
+  lineBloom: (typeof lineBloomColors)['colorful'];
+}
+
+/**
+ * Parses one user-supplied CSS color (`#rgb`, `#rgba`, `#rrggbb`, `#rrggbbaa`,
+ * `rgb()`, `rgba()` — commas or spaces, number or percentage channels) into a
+ * solid `rgb(r, g, b)` string. Returns null for anything else (named colors,
+ * hsl, malformed input, …) so the component can fall back to the preset.
+ */
+function normalizeCustomColor(input: string): string | null {
+  const s = input.trim();
+  const hex = s.match(/^#([0-9a-fA-F]{3,8})$/)?.[1];
+  if (hex && hex.length !== 5 && hex.length !== 7) {
+    const wide = hex.length <= 4 ? [...hex].map(ch => ch + ch).join('') : hex;
+    const r = parseInt(wide.slice(0, 2), 16);
+    const g = parseInt(wide.slice(2, 4), 16);
+    const b = parseInt(wide.slice(4, 6), 16);
+    return `rgb(${r}, ${g}, ${b})`;
+  }
+  // Anchored, with strict numerals ("1.2.3" or an unclosed paren must fall
+  // back to the preset, not leak NaN/garbage into the generated CSS). The
+  // optional alpha token is validated but ignored — layers manage opacity.
+  const m = s.match(
+    /^rgba?\(\s*(-?\d*\.?\d+%?)\s*[,\s]\s*(-?\d*\.?\d+%?)\s*[,\s]\s*(-?\d*\.?\d+%?)\s*(?:[,/]\s*-?\d*\.?\d+%?\s*)?\)$/
+  );
+  if (!m) return null;
+  const channel = (raw: string): number => {
+    const value = parseFloat(raw);
+    const scaled = raw.endsWith('%') ? (value / 100) * 255 : value;
+    return Math.round(Math.min(255, Math.max(0, scaled)));
+  };
+  return `rgb(${channel(m[1])}, ${channel(m[2])}, ${channel(m[3])})`;
+}
+
+/**
+ * Normalizes the `colors` prop, dropping entries that fail to parse. Returns
+ * null when nothing usable remains so the component falls back to the preset
+ * `colorVariant`.
+ */
+export function normalizeCustomColors(colors: readonly string[]): string[] | null {
+  const parsed = colors.map(normalizeCustomColor).filter((c): c is string => c !== null);
+  return parsed.length > 0 ? parsed : null;
+}
+
+/** Alpha of an `rgba()` reference color, or null when it is a solid `rgb()`. */
+function refAlpha(color: string): number | null {
+  const m = color.match(/^rgba\([^)]*,\s*([\d.]+)\s*\)$/);
+  return m ? parseFloat(m[1]) : null;
+}
+
+/** Swaps a reference color's rgb for a custom one, keeping the reference alpha. */
+function recolor(ref: string, rgb: string): string {
+  const a = refAlpha(ref);
+  return a === null ? rgb : withAlpha(rgb, a);
+}
+
+/**
+ * Builds the full palette set from normalized custom colors by recoloring the
+ * 'colorful' reference tables in user order.
+ */
+export function buildCustomPalettes(colors: string[]): CustomPaletteSet {
+  const at = (i: number) => colors[i % colors.length];
+  const ref = colorPalettes.colorful;
+  const refSmall = smallColorPalettes.colorful;
+  const refLine = lineColorPalettes.colorful;
+  const refBloom = lineBloomColors.colorful;
+  const recolorPair = (s: { color1: string; color2: string }, i: number) => ({
+    color1: recolor(s.color1, at(i)),
+    color2: recolor(s.color2, at(i)),
+  });
+  return {
+    border: {
+      border: ref.border.map((c, i) => ({ ...c, color: at(i) })),
+      // The first two colors lead the line bloom's traveling spikes.
+      spike: {
+        primary: recolor(ref.spike.primary, at(0)),
+        secondary: recolor(ref.spike.secondary, at(1)),
+      },
+      spikeLt: {
+        primary: recolor(ref.spikeLt.primary, at(0)),
+        secondary: recolor(ref.spikeLt.secondary, at(1)),
+      },
+    },
+    small: {
+      border: refSmall.border.map((c, i) => ({ ...c, color: recolor(c.color, at(i)) })),
+      inner: refSmall.inner.map((c, i) => ({ ...c, color: recolor(c.color, at(i)) })),
+    },
+    line: {
+      dark: refLine.dark.map((c, i) => ({ ...c, color: at(i) })),
+      light: refLine.light.map((c, i) => ({ ...c, color: at(i) })),
+    },
+    lineInner: lineInnerGradientData.colorful.map((c, i) => ({ ...c, color: recolor(c.color, at(i)) })),
+    lineBloom: {
+      dark: { spikes: refBloom.dark.spikes.map(recolorPair) },
+      light: { spikes: refBloom.light.spikes.map(recolorPair) },
+    },
+  };
+}
+
+function getLineBloomGradients(
+  colorVariant: BorderBeamColorVariant,
+  isDark: boolean,
+  id: string,
+  custom?: CustomPaletteSet | null
+): string {
+  const spikeColors = getSpikeColors(colorVariant, isDark, custom);
+  const bloomData = (custom?.lineBloom ?? lineBloomColors[colorVariant])[isDark ? 'dark' : 'light'];
   const isMono = colorVariant === 'mono';
 
   // Mono uses uniform gray so thin spikes at full opacity look like harsh bars.
@@ -776,8 +913,8 @@ function pulseGrad(
 
 // The 9-gradient perimeter ring (Card 4 ::after / Card 5 stroke share this) —
 // positions + sizes come straight from the palette, region/quad from PULSE_RING_MAP.
-function pulseRingGradients(variant: BorderBeamColorVariant, id: string): string {
-  return colorPalettes[variant].border
+function pulseRingGradients(variant: BorderBeamColorVariant, id: string, custom?: CustomPaletteSet | null): string {
+  return (custom?.border ?? colorPalettes[variant]).border
     .map((c, i) => {
       const { region, quad } = PULSE_RING_MAP[i];
       const [x, y] = c.pos.split(' ');
@@ -788,8 +925,13 @@ function pulseRingGradients(variant: BorderBeamColorVariant, id: string): string
 }
 
 // Card 4 inner-perimeter gradients (smaller sizes) plus the bright corner accents.
-function pulseInnerGradients(variant: BorderBeamColorVariant, id: string, isDark: boolean): string {
-  const palette = colorPalettes[variant].border;
+function pulseInnerGradients(
+  variant: BorderBeamColorVariant,
+  id: string,
+  isDark: boolean,
+  custom?: CustomPaletteSet | null
+): string {
+  const palette = (custom?.border ?? colorPalettes[variant]).border;
   const grads = palette.map((c, i) => {
     const { region, quad } = PULSE_RING_MAP[i];
     const [x, y] = c.pos.split(' ');
@@ -815,9 +957,10 @@ function pulseInnerGradients(variant: BorderBeamColorVariant, id: string, isDark
 function pulseTableGradients(
   table: PulseGradientDef[],
   variant: BorderBeamColorVariant,
-  id: string
+  id: string,
+  custom?: CustomPaletteSet | null
 ): string {
-  const palette = colorPalettes[variant].border;
+  const palette = (custom?.border ?? colorPalettes[variant]).border;
   return table
     .map(e => {
       const c = palette[e.ci];
@@ -836,9 +979,10 @@ function pulseTableGradients(
 function pulseTableGradientsStatic(
   table: PulseGradientDef[],
   variant: BorderBeamColorVariant,
-  frozenAlpha: number
+  frozenAlpha: number,
+  custom?: CustomPaletteSet | null
 ): string {
-  const palette = colorPalettes[variant].border;
+  const palette = (custom?.border ?? colorPalettes[variant]).border;
   const a = +frozenAlpha.toFixed(3);
   return table
     .map(e => {
@@ -1023,6 +1167,11 @@ interface GenerateStylesOptions {
   theme: 'dark' | 'light';
   /** Opacity of the 1px hairline outline (pulse-outside only). Falls back to 0. */
   hairlineOpacity?: number;
+  /**
+   * Recolored palette set built from the `colors` prop; replaces the
+   * `colorVariant` preset tables wholesale when present.
+   */
+  customPalette?: CustomPaletteSet | null;
 }
 
 /**
@@ -1066,17 +1215,24 @@ function generateSmallVariantCSS(options: GenerateStylesOptions): string {
     saturation,
     hueRange,
     theme,
+    customPalette,
   } = options;
 
   const innerRadius = Math.max(0, borderRadius - borderWidth);
-  
+
   const monoOpacityMultiplier = colorVariant === 'mono' ? 0.5 : 1.0;
   const finalStrokeOpacity = strokeOpacity * monoOpacityMultiplier;
   const finalInnerOpacity = innerOpacity * monoOpacityMultiplier;
   const finalBloomOpacity = bloomOpacity * monoOpacityMultiplier;
   
-  const hueShiftAnimation = staticColors 
-    ? '' 
+  // Custom palettes render "colorful with the hue pinned": the tuned
+  // brightness/saturate normally live inside the hue-shift keyframes' filter,
+  // so a static custom palette applies them as a static filter instead.
+  // Preset static renders (mono / staticColors) keep their filter-less look.
+  const hueShiftAnimation = staticColors
+    ? customPalette
+      ? `filter: brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)});`
+      : ''
     : `animation: beam-hue-shift-${id} 12s ease-in-out infinite;`;
   
   const hueShiftKeyframes = staticColors ? '' : `
@@ -1114,8 +1270,8 @@ function generateSmallVariantCSS(options: GenerateStylesOptions): string {
         transparent 78%, transparent 100%
       )`;
 
-  const colorGradients = getSmallColorGradients(colorVariant);
-  const innerGradients = getSmallInnerGradients(colorVariant);
+  const colorGradients = getSmallColorGradients(colorVariant, customPalette);
+  const innerGradients = getSmallInnerGradients(colorVariant, customPalette);
 
   const bloomGradient = isDark
     ? `conic-gradient(
@@ -1305,18 +1461,25 @@ function generateBorderVariantCSS(options: GenerateStylesOptions): string {
     saturation,
     hueRange,
     theme,
+    customPalette,
   } = options;
 
   const innerRadius = Math.max(0, borderRadius - borderWidth);
-  
+
   // Mono variant gets 50% lower opacity
   const monoOpacityMultiplier = colorVariant === 'mono' ? 0.5 : 1.0;
   const finalStrokeOpacity = strokeOpacity * monoOpacityMultiplier;
   const finalInnerOpacity = innerOpacity * monoOpacityMultiplier;
   const finalBloomOpacity = bloomOpacity * monoOpacityMultiplier;
   
-  const hueShiftAnimation = staticColors 
-    ? '' 
+  // Custom palettes render "colorful with the hue pinned": the tuned
+  // brightness/saturate normally live inside the hue-shift keyframes' filter,
+  // so a static custom palette applies them as a static filter instead.
+  // Preset static renders (mono / staticColors) keep their filter-less look.
+  const hueShiftAnimation = staticColors
+    ? customPalette
+      ? `filter: brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)});`
+      : ''
     : `animation: beam-hue-shift-${id} 12s ease-in-out infinite;`;
   
   const hueShiftKeyframes = staticColors ? '' : `
@@ -1354,8 +1517,8 @@ function generateBorderVariantCSS(options: GenerateStylesOptions): string {
         transparent 78%, transparent 100%
       )`;
 
-  const colorGradients = getColorGradients(colorVariant);
-  const innerGradients = getInnerGradients(colorVariant);
+  const colorGradients = getColorGradients(colorVariant, customPalette);
+  const innerGradients = getInnerGradients(colorVariant, customPalette);
 
   const bloomGradient = isDark
     ? `conic-gradient(
@@ -1549,6 +1712,7 @@ function generatePulseInnerVariantCSS(options: GenerateStylesOptions): string {
     id, borderRadius, borderWidth, duration,
     strokeOpacity, innerOpacity, bloomOpacity,
     colorVariant, staticColors, brightness, saturation, hueRange, theme,
+    customPalette,
   } = options;
 
   const isDark = theme === 'dark';
@@ -1578,10 +1742,10 @@ function generatePulseInnerVariantCSS(options: GenerateStylesOptions): string {
     ? `filter: blur(${bloomBlur}px) brightness(${b}) saturate(${s});`
     : `filter: blur(${bloomBlur}px) hue-rotate(calc(var(--beam-hue-base, 0deg) + var(--beam-hue-${id}))) brightness(${b}) saturate(${s});`;
 
-  const ringGradients = pulseRingGradients(colorVariant, id);
-  const innerGradients = pulseInnerGradients(colorVariant, id, isDark);
+  const ringGradients = pulseRingGradients(colorVariant, id, customPalette);
+  const innerGradients = pulseInnerGradients(colorVariant, id, isDark, customPalette);
   // Frozen at the breathing time-average (midpoint of the [1-op, 1] opacity range).
-  const bloomGradients = pulseTableGradientsStatic(PULSE_INNER_BLOOM, colorVariant, 1 - op * 0.5);
+  const bloomGradients = pulseTableGradientsStatic(PULSE_INNER_BLOOM, colorVariant, 1 - op * 0.5, customPalette);
 
   return `
 ${pulsePropertyRegs(id)}
@@ -1703,6 +1867,7 @@ function generatePulseOuterVariantCSS(options: GenerateStylesOptions): string {
     strokeOpacity, innerOpacity, bloomOpacity,
     colorVariant, staticColors, brightness, saturation, hueRange, theme,
     hairlineOpacity = 0,
+    customPalette,
   } = options;
 
   const isDark = theme === 'dark';
@@ -1753,10 +1918,10 @@ function generatePulseOuterVariantCSS(options: GenerateStylesOptions): string {
     ? `filter: blur(var(--beam-bloom-blur, ${bloomBlur}px)) ${glowBright};`
     : `filter: blur(var(--beam-bloom-blur, ${bloomBlur}px)) hue-rotate(calc(var(--beam-hue-base, 0deg) + var(--beam-hue-${id}))) ${glowBright};`;
 
-  const strokeGradients = pulseTableGradients(PULSE_OUTER_CORE, colorVariant, id);
-  const coreGradients = pulseTableGradients(PULSE_OUTER_CORE, colorVariant, id);
+  const strokeGradients = pulseTableGradients(PULSE_OUTER_CORE, colorVariant, id, customPalette);
+  const coreGradients = pulseTableGradients(PULSE_OUTER_CORE, colorVariant, id, customPalette);
   // Frozen at the breathing time-average (midpoint of the [1-op, 1] opacity range).
-  const bloomGradients = pulseTableGradientsStatic(PULSE_OUTER_BLOOM, colorVariant, 1 - op * 0.5);
+  const bloomGradients = pulseTableGradientsStatic(PULSE_OUTER_BLOOM, colorVariant, 1 - op * 0.5, customPalette);
   // Paint a static hairline in the SAME masked ring as the stroke glow so their
   // position and anti-aliasing always match exactly.
   const strokeBackground = hairlineOpacity > 0
@@ -1890,21 +2055,34 @@ function generateLineVariantCSS(options: GenerateStylesOptions): string {
     saturation,
     hueRange,
     theme,
+    customPalette,
   } = options;
 
   const innerRadius = Math.max(0, borderRadius - borderWidth);
   const isDark = theme === 'dark';
-  
+
   const finalStrokeOpacity = strokeOpacity;
   const finalInnerOpacity = innerOpacity;
   const finalBloomOpacity = bloomOpacity;
   
-  const hueShiftAnimation = staticColors 
-    ? '' 
+  // Custom palettes render "colorful with the hue pinned": the tuned
+  // brightness/saturate normally live inside the hue-shift keyframes' filter,
+  // so a static custom palette applies them as a static filter instead.
+  // Preset static renders (mono / staticColors) keep their filter-less look.
+  const hueShiftAnimation = staticColors
+    ? customPalette
+      ? `filter: brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)});`
+      : ''
     : `animation: beam-hue-shift-${id} 12s ease-in-out infinite;`;
 
+  // Same "hue pinned" rule for the bloom: its blur(8px) lives only inside the
+  // bloom keyframes' filter, so a static custom palette must re-apply it or
+  // the thin spike gradients paint as harsh unblurred bars (the artifact the
+  // mono attenuation below works around).
   const hueShiftBloomAnimation = staticColors
-    ? ''
+    ? customPalette
+      ? `filter: blur(8px) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)});`
+      : ''
     : `animation: beam-hue-shift-bloom-${id} 8s ease-in-out infinite;`;
   
   const hueShiftKeyframes = staticColors ? '' : `
@@ -1934,10 +2112,10 @@ function generateLineVariantCSS(options: GenerateStylesOptions): string {
         transparent 70%
       )`;
 
-  const colorGradients = getLineColorGradients(colorVariant, isDark, id);
-  const innerGradients = getLineInnerGradients(colorVariant, id);
+  const colorGradients = getLineColorGradients(colorVariant, isDark, id, customPalette);
+  const innerGradients = getLineInnerGradients(colorVariant, id, customPalette);
 
-  const bloomGradients = getLineBloomGradients(colorVariant, isDark, id);
+  const bloomGradients = getLineBloomGradients(colorVariant, isDark, id, customPalette);
   const monoBloomBlur = colorVariant === 'mono' ? 'filter: blur(6px);' : '';
 
   return `

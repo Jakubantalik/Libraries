@@ -13,6 +13,9 @@ struct PulseBeamConfig {
     let strength: Double
     let reduceMotion: Bool
     let tuning: BeamTuning
+    /// Recolored palettes from the `colors:` parameter; replaces the
+    /// `variant` preset tables wholesale when present.
+    let customPalette: BeamCustomPalette?
 
     let spec = BeamSpec.shared
 
@@ -93,7 +96,7 @@ struct PulseBeamLayers: View {
 
     private func ringDefs() -> [PulseBlobDef] {
         let spec = config.spec
-        let palette = spec.palettes.border[config.variant.rawValue]!.border
+        let palette = config.customPalette?.border ?? spec.palettes.border[config.variant.rawValue]!.border
         return palette.enumerated().map { i, blob in
             let c = BeamRGBA(css: blob.color) ?? .clear
             let pos = parsePercentPair(blob.pos)
@@ -108,7 +111,7 @@ struct PulseBeamLayers: View {
     }
 
     private func tableDefs(_ table: [BeamSpec.PulseGradientEntry]) -> [PulseBlobDef] {
-        let palette = config.spec.palettes.border[config.variant.rawValue]!.border
+        let palette = config.customPalette?.border ?? config.spec.palettes.border[config.variant.rawValue]!.border
         return table.map { e in
             let src = palette[e.ci]
             let c = BeamRGBA(css: src.color) ?? .clear
