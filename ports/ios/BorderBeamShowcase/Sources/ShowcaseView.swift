@@ -33,8 +33,8 @@ struct ShowcaseView: View {
                         Group {
                             EdgeBeamPage(size: .md, subtitle: "Rotate", active: effectVisible(0)).id(0)
                             EdgeBeamPage(size: .pulseInner, subtitle: "Pulse", active: effectVisible(1)).id(1)
-                            ButtonPage(active: effectVisible(2)).id(2)
-                            EdgeBeamPage(size: .line, subtitle: "Line", active: effectVisible(3)).id(3)
+                            EdgeBeamPage(size: .line, subtitle: "Line", active: effectVisible(2)).id(2)
+                            ButtonPage(active: effectVisible(3)).id(3)
                         }
                         .containerRelativeFrame(.horizontal)
                     }
@@ -92,17 +92,17 @@ private enum Showcase {
     /// Instead the pulse/rotate beams render on a canvas this many times
     /// smaller — card-like, where the blobs nearly close the ring — and the
     /// whole rendering is scaled up to fill the box, keeping the ring
-    /// visually continuous like the web demo card. Rotate's glows sit further
-    /// apart in the palette, so it gets a stronger condensing scale.
+    /// visually continuous like the web demo card. Rotate condenses harder;
+    /// pulse keeps the smaller glow size of the original tuning.
     static let pulseBeamScale: CGFloat = 2.0
     static let rotateBeamScale: CGFloat = 2.6
-    /// Per-type beam durations. Pulse keeps the spec default (2.3s) with the
-    /// mirrored copy desynced; rotate runs 30% slower than its 1.96s spec
-    /// default, again with the mirrored copy off-phase.
+    /// Per-type beam durations. Rotate runs 30% slower than its 1.96s spec
+    /// default (mirrored copy off-phase); pulse breathes 40% slower than its
+    /// 2.3s default.
     static func beamDuration(for size: BeamSize, mirrored: Bool) -> Double? {
         switch size {
         case .md: return mirrored ? 3.6 : 2.8
-        case .pulseInner: return mirrored ? 2.9 : nil
+        case .pulseInner: return 3.8
         default: return nil
         }
     }
@@ -151,11 +151,11 @@ private struct EdgeBeamPage: View {
             ZStack {
                 Group {
                     beamLayer(in: geo.size, mirrored: false)
-                    // Second, horizontally mirrored and desynced instance:
-                    // the palette's blob positions land in the gaps their
-                    // originals leave, doubling the visible glows (and giving
-                    // rotate two counter-sweeping arcs).
-                    if !isLine {
+                    // Rotate gets a second, horizontally mirrored and
+                    // desynced instance: two counter-sweeping arcs. Pulse
+                    // stays single — doubled up it reads as a dense wall of
+                    // color rather than distinct breathing glows.
+                    if size == .md {
                         beamLayer(in: geo.size, mirrored: true)
                     }
                 }
@@ -313,17 +313,14 @@ private struct PageDots: View {
 }
 
 extension BeamTuning {
-    /// Derived from the web demo's tuned pulse preset (`--pulse-glow-boost`
-    /// and friends in demo/src/styles.css) but with the opacity multipliers
-    /// pushed further: the per-quadrant breathing oscillators dip close to
-    /// zero, and on a screen-edge beam that read as "the glow disappeared".
-    /// The higher floor keeps every quadrant visible through its dim phase
-    /// (peaks clamp at 1, exactly like CSS opacity).
+    /// The web demo's tuned pulse preset (`--pulse-glow-boost` and friends in
+    /// demo/src/styles.css). Without it the beam renders the library defaults,
+    /// which read noticeably softer than the demo.
     static let showcasePulse = BeamTuning(
         glowBoost: 1.05,
-        strokeOpacity: 2.4,
-        innerOpacity: 2.4,
-        bloomOpacity: 2.4,
+        strokeOpacity: 1.71,
+        innerOpacity: 1.71,
+        bloomOpacity: 1.71,
         glowBrightness: 1.3 * 1.71,
         glowSaturate: 1.2 * 1.71
     )
