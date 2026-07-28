@@ -178,6 +178,12 @@ struct LineBeamLayers: View {
             .float(config.sizeConfig.borderWidth),
             .float(geomKind),
             .float(edgeMaskPx),
+            // Corner-wrap: the line family's blobs all anchor to the bottom
+            // border, so evaluating them in border-path space bends the
+            // traveling streak around the corner radius as it reaches the
+            // ends. Identical along the straight bottom edge; iOS deviation
+            // from the web renderer (see the pulse-inner layer note).
+            .float(1),
             .floatArray(radial),
             .floatArray(blobs),
             .floatArray(matrix),

@@ -54,6 +54,49 @@ static float4 srcOver(float4 src, float4 dst) {
     return src + dst * (1.0 - src.a);
 }
 
+// Arc-length parametrization of a rounded-rect border. Returns
+// float3(s, d, P): s = clockwise arc length from the top-center, d = distance
+// inside the border (negative outside), P = total perimeter. Inside the
+// rect's interior "cross" (far from every edge) s snaps to the nearest edge's
+// projection; callers only evaluate border-hugging fields there, so the far
+// interior never becomes visible.
+static float3 borderPathCoord(float2 rel, float2 halfSize, float r) {
+    float ex = max(halfSize.x - r, 0.0);
+    float ey = max(halfSize.y - r, 0.0);
+    float arc = 0.5 * M_PI_F * r;
+    float P = 4.0 * ex + 4.0 * ey + 4.0 * arc;
+    float halfPi = 0.5 * M_PI_F;
+    float x = rel.x, y = rel.y;
+    float ax = fabs(x), ay = fabs(y);
+
+    if (ax > ex && ay > ey) {
+        // Corner arc region: measure the angle around the arc center.
+        float2 k = float2(copysign(ex, x), copysign(ey, y));
+        float2 v = rel - k;
+        float d = r - length(v);
+        float a, base;
+        if (x >= 0.0 && y < 0.0)  { a = atan2(v.x, -v.y);  base = ex; }
+        else if (x >= 0.0)        { a = atan2(v.y, v.x);   base = ex + arc + 2.0 * ey; }
+        else if (y >= 0.0)        { a = atan2(-v.x, v.y);  base = 3.0 * ex + 2.0 * arc + 2.0 * ey; }
+        else                      { a = atan2(-v.y, -v.x); base = 3.0 * ex + 3.0 * arc + 4.0 * ey; }
+        return float3(base + r * clamp(a, 0.0, halfPi), d, P);
+    }
+
+    bool vertBand;
+    if (ax > ex)      vertBand = true;
+    else if (ay > ey) vertBand = false;
+    else              vertBand = (halfSize.x - ax) < (halfSize.y - ay);
+
+    if (vertBand) {
+        if (x >= 0.0) return float3(ex + arc + (y + ey), halfSize.x - x, P);
+        return float3(3.0 * ex + 3.0 * arc + 2.0 * ey + (ey - y), x + halfSize.x, P);
+    }
+    if (y < 0.0) {
+        return float3((x >= 0.0) ? x : P + x, y + halfSize.y, P);
+    }
+    return float3(ex + 2.0 * arc + 2.0 * ey + (ex - x), halfSize.y - y, P);
+}
+
 // ── Rotate-family layer ──────────────────────────────────────────────────────
 //
 // layerKind: 0 = stroke ring (::after), 1 = inner glow (::before),
@@ -206,6 +249,7 @@ static float stopAlpha(float t, float a0, float p1, float a1, float p2, float a2
     float borderWidth,
     float geomKind,
     float edgeMaskPx,
+    float wrapCorners,
     device const float *radial, int radialCount,
     device const float *blobs, int blobCount,
     device const float *cm, int cmCount,
@@ -214,6 +258,7 @@ static float stopAlpha(float t, float a0, float p1, float a1, float p2, float a2
     float2 rectCenter = rectOrigin + rectSize * 0.5;
     float2 rel = position - rectCenter;
     int kind = int(geomKind);
+    bool wrap = wrapCorners > 0.5;
 
     // Geometry mask.
     float geom = 1.0;
@@ -232,14 +277,27 @@ static float stopAlpha(float t, float a0, float p1, float a1, float p2, float a2
         if (geom <= 0.0) return half4(0.0);
     }
 
+    // Border-path coordinates of this pixel (wrap mode only): x = clockwise
+    // arc length along the border, y = distance inside it, z = perimeter.
+    float3 pathP = float3(0.0);
+    if (wrap) {
+        pathP = borderPathCoord(rel, rectSize * 0.5, radius);
+    }
+
     float mask = 1.0;
 
-    // Edge fade (rounded-rect fill only).
+    // Edge fade (rounded-rect fill only). In wrap mode the fade follows the
+    // border's inside distance, so its isolines bend around the corner arcs
+    // instead of forming the square union of two straight gradients.
     if (kind == 1 && edgeMaskPx > 0.0) {
-        float2 lp = position - rectOrigin;
-        float ev = max(1.0 - lp.y / edgeMaskPx, 1.0 - (rectSize.y - lp.y) / edgeMaskPx);
-        float eh = max(1.0 - lp.x / edgeMaskPx, 1.0 - (rectSize.x - lp.x) / edgeMaskPx);
-        mask *= clamp(max(ev, 0.0) + max(eh, 0.0), 0.0, 1.0);
+        if (wrap) {
+            mask *= clamp(1.0 - pathP.y / edgeMaskPx, 0.0, 1.0);
+        } else {
+            float2 lp = position - rectOrigin;
+            float ev = max(1.0 - lp.y / edgeMaskPx, 1.0 - (rectSize.y - lp.y) / edgeMaskPx);
+            float eh = max(1.0 - lp.x / edgeMaskPx, 1.0 - (rectSize.x - lp.x) / edgeMaskPx);
+            mask *= clamp(max(ev, 0.0) + max(eh, 0.0), 0.0, 1.0);
+        }
     }
 
     // Radial window mask (line family).
@@ -261,6 +319,14 @@ static float stopAlpha(float t, float a0, float p1, float a1, float p2, float a2
     if (mask <= 0.001) return half4(0.0);
 
     // Blob stack: premultiplied source-over, FIRST blob on top.
+    //
+    // Wrap mode (pulse-inner glow): blobs are evaluated in border-path space —
+    // tangential distance measured along the border (through the corner arcs)
+    // and normal distance measured inward — so the glow bends with the corner
+    // radius and neighbouring edge blobs blend along the path instead of
+    // overlapping as straight-edged ellipses. Along straight edges this is
+    // identical to the planar evaluation. e[13] carries the blob's tangential
+    // axis (1 = the blob hugs a left/right edge, its ry runs along the border).
     float4 acc = float4(0.0);
     int nBlobs = blobCount / 14;
     for (int i = nBlobs - 1; i >= 0; i--) {
@@ -268,7 +334,19 @@ static float stopAlpha(float t, float a0, float p1, float a1, float p2, float a2
         float rx = max(e[0], 0.001);
         float ry = max(e[1], 0.001);
         float2 c = float2(e[2], e[3]);
-        float t = length((position - c) / float2(rx, ry));
+        float t;
+        if (wrap) {
+            float3 pathC = borderPathCoord(c - rectCenter, rectSize * 0.5, radius);
+            float ds = pathP.x - pathC.x;
+            ds -= pathP.z * rint(ds / max(pathP.z, 0.0001));
+            float dd = pathP.y - pathC.y;
+            bool vertical = e[13] > 0.5;
+            float rT = vertical ? ry : rx;
+            float rN = vertical ? rx : ry;
+            t = length(float2(ds / rT, dd / rN));
+        } else {
+            t = length((position - c) / float2(rx, ry));
+        }
         float alpha = stopAlpha(t, e[7], e[8], e[9], e[10], e[11], e[12]);
         if (alpha <= 0.0) continue;
         acc = srcOver(float4(float3(e[4], e[5], e[6]) * alpha, alpha), acc);
