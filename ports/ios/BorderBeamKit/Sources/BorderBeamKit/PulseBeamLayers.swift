@@ -167,12 +167,20 @@ struct PulseBeamLayers: View {
             // (web withAlphaVar); static corner accents multiply their base.
             let alpha = d.region == 0 ? d.color.a * bop : bop
             let end = d.fadeEnd
+            // Which border edge the blob hugs, for the shader's corner-wrap
+            // evaluation: 1 when it sits against a left/right edge (its height
+            // runs along the border), 0 for top/bottom. Ignored outside wrap
+            // mode (the reserved 14th float was always 0 before).
+            let edgeDistX = max(min(d.xFrac, 1 - d.xFrac) * boxSize.width, 0)
+            let edgeDistY = max(min(d.yFrac, 1 - d.yFrac) * boxSize.height, 0)
+            let vertical: Float = edgeDistX < edgeDistY ? 1 : 0
             out += [
                 Float(d.w * bw * sx), Float(d.h * bh * sy),
                 Float(boxOrigin.x + d.xFrac * boxSize.width + dx),
                 Float(boxOrigin.y + d.yFrac * boxSize.height + dy),
                 Float(d.color.r), Float(d.color.g), Float(d.color.b), Float(alpha),
-                Float(end / 3), Float(alpha * 2 / 3), Float(2 * end / 3), Float(alpha / 3), Float(end), 0,
+                Float(end / 3), Float(alpha * 2 / 3), Float(2 * end / 3), Float(alpha / 3), Float(end),
+                vertical,
             ]
         }
         return out
@@ -281,7 +289,16 @@ struct PulseBeamLayers: View {
                     boxPad: 0, elementSize: elementSize,
                     radius: config.radius, borderWidth: config.sizeConfig.borderWidth,
                     geomKind: 1, edgeMaskPx: spec.rotate.innerEdgeMaskPx,
-                    blobs: liveBlobs(innerDefs(), osc: osc, boxOrigin: .zero, boxSize: elementSize, sx: 1, sy: 1),
+                    // Corner-wrap: evaluate the glow in border-path space so it
+                    // bends with the corner radius instead of straight-edged
+                    // ellipses clashing where two edges meet. iOS-only
+                    // deviation from the web renderer (which shows the same
+                    // artifact); keep the SkSL twin in sync when porting.
+                    wrapCorners: 1,
+                    blobs: liveBlobs(
+                        innerDefs(), osc: osc, boxOrigin: .zero, boxSize: elementSize,
+                        sx: tuning.innerSizeScale, sy: tuning.innerSizeScale
+                    ),
                     matrix: cm,
                     opacity: base * config.themeConfig.innerOpacity * tuning.innerOpacity
                 )
@@ -317,6 +334,7 @@ struct PulseBeamLayers: View {
         borderWidth: Double,
         geomKind: Double,
         edgeMaskPx: Double,
+        wrapCorners: Double = 0,
         blobs: [Float],
         matrix: [Float],
         opacity: Double
@@ -332,6 +350,7 @@ struct PulseBeamLayers: View {
             .float(borderWidth),
             .float(geomKind),
             .float(edgeMaskPx),
+            .float(wrapCorners),
             .floatArray(BlobEncoder.noRadial),
             .floatArray(blobs),
             .floatArray(matrix),

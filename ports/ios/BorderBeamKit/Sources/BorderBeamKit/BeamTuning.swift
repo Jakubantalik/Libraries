@@ -41,6 +41,13 @@ public struct BeamTuning: Equatable, Sendable {
     public var glowBrightness: Double?
     public var glowSaturate: Double?
 
+    /// Multiplier on the size of `pulse-inner`'s inward glow blobs (the z1
+    /// layer, including the corner accents). 1 keeps the spec sizes. Values
+    /// below 1 pull the inner wash tighter to the border so it hugs corners
+    /// the way the rotate family's (0.9x-derived) inner glow does. iOS-only
+    /// tuning hook — the web library has no equivalent custom property yet.
+    public var innerSizeScale: Double
+
     public init(
         glowBoost: Double = 1,
         strokeOpacity: Double = 1,
@@ -49,7 +56,8 @@ public struct BeamTuning: Equatable, Sendable {
         coreBlur: Double? = nil,
         bloomBlur: Double? = nil,
         glowBrightness: Double? = nil,
-        glowSaturate: Double? = nil
+        glowSaturate: Double? = nil,
+        innerSizeScale: Double = 1
     ) {
         self.glowBoost = glowBoost
         self.strokeOpacity = strokeOpacity
@@ -59,6 +67,7 @@ public struct BeamTuning: Equatable, Sendable {
         self.bloomBlur = bloomBlur
         self.glowBrightness = glowBrightness
         self.glowSaturate = glowSaturate
+        self.innerSizeScale = innerSizeScale
     }
 
     /// Library defaults — no tuning applied.
