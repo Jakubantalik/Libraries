@@ -138,7 +138,7 @@ export const themeColors: Record<'dark' | 'light', ThemeColors> = {
 /**
  * Color palettes for each color variant
  */
-const colorPalettes = {
+export const colorPalettes = {
   colorful: {
     border: [
       { color: 'rgb(255, 50, 100)', pos: '33% -7.4%', size: '70px 40px' },
@@ -204,7 +204,7 @@ const colorPalettes = {
 /**
  * Small size color palettes (compact gradients for button-sized elements)
  */
-const smallColorPalettes = {
+export const smallColorPalettes = {
   colorful: {
     border: [
       { color: 'rgb(50, 200, 80)', pos: '2% 68%', size: '9px 18px' },
@@ -337,7 +337,7 @@ function getSpikeColors(colorVariant: BorderBeamColorVariant, isDark: boolean) {
   return isDark ? palette.spike : palette.spikeLt;
 }
 
-const lineColorPalettes = {
+export const lineColorPalettes = {
   colorful: {
     dark: [
       { color: 'rgb(255, 50, 100)', sizeW: 36, sizeH: 36, offsetX: 0, offsetY: 2 },
@@ -448,7 +448,7 @@ function getLineColorGradients(colorVariant: BorderBeamColorVariant, isDark: boo
 }
 
 // Inner gradient data matching v5.css exactly
-const lineInnerGradientData = {
+export const lineInnerGradientData = {
   colorful: [
     { color: 'rgba(255, 50, 100, 0.48)', sizeW: 33, sizeH: 30, offsetX: 0, offsetY: 0 },
     { color: 'rgba(40, 180, 220, 0.42)', sizeW: 24, sizeH: 26, offsetX: 39, offsetY: -3 },
@@ -506,7 +506,7 @@ function getLineInnerGradients(colorVariant: BorderBeamColorVariant, id: string)
     .join(',\n    ');
 }
 
-const lineBloomColors = {
+export const lineBloomColors = {
   colorful: {
     dark: {
       spikes: [
@@ -682,7 +682,7 @@ type PulseQuad = 'tl' | 'tr' | 'bl' | 'br';
 
 // Which size-region (g1/g2/g3) and opacity-quadrant each of the 9 palette
 // gradients belongs to (taken from the v5 Card 4 ::after ordering).
-const PULSE_RING_MAP: { region: PulseRegion; quad: PulseQuad }[] = [
+export const PULSE_RING_MAP: { region: PulseRegion; quad: PulseQuad }[] = [
   { region: 1, quad: 'tl' },
   { region: 2, quad: 'tl' },
   { region: 3, quad: 'bl' },
@@ -695,11 +695,11 @@ const PULSE_RING_MAP: { region: PulseRegion; quad: PulseQuad }[] = [
 ];
 
 // Card 4 inner-perimeter (::before) gradient sizes — slightly smaller than the ring.
-const PULSE_INNER_SIZES: [number, number][] = [
+export const PULSE_INNER_SIZES: [number, number][] = [
   [65, 35], [55, 30], [35, 65], [15, 30], [173, 28], [80, 22], [69, 28], [22, 38], [47, 44],
 ];
 
-interface PulseGradientDef {
+export interface PulseGradientDef {
   ci: number; // index into colorPalettes[variant].border
   region: PulseRegion;
   quad: PulseQuad;
@@ -710,7 +710,7 @@ interface PulseGradientDef {
 }
 
 // Card 4 bloom — 7 of the 9 colors, expanded sizes (positions come from palette).
-const PULSE_INNER_BLOOM: PulseGradientDef[] = [
+export const PULSE_INNER_BLOOM: PulseGradientDef[] = [
   { ci: 0, region: 1, quad: 'tl', w: 84, h: 48 },
   { ci: 1, region: 2, quad: 'tl', w: 72, h: 42 },
   { ci: 2, region: 3, quad: 'bl', w: 48, h: 84 },
@@ -721,7 +721,7 @@ const PULSE_INNER_BLOOM: PulseGradientDef[] = [
 ];
 
 // Card 5 outward core (::after hairline + ::before glow share this edge-positioned set).
-const PULSE_OUTER_CORE: PulseGradientDef[] = [
+export const PULSE_OUTER_CORE: PulseGradientDef[] = [
   { ci: 0, region: 1, quad: 'tl', w: 80, h: 19, x: '27%', y: '0%' },
   { ci: 6, region: 2, quad: 'tr', w: 74, h: 11, x: '73%', y: '-1%' },
   { ci: 7, region: 3, quad: 'tr', w: 15, h: 44, x: '100%', y: '33%' },
@@ -733,7 +733,7 @@ const PULSE_OUTER_CORE: PulseGradientDef[] = [
 ];
 
 // Card 5 outward bloom — wider/blurred halo (7 gradients).
-const PULSE_OUTER_BLOOM: PulseGradientDef[] = [
+export const PULSE_OUTER_BLOOM: PulseGradientDef[] = [
   { ci: 0, region: 1, quad: 'tl', w: 110, h: 30, x: '27%', y: '3%' },
   { ci: 6, region: 2, quad: 'tr', w: 100, h: 20, x: '73%', y: '1%' },
   { ci: 7, region: 3, quad: 'tr', w: 26, h: 62, x: '100%', y: '33%' },
@@ -922,7 +922,7 @@ export interface PulseDriverConfig {
 }
 
 /** Theme/size/duration-tuned breathing parameters (shared by CSS + JS driver). */
-function pulseParams(size: BorderBeamSize, theme: 'dark' | 'light', duration: number) {
+export function pulseParams(size: BorderBeamSize, theme: 'dark' | 'light', duration: number) {
   const isDark = theme === 'dark';
   const durScale = duration / 2.3;
   if (size === 'pulse-inner') {
@@ -952,7 +952,7 @@ function pulseParams(size: BorderBeamSize, theme: 'dark' | 'light', duration: nu
 }
 
 /** Build the oscillator table for an instance (matches the former keyframes). */
-function pulseOscillatorDefs(id: string, p: ReturnType<typeof pulseParams>): PulseOscillatorDef[] {
+export function pulseOscillatorDefs(id: string, p: ReturnType<typeof pulseParams>): PulseOscillatorDef[] {
   const { sp, dr, op, gh, bs, ss, ghs } = p;
   return [
     { prop: `--bw1-${id}`, a: 1 - sp, b: 1 + sp * 1.1, period: ss * 0.9, delay: 0, unit: '' },

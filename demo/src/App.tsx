@@ -282,6 +282,51 @@ function getInitialTheme(): ThemeMode {
   return stored === 'light' ? 'light' : 'dark';
 }
 
+/* Platform tabs for the install/usage snippets. The web package is published;
+   the native ports live in the same repo under ports/ and are not on a registry
+   yet, so they install from source. */
+type Platform = 'react' | 'swiftui' | 'native';
+
+const PLATFORM_OPTIONS: { value: Platform; label: string }[] = [
+  { value: 'react', label: 'React' },
+  { value: 'swiftui', label: 'SwiftUI' },
+  { value: 'native', label: 'React Native' },
+];
+
+const INSTALL_BY_PLATFORM: Record<Platform, string> = {
+  react: 'npm install border-beam',
+  swiftui: '.package(url: "https://github.com/Jakubantalik/border-beam.git", from: "1.4.0")',
+  native: 'npm install @shopify/react-native-skia react-native-reanimated',
+};
+
+const USAGE_BY_PLATFORM: Record<Platform, string> = {
+  react: `import { BorderBeam } from 'border-beam';
+
+<BorderBeam>
+  <YourCard>Content</YourCard>
+</BorderBeam>`,
+  swiftui: `import BorderBeamKit
+
+BorderBeam(size: .md) {
+    YourCard()
+}
+
+// or as a modifier
+YourCard().borderBeam(.md, colorVariant: .ocean)`,
+  native: `import { BorderBeam } from 'border-beam-native';
+
+<BorderBeam size="md" colorVariant="colorful" borderRadius={16}>
+  <YourCard />
+</BorderBeam>`,
+};
+
+/* Shown under the install block for ports that aren't on a registry yet. */
+const INSTALL_NOTE_BY_PLATFORM: Record<Platform, string | null> = {
+  react: null,
+  swiftui: 'Swift Package Manager · requires iOS 17+ · Add via File \u203a Add Package Dependencies in Xcode.',
+  native: 'In beta \u2014 not yet published. Copy ports/react-native/border-beam-native from the repo, then install the two peer dependencies above.',
+};
+
 const COLOR_OPTIONS: { value: BorderBeamColorVariant; label: string }[] = [
   { value: 'colorful', label: 'Colorful' },
   { value: 'mono', label: 'Mono' },
@@ -297,6 +342,7 @@ export default function App() {
   );
   const [playgroundColorVariant, setPlaygroundColorVariant] = useState<BorderBeamColorVariant>('colorful');
   const [playgroundStrength, setPlaygroundStrength] = useState(70);
+  const [platform, setPlatform] = useState<Platform>('react');
   const [theme, setTheme] = useState<ThemeMode>(getInitialTheme);
   const strengthId = useId();
 
@@ -371,12 +417,9 @@ export default function App() {
     return () => window.removeEventListener('resize', onResize);
   }, [moveTabPill]);
 
-  const installCmd = 'npm install border-beam';
-  const usageCode = `import { BorderBeam } from 'border-beam';
-
-<BorderBeam>
-  <YourCard>Content</YourCard>
-</BorderBeam>`;
+  const installCmd = INSTALL_BY_PLATFORM[platform];
+  const usageCode = USAGE_BY_PLATFORM[platform];
+  const installNote = INSTALL_NOTE_BY_PLATFORM[platform];
   const playgroundCode = `<BorderBeam size="${playgroundSize}" colorVariant="${playgroundColorVariant}"${playgroundStrength < 100 ? ` strength={${playgroundStrength / 100}}` : ''}>
   <Card>Content</Card>
 </BorderBeam>`;
@@ -518,11 +561,28 @@ export default function App() {
         </section>
 
         <section className="section" aria-label="Installation">
-          <h2 className="section-title">Installation</h2>
+          <div className="section-head">
+            <h2 className="section-title">Installation</h2>
+            <div className="platform-tabs" role="radiogroup" aria-label="Platform">
+              {PLATFORM_OPTIONS.map(({ value, label }) => (
+                <button
+                  key={value}
+                  className="tab-btn"
+                  role="radio"
+                  aria-checked={platform === value}
+                  data-active={platform === value}
+                  onClick={() => setPlatform(value)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="code-block">
             <code>{installCmd}</code>
             <CopyButton text={installCmd} label="Copy install command" />
           </div>
+          {installNote && <p className="install-note">{installNote}</p>}
         </section>
 
         <section className="section" aria-label="Usage">

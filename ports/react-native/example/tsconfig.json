@@ -1,0 +1,12 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "border-beam-native": [
+        "../border-beam-native/src"
+      ]
+    },
+    "baseUrl": "."
+  }
+}

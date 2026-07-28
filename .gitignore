@@ -27,3 +27,18 @@ coverage/
 .turbo/
 AI seach.html
 .npmrc
+
+# Generated parity snapshots (regenerate with ports/ios/BorderBeamKit/snapshot.sh)
+ports/ios/BorderBeamKit/snapshots/
+ports/ios/BorderBeamKit/.build/
+ports/react-native/border-beam-native/lib/
+ports/ios/BorderBeamDemo/BorderBeamDemo.xcodeproj/
+ports/ios/BorderBeamDemo/build/
+ports/react-native/example/node_modules/
+ports/react-native/example/ios/
+ports/react-native/example/android/
+ports/react-native/example/.expo/
+demo/parity-web/
+demo/parity-diff/
+ports/ios/BorderBeamShowcase/build/
+ports/ios/BorderBeamShowcase/BorderBeamShowcase.xcodeproj/

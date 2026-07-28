@@ -1780,3 +1780,86 @@ html[data-theme='light'] .playground-toggle:focus-visible {
     flex-wrap: wrap;
   }
 }
+
+/* ── Platform tabs (Installation) ─────────────────────────────────────────── */
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.section-head .section-title {
+  margin-bottom: 0;
+}
+
+.platform-tabs {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.platform-tabs .tab-btn {
+  padding: 5px 12px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.platform-tabs .tab-btn:hover:not([data-active='true']) {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.platform-tabs .tab-btn[data-active='true'] {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* Caveat under the install command for ports not yet on a registry. */
+.install-note {
+  margin: 10px 2px 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+html[data-theme='light'] .platform-tabs {
+  background: rgba(0, 0, 0, 0.035);
+  border-color: rgba(0, 0, 0, 0.07);
+}
+
+html[data-theme='light'] .platform-tabs .tab-btn {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+html[data-theme='light'] .platform-tabs .tab-btn:hover:not([data-active='true']) {
+  color: rgba(0, 0, 0, 0.75);
+}
+
+html[data-theme='light'] .platform-tabs .tab-btn[data-active='true'] {
+  background: rgba(0, 0, 0, 0.08);
+  color: #111;
+}
+
+html[data-theme='light'] .install-note {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+@media (max-width: 560px) {
+  .section-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+}
