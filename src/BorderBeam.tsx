@@ -12,7 +12,14 @@ import {
   type MutableRefObject,
 } from 'react';
 import type { BorderBeamProps, BorderBeamTheme } from './types';
-import { sizePresets, sizeThemePresets, generateBeamCSS, getPulseDriverConfig } from './styles';
+import {
+  sizePresets,
+  sizeThemePresets,
+  generateBeamCSS,
+  getPulseDriverConfig,
+  normalizeCustomColors,
+  buildCustomPalettes,
+} from './styles';
 import { registerPulseInstance } from './pulseDriver';
 
 function useSystemTheme(): 'dark' | 'light' {
@@ -56,6 +63,7 @@ export const BorderBeam = forwardRef<HTMLDivElement, BorderBeamProps>(
       children,
       size = 'md',
       colorVariant = 'colorful',
+      colors,
       theme = 'dark',
       staticColors = false,
       duration,
@@ -200,12 +208,27 @@ export const BorderBeam = forwardRef<HTMLDivElement, BorderBeamProps>(
 
     const isPulse = size === 'pulse-inner' || size === 'pulse-outside';
 
+    // Build the custom palette set once per distinct color list (the
+    // serialized key keeps inline array literals from rebuilding the palettes
+    // every render, and unlike join() cannot collide across different
+    // arrays). Falls back to the preset variant when no entry parses.
+    const colorsKey = colors ? JSON.stringify(colors) : undefined;
+    const customPalette = useMemo(() => {
+      if (!colors || colors.length === 0) return null;
+      const normalized = normalizeCustomColors(colors);
+      return normalized ? buildCustomPalettes(normalized) : null;
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [colorsKey]);
+
     const finalBorderRadius = customBorderRadius ?? detectedRadius ?? sizeConfig.borderRadius;
     const finalDuration = duration ?? (size === 'line' ? 3.1 : isPulse ? 2.3 : 1.96);
     const finalSaturation = saturation ?? themeConfig.saturation;
     const finalBrightness = brightnessProp ?? themeConfig.brightness ?? 1.3;
     const finalHueRange = size === 'line' ? Math.min(hueRange, 13) : hueRange;
-    const finalStaticColors = colorVariant === 'mono' ? true : staticColors;
+    // Custom colors render through the 'colorful' code paths (no mono opacity
+    // halving) and always pin the hue so brand colors stay exact.
+    const effectiveVariant = customPalette ? 'colorful' : colorVariant;
+    const finalStaticColors = customPalette ? true : colorVariant === 'mono' ? true : staticColors;
 
     const cssStyles = useMemo(
       () =>
@@ -219,13 +242,14 @@ export const BorderBeam = forwardRef<HTMLDivElement, BorderBeamProps>(
           bloomOpacity: themeConfig.bloomOpacity,
           innerShadow: themeConfig.innerShadow,
           size,
-          colorVariant,
+          colorVariant: effectiveVariant,
           staticColors: finalStaticColors,
           brightness: finalBrightness,
           saturation: finalSaturation,
           hueRange: finalHueRange,
           theme: resolvedTheme,
           hairlineOpacity: themeConfig.hairlineOpacity,
+          customPalette,
         }),
       [
         id,
@@ -238,12 +262,13 @@ export const BorderBeam = forwardRef<HTMLDivElement, BorderBeamProps>(
         themeConfig.innerShadow,
         themeConfig.hairlineOpacity,
         size,
-        colorVariant,
+        effectiveVariant,
         finalStaticColors,
         finalBrightness,
         finalSaturation,
         finalHueRange,
         resolvedTheme,
+        customPalette,
       ]
     );
 

@@ -245,6 +245,17 @@ struct BeamSpec: Decodable {
         let rotate: Double
     }
 
+    /// Derivation rules for user-supplied custom colors (see
+    /// ``BeamCustomPalette``): which preset variant donates the geometry and
+    /// per-stop alphas, and how the pre-baked line bloom gradients recolor.
+    struct CustomColors: Decodable {
+        let referenceVariant: String
+        let forcesStaticColors: Bool
+        /// line.bloomGradients recolor map: template gradient index → user
+        /// color index. Gradients beyond the map keep their built-in colors.
+        let lineBloomColorMap: [Int]
+    }
+
     struct Defaults: Decodable {
         let duration: DurationDefaults
         let hueRange: Double
@@ -264,6 +275,7 @@ struct BeamSpec: Decodable {
     let sizePresets: [String: SizeConfig]
     let sizeThemePresets: [String: [String: ThemeColors]]
     let palettes: Palettes
+    let customColors: CustomColors
     let rotate: Rotate
     let line: Line
     let pulse: Pulse

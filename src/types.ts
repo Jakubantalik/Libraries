@@ -83,6 +83,18 @@ export interface BorderBeamProps extends Omit<HTMLAttributes<HTMLDivElement>, 'c
   colorVariant?: BorderBeamColorVariant;
 
   /**
+   * Custom colors for the beam, in display order. Accepts hex (`#rgb`,
+   * `#rgba`, `#rrggbb`, `#rrggbbaa`) and `rgb()` / `rgba()` with number or
+   * percentage channels. Takes precedence over `colorVariant` and always
+   * renders with static colors so brand hues stay exact (like 'mono').
+   * Colors cycle in order through the palette's gradient stops — the first
+   * color is the most prominent. Alpha components are ignored; the beam
+   * layers manage their own opacity. Entries that fail to parse are
+   * skipped; when nothing parses, `colorVariant` applies.
+   */
+  colors?: string[];
+
+  /**
    * Theme mode - adapts beam/glow colors for dark or light backgrounds
    * 'auto' detects system preference via prefers-color-scheme
    * @default 'dark'

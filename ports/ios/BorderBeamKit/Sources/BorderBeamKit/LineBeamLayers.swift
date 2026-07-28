@@ -11,6 +11,9 @@ struct LineBeamConfig {
     let saturation: Double?
     let hueRange: Double // already capped at 13 by BorderBeam
     let strength: Double
+    /// Recolored palettes from the `colors:` parameter; replaces the
+    /// `variant` preset tables wholesale when present.
+    let customPalette: BeamCustomPalette?
 
     let spec = BeamSpec.shared
 
@@ -54,12 +57,19 @@ struct LineBeamLayers: View {
             : -bloomRange + 2 * bloomRange * PulseDriver.pingPong(t / spec.defaults.lineBloomHueShiftPeriod)
         // Web parity: with staticColors the line layers carry no filter (the
         // brightness/saturate live only in the hue-shift keyframes); mono's
-        // bloom keeps just its 6px blur, applied below.
+        // bloom keeps just its 6px blur, applied below. Custom palettes are
+        // the exception: they render "colorful with the hue pinned", i.e. the
+        // tuned brightness/saturate as a static filter.
         let identity: [Float] = [1, 0, 0, 0, 1, 0, 0, 0, 1]
-        let cm = config.staticColors ? identity : BeamColorMatrix.composed(
+        let staticCM = config.customPalette != nil
+            ? BeamColorMatrix.composed(
+                hueDegrees: 0, brightness: config.finalBrightness, saturation: config.finalSaturation
+            )
+            : identity
+        let cm = config.staticColors ? staticCM : BeamColorMatrix.composed(
             hueDegrees: hue, brightness: config.finalBrightness, saturation: config.finalSaturation
         )
-        let bloomCM = config.staticColors ? identity : BeamColorMatrix.composed(
+        let bloomCM = config.staticColors ? staticCM : BeamColorMatrix.composed(
             hueDegrees: bloomHue, brightness: config.finalBrightness, saturation: config.finalSaturation
         )
 
@@ -82,9 +92,12 @@ struct LineBeamLayers: View {
         ]
 
         // Web parity: the animated bloom filter includes blur(8px); mono with
-        // static colors gets base blur(6px); other static variants none.
+        // static colors gets base blur(6px); other static variants none —
+        // except custom palettes, whose static bloom keeps the full 8px blur
+        // (unblurred, the thin spikes paint as harsh bars).
         let bloomBlur: Double = config.staticColors
-            ? (config.variant == .mono ? spec.line.monoBloomExtraBlurPx : 0)
+            ? (config.variant == .mono ? spec.line.monoBloomExtraBlurPx
+                : config.customPalette != nil ? spec.line.bloomBlurPx : 0)
             : spec.line.bloomBlurPx
 
         ZStack {
@@ -126,7 +139,7 @@ struct LineBeamLayers: View {
                 rx: wh.w * v.w, ry: wh.h * v.h, cx: bx, cy: height + wh.yOffset, stops: stops
             )
         }
-        for e in spec.palettes.line[config.variant.rawValue]![config.theme]! {
+        for e in config.customPalette?.line[config.theme] ?? spec.palettes.line[config.variant.rawValue]![config.theme]! {
             guard let c = BeamRGBA(css: e.color) else { continue }
             blobs += BlobEncoder.simple(
                 rx: e.sizeW * v.w, ry: e.sizeH * v.h,
@@ -138,7 +151,7 @@ struct LineBeamLayers: View {
 
     private func innerBlobs(v: BeamAnimation.LineFrameValues, bx: Double, height: Double) -> [Float] {
         var blobs: [Float] = []
-        for e in config.spec.palettes.lineInner[config.variant.rawValue]! {
+        for e in config.customPalette?.lineInner ?? config.spec.palettes.lineInner[config.variant.rawValue]! {
             guard let c = BeamRGBA(css: e.color) else { continue }
             blobs += BlobEncoder.simple(
                 rx: e.sizeW * v.w, ry: e.sizeH * v.h,
@@ -150,7 +163,8 @@ struct LineBeamLayers: View {
 
     private func bloomBlobs(v: BeamAnimation.LineFrameValues, bx: Double, width: Double, height: Double) -> [Float] {
         var blobs: [Float] = []
-        let grads = config.spec.line.bloomGradients[config.variant.rawValue]![config.theme]!
+        let grads = config.customPalette?.lineBloom[config.theme]
+            ?? config.spec.line.bloomGradients[config.variant.rawValue]![config.theme]!
         for g in grads {
             let cx = g.xPct.map { $0 / 100 * width } ?? bx
             blobs += BlobEncoder.stops(

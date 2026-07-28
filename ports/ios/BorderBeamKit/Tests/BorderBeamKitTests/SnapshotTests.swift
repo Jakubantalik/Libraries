@@ -46,12 +46,14 @@ struct SnapshotTests {
     /// A card mimicking the web demo's surface, wrapped in the beam.
     @ViewBuilder
     static func card(
-        size: BeamSize, variant: BeamColorVariant, theme: BeamTheme, active: Bool = true
+        size: BeamSize, variant: BeamColorVariant, theme: BeamTheme, active: Bool = true,
+        colors: [Color]? = nil
     ) -> some View {
         let isDark = theme != .light
         BorderBeam(
             size: size,
             colorVariant: variant,
+            colors: colors,
             theme: theme,
             active: active,
             borderRadius: cardRadius
@@ -69,14 +71,15 @@ struct SnapshotTests {
     /// Renders one combination onto a demo-like background and returns the PNG.
     /// `active: false` yields the beam-off reference used for blank detection.
     static func render(
-        size: BeamSize, variant: BeamColorVariant, theme: BeamTheme, active: Bool = true
+        size: BeamSize, variant: BeamColorVariant, theme: BeamTheme, active: Bool = true,
+        colors: [Color]? = nil
     ) -> Data? {
         let isDark = theme != .light
         // Padding leaves room for pulse-outside's halo, which spills outward.
         let pad: CGFloat = 60
         let scene = ZStack {
             (isDark ? Color(white: 0.027) : Color(white: 1.0))
-            card(size: size, variant: variant, theme: theme, active: active)
+            card(size: size, variant: variant, theme: theme, active: active, colors: colors)
         }
         .frame(
             width: cardSize.width + pad * 2,
@@ -128,6 +131,36 @@ struct SnapshotTests {
         }
         #expect(written == BeamSize.allCases.count * BeamColorVariant.allCases.count * 2)
         #expect(blank.isEmpty, "these combinations rendered no beam: \(blank)")
+    }
+
+    /// Same brand palette the web verification page uses (#e63946, #457b9d,
+    /// #2a9d8f) — every size × theme must paint a beam from custom colors.
+    @Test func rendersCustomColors() throws {
+        let dir = Self.outputDir
+        let brand: [Color] = [
+            Color(red: 230 / 255, green: 57 / 255, blue: 70 / 255),
+            Color(red: 69 / 255, green: 123 / 255, blue: 157 / 255),
+            Color(red: 42 / 255, green: 157 / 255, blue: 143 / 255),
+        ]
+        var blank: [String] = []
+
+        for size in BeamSize.allCases {
+            for theme: BeamTheme in [.dark, .light] {
+                let name = "\(size.rawValue)_custom_\(theme.rawValue).png"
+                let png = try #require(
+                    Self.render(size: size, variant: .colorful, theme: theme, colors: brand),
+                    "render returned nil for \(name)"
+                )
+                try png.write(to: dir.appendingPathComponent(name))
+                let off = try #require(
+                    Self.render(size: size, variant: .colorful, theme: theme, active: false, colors: brand),
+                    "beam-off render returned nil for \(name)"
+                )
+                if !Self.differs(png, off) { blank.append(name) }
+            }
+        }
+
+        #expect(blank.isEmpty, "these custom-color combinations rendered no beam: \(blank)")
     }
 
     /// True when two renders differ measurably — i.e. the beam painted

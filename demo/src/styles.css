@@ -1349,6 +1349,64 @@ html[data-theme='light'] .control-label {
   outline-offset: 2px;
 }
 
+/* Custom-palette editor: ordered color wells + add/remove, shown when the
+   "Custom" color option is active. */
+.custom-colors-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.custom-color-swatch {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+}
+
+.custom-color-swatch::-webkit-color-swatch-wrapper {
+  padding: 5px;
+}
+
+.custom-color-swatch::-webkit-color-swatch {
+  border: none;
+  border-radius: 5px;
+}
+
+.custom-color-swatch::-moz-color-swatch {
+  border: none;
+  border-radius: 5px;
+}
+
+.custom-color-btn {
+  width: 36px;
+  padding: 0;
+  font-size: 16px;
+}
+
+.custom-color-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.custom-colors-hint {
+  font-size: 12px;
+  color: rgba(251, 251, 251, 0.4);
+  white-space: nowrap;
+}
+
+html[data-theme='light'] .custom-color-swatch {
+  background: #ebebeb;
+}
+
+html[data-theme='light'] .custom-colors-hint {
+  color: #999;
+}
+
 /* Light-mode playground buttons. Scoped under .playground-controls so the
    Rotate/Pulse family tabs (with their sliding pill) keep their own styling. */
 html[data-theme='light'] .playground-controls .tab-btn {

@@ -298,6 +298,22 @@ const spec = {
     lineBloom: lineBloomColors,
   },
 
+  // User-supplied custom colors (web `colors` prop / iOS `colors:` parameter):
+  // every palette family keeps the reference variant's geometry and per-stop
+  // alphas and only swaps in the user colors, cycling in order (stop i gets
+  // colors[i % n]; rgba references keep their alpha). See styles.ts
+  // buildCustomPalettes + BeamCustomPalette.swift — keep both in sync.
+  customColors: {
+    referenceVariant: 'colorful',
+    // Custom palettes always render static (like mono) so brand hues stay exact.
+    forcesStaticColors: true,
+    // Recolor map for line.bloomGradients: template gradient index → user color
+    // index (sc1=spike.primary→0, sc2=spike.secondary→1, spikes[0..4]→0..4).
+    // Gradients beyond the map (traveling glow dot, ambient, light-theme
+    // shadow) keep their built-in colors.
+    lineBloomColorMap: [0, 1, 0, 1, 2, 3, 4],
+  },
+
   rotate: {
     whiteGradientStops: rotateWhiteGradientStops,
     bloomGradientStops: rotateBloomGradientStops,

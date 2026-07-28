@@ -2,9 +2,9 @@
   "specVersion": "1.0.0",
   "sourceLibrary": {
     "name": "border-beam",
-    "version": "1.3.0"
+    "version": "1.5.0"
   },
-  "generated": "2026-07-27",
+  "generated": "2026-07-28",
   "reference": "Web demo at https://beam.jakubantalik.com is the visual ground truth.",
   "enums": {
     "sizes": [
@@ -1731,6 +1731,19 @@
         }
       }
     }
+  },
+  "customColors": {
+    "referenceVariant": "colorful",
+    "forcesStaticColors": true,
+    "lineBloomColorMap": [
+      0,
+      1,
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
   },
   "rotate": {
     "whiteGradientStops": {

@@ -8,6 +8,8 @@ import SwiftUI
 /// }
 /// // or
 /// Card().borderBeam(.md, colorVariant: .ocean)
+/// // or with custom brand colors (ordered; overrides colorVariant)
+/// Card().borderBeam(.md, colors: [.purple, .pink])
 /// ```
 ///
 /// Rendering matches the web version layer-for-layer: an inner glow layer, a
@@ -30,7 +32,14 @@ public struct BorderBeam<Content: View>: View {
     private let onActivate: (() -> Void)?
     private let onDeactivate: (() -> Void)?
     private let content: Content
+    /// Custom colors from the `colors:` parameter, resolved in `body` against
+    /// the live environment (so adaptive colors track appearance changes).
+    private let colors: [Color]?
 
+    /// Full environment capture for `Color.resolve(in:)` — dynamic colors
+    /// (`.primary`, asset-catalog colors) must resolve against the view's
+    /// actual environment, not whatever traits are current at init.
+    @Environment(\.self) private var environmentValues
     @Environment(\.colorScheme) private var colorScheme
     /// Web parity: only the pulse family honors reduced motion.
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -41,9 +50,15 @@ public struct BorderBeam<Content: View>: View {
     /// that never delivers `onAppear` (e.g. `ImageRenderer`) still draws.
     @State private var mounted: Bool
 
+    /// - Parameter colors: Custom colors for the beam, in display order.
+    ///   Takes precedence over `colorVariant` and always renders with static
+    ///   colors so brand hues stay exact (web `colors` prop parity). Colors
+    ///   cycle in order through the palette's gradient stops — the first
+    ///   color is the most prominent. Opacity components are ignored.
     public init(
         size: BeamSize = .md,
         colorVariant: BeamColorVariant = .colorful,
+        colors: [Color]? = nil,
         theme: BeamTheme = .dark,
         staticColors: Bool = false,
         duration: Double? = nil,
@@ -60,6 +75,7 @@ public struct BorderBeam<Content: View>: View {
     ) {
         self.size = size
         self.colorVariant = colorVariant
+        self.colors = colors
         self.theme = theme
         self.staticColors = staticColors
         self.duration = duration
@@ -77,18 +93,23 @@ public struct BorderBeam<Content: View>: View {
     }
 
     public var body: some View {
+        // Resolved per body evaluation so adaptive colors track the live
+        // environment; nil when the parameter is absent (preset applies).
+        let customPalette = colors.flatMap {
+            BeamCustomPalette(colors: $0, environment: environmentValues)
+        }
         content
             .background {
                 // pulse-outside core + bloom glow behind the content
                 // (web z-index -1; the wrapped child must be opaque).
                 if mounted, size == .pulseOutside {
-                    PulseBeamLayers(config: pulseConfig, fade: fade, part: .glow)
+                    PulseBeamLayers(config: pulseConfig(customPalette), fade: fade, part: .glow)
                         .allowsHitTesting(false)
                 }
             }
             .overlay {
                 if mounted {
-                    beamOverlay.allowsHitTesting(false)
+                    beamOverlay(customPalette).allowsHitTesting(false)
                 }
             }
             .onAppear { if active { setActive(true) } }
@@ -123,16 +144,16 @@ public struct BorderBeam<Content: View>: View {
     // MARK: - Overlay dispatch
 
     @ViewBuilder
-    private var beamOverlay: some View {
+    private func beamOverlay(_ customPalette: BeamCustomPalette?) -> some View {
         switch size {
         case .sm, .md:
-            RotateBeamLayers(config: rotateConfig, fade: fade)
+            RotateBeamLayers(config: rotateConfig(customPalette), fade: fade)
         case .line:
-            LineBeamLayers(config: lineConfig, fade: fade)
+            LineBeamLayers(config: lineConfig(customPalette), fade: fade)
         case .pulseInner:
-            PulseBeamLayers(config: pulseConfig, fade: fade, part: .all)
+            PulseBeamLayers(config: pulseConfig(customPalette), fade: fade, part: .all)
         case .pulseOutside:
-            PulseBeamLayers(config: pulseConfig, fade: fade, part: .stroke)
+            PulseBeamLayers(config: pulseConfig(customPalette), fade: fade, part: .stroke)
         }
     }
 
@@ -144,47 +165,56 @@ public struct BorderBeam<Content: View>: View {
         }
     }
 
-    private var finalStaticColors: Bool {
-        colorVariant == .mono ? true : staticColors
+    /// Custom colors render through the 'colorful' code paths (no mono
+    /// opacity halving) and always pin the hue so brand colors stay exact.
+    private func effectiveVariant(_ customPalette: BeamCustomPalette?) -> BeamColorVariant {
+        customPalette != nil ? .colorful : colorVariant
     }
 
-    private var rotateConfig: RotateBeamConfig {
+    private func finalStaticColors(_ customPalette: BeamCustomPalette?) -> Bool {
+        if customPalette != nil { return true }
+        return colorVariant == .mono ? true : staticColors
+    }
+
+    private func rotateConfig(_ customPalette: BeamCustomPalette?) -> RotateBeamConfig {
         RotateBeamConfig(
             size: size,
-            variant: colorVariant,
+            variant: effectiveVariant(customPalette),
             theme: resolvedTheme,
-            staticColors: finalStaticColors,
+            staticColors: finalStaticColors(customPalette),
             duration: duration ?? BeamSpec.shared.defaults.duration.rotate,
             borderRadius: borderRadius,
             brightness: brightness,
             saturation: saturation,
             hueRange: hueRange,
-            strength: min(max(strength, 0), 1)
+            strength: min(max(strength, 0), 1),
+            customPalette: customPalette
         )
     }
 
-    private var lineConfig: LineBeamConfig {
+    private func lineConfig(_ customPalette: BeamCustomPalette?) -> LineBeamConfig {
         let spec = BeamSpec.shared
         return LineBeamConfig(
-            variant: colorVariant,
+            variant: effectiveVariant(customPalette),
             theme: resolvedTheme,
-            staticColors: finalStaticColors,
+            staticColors: finalStaticColors(customPalette),
             duration: duration ?? spec.defaults.duration.line,
             borderRadius: borderRadius,
             brightness: brightness,
             saturation: saturation,
             // The line family caps the hue range at 13° (web parity).
             hueRange: min(hueRange, spec.defaults.lineHueRangeCap),
-            strength: min(max(strength, 0), 1)
+            strength: min(max(strength, 0), 1),
+            customPalette: customPalette
         )
     }
 
-    private var pulseConfig: PulseBeamConfig {
+    private func pulseConfig(_ customPalette: BeamCustomPalette?) -> PulseBeamConfig {
         PulseBeamConfig(
             size: size,
-            variant: colorVariant,
+            variant: effectiveVariant(customPalette),
             theme: resolvedTheme,
-            staticColors: finalStaticColors,
+            staticColors: finalStaticColors(customPalette),
             duration: duration ?? BeamSpec.shared.defaults.duration.pulse,
             borderRadius: borderRadius,
             brightness: brightness,
@@ -192,7 +222,8 @@ public struct BorderBeam<Content: View>: View {
             strength: min(max(strength, 0), 1),
             // Web parity: only the pulse family honors reduced motion.
             reduceMotion: reduceMotion,
-            tuning: tuning
+            tuning: tuning,
+            customPalette: customPalette
         )
     }
 }
@@ -204,6 +235,7 @@ public extension View {
     func borderBeam(
         _ size: BeamSize = .md,
         colorVariant: BeamColorVariant = .colorful,
+        colors: [Color]? = nil,
         theme: BeamTheme = .dark,
         staticColors: Bool = false,
         duration: Double? = nil,
@@ -220,6 +252,7 @@ public extension View {
         BorderBeam(
             size: size,
             colorVariant: colorVariant,
+            colors: colors,
             theme: theme,
             staticColors: staticColors,
             duration: duration,
