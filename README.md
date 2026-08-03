@@ -1,6 +1,6 @@
 # thinking-orbs
 
-Dotted thought-orb loading indicators for AI & agent UIs. Six hand-tuned animated states, each shipped at two purpose-tuned sizes, rendered on a plain 2D canvas — no WebGL, no filters, works identically in Chrome, Safari and Firefox.
+Dotted thought-orb loading indicators for AI & agent UIs. Nine hand-tuned animated states, each shipped at two purpose-tuned sizes, rendered on a plain 2D canvas — no WebGL, no filters, works identically in Chrome, Safari and Firefox.
 
 [Live demo](https://orbs.jakubantalik.com) · [Repository](https://github.com/Jakubantalik/thinking-orbs) · [Report an issue](https://github.com/Jakubantalik/thinking-orbs/issues)
 
@@ -22,15 +22,18 @@ function Status() {
 
 ## States
 
-Six verbs an agent can be doing, each a distinct animation:
+Nine verbs an agent can be doing, each a distinct animation:
 
 ```tsx
-<ThinkingOrb state="working" />    {/* particles on tilted orbits */}
-<ThinkingOrb state="searching" />  {/* a scan meridian sweeps a dotted globe */}
-<ThinkingOrb state="solving" />    {/* bands scramble, then click back solved */}
-<ThinkingOrb state="listening" />  {/* a waveform rolls through the rings */}
-<ThinkingOrb state="composing" />  {/* an undulating multi-band sash */}
-<ThinkingOrb state="shaping" />    {/* dotted outline: circle → triangle → square */}
+<ThinkingOrb state="working" />     {/* particles on tilted orbits */}
+<ThinkingOrb state="searching" />   {/* a scan meridian sweeps a dotted globe */}
+<ThinkingOrb state="solving" />     {/* bands scramble, then click back solved */}
+<ThinkingOrb state="listening" />   {/* a waveform rolls through the rings */}
+<ThinkingOrb state="connecting" />  {/* a constellation wires itself */}
+<ThinkingOrb state="weaving" />     {/* three strands plait around the sphere */}
+<ThinkingOrb state="composing" />   {/* an undulating multi-band sash */}
+<ThinkingOrb state="breathing" />   {/* a ring slowly morphing */}
+<ThinkingOrb state="shaping" />     {/* dotted outline: circle → triangle → square */}
 ```
 
 ## Sizes

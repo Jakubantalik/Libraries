@@ -9,10 +9,20 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const chipClass =
   'inline-flex items-center gap-2 h-9 pl-2 pr-3.5 rounded-full bg-(--pill-fill) shadow-(--pill-stroke) text-(--pill-fg) text-xs leading-[14px] font-inherit cursor-default';
 
-const CHIP_STATES: OrbState[] = ['listening', 'working', 'searching', 'shaping'];
+// Order matters: with row-major auto-placement over 151px rows, this
+// sequence of 1- and 2-row spans tiles five rows with no leftover gaps.
+const CHIP_STATES: OrbState[] = [
+  'listening',
+  'working',
+  'searching',
+  'connecting',
+  'weaving',
+  'breathing',
+  'shaping',
+];
 
 // Chip states that render as full large pills (the rest stay compact).
-const LARGE_CHIPS = new Set<OrbState>(['working', 'searching']);
+const LARGE_CHIPS = new Set<OrbState>(['working', 'searching', 'connecting']);
 
 const HERO_PILLS: Array<{ state: OrbState; label: string }> = [
   { state: 'solving', label: 'Solving….' },

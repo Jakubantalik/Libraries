@@ -2,7 +2,7 @@
 
 import type { ModeOpts } from './profiles';
 
-export type { Dot } from './core';
+export type { Dot, Line } from './core';
 
 /** One frame painter: draws a mode into a 2D context at CSS-px `size`. */
 export type ModeDraw = (

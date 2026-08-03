@@ -14,12 +14,22 @@ const COUNT_PAIRS: ReadonlyArray<readonly [string, string]> = [
   ['rings', 'lonDensity'],
   ['lanes', 'segs']
 ];
-const COUNT_KEYS = ['orbitN', 'ghostN'] as const;
+const COUNT_KEYS = ['orbitN', 'ghostN', 'nodeN', 'strandN', 'signals'] as const;
 const ICON_DENSITY_KEYS = ['iconD'] as const;
 
 // Every key that sets a dot's rendered radius — scaling all of them keeps
 // a dot's near/far falloff intact while shrinking or growing the mark.
-const RADIUS_KEYS = ['rBase', 'rDepth', 'rActive', 'rDot', 'ghostR', 'partR', 'partRDepth'] as const;
+const RADIUS_KEYS = [
+  'rBase',
+  'rDepth',
+  'rActive',
+  'rDot',
+  'ghostR',
+  'partR',
+  'partRDepth',
+  'nodeR',
+  'nodeRDepth'
+] as const;
 
 export function scaleCounts(opts: ModeOpts, scale: number): ModeOpts {
   const out: ModeOpts = { ...opts };
@@ -37,7 +47,9 @@ export function scaleCounts(opts: ModeOpts, scale: number): ModeOpts {
   }
   for (const k of COUNT_KEYS) {
     const v = out[k];
-    if (v != null && !done.has(k)) out[k] = Math.max(1, Math.round(v * scale));
+    // 0 means the mode opted out of that layer entirely (ring has no ghost
+    // sphere) — scaling must not resurrect it as a single stray dot
+    if (v != null && v !== 0 && !done.has(k)) out[k] = Math.max(1, Math.round(v * scale));
   }
   for (const k of ICON_DENSITY_KEYS) {
     const v = out[k];
@@ -102,10 +114,41 @@ export const BASE_PROFILES: Record<string, ModeOpts> = {
     rsPow: 0.6,
     rMin: 0.3
   },
+  web: {
+    nodeN: 30,
+    thr: 0.72,
+    signals: 5,
+    nodeR: 1.4,
+    nodeRDepth: 1.8,
+    lineW: 0.8,
+    rsPow: 0.6,
+    rMin: 0.3
+  },
+  braid: {
+    strandN: 52,
+    turns: 3.0,
+    ghostN: 150,
+    rBase: 1.2,
+    rDepth: 1.8,
+    rsPow: 0.6,
+    rMin: 0.3
+  },
   ribbon: {
     lanes: 5,
     segs: 88,
     ghostN: 150,
+    rBase: 1.1,
+    rDepth: 1.7,
+    rsPow: 0.6,
+    rMin: 0.3
+  },
+  // ring shares ribbon's painter; faceOn cancels the camera tilt and moves
+  // the undulation onto the radius, and there is no ghost sphere behind it
+  ring: {
+    lanes: 5,
+    segs: 88,
+    ghostN: 0,
+    faceOn: 1,
     rBase: 1.1,
     rDepth: 1.7,
     rsPow: 0.6,

@@ -14,7 +14,42 @@ export interface Dot {
   a?: number;
 }
 
+/** A stroked edge between two projected points (the `connecting` web). */
+export interface Line {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  /** Ink value, same convention as `Dot.white`. */
+  white: number;
+  a?: number;
+  w: number;
+}
+
 export type Projector = (x: number, y: number, z: number) => [number, number, number];
+
+export function lerp(a: number, b: number, f: number): number {
+  return a + (b - a) * f;
+}
+
+export function frac(x: number): number {
+  return x - Math.floor(x);
+}
+
+/** Value noise on a 2D lattice — smooth, deterministic, cheap. */
+export function vnoise(x: number, y: number): number {
+  const xi = Math.floor(x);
+  const yi = Math.floor(y);
+  let fx = x - xi;
+  let fy = y - yi;
+  fx = fx * fx * (3 - 2 * fx);
+  fy = fy * fy * (3 - 2 * fy);
+  const a = hashD(xi, yi);
+  const b = hashD(xi + 1, yi);
+  const c = hashD(xi, yi + 1);
+  const d = hashD(xi + 1, yi + 1);
+  return a + (b - a) * fx + (c - a) * fy + (a - b - c + d) * fx * fy;
+}
 
 /** Deterministic hash in [0, 1). */
 export function hashD(a: number, b: number): number {
@@ -67,6 +102,22 @@ export function paint(ctx: CanvasRenderingContext2D, dots: Dot[], dark: boolean,
     ctx.beginPath();
     ctx.arc(d.x, d.y, Math.max(rMin, d.r), 0, Math.PI * 2);
     ctx.fill();
+  }
+}
+
+/** Stroke pass for edge-based modes. Runs before `paint` so nodes sit on top. */
+export function paintLines(ctx: CanvasRenderingContext2D, lines: Line[], dark: boolean): void {
+  for (const l of lines) {
+    const alpha = l.a ?? 1;
+    if (alpha < 0.02) continue;
+    const w = Math.min(1, Math.max(0, l.white));
+    const g = Math.round((dark ? 1 - w : w) * 255);
+    ctx.strokeStyle = `rgba(${g},${g},${g},${alpha})`;
+    ctx.lineWidth = l.w;
+    ctx.beginPath();
+    ctx.moveTo(l.x1, l.y1);
+    ctx.lineTo(l.x2, l.y2);
+    ctx.stroke();
   }
 }
 

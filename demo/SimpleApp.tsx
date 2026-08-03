@@ -7,7 +7,10 @@ const STATES: Array<{ state: OrbState; blurb: string }> = [
   { state: 'searching', blurb: 'a scan meridian sweeps the field' },
   { state: 'solving', blurb: 'bands scramble, then click back' },
   { state: 'listening', blurb: 'a waveform rolls through the rings' },
+  { state: 'connecting', blurb: 'a constellation wires itself' },
+  { state: 'weaving', blurb: 'three strands plait around the sphere' },
   { state: 'composing', blurb: 'an undulating sash of bands' },
+  { state: 'breathing', blurb: 'a ring slowly morphing' },
   { state: 'shaping', blurb: 'circle → triangle → square' }
 ];
 
