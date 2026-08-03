@@ -68,6 +68,14 @@ const HOLD = 1.4;
 const MORPH = 0.9;
 const SEG = HOLD + MORPH;
 
+// This state was tuned in inkform, which paints it through a blur +
+// threshold "goo" filter; we draw plain circles instead, since `ctx.filter`
+// and SVG filter refs are not safe to rely on across Chrome / Safari /
+// Firefox. The dot GEOMETRY is identical either way — the threshold just
+// yields a hard edge where a plain fill has an antialiased one, so these
+// dots read a touch softer than inkform's. Don't "correct" for that by
+// shrinking the radius: it makes the mark genuinely smaller than the tuning.
+
 export const drawMorph: ModeDraw = (ctx, size, t, dark, o) => {
   const K = CYCLE.length;
   const tc = t % (SEG * K);
