@@ -49,7 +49,7 @@ export function Slider({ blur, contrast }: DemoProps) {
   const [x, setX] = useState(84)
   const drag = useRef<number | null>(null)
   /** The public Move knobs; defaults reproduce the tuned look. */
-  const [mv, setMv] = useState({ springiness: 0.5, stretch: 0.36, trail: 0.575 })
+  const [mv, setMv] = useState({ springiness: 0.5, stretch: 0.6, trail: 0.35 })
 
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     try {
