@@ -34,10 +34,10 @@ interface TabState {
 }
 
 const DEFAULTS: TabState = {
-  slideDur: 320,
+  slideDur: 250,
   slideEase: 'Smooth',
   stiffness: 380,
-  damping: 18,
+  damping: 24.5,
   stretch: 0.18,
   tail: 0.46,
   // Goo blur must stay proportional to the feature size: the indicator is only
