@@ -32,6 +32,10 @@ export interface MorphTuning {
   /** 0..1 — how much the shape physics overshoot and wobble. 0 = calm and
    *  critically damped, 1 = very springy. Default 0.5. */
   bounce?: number
+  /** Max px your CONTENT cross-blurs by while the liquid is in motion,
+   *  sharpening as the shape settles — the content half of the effect, not
+   *  just the surface. Applies with `shape`. Default 7, `0` disables. */
+  contentBlur?: number
   /** Full escape hatch: raw engine options, merged over the mapped values. */
   advanced?: {
     evolve?: EvolveOptions
@@ -113,6 +117,7 @@ function mapMorphSprings(t: MorphTuning | undefined): EvolveOptions {
     radiusStiffness: EVOLVE_DEFAULTS.radiusStiffness * s * s,
     radiusDamping: EVOLVE_DEFAULTS.radiusDamping * s,
     cornerDuration: EVOLVE_DEFAULTS.cornerDuration / s,
+    contentBlur: t?.contentBlur ?? EVOLVE_DEFAULTS.contentBlur,
   }
 }
 

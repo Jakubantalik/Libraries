@@ -40,6 +40,11 @@ export function ApiTest() {
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState(0)
   const [big, setBig] = useState(false)
+  // Bridging is a ratio of blur to gap: blur 5 against an 8px gap sits below
+  // the threshold and the row reads as three separate pills.
+  const [blur, setBlur] = useState(12)
+  const [gap, setGap] = useState(8)
+  const [contentBlur, setContentBlur] = useState(7)
 
   return (
     <div style={{ font: '14px/1.5 system-ui, sans-serif', padding: 32, display: 'grid', gap: 24, maxWidth: 900 }}>
@@ -64,11 +69,22 @@ export function ApiTest() {
         </Liquid>
       </section>
 
-      {/* 2. Layout safety: items inside a plain flex row */}
+      {/* 2. Layout safety + merge threshold: items inside a plain flex row */}
       <section style={box} data-test="flex-layout">
-        <p>2. Items inside a plain flex row (wrapper must not break layout)</p>
-        <Liquid blur={5} fill="#fff" shadow="0 1px 4px rgba(0,0,0,.12)"
-          style={{ display: 'flex', gap: 8, alignItems: 'center', padding: 8 }}>
+        <p>
+          2. Items inside a plain flex row (wrapper must not break layout, and
+          neighbours must merge)
+        </p>
+        <label style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
+          <span style={{ width: 60 }}>blur {blur}</span>
+          <input type="range" min={0} max={20} step={0.5} value={blur}
+            onChange={e => setBlur(Number(e.target.value))} />
+          <span style={{ width: 60 }}>gap {gap}px</span>
+          <input type="range" min={0} max={24} step={1} value={gap}
+            onChange={e => setGap(Number(e.target.value))} />
+        </label>
+        <Liquid blur={blur} fill="#fff" shadow="0 1px 4px rgba(0,0,0,.12)"
+          style={{ display: 'flex', gap, alignItems: 'center', padding: 16 }}>
           <Liquid.Item observe><DsButton>One</DsButton></Liquid.Item>
           <Liquid.Item observe><DsButton>Two</DsButton></Liquid.Item>
           <Liquid.Item observe><DsButton>Three</DsButton></Liquid.Item>
@@ -78,9 +94,14 @@ export function ApiTest() {
       {/* 3. Morph shape on a user's own resizable card */}
       <section style={box} data-test="morph-shape">
         <p>3. morph=&#123;&#123; shape &#125;&#125; on a user's own card that resizes via CSS</p>
+        <label style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
+          <span style={{ width: 130 }}>contentBlur {contentBlur}px</span>
+          <input type="range" min={0} max={20} step={0.5} value={contentBlur}
+            onChange={e => setContentBlur(Number(e.target.value))} />
+        </label>
         <Liquid blur={6} fill="#fff" shadow="0 2px 8px rgba(0,0,0,.12)"
           style={{ width: 340, height: 200, position: 'relative' }}>
-          <Liquid.Item morph={{ shape: true }} style={{ position: 'absolute', left: 16, top: 16 }}>
+          <Liquid.Item morph={{ shape: true, contentBlur }} style={{ position: 'absolute', left: 16, top: 16 }}>
             <div
               data-role="card"
               onClick={() => setBig(b => !b)}

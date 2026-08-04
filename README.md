@@ -54,6 +54,9 @@ Merging is automatic: blobs share the group's goo filter, so touching pieces bri
 | `dissolve` | off | `true` for the tuned look, or `0..1` intensity. |
 | `speed` | `1` | Tempo multiplier for the shape physics (2 = twice as fast, same character). |
 | `bounce` | `0.5` | `0..1` — how much the physics overshoot and wobble. `0` = calm, critically damped. |
+| `contentBlur` | `7` | Max px **your content** cross-blurs by while the liquid is in motion, sharpening as it settles. `0` disables. |
+
+Morph acts on both halves of the effect: the *surface* (merge, springs, corner timeline) and your *content* (`contentBlur` while moving, `dissolve` melting imagery at a contact point).
 
 ### Move
 
@@ -80,7 +83,7 @@ Renders a `position: relative` div; the liquid silhouette svg sits behind all ch
 
 | Prop | Default | Description |
 | --- | --- | --- |
-| `blur` | `6` | Goo blur sigma (px). Larger = pieces bridge from farther away. |
+| `blur` | `6` | Goo blur sigma (px). Larger = pieces bridge from farther away. **Bridging is a ratio of blur to gap** — roughly, neighbours merge once `blur` ≳ the gap between them. Items 8px apart barely bridge at `blur={5}` and merge cleanly at `blur={12}`. If pieces that should merge look separate, raise `blur` (or close the gap) before suspecting anything else. |
 | `contrast` | `18` | Alpha-contrast slope. Larger = sharper liquid edge. |
 | `fill` | `'#fff'` | Liquid surface color. Any CSS color; `var(--surface)` works (theming). |
 | `shadow` | — | `box-shadow` syntax, multi-layer supported. Rendered on the **merged** silhouette, so one consistent shadow hugs the liquid through every merge and split. `inset` unsupported. |
