@@ -1,0 +1,834 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f5f5f6;
+  color: #17181c;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 48px 32px 80px;
+}
+
+.header h1 {
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+}
+
+.header .tag {
+  font-size: 14px;
+  font-weight: 500;
+  color: #8a8b92;
+  margin-left: 8px;
+  letter-spacing: 0;
+}
+
+.header p {
+  max-width: 620px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #55565e;
+}
+
+/* ---------- knobs ---------- */
+
+.knobs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin: 28px 0 32px;
+  padding: 14px 18px;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: 14px;
+  width: fit-content;
+}
+
+.knob {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #55565e;
+}
+
+.knob input[type='range'] {
+  width: 120px;
+  accent-color: #17181c;
+}
+
+.knob code {
+  font-family: 'Roboto Mono', ui-monospace, monospace;
+  font-size: 12px;
+  color: #17181c;
+  min-width: 28px;
+  text-align: right;
+}
+
+.knob select {
+  font: inherit;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #fff;
+}
+
+.melt-panel {
+  flex-basis: 100%;
+}
+
+.melt-panel summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #55565e;
+  user-select: none;
+}
+
+.melt-panel[open] summary {
+  margin-bottom: 10px;
+}
+
+.melt-knobs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+}
+
+/* ---------- cards ---------- */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: 20px;
+  padding: 20px;
+}
+
+.card-label {
+  margin: 0 0 14px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #8a8b92;
+}
+
+.card-note {
+  margin: 14px 0 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: #7c7d84;
+}
+
+.stage {
+  display: grid;
+  place-items: center;
+  height: 280px;
+  background: rgba(225, 225, 225, 0.3);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* ---------- plus menu ---------- */
+
+.pm {
+  width: 200px;
+  height: 140px;
+}
+
+.pm-slot {
+  position: absolute;
+  left: 80px;
+  top: 80px;
+}
+
+.pm-btn {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: #17181c;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pm-btn:focus-visible {
+  outline: 2px solid #17181c;
+  outline-offset: 2px;
+}
+
+.pm-sat {
+  pointer-events: none;
+}
+
+.pm-open .pm-sat {
+  pointer-events: auto;
+}
+
+.pm-open .pm-sat:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* Icons hold back while the blob is merged, then materialise with a soft
+   cross-blur as the satellite pulls clear. */
+.pm-sat-icon {
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  filter: blur(2px);
+  transition: opacity 120ms ease, filter 120ms ease;
+}
+
+.pm-open .pm-sat-icon {
+  opacity: 1;
+  filter: blur(0);
+  transition-duration: var(--pm-icon-dur, 180ms);
+}
+
+/* Close anticipation: the whole liquid layer — and the main button riding it
+   — dips toward the returning satellites' momentum, then settles. Moving the
+   LAYER (not one blob) is what reads as the button physically dipping: with
+   every blob stacked at the centre when closed, moving one inside the union
+   would merely stretch the silhouette. */
+@keyframes pm-anticipate {
+  0% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(var(--pm-anticip, 5px));
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* Longhands on purpose: WebKit mis-parses var() inside the `animation`
+   shorthand and falls back to 0s. */
+.pm-anticipating [data-gooey-svg],
+.pm-anticipating .pm-main {
+  animation-name: pm-anticipate;
+  animation-duration: var(--pm-anticip-dur, 700ms);
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-fill-mode: both;
+}
+
+.pm-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.pm-plus {
+  display: grid;
+  place-items: center;
+  transform: rotate(0deg);
+  transition: transform 250ms ease-in-out;
+}
+
+.pm-open .pm-plus {
+  transform: rotate(45deg);
+}
+
+/* ---------- gooey tabs (move) ----------
+   transitions.dev P16 "Tabs with sliding active indicator": 36px pill bar on
+   #eee, 30px tabs, 13px Inter Medium, white pill indicator — here the
+   indicator is the liquid. */
+
+.tb {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 48px;
+}
+
+.tb-bar {
+  position: absolute;
+  inset: 0;
+  border-radius: 48px;
+  background: #eeeeee;
+  /* Below the goo layer (svg at z -1): the liquid pill paints over the bar. */
+  z-index: -2;
+}
+
+.tb-tabs {
+  display: contents;
+}
+
+.tb-tab {
+  appearance: none;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  background: transparent;
+  height: 30px;
+  padding: 4px 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: rgba(15, 15, 15, 0.8);
+  cursor: pointer;
+  border-radius: 48px;
+  z-index: 1;
+  transition:
+    color 250ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 250ms cubic-bezier(0.22, 1, 0.36, 1);
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+
+.tb-tab:not([aria-selected='true']):hover {
+  color: #0f0f0f;
+}
+
+.tb-tab[aria-selected='true'] {
+  color: #0f0f0f;
+}
+
+.tb-tab:focus-visible {
+  outline: 2px solid #17181c;
+  outline-offset: 2px;
+}
+
+/* Invisible geometry carrier: CSS slides it, the liquid blob renders it. */
+.tb-ind {
+  position: absolute;
+  top: 3px;
+  left: 0;
+  height: 30px;
+  border-radius: 48px;
+  pointer-events: none;
+  transition:
+    transform var(--tb-dur, 320ms) var(--tb-ease, cubic-bezier(0.3, 1.05, 0.4, 1)),
+    width var(--tb-dur, 320ms) var(--tb-ease, cubic-bezier(0.3, 1.05, 0.4, 1));
+}
+
+.tb-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- avatar group (evolve + move) ----------
+   Figma: "Share" pill, 56px tall, radius 58, overlapping 32px avatars;
+   loose 32px draggable avatar (Logram — 2468:1766 / 2468:1785). */
+
+.ap-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.ap {
+  width: 290px;
+  height: 210px;
+}
+
+.ap-pill {
+  position: absolute;
+  left: 20px;
+  top: 82px;
+  height: 56px;
+  border-radius: 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 17px;
+}
+
+.ap-label {
+  font-size: 14px;
+  line-height: 22px;
+  color: #17181c;
+  white-space: nowrap;
+}
+
+.ap-stack {
+  display: flex;
+  align-items: center;
+}
+
+/* Positioned so the explicit z-index applies — see the stacking note in
+   Chips.tsx (an avatar inserted mid-group must not change paint order). */
+.ap-avatar {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  /* OUTSET ring (box-shadow), not an inset border: a border eats into the
+     box, so the photo itself was only a 28px circle inside a 32px box. The
+     chip that joins the group has no such ring, so at the moment it becomes
+     a "real" stack avatar the photo would visibly SHRINK 32→28 — the "resize
+     jump" bug. box-shadow paints outside the box (still separating
+     overlapping avatars exactly like the border did) while leaving the
+     photo itself at the full 32px the chip already used. */
+  box-shadow: 0 0 0 2px #fff;
+  background: #e3e3e6;
+  /* The hover gap opens/closes by animating margins; the pill's evolve
+     spring turns the width change into a liquid bounce. */
+  transition: margin-left 280ms cubic-bezier(0.3, 1.05, 0.4, 1);
+}
+
+.ap-endgap {
+  display: inline-block;
+  height: 1px;
+  transition: width 280ms cubic-bezier(0.3, 1.05, 0.4, 1);
+}
+
+.ap-chip {
+  position: absolute;
+  right: 20px;
+  top: 22px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: grab;
+  touch-action: none;
+  transition:
+    transform 550ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    filter 200ms ease;
+  /* Elevation while the avatar is loose. drop-shadow (not box-shadow) so it
+     follows the circular alpha rather than the square box. */
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.2)) drop-shadow(0 4px 20px rgba(0, 0, 0, 0.16));
+}
+
+@supports (color: color(display-p3 0 0 0 / 0.2)) {
+  .ap-chip {
+    filter: drop-shadow(0 1px 3px color(display-p3 0 0 0 / 0.2))
+      drop-shadow(0 4px 20px color(display-p3 0 0 0 / 0.16));
+  }
+}
+
+.ap-dragging {
+  transition: filter 200ms ease;
+  cursor: grabbing;
+}
+
+/* Travelling into its gap in the stack after release — a gentle overshoot so
+   the avatar settles into the group with a subtle bounce. The elevation drops
+   away as it merges: it's becoming part of the pill's surface, which carries
+   its own shadow on the liquid silhouette. */
+.ap-absorbing {
+  transition:
+    transform var(--ap-absorb-dur, 420ms) var(--ap-absorb-ease, cubic-bezier(0.34, 1.4, 0.64, 1)),
+    filter 160ms ease;
+  filter: none;
+  pointer-events: none;
+}
+
+.ap-reset {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 3;
+  border: 0;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.05);
+  color: #5e6773;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.ap-reset:hover {
+  background: rgba(0, 0, 0, 0.09);
+  color: #17181c;
+}
+
+/* No white ring by default — the loose avatar is a bare photo with its own
+   elevation. The ring grows in only as it joins the group (matching
+   .ap-avatar's box-shadow ring exactly), so it's already at full strength by
+   the moment of the swap — nothing changes at that frame, which is what
+   made the join read as a jump/flicker before. */
+.ap-chip img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: block;
+  pointer-events: none;
+  background: #e3e3e6;
+  box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  /* Short and independent of the flight: the ring is finished during the
+     hover, long before the drop starts, so nothing about it is still moving
+     at the landing. */
+  transition: box-shadow 180ms ease-out;
+}
+
+/* Applied from the moment a slot is engaged (hover) and held through the
+   flight — see the class note in Chips.tsx.
+   --ap-ring is 2px DIVIDED by the absorb scale: the chip scales down as it
+   flies and that scale shrinks its box-shadow too, so a flat 2px here would
+   render 1.6px and pop to the avatar's 2px at the swap. At full size during
+   the hover it reads 2.5px and then shrinks WITH the photo — one motion, not
+   a separate ring animation. */
+.ap-ringed img {
+  box-shadow: 0 0 0 var(--ap-ring, 2.5px) #fff;
+}
+
+/* ---------- evolve (three-dot button → dropdown) ---------- */
+
+.ev {
+  width: 290px;
+  height: 230px;
+}
+
+.ev-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Figma: closed = 36px dots button, open = 245px dropdown, radius 18,
+   8px padding, 40px rows (Logram — 2468:1712 / 2468:1758). */
+.dd {
+  position: absolute;
+  left: 20px;
+  top: 24px;
+  width: 36px;
+  height: 36px;
+  border-radius: 18px;
+  overflow: hidden;
+  transition:
+    width var(--ev-dur, 460ms) var(--ev-ease, cubic-bezier(0.3, 1.05, 0.4, 1)),
+    height var(--ev-dur, 460ms) var(--ev-ease, cubic-bezier(0.3, 1.05, 0.4, 1)),
+    border-radius var(--ev-rad-dur, 460ms) var(--ev-rad-ease, cubic-bezier(0.3, 1.05, 0.4, 1))
+      var(--ev-rad-delay, 0ms);
+}
+
+.dd-open {
+  width: 245px;
+  height: 176px;
+  border-radius: 18px;
+}
+
+.dd-toggle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  padding: 0;
+  border-radius: 18px;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: #17181c;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dd-toggle img {
+  display: block;
+  transition: opacity 120ms ease;
+}
+
+.dd-open .dd-toggle {
+  pointer-events: none;
+}
+
+.dd-open .dd-toggle img {
+  opacity: 0;
+}
+
+.dd-toggle:focus-visible {
+  outline: 2px solid #17181c;
+  outline-offset: 2px;
+}
+
+.dd-items {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  /* A plain div is hit-testable even with no visible content — this box
+     overlapped most of the closed toggle button and silently ate clicks
+     meant for it. Children opt back in via `.dd-open .dd-item`. */
+  pointer-events: none;
+}
+
+.dd-item {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 14px;
+  line-height: 22px;
+  color: #17181c;
+  cursor: pointer;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition:
+    opacity var(--ev-fade-dur, 150ms) ease,
+    transform var(--ev-fade-dur, 150ms) ease,
+    background-color 120ms ease;
+}
+
+.dd-item img {
+  display: block;
+  flex: none;
+}
+
+.dd-open .dd-item {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.dd-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* ---------- control panel (prototypes-pro cp design) ---------- */
+
+.cp-panel {
+  margin-top: 14px;
+  background: #fbfbfc;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.cp-section {
+  padding: 14px 16px 16px;
+}
+
+.cp-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.cp-section-title {
+  font-family: 'Roboto Mono', ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: #17181c;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.72;
+}
+
+.cp-export {
+  appearance: none;
+  border: 0;
+  background: #17181c;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex: none;
+  transition: background-color 120ms ease;
+}
+
+.cp-export:hover {
+  background: #000;
+}
+
+.cp-export.is-copied {
+  background: #0b8a3e;
+}
+
+.cp-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cp-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 3px 0;
+}
+
+.cp-subhead {
+  margin: 14px 0 2px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.35);
+}
+
+.cp-subhead:first-of-type {
+  margin-top: 4px;
+}
+
+.cp-label {
+  color: #5e6773;
+  font-size: 11.5px;
+  line-height: 1.3;
+  font-weight: 400;
+  user-select: none;
+}
+
+.cp-row input,
+.cp-row select {
+  width: 86px;
+  height: 24px;
+  padding: 0 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  font-family: 'Roboto Mono', ui-monospace, monospace;
+  font-size: 11px;
+  color: #17181c;
+  background: #ffffff;
+  text-align: right;
+  -moz-appearance: textfield;
+}
+
+.cp-row input::-webkit-outer-spin-button,
+.cp-row input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.cp-row input:focus,
+.cp-row select:focus {
+  outline: 2px solid #17181c;
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+.cp-slider {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cp-slider input[type='range'] {
+  width: 110px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  accent-color: #17181c;
+}
+
+.cp-slider .cp-val {
+  font-family: 'Roboto Mono', ui-monospace, monospace;
+  font-size: 11px;
+  color: #17181c;
+  min-width: 34px;
+  text-align: right;
+}
+
+.cp-row select.cp-ease {
+  width: 128px;
+  text-align: left;
+  padding-right: 4px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #5e6773 50%),
+    linear-gradient(135deg, #5e6773 50%, transparent 50%);
+  background-position:
+    calc(100% - 10px) 10px,
+    calc(100% - 6px) 10px;
+  background-size: 4px 4px, 4px 4px;
+  background-repeat: no-repeat;
+}
+
+/* ---------- move (slider) ----------
+   Exact values read from the Figma reference SVG (Logram — asset
+   844c7d8e…, node 2468:1762): 8px track, radius 4, 1px inset border at
+   6% black; 24px thumb, white, with the file's own three-layer glossy
+   shadow (outer blur + two inset rings), identical recipe to the other
+   round buttons in this design. */
+
+.sl {
+  width: 240px;
+  height: 80px;
+}
+
+.sl-track {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  top: 38px;
+  height: 8px;
+  border-radius: 4px;
+  background: #eaeaea;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+  /* Below the goo layer (svg sits at z -1): the liquid thumb and its tail
+     must paint OVER the track, not be sliced by it. */
+  z-index: -2;
+}
+
+/* The thumb element itself must stay unstyled: its surface AND shadow are
+   the liquid blob below — a box-shadow here would stick to the pointer while
+   the liquid lags, reading as a detached ring. The Figma thumb shadow is
+   passed as the Gooey `shadow` prop instead, so it rides the silhouette. */
+.sl-thumb {
+  position: absolute;
+  left: 14px;
+  top: 30px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.sl-thumb:active {
+  cursor: grabbing;
+}
+
+.sl-thumb:focus-visible {
+  outline: 2px solid #17181c;
+  outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tb-ind,
+  .ap-chip,
+  .pm-plus,
+  .pm-sat-icon {
+    transition: none !important;
+  }
+
+  .pm-anticipating [data-gooey-svg],
+  .pm-anticipating .pm-main {
+    animation: none !important;
+  }
+}

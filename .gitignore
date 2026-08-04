@@ -1,0 +1,8 @@
+node_modules
+dist
+dist-playground
+*.log
+.DS_Store
+
+# Design reference screenshots (not part of the library)
+images

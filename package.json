@@ -1,0 +1,51 @@
+{
+  "name": "liquid-gooey",
+  "version": "0.1.0",
+  "description": "Liquid UI effects for React: Morph (gooey merge, jelly shape change, contact dissolve) and Move (liquid-rubber trails). SVG-filter silhouette layer + crisp content layer, real shadows on the merged liquid. Cross-browser, Safari included.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsup src/index.ts --format esm,cjs --dts --sourcemap --clean",
+    "build:playground": "vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tsup": "^8.1.0",
+    "typescript": "^5.5.3",
+    "vite": "^5.3.3"
+  },
+  "keywords": [
+    "react",
+    "gooey",
+    "metaball",
+    "liquid",
+    "svg-filter",
+    "animation",
+    "spring"
+  ]
+}
