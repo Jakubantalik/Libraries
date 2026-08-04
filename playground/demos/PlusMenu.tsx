@@ -246,6 +246,19 @@ export function PlusMenu({ blur, contrast, shadow, pro }: DemoProps) {
         </Liquid>
       </div>
 
+      {!pro && (
+        <div className="cp-panel">
+          <div className="cp-section">
+            <div className="cp-section-head">
+              <span className="cp-section-title">Morph</span>
+            </div>
+            {/* The public knobs for a component-driven morph item: the
+                `transition` duration and the per-item `delay` stagger. */}
+            <SliderRow label="Duration (ms)" value={st.openDur} min={80} max={1200} step={10} onChange={set('openDur')} />
+            <SliderRow label="Stagger (ms)" value={st.openStagger} min={0} max={200} step={5} onChange={set('openStagger')} />
+          </div>
+        </div>
+      )}
       {pro && (
       <div className="cp-panel">
         <div className="cp-section">

@@ -77,6 +77,11 @@ export function App() {
             ))}
           </select>
         </label>
+        {/* The pro panels were previously only reachable by typing ?pro — a
+            hidden flag reads as "the controls disappeared". */}
+        <a className="knob-link" href={PRO ? '/' : '/?pro'}>
+          {PRO ? '← Simple controls' : 'Pro controls →'}
+        </a>
       </div>
 
       <main className="grid">
@@ -115,9 +120,7 @@ export function App() {
         </section>
         <section className="card">
           <p className="card-label">Move — liquid rubber</p>
-          <div className="stage">
-            <Slider {...demo} />
-          </div>
+          <Slider {...demo} />
           <p className="card-note">
             Drag the thumb — the surface trails as a moving drop with a liquid tail, snapping back
             with a wobble. <code>effect="move"</code>

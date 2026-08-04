@@ -41,6 +41,24 @@ body {
 
 /* ---------- knobs ---------- */
 
+.knob-link {
+  align-self: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: #5e6773;
+  text-decoration: none;
+  padding: 5px 11px;
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.05);
+  white-space: nowrap;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.knob-link:hover {
+  background: rgba(0, 0, 0, 0.09);
+  color: #17181c;
+}
+
 .knobs {
   display: flex;
   flex-wrap: wrap;
@@ -773,6 +791,11 @@ body {
    6% black; 24px thumb, white, with the file's own three-layer glossy
    shadow (outer blur + two inset rings), identical recipe to the other
    round buttons in this design. */
+
+.sl-wrap {
+  display: flex;
+  flex-direction: column;
+}
 
 .sl {
   width: 240px;
