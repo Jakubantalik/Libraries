@@ -1,10 +1,8 @@
 import { useState } from 'react'
 import { Chips } from './demos/Chips'
-import { Evolve } from './demos/Evolve'
 import { PlusMenu } from './demos/PlusMenu'
 import { Slider } from './demos/Slider'
 import { Tabs } from './demos/Tabs'
-import { TextMenu } from './demos/TextMenu'
 
 export interface DemoProps {
   blur: number
@@ -108,24 +106,6 @@ export function App() {
           <p className="card-note">
             Drag the avatar into the pill — it dissolves in on contact and the group grows, the
             pill resizing with a liquid follow. <code>morph=&#123;&#123; dissolve &#125;&#125;</code>
-          </p>
-        </section>
-        <section className="card">
-          <p className="card-label">Morph — shape change</p>
-          <Evolve {...demo} />
-          <p className="card-note">
-            Click the ⋯ button — it morphs into a dropdown: the liquid mass flows toward the new
-            centre first, then size and corner radius adapt.{' '}
-            <code>morph=&#123;&#123; shape &#125;&#125;</code>
-          </p>
-        </section>
-        <section className="card">
-          <p className="card-label">Morph — selection menu</p>
-          <TextMenu {...demo} />
-          <p className="card-note">
-            Select text in the paragraph — the formatting menu grows out of the
-            selection as liquid and melts away on dismiss.{' '}
-            <code>morph=&#123;&#123; shape &#125;&#125;</code>
           </p>
         </section>
         <section className="card">
