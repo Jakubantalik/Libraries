@@ -402,7 +402,20 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
               // visible. Position derives from the neighbour's live margin —
               // when the hover gap opens, the crescent slides off the box and
               // the cut disappears on its own.
-              const nextMl = i < group.length - 1 ? (gapIndex === i + 1 ? PITCH - 8 : -8) : null
+              // While an avatar is FLYING into the slot to my right, carve
+              // around the flier's landing spot already (-8 overlap) even
+              // though the DOM neighbour still holds the open gap — the swap
+              // then changes nothing, instead of the cut popping in a frame
+              // after the landing.
+              const incomingRight = absorbing && dropIndex != null && i === dropIndex - 1
+              const nextMl =
+                incomingRight
+                  ? -8
+                  : i < group.length - 1
+                    ? gapIndex === i + 1
+                      ? PITCH - 8
+                      : -8
+                    : null
               const sep =
                 nextMl != null
                   ? `radial-gradient(circle 18px at ${16 + 32 + nextMl}px 16px, transparent 17.5px, #000 18px)`
@@ -511,6 +524,20 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
                 // While travelling, adopt the stacking of the slot being
                 // joined so the handoff to the real avatar is paint-identical.
                 zIndex: absorbing && dropIndex != null ? dropIndex : 20,
+                // The crescent the landed avatar will wear, worn ALREADY
+                // during the flight so the swap is paint-identical. Chip
+                // coordinates are pre-scale (40px box, x1.25): neighbour
+                // centre 24px right => 30px local, radius 18 => 22.5 local.
+                // On the wrapper div, not the img — the engine owns the img's
+                // mask for the dissolve hole.
+                ...(absorbing && dropIndex != null && dropIndex < group.length
+                  ? {
+                      maskImage:
+                        'radial-gradient(circle 22.5px at 50px 20px, transparent 21.9px, #000 22.5px)',
+                      WebkitMaskImage:
+                        'radial-gradient(circle 22.5px at 50px 20px, transparent 21.9px, #000 22.5px)',
+                    }
+                  : null),
                 '--ap-absorb-dur': `${melt.dropDur}ms`,
                 '--ap-absorb-ease': dropEase(melt.dropBounce),
                 // Pre-divided by the absorb scale so it RENDERS at RING_PX,
