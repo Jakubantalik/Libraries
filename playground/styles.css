@@ -842,11 +842,103 @@ body {
   outline-offset: 4px;
 }
 
+/* ---------- text-selection formatting menu ---------- */
+
+.tm-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.tm-stage {
+  position: relative;
+  width: 290px;
+  height: 210px;
+  padding: 24px 22px;
+}
+
+/* The liquid group is an OVERLAY above the paragraph, not its container —
+   see the note in TextMenu.tsx. Its position/inset/pointer-events are set
+   INLINE there, because <Liquid>'s own inline style would beat this rule. */
+
+.tm-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 24px;
+  color: #3c4149;
+  cursor: text;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.tm-text::selection {
+  background: rgba(66, 133, 244, 0.22);
+}
+
+/* Closed = a liquid dot at the selection; open = the toolbar. The element's
+   own CSS transition drives the geometry — morph shape re-measures every
+   frame, so the liquid follows this exact timing with jelly physics. */
+.tm-menu {
+  position: absolute;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  overflow: hidden;
+  /* The closed circle sits ON the text — it must never eat the pointer,
+     or it blocks re-selecting the words underneath while it melts away. */
+  pointer-events: none;
+  transition:
+    width var(--tm-dur, 380ms) var(--tm-ease, cubic-bezier(0.3, 1.05, 0.4, 1)),
+    height var(--tm-dur, 380ms) var(--tm-ease, cubic-bezier(0.3, 1.05, 0.4, 1)),
+    left var(--tm-dur, 380ms) var(--tm-ease, cubic-bezier(0.3, 1.05, 0.4, 1)),
+    top var(--tm-dur, 380ms) var(--tm-ease, cubic-bezier(0.3, 1.05, 0.4, 1));
+}
+
+.tm-btn {
+  width: 34px;
+  height: 32px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  /* Dark surface: the liquid below the buttons is the black menu fill. */
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex: none;
+  /* Content arrives after the liquid has mostly formed, and leaves first. */
+  opacity: 0;
+  transition: opacity var(--tm-fade-dur, 140ms) ease, background-color 120ms ease;
+}
+
+.tm-menu-open {
+  pointer-events: auto;
+}
+
+.tm-menu-open .tm-btn {
+  opacity: 1;
+  transition-delay: var(--tm-fade-delay, 90ms);
+}
+
+.tm-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.tm-btn-active {
+  background: rgba(255, 255, 255, 0.22);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tb-ind,
   .ap-chip,
   .pm-plus,
-  .pm-sat-icon {
+  .pm-sat-icon,
+  .tm-menu,
+  .tm-btn {
     transition: none !important;
   }
 
