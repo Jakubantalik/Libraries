@@ -390,6 +390,11 @@ body {
   width: 32px;
   height: 32px;
   border-radius: 50%;
+  /* The portraits are portrait/landscape (e.g. 640x500), never square —
+     without cover they are non-uniformly squashed into the circle. It also
+     matches the melt engine, which renders its warped copy with
+     preserveAspectRatio="xMidYMid slice" (the SVG equivalent of cover). */
+  object-fit: cover;
   /* OUTSET ring (box-shadow), not an inset border: a border eats into the
      box, so the photo itself was only a 28px circle inside a 32px box. The
      chip that joins the group has no such ring, so at the moment it becomes
@@ -482,6 +487,8 @@ body {
   width: 100%;
   height: 100%;
   border-radius: 50%;
+  /* See .ap-avatar — non-square sources must be cropped, not squashed. */
+  object-fit: cover;
   display: block;
   pointer-events: none;
   background: #e3e3e6;
