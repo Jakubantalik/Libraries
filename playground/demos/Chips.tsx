@@ -171,6 +171,12 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
   const avatarEls = useRef<Array<HTMLImageElement | null>>([])
   const shove = useRef<{ x: number[]; v: number[]; raf: number; last: number } | null>(null)
   const shoveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  /** True once the flier has IMPACTED (same clock as the shove): the
+   *  separator crescents grow open at this moment, not at release and not
+   *  at the swap — the hit is what visually seats the avatar. */
+  const [seated, setSeated] = useState(false)
+  const seatTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => () => { if (seatTimer.current) clearTimeout(seatTimer.current) }, [])
   const stopShove = () => {
     if (shove.current) cancelAnimationFrame(shove.current.raf)
     shove.current = null
@@ -313,6 +319,10 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
       // Impact timing is an explicit knob, not a fraction of the flight: at
       // 0 the row reacts the instant you let go (the shove leads the avatar
       // in, which reads as anticipation); larger values wait for it.
+      setSeated(false)
+      if (seatTimer.current) clearTimeout(seatTimer.current)
+      if (melt.pushDelay <= 0) setSeated(true)
+      else seatTimer.current = setTimeout(() => setSeated(true), melt.pushDelay)
       if (melt.push > 0) {
         if (shoveTimer.current) clearTimeout(shoveTimer.current)
         const count = group.length
@@ -343,6 +353,8 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
   const reset = () => {
     if (absorbTimer.current) clearTimeout(absorbTimer.current)
     if (shoveTimer.current) clearTimeout(shoveTimer.current)
+    if (seatTimer.current) clearTimeout(seatTimer.current)
+    setSeated(false)
     stopShove()
     stableGap.current = null
     setSwapping(true)
@@ -416,9 +428,12 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
                       ? PITCH - 8
                       : -8
                     : null
+              // Radius rides --seat (0..1, registered + transitioned): resting
+              // avatars sit at the default 1 (full 18px cut); the landing
+              // pair starts at 0 and grows open at the impact.
               const sep =
                 nextMl != null
-                  ? `radial-gradient(circle 18px at ${16 + 32 + nextMl}px 16px, transparent 17.5px, #000 18px)`
+                  ? `radial-gradient(circle at ${16 + 32 + nextMl}px 16px, transparent calc(var(--seat, 1) * 18px - 0.5px), #000 calc(var(--seat, 1) * 18px))`
                   : undefined
               return (
               <img
@@ -435,6 +450,11 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
                   transition: swapping ? 'none' : undefined,
                   maskImage: sep,
                   WebkitMaskImage: sep,
+                  ...(incomingRight
+                    ? { '--seat': seated ? 1 : 0 }
+                    : gapIndex === i + 1
+                      ? { '--seat': 0 }
+                      : null),
                   // Explicit stacking: DOM order alone makes an avatar
                   // inserted mid-group drop beneath its right-hand
                   // neighbours the instant it appears — a visible flash.
@@ -533,11 +553,15 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
                 ...(absorbing && dropIndex != null && dropIndex < group.length
                   ? {
                       maskImage:
-                        'radial-gradient(circle 22.5px at 50px 20px, transparent 21.9px, #000 22.5px)',
+                        'radial-gradient(circle at 50px 20px, transparent calc(var(--seat, 1) * 22.5px - 0.6px), #000 calc(var(--seat, 1) * 22.5px))',
                       WebkitMaskImage:
-                        'radial-gradient(circle 22.5px at 50px 20px, transparent 21.9px, #000 22.5px)',
+                        'radial-gradient(circle at 50px 20px, transparent calc(var(--seat, 1) * 22.5px - 0.6px), #000 calc(var(--seat, 1) * 22.5px))',
                     }
                   : null),
+                // Pinned to 0 outside the flight so the registered property
+                // does not TRANSITION from its initial 1 the moment the mask
+                // mounts (a phantom cut shrinking right at release).
+                '--seat': absorbing ? (seated ? 1 : 0) : 0,
                 '--ap-absorb-dur': `${melt.dropDur}ms`,
                 '--ap-absorb-ease': dropEase(melt.dropBounce),
                 // Pre-divided by the absorb scale so it RENDERS at RING_PX,

@@ -349,6 +349,16 @@ body {
   flex-direction: column;
 }
 
+/* Seating factor for the separator crescents: 0 = no cut, 1 = full cut.
+   Registered so it TRANSITIONS — the gap grows open organically at the
+   moment of impact instead of popping. Browsers without @property fall back
+   to a discrete (but correctly timed) appearance. */
+@property --seat {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 1;
+}
+
 /* ---------- avatar group (evolve + move) ----------
    Figma: "Share" pill, 56px tall, radius 58, overlapping 32px avatars;
    loose 32px draggable avatar (Logram — 2468:1766 / 2468:1785). */
@@ -413,8 +423,11 @@ body {
   outline-offset: -1px;
   background: #e3e3e6;
   /* The hover gap opens/closes by animating margins; the pill's evolve
-     spring turns the width change into a liquid bounce. */
-  transition: margin-left 280ms cubic-bezier(0.3, 1.05, 0.4, 1);
+     spring turns the width change into a liquid bounce. --seat drives the
+     separator crescent's growth at landing. */
+  transition:
+    margin-left 280ms cubic-bezier(0.3, 1.05, 0.4, 1),
+    --seat 240ms cubic-bezier(0.3, 1.05, 0.4, 1);
 }
 
 .ap-endgap {
@@ -434,33 +447,33 @@ body {
   touch-action: none;
   transition:
     transform 550ms cubic-bezier(0.34, 1.56, 0.64, 1),
-    filter 200ms ease;
-  /* Elevation while the avatar is loose. drop-shadow (not box-shadow) so it
-     follows the circular alpha rather than the square box. */
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.2)) drop-shadow(0 4px 20px rgba(0, 0, 0, 0.16));
-}
-
-@supports (color: color(display-p3 0 0 0 / 0.2)) {
-  .ap-chip {
-    filter: drop-shadow(0 1px 3px color(display-p3 0 0 0 / 0.2))
-      drop-shadow(0 4px 20px color(display-p3 0 0 0 / 0.16));
-  }
+    --seat 240ms cubic-bezier(0.3, 1.05, 0.4, 1);
+  /* Elevation lives on the IMG now (box-shadow + outline) — see .ap-chip img.
+     A `filter: drop-shadow(...)` on this div doesn't compose with that: the
+     old approach used filter because it follows the circular alpha of a
+     square box, but the box itself is already a circle (border-radius:50%),
+     so a plain box-shadow renders identically without needing filter. */
 }
 
 .ap-dragging {
-  transition: filter 200ms ease;
+  /* Listing only properties that AREN'T transform: this suppresses the
+     div's own transform transition (position must track the pointer
+     instantly) while leaving the img's box-shadow/outline transitions,
+     declared on the img itself, untouched. */
+  transition: none;
   cursor: grabbing;
 }
 
 /* Travelling into its gap in the stack after release — a gentle overshoot so
    the avatar settles into the group with a subtle bounce. The elevation drops
    away as it merges: it's becoming part of the pill's surface, which carries
-   its own shadow on the liquid silhouette. */
+   its own shadow on the liquid silhouette — handled by .ap-ringed img fully
+   overriding .ap-chip img's box-shadow/outline (same specificity, later in
+   the cascade), so nothing extra is needed here. */
 .ap-absorbing {
   transition:
     transform var(--ap-absorb-dur, 420ms) var(--ap-absorb-ease, cubic-bezier(0.34, 1.4, 0.64, 1)),
-    filter 160ms ease;
-  filter: none;
+    --seat 240ms cubic-bezier(0.3, 1.05, 0.4, 1);
   pointer-events: none;
 }
 
@@ -486,11 +499,15 @@ body {
   color: #17181c;
 }
 
-/* No white ring by default — the loose avatar is a bare photo with its own
-   elevation. The ring grows in only as it joins the group (matching
-   .ap-avatar's box-shadow ring exactly), so it's already at full strength by
-   the moment of the swap — nothing changes at that frame, which is what
-   made the join read as a jump/flicker before. */
+/* No white RING by default — the loose avatar is a bare photo with its own
+   floating elevation (ambient + contact shadow, inner hairline). The ring
+   grows in only as it joins the group (matching .ap-avatar's box-shadow ring
+   exactly — see .ap-ringed img, which fully replaces this elevation), so
+   it's already at full strength by the moment of the swap — nothing changes
+   at that frame, which is what made the join read as a jump/flicker before.
+   Inset box-shadow does not paint on <img> (a replaced element) — WebKit
+   silently drops it — so the inner hairline is an `outline` with a negative
+   offset instead, which draws inside the edge and on top of the photo. */
 .ap-chip img {
   width: 100%;
   height: 100%;
@@ -500,11 +517,22 @@ body {
   display: block;
   pointer-events: none;
   background: #e3e3e6;
-  box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.16), 0 1px 1px 0 rgba(0, 0, 0, 0.2);
+  outline: 1px solid rgba(0, 0, 0, 0.2);
+  outline-offset: -1px;
   /* Short and independent of the flight: the ring is finished during the
      hover, long before the drop starts, so nothing about it is still moving
      at the landing. */
-  transition: box-shadow 180ms ease-out;
+  transition: box-shadow 180ms ease-out, outline-color 180ms ease-out;
+}
+
+@supports (color: color(display-p3 0 0 0 / 0.2)) {
+  .ap-chip img {
+    box-shadow:
+      0 2px 6px 0 color(display-p3 0 0 0 / 0.16),
+      0 1px 1px 0 color(display-p3 0 0 0 / 0.2);
+    outline-color: color(display-p3 0 0 0 / 0.2);
+  }
 }
 
 /* Applied from the moment a slot is engaged (hover) and held through the
