@@ -123,14 +123,16 @@ function mapMorphSprings(t: MorphTuning | undefined): EvolveOptions {
 
 function mapDissolve(d: boolean | number): DissolveOptions {
   const k = typeof d === 'number' ? Math.min(1, Math.max(0, d)) : 1
-  // k scales the strength axes; geometry (zone/range) and motion character
-  // (taper/churn) stay at the tuned values so a weak dissolve still looks
-  // like the same liquid, just shallower.
+  // `strength` is the engine's own ceiling: it scales warp/blur/gravity/mix
+  // AND the hole that erases the image's edge together, so a weak dissolve
+  // reads as a shallower liquid rather than an erased edge with nothing
+  // there to justify it. Geometry (zone/range) and motion character (taper/
+  // churn) stay at the tuned values regardless of strength.
   return {
-    warp: 26 * k,
-    blur: 8 * k,
-    mix: 0.7 * k,
-    gravity: 60 * k,
+    warp: 26,
+    blur: 8,
+    mix: 0.7,
+    gravity: 60,
     taper: 1,
     warpFreq: 1.7,
     flowSpeed: 22,
@@ -138,6 +140,7 @@ function mapDissolve(d: boolean | number): DissolveOptions {
     zone: 18,
     range: 49,
     releaseMs: 110,
+    strength: k,
   }
 }
 

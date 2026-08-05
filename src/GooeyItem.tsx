@@ -58,6 +58,10 @@ export interface DissolveOptions {
   /** Ms the melt takes to evaporate (opacity -> 0), independent of
    *  `releaseMs`. Defaults to `releaseMs`. */
   fadeMs?: number
+  /** 0..1 — overall dissolve intensity, independent of proximity: caps how
+   *  far the melt can develop even at full contact (scales warp/blur/
+   *  gravity/mix and the hole depth together). Default 1. */
+  strength?: number
 }
 
 export interface GooeyItemProps {
@@ -299,7 +303,12 @@ function ObservedItem({
   const hostRef = useRef<HTMLSpanElement | null>(null)
   const blobRef = useRef<SVGRectElement | null>(null)
   const meltRef = useRef<SVGGElement | null>(null)
-  const blendRef = useRef<{ active?: boolean; releaseMs?: number; fadeMs?: number } | null>(null)
+  const blendRef = useRef<{
+    active?: boolean
+    releaseMs?: number
+    fadeMs?: number
+    strength?: number
+  } | null>(null)
 
   const opts = typeof contactBlur === 'object' ? contactBlur : {}
   const blendBlur = opts.blur ?? 8
@@ -317,6 +326,7 @@ function ObservedItem({
   const blendActive = opts.active !== false
   const blendRelease = opts.releaseMs ?? 240
   const blendFade = opts.fadeMs
+  const blendStrength = opts.strength ?? 1
 
   const effects = toEffects(effect)
   const dynamics = {
@@ -361,6 +371,7 @@ function ObservedItem({
             active: blendActive,
             releaseMs: blendRelease,
             fadeMs: blendFade,
+            strength: blendStrength,
           }
         : undefined
     blendRef.current = blend ?? null
@@ -376,15 +387,17 @@ function ObservedItem({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ctx, radiusKey, blendKey, effectKey, blobInset, bridgeGrow])
 
-  // `active` / `releaseMs` are pushed straight into the live config so a drag
-  // release fades the melt without rebuilding it.
+  // `active` / `releaseMs` / `fadeMs` / `strength` are pushed straight into
+  // the live config so a drag release (or a strength slider) updates the
+  // melt without rebuilding its SVG structure.
   useEffect(() => {
     if (!blendRef.current) return
     blendRef.current.active = blendActive
     blendRef.current.releaseMs = blendRelease
     blendRef.current.fadeMs = blendFade
+    blendRef.current.strength = blendStrength
     ctx.engine.wake()
-  }, [ctx, blendActive, blendRelease, blendFade])
+  }, [ctx, blendActive, blendRelease, blendFade, blendStrength])
 
   return (
     <>

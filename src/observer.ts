@@ -52,6 +52,12 @@ export interface BlendConfig {
    *  instead of blinking out. May exceed `releaseMs` (the melt then lives
    *  until the fade finishes). Defaults to `releaseMs`. */
   fadeMs?: number
+  /** 0..1 — overall dissolve intensity, independent of proximity: a master
+   *  ceiling on how far the melt can develop even at full contact. Scales
+   *  warp/blur/gravity/mix AND the hole depth together, so a weak strength
+   *  reads as a shallower liquid rather than an erased edge with no melt to
+   *  justify it. 1 = full strength (default). */
+  strength?: number
 }
 
 export interface EvolveOptions {
@@ -486,9 +492,12 @@ export class ObserveEngine {
     const defs = svg('defs', {})
     const gradient = svg('radialGradient', { id: `${uid}-g` })
     gradient.append(
+      // Long, smooth falloff: the melt reads as a gradient from intact rim
+      // to fully mixed core, not as a disc with a soft edge.
       svg('stop', { offset: '0%', 'stop-color': '#fff' }),
-      svg('stop', { offset: '45%', 'stop-color': '#fff', 'stop-opacity': '0.85' }),
-      svg('stop', { offset: '75%', 'stop-color': '#fff', 'stop-opacity': '0.35' }),
+      svg('stop', { offset: '35%', 'stop-color': '#fff', 'stop-opacity': '0.95' }),
+      svg('stop', { offset: '60%', 'stop-color': '#fff', 'stop-opacity': '0.6' }),
+      svg('stop', { offset: '82%', 'stop-color': '#fff', 'stop-opacity': '0.25' }),
       svg('stop', { offset: '100%', 'stop-color': '#fff', 'stop-opacity': '0' }),
     )
     defs.append(gradient)
@@ -968,7 +977,12 @@ export class ObserveEngine {
       // dissolve must track the BRIDGE onset — a squared curve left a sharp
       // avatar edge visible inside an already-formed neck.
       const sRaw = smoothstep(1 - bestGap / range)
-      sTarget = Math.pow(sRaw, 1.25)
+      // Strength is a CEILING, not a linear scale: even at full contact the
+      // melt cannot exceed it, but it still ramps the same way on approach —
+      // scaling sRaw itself would also slow the ramp, reading as "farther
+      // away" rather than "weaker".
+      const strength = Math.max(0, Math.min(1, blend.strength ?? 1))
+      sTarget = Math.pow(sRaw, 1.25) * strength
     }
     // Asymmetric smoothing: quick attack; the release is a TIMED fade that
     // reaches the target in exactly `releaseMs`. An exponential chase here
@@ -978,6 +992,13 @@ export class ObserveEngine {
     // residual dissolve hole popped off in a single frame.
     if (sTarget >= item.meltFade) {
       item.meltFade += (sTarget - item.meltFade) * Math.min(1, dt * 16)
+      item.meltRel = null
+    } else if (sTarget > 0.02) {
+      // In-range fluctuation (pointer jitter, slow retreat): a gentle chase
+      // down, NOT the evaporation pipeline. Engaging the timed release here
+      // started the opacity fade mid-hover — the dissolve visibly vanished
+      // while still necking, then popped back on re-approach.
+      item.meltFade += (sTarget - item.meltFade) * Math.min(1, dt * 6)
       item.meltRel = null
     } else {
       // The melt lives until BOTH the structural release and the opacity
@@ -1123,7 +1144,7 @@ export class ObserveEngine {
       // Blur eases in with a curve so the rim stays nearly sharp and the
       // core carries the full radius: gentle at first, then rising.
       const blurK = 0.06 + 0.94 * Math.pow(t, 1.7)
-      const warpK = 0.34 + 0.66 * t
+      const warpK = 0.2 + 0.8 * t
       layer.disp.setAttribute('scale', String(round(blend.warp * warpK * eStruct)))
       layer.blurEl.setAttribute('stdDeviation', String(round(blend.blur * blurK * eStruct)))
       if (layer.turb.getAttribute('baseFrequency') !== bfStr) {
@@ -1141,10 +1162,13 @@ export class ObserveEngine {
       layer.noiseOffset.setAttribute('dy', String(round(guy * oa + gux * ob)))
       layer.circle.setAttribute('cx', String(round(bx)))
       layer.circle.setAttribute('cy', String(round(by)))
-      layer.circle.setAttribute('r', String(round(d * (1 - 0.5 * t))))
-      // Outer layers a touch more opaque so the stack's total alpha stays
-      // even from rim to core.
-      layer.gl.setAttribute('opacity', String(round(Math.min(1, eStruct * (1.35 - 0.35 * t)))))
+      // Wider radius spread than before (rim reaches past the zone, tip
+      // concentrates): with the longer gradient tail this turns the zone
+      // into a continuous ramp instead of a soft-edged disc.
+      layer.circle.setAttribute('r', String(round(d * (1.15 - 0.75 * t))))
+      // Rim layer slightly translucent so the onset is gradual; the core
+      // still stacks to full alpha.
+      layer.gl.setAttribute('opacity', String(round(Math.min(1, eStruct * (0.75 + 0.25 * t)))))
     })
     host.setAttribute('opacity', r3(item.meltOp).toString())
     // Anchored stretch, NOT translation: scaling from the trailing edge of

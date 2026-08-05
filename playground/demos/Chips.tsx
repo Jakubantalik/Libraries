@@ -15,6 +15,9 @@ import avatar6 from '../assets/avatars/avatar-6.png'
 import type { DemoProps } from '../App'
 
 interface MeltState {
+  /** 0..1 — master ceiling on how far the dissolve can develop; scales the
+   *  liquid intensity AND the image-edge erasure together. */
+  strength: number
   warp: number
   blur: number
   zone: number
@@ -54,7 +57,7 @@ function meltSnippet(m: MeltState): string {
   return [
     '// liquid-gooey — Dissolve values',
     'contactBlur={{',
-    `  warp: ${m.warp}, blur: ${m.blur}, mix: ${m.mix}, gravity: ${m.gravity},`,
+    `  strength: ${m.strength}, warp: ${m.warp}, blur: ${m.blur}, mix: ${m.mix}, gravity: ${m.gravity},`,
     `  taper: ${m.taper}, warpFreq: ${m.warpFreq}, flowSpeed: ${m.flowSpeed},`,
     `  detail: ${m.detail}, zone: ${m.zone}, range: ${m.range},`,
     `  releaseMs: ${m.release}, fadeMs: ${m.fade},`,
@@ -66,6 +69,7 @@ function meltSnippet(m: MeltState): string {
 }
 
 const MELT_DEFAULTS: MeltState = {
+  strength: 1,
   warp: 26,
   blur: 8,
   zone: 18,
@@ -497,6 +501,7 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
               blobInset: 2,
               bridgeGrow: 8,
               dissolve: {
+                strength: melt.strength,
                 ...(pro
                   ? {
                       blur: melt.blur,
@@ -608,6 +613,7 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
               </button>
             </span>
           </div>
+          <SliderRow label="Strength" value={melt.strength} min={0} max={1} step={0.05} onChange={setM('strength')} />
           <SliderRow label="Warp" value={melt.warp} min={0} max={90} step={1} onChange={setM('warp')} />
           <SliderRow label="Mix (two-liquid)" value={melt.mix} min={0} max={1} step={0.05} onChange={setM('mix')} />
           <SliderRow label="Gravity (px)" value={melt.gravity} min={0} max={60} step={1} onChange={setM('gravity')} />
