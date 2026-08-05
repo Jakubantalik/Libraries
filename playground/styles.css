@@ -874,19 +874,35 @@ body {
   background: rgba(66, 133, 244, 0.22);
 }
 
-/* The selection-anchor circle: one of the TWO liquid elements. Its liquid
-   surface is the blob — the element only carries geometry. */
-.tm-dot {
+/* The selection-anchor circle: one of the TWO liquid elements. The wrapper
+   carries position + the pop transform; the engine mirrors its rendered
+   rect into the liquid every frame. */
+.tm-dot-wrap {
+  position: absolute;
   width: 12px;
   height: 12px;
   border-radius: 50%;
   pointer-events: none;
+  transform: scale(0.01);
+  transition: transform var(--dur, 180ms) var(--ease, ease) var(--delay, 0ms);
+  will-change: transform;
 }
 
-/* The toolbar: a STATIC box — all open/close motion is the mirrored item's
-   transform (translate + scale), so there is no width/height/left/top
-   animation left to jump or drift. */
-.tm-menu {
+.tm-dot-wrap.tm-on {
+  transform: none;
+}
+
+.tm-dot {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+/* The toolbar: a STATIC 232x44 box; all open/close motion is a transform
+   transition (collapse into the circle's centre via --dx/--dy). No
+   width/height/left/top ever animates. */
+.tm-bar-wrap {
+  position: absolute;
   width: 232px;
   height: 44px;
   border-radius: 999px;
@@ -896,6 +912,16 @@ body {
   gap: 2px;
   overflow: hidden;
   pointer-events: none;
+  transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(0.04);
+  transition: transform var(--dur, 380ms) var(--ease, ease) var(--delay, 0ms);
+  will-change: transform;
+}
+
+/* Re-enable the pointer only once open — the overlay and collapsed states
+   must never block re-selecting the text underneath. */
+.tm-bar-wrap.tm-on {
+  transform: none;
+  pointer-events: auto;
 }
 
 .tm-btn {
@@ -915,18 +941,12 @@ body {
   flex: none;
   /* Content arrives after the liquid has mostly formed, and leaves first. */
   opacity: 0;
-  transition: opacity var(--tm-fade-dur, 140ms) ease, background-color 120ms ease;
+  transition: opacity var(--fade-dur, 140ms) ease, background-color 120ms ease;
 }
 
-/* Re-enable the pointer only once open — the overlay and collapsed states
-   must never block re-selecting the text underneath. */
-.tm-menu-open {
-  pointer-events: auto;
-}
-
-.tm-menu-open .tm-btn {
+.tm-bar-wrap.tm-on .tm-btn {
   opacity: 1;
-  transition-delay: var(--tm-fade-delay, 90ms);
+  transition-delay: var(--fade-delay, 90ms);
 }
 
 .tm-btn:hover {
@@ -942,7 +962,8 @@ body {
   .ap-chip,
   .pm-plus,
   .pm-sat-icon,
-  .tm-menu,
+  .tm-bar-wrap,
+  .tm-dot-wrap,
   .tm-btn {
     transition: none !important;
   }
