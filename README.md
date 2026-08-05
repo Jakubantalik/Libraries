@@ -7,6 +7,20 @@ Liquid effects for React UI. Two effects cover the whole family:
 
 Cross-browser (Safari included), crisp text/icons/images at all times, real shadows on the merged liquid, zero idle cost.
 
+## Why
+
+The usual gooey effect runs blur + alpha-contrast over your actual UI. That one decision costs you everything else: text goes soft, images smear, shadows become impossible (the contrast step eats them), and Safari renders it wrong. So the effect stays confined to decorative colored circles.
+
+liquid-gooey splits it in two — a silhouette layer carries the goo and the shadow, your real DOM rides crisp on top. Same liquid, none of the tax.
+
+- **Real shadows.** Parsed from `box-shadow` syntax and rebuilt on the *merged* silhouette, so one consistent shadow hugs the liquid through every merge, split and bridge — no handoff, nothing to flash.
+- **Crisp everything.** Text, icons and photos stay pixel-sharp because they are never filtered.
+- **Images that actually melt.** Opt-in dissolve warps imagery at the contact point with SVG displacement — two materials mixing, not a blur.
+- **Safari included.** Filters run on SVG content, never CSS `url()` on HTML — that's the specific thing WebKit gets wrong.
+- **It's real UI, not decoration.** The content layer is live DOM: focus rings, hit targets, ARIA and handlers all intact.
+- **Zero idle cost.** Component-driven springs compile to GPU-composited CSS `linear()` easings; the measurement loop sleeps completely when nothing moves.
+- **Two effects, not fifty knobs.** Morph and Move take 3–4 normalized knobs each, with the full physics underneath when you want it.
+
 ```bash
 npm install liquid-gooey
 ```
