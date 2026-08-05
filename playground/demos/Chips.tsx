@@ -55,18 +55,18 @@ function meltSnippet(m: MeltState): string {
 }
 
 const MELT_DEFAULTS: MeltState = {
-  warp: 13,
+  warp: 26,
   blur: 8,
   zone: 18,
-  range: 16,
-  mix: 0.45,
+  range: 49,
+  mix: 0.7,
   gravity: 60,
-  taper: 0.95,
-  warpFreq: 1,
-  flowSpeed: 26,
+  taper: 1,
+  warpFreq: 1.7,
+  flowSpeed: 22,
   detail: 2,
   release: 110,
-  dropDur: 420,
+  dropDur: 360,
   dropEase: 'Bounce',
 }
 

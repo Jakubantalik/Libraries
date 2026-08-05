@@ -318,8 +318,11 @@ body {
   color: #0f0f0f;
 }
 
+/* The indicator liquid is black (see Tabs.tsx `fill`), so the selected label
+   inverts. It transitions on the same curve as the pill's slide, so the
+   colour crosses over while the liquid is arriving underneath. */
 .tb-tab[aria-selected='true'] {
-  color: #0f0f0f;
+  color: #fff;
 }
 
 .tb-tab:focus-visible {

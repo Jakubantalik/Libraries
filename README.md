@@ -114,7 +114,7 @@ Every raw engine value stays reachable — the slim knobs map onto them, and `ad
     dissolve: true,
     advanced: {
       evolve: { massStiffness: 320, cornerDuration: 820, roundness: 1 /* EvolveOptions */ },
-      dissolve: { warp: 13, mix: 0.45, gravity: 60, active: dragging /* DissolveOptions */ },
+      dissolve: { warp: 26, mix: 0.7, gravity: 60, active: dragging /* DissolveOptions */ },
       blobInset: 2,   // shrink the blob so an opaque photo covers its own liquid
       bridgeGrow: 8,  // liquid coat that swells out and necks into a neighbour
     },

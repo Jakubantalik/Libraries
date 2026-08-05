@@ -27,7 +27,7 @@ export type GooeyEffect = 'morph' | 'evolve' | 'move'
 export interface DissolveOptions {
   /** Melt blur in px. Default 8. */
   blur?: number
-  /** Displacement strength of the liquid warp. Default 13. */
+  /** Displacement strength of the liquid warp. Default 26. */
   warp?: number
   /** Magnetic drift toward the contact, px. Default 4. */
   pull?: number
@@ -36,7 +36,7 @@ export interface DissolveOptions {
   /** Size of the melt zone around the contact, px. */
   zone?: number
   /** 0..1 — two-liquid mixing: erodes the melted copy into tendrils so the
-   *  liquid behind shows through the gaps. Default 0.45 when dissolving. */
+   *  liquid behind shows through the gaps. Default 0.7 when dissolving. */
   mix?: number
   /** Px the melt is drawn toward the neighbour's centre (flow gravity). */
   gravity?: number
@@ -86,7 +86,7 @@ export interface GooeyItemProps {
   /** Observe mode: liquid-melt the item's imagery at the point where it
    *  touches a neighbour — a turbulence-displacement warp bends the image and
    *  its edge like two materials merging, ramping in as the goo bridge forms.
-   *  `blur` is the melt blur in px (default 6), `warp` the displacement
+   *  `blur` is the melt blur in px (default 8), `warp` the displacement
    *  strength (default 26), `pull` the magnetic drift toward the contact in px
    *  (default 4), `range` the distance where melting starts (defaults from the
    *  group's goo blur). Text is never melted. */
@@ -300,15 +300,15 @@ function ObservedItem({
 
   const opts = typeof contactBlur === 'object' ? contactBlur : {}
   const blendBlur = opts.blur ?? 8
-  const blendWarp = opts.warp ?? 13
+  const blendWarp = opts.warp ?? 26
   const blendPull = opts.pull ?? 4
   const blendRange = opts.range
   const blendZone = opts.zone
   const blendMix = opts.mix ?? 0
   const blendGravity = opts.gravity ?? 60
-  const blendTaper = opts.taper ?? 0.95
-  const blendWarpFreq = opts.warpFreq ?? 1
-  const blendFlowSpeed = opts.flowSpeed ?? 26
+  const blendTaper = opts.taper ?? 1
+  const blendWarpFreq = opts.warpFreq ?? 1.7
+  const blendFlowSpeed = opts.flowSpeed ?? 22
   const blendWarpStyle = opts.warpStyle ?? 'fractalNoise'
   const blendDetail = opts.detail ?? 2
   const blendActive = opts.active !== false

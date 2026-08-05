@@ -13,7 +13,7 @@ const TABS = ['Plan', 'Debug', 'Ask']
 
 /** The indicator pill's own elevation, rendered on the liquid silhouette so
  *  it travels (and stretches) with the drop, never detaching from it. */
-const PILL_SHADOW = '0 0 0 1px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.1)'
+const PILL_SHADOW = '0 1px 3px rgba(0, 0, 0, 0.22), 0 1px 1px rgba(0, 0, 0, 0.14)'
 
 const EASES: Record<string, string> = {
   Smooth: 'cubic-bezier(0.3, 1.05, 0.4, 1)',
@@ -127,7 +127,7 @@ export function Tabs({ contrast, pro }: DemoProps) {
         <Liquid
           blur={st.gooBlur}
           contrast={contrast}
-          fill="#fff"
+          fill="#0f0f0f"
           shadow={PILL_SHADOW}
           className="tb"
           style={

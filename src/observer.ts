@@ -297,6 +297,9 @@ interface Item extends ObservedTarget {
   /** In-flight release: start strength + elapsed ms, so the fade completes in
    *  exactly `releaseMs` instead of chasing zero forever. */
   meltRel: { from: number; t: number } | null
+  /** Smoothed overlay opacity — carries the progressive release fade, and
+   *  keeps a re-approach mid-fade from popping back to full. */
+  meltOp: number
   /** Accumulated noise-drift phase — makes the liquid churn. */
   meltPhase: number
   /** Previous frame position, to gate the churn on actual movement. */
@@ -392,6 +395,7 @@ export class ObserveEngine {
       lastBi: t.blobInset ?? 0,
       meltFade: 0,
       meltRel: null,
+      meltOp: 1,
       meltPhase: 0,
       meltPrev: null,
       meltGeom: null,
@@ -1008,11 +1012,30 @@ export class ObserveEngine {
           ? (o.y + o.h + f.y) / 2
           : (Math.max(f.y, o.y) + Math.min(f.y + f.h, o.y + o.h)) / 2
     item.meltGeom = { o: { ...o } }
+    // Progressive release: OPACITY leads, STRUCTURE lags. Scaling warp and
+    // blur down with the strength made the copy un-warp while still opaque —
+    // the image visibly "snapped back to normal" before disappearing.
+    // Instead the melt keeps most of its liquid character (structure relaxes
+    // only ~45%) and EVAPORATES: the overlay's opacity rides the timed
+    // release curve to zero, while the original image restores in sync with
+    // the true strength `s`.
+    const rel = item.meltRel
+    const relFade = rel && rel.from > 0.02 ? Math.min(1, s / rel.from) : 1
+    const sStruct = rel ? Math.min(1, rel.from * (0.55 + 0.45 * relFade)) : s
+    const eStruct = sStruct * sStruct * (3 - 2 * sStruct)
+    // Falling follows the timed curve EXACTLY — it is already smooth, and a
+    // lagging chase here left the overlay at ~0.4 opacity when the fade hit
+    // zero and clearBlend cut it off: a visible pop at the very end. Only a
+    // re-approach mid-fade ramps, so opacity can't jump back to full.
+    item.meltOp =
+      relFade < item.meltOp
+        ? relFade
+        : item.meltOp + (relFade - item.meltOp) * Math.min(1, dt * 16)
     // Melt zone sized like the goo bridge (from the group's blur), growing a
     // little as contact deepens, and never swallowing the whole element —
     // only the part around the contact mixes; the rest stays intact.
     const zone = blend.zone ?? this.gooBlur * 2.2 + 4
-    const d = Math.min(Math.min(f.w, f.h) * 0.9, zone * (0.7 + 0.6 * s))
+    const d = Math.min(Math.min(f.w, f.h) * 0.9, zone * (0.7 + 0.6 * sStruct))
     // Churn phase, gated on ACTUAL movement: liquid only flows while the
     // element is being dragged — a held drag freezes, and churn scales with
     // drag speed.
@@ -1038,7 +1061,6 @@ export class ObserveEngine {
     const round = (v: number) => Math.round(v * 10) / 10
     const host = blend.host
 
-    const eased = s * s * (3 - 2 * s)
     const n = melt.layers.length
 
     // Gravity direction: toward the NEIGHBOUR's centre.
@@ -1049,7 +1071,7 @@ export class ObserveEngine {
     const gdl = Math.hypot(gdx, gdy) || 1
     const gux = gdx / gdl
     const guy = gdy / gdl
-    const gAmt = Math.max(0, blend.gravity ?? 25) * eased
+    const gAmt = Math.max(0, blend.gravity ?? 25) * eStruct
     const gDeg = round((Math.atan2(guy, gux) * 180) / Math.PI)
     const r3 = (v: number) => Math.round(v * 1000) / 1000
     const taper = Math.max(0, Math.min(1, blend.taper ?? 0.65))
@@ -1085,8 +1107,8 @@ export class ObserveEngine {
       // core carries the full radius: gentle at first, then rising.
       const blurK = 0.06 + 0.94 * Math.pow(t, 1.7)
       const warpK = 0.34 + 0.66 * t
-      layer.disp.setAttribute('scale', String(round(blend.warp * warpK * eased)))
-      layer.blurEl.setAttribute('stdDeviation', String(round(blend.blur * blurK * eased)))
+      layer.disp.setAttribute('scale', String(round(blend.warp * warpK * eStruct)))
+      layer.blurEl.setAttribute('stdDeviation', String(round(blend.blur * blurK * eStruct)))
       if (layer.turb.getAttribute('baseFrequency') !== bfStr) {
         layer.turb.setAttribute('baseFrequency', bfStr)
       }
@@ -1105,9 +1127,9 @@ export class ObserveEngine {
       layer.circle.setAttribute('r', String(round(d * (1 - 0.5 * t))))
       // Outer layers a touch more opaque so the stack's total alpha stays
       // even from rim to core.
-      layer.gl.setAttribute('opacity', String(round(Math.min(1, eased * (1.35 - 0.35 * t)))))
+      layer.gl.setAttribute('opacity', String(round(Math.min(1, eStruct * (1.35 - 0.35 * t)))))
     })
-    host.setAttribute('opacity', '1')
+    host.setAttribute('opacity', r3(item.meltOp).toString())
     // Anchored stretch, NOT translation: scaling from the trailing edge of
     // the melt zone keeps the warped copy aligned with the original at the
     // back (a translated copy shows its silhouette as an offset ghost ring),
@@ -1136,7 +1158,7 @@ export class ObserveEngine {
     // The image breaks into tendrils and the liquid already behind shows
     // through the gaps — no shape is drawn, so no disc can appear. The core
     // erodes harder than the outer ripple, so mixing deepens toward the seam.
-    const mixAmt = Math.max(0, Math.min(1, blend.mix ?? 0)) * eased
+    const mixAmt = Math.max(0, Math.min(1, blend.mix ?? 0)) * eStruct
     const erodeRow = (amt: number) => {
       if (amt < 0.002) return '0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0 1'
       // fractalNoise R sits around 0.5; a SOFT slope keeps tendril edges
@@ -1153,7 +1175,9 @@ export class ObserveEngine {
     const icx = f.x + f.w / 2
     const icy = f.y + f.h / 2
     const ang = Math.atan2(cy - icy, cx - icx)
-    const pull = blend.pull * s
+    // Pull holds with the structure during the fade — the overlay must not
+    // glide back while it evaporates.
+    const pull = blend.pull * sStruct
     host.style.transform = `translate(${round(Math.cos(ang) * pull)}px, ${round(Math.sin(ang) * pull)}px)`
 
     // Depth 2.2x-biased: the original's edge is FULLY erased from s ≈ 0.45 —

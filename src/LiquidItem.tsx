@@ -127,16 +127,16 @@ function mapDissolve(d: boolean | number): DissolveOptions {
   // (taper/churn) stay at the tuned values so a weak dissolve still looks
   // like the same liquid, just shallower.
   return {
-    warp: 13 * k,
+    warp: 26 * k,
     blur: 8 * k,
-    mix: 0.45 * k,
+    mix: 0.7 * k,
     gravity: 60 * k,
-    taper: 0.95,
-    warpFreq: 1,
-    flowSpeed: 26,
+    taper: 1,
+    warpFreq: 1.7,
+    flowSpeed: 22,
     detail: 2,
     zone: 18,
-    range: 16,
+    range: 49,
     releaseMs: 110,
   }
 }
