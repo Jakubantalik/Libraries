@@ -33,7 +33,15 @@ interface MeltState {
   dropBounce: number
   /** Px the neighbours get shoved outward when the avatar lands. */
   push: number
-  pushDur: number
+  /** 0..1 — how springy the shove chain is (damping of the coupled springs). */
+  pushBounce: number
+  /** Ms after release the impact lands. 0 = the row reacts the instant you
+   *  let go (anticipation); ~dropDur = it waits for the avatar to arrive. */
+  pushDelay: number
+  /** Anchor-spring stiffness — how fast each avatar oscillates and returns. */
+  pushSpeed: number
+  /** Neighbour coupling — how far the wave carries down the row. */
+  pushSpread: number
 }
 
 /** Drop easing from a 0..1 bounce knob: y1 rises past 1 for overshoot.
@@ -52,7 +60,8 @@ function meltSnippet(m: MeltState): string {
     `  releaseMs: ${m.release}, fadeMs: ${m.fade},`,
     '}}',
     `// drop: duration ${m.dropDur}ms, easing '${dropEase(m.dropBounce)}',`,
-    `// push: ${m.push}px over ${m.pushDur}ms`,
+    `// push: ${m.push}px, springiness ${m.pushBounce}, delay ${m.pushDelay}ms,`,
+    `//       speed ${m.pushSpeed}, spread ${m.pushSpread}`,
   ].join('\n')
 }
 
@@ -72,7 +81,10 @@ const MELT_DEFAULTS: MeltState = {
   dropDur: 360,
   dropBounce: 0.5,
   push: 10,
-  pushDur: 420,
+  pushBounce: 0.5,
+  pushDelay: 90,
+  pushSpeed: 300,
+  pushSpread: 220,
 }
 
 function SliderRow({
@@ -151,11 +163,68 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
   /** Slot the released avatar is travelling into — the chip adopts that slot's
    *  stacking during the flight, so the swap doesn't flip its paint order. */
   const [dropIndex, setDropIndex] = useState<number | null>(null)
-  /** Slot that just LANDED — its neighbours play the shove animation. */
-  const [pushAt, setPushAt] = useState<number | null>(null)
-  const pushTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  useEffect(() => () => { if (pushTimer.current) clearTimeout(pushTimer.current) }, [])
+  /** Coupled spring chain: every avatar is a spring-mass anchored to its
+   *  slot AND connected to its neighbours — the landing impulse goes only to
+   *  the immediate neighbours and the coupling propagates it outward as a
+   *  wave, like the row is strung on invisible springs. Written imperatively
+   *  (transform is not in the React style object, so re-renders keep it). */
+  const avatarEls = useRef<Array<HTMLImageElement | null>>([])
+  const shove = useRef<{ x: number[]; v: number[]; raf: number; last: number } | null>(null)
+  const shoveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const stopShove = () => {
+    if (shove.current) cancelAnimationFrame(shove.current.raf)
+    shove.current = null
+    for (const el of avatarEls.current) el?.style.removeProperty('transform')
+  }
+  useEffect(() => () => {
+    if (shoveTimer.current) clearTimeout(shoveTimer.current)
+    if (shove.current) cancelAnimationFrame(shove.current.raf)
+  }, [])
+  const stepShove = (now: number) => {
+    const st = shove.current
+    if (!st) return
+    const dt = Math.min(1 / 30, (now - st.last) / 1000)
+    st.last = now
+    const K = meltRef.current.pushSpeed // anchor spring (1/s^2)
+    const KC = meltRef.current.pushSpread // coupling — carries the wave out
+    const zeta = 1.05 - 0.85 * Math.min(1, Math.max(0, meltRef.current.pushBounce))
+    const C = 2 * zeta * Math.sqrt(K)
+    const n = st.x.length
+    let live = false
+    for (let i = 0; i < n; i++) {
+      let f = -K * st.x[i] - C * st.v[i]
+      if (i > 0) f += KC * (st.x[i - 1] - st.x[i])
+      if (i < n - 1) f += KC * (st.x[i + 1] - st.x[i])
+      st.v[i] += f * dt
+    }
+    for (let i = 0; i < n; i++) {
+      st.x[i] += st.v[i] * dt
+      if (Math.abs(st.x[i]) > 0.05 || Math.abs(st.v[i]) > 2) live = true
+      avatarEls.current[i]?.style.setProperty('transform', `translateX(${st.x[i].toFixed(2)}px)`)
+    }
+    if (live) st.raf = requestAnimationFrame(stepShove)
+    else stopShove()
+  }
+  /** Impulse into the slot's immediate neighbours (old indices, pre-swap):
+   *  old index g-1 sits left of the gap, old index g sits right of it. */
+  const startShove = (g: number, count: number) => {
+    stopShove()
+    const x = Array(count).fill(0)
+    const v = Array(count).fill(0)
+    // v0 scaled so the first neighbour peaks ≈ the Push (px) knob, tracking
+    // the stiffness knob (peak ≈ v0/sqrt(K_eff), and coupling to resting
+    // neighbours roughly doubles the effective stiffness).
+    const m = meltRef.current
+    const v0 = m.push * Math.sqrt(m.pushSpeed + m.pushSpread * 2) * 1.55
+    if (g - 1 >= 0) v[g - 1] = -v0
+    if (g < count) v[g] = v0
+    shove.current = { x, v, raf: 0, last: performance.now() }
+    shove.current.raf = requestAnimationFrame(stepShove)
+  }
   const [melt, setMelt] = useState<MeltState>(MELT_DEFAULTS)
+  /** The rAF sim reads live knob values without re-subscribing. */
+  const meltRef = useRef(melt)
+  meltRef.current = melt
   const setM =
     <K extends keyof MeltState>(k: K) =>
     (v: MeltState[K]) =>
@@ -241,19 +310,26 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
         x: prev.x + (targetCx - (c.left + c.width / 2)),
         y: prev.y + (targetCy - (c.top + c.height / 2)),
       }))
+      // Impact timing is an explicit knob, not a fraction of the flight: at
+      // 0 the row reacts the instant you let go (the shove leads the avatar
+      // in, which reads as anticipation); larger values wait for it.
+      if (melt.push > 0) {
+        if (shoveTimer.current) clearTimeout(shoveTimer.current)
+        const count = group.length
+        if (melt.pushDelay <= 0) startShove(g, count)
+        else shoveTimer.current = setTimeout(() => startShove(g, count), melt.pushDelay)
+      }
       absorbTimer.current = setTimeout(() => {
         setSwapping(true)
         setGroup(gr => [...gr.slice(0, g), CHIP_SRC, ...gr.slice(g)])
         setGapIndex(null)
         setConsumed(true)
         setAbsorbing(false)
-        // Landing shove: neighbours react to the impact, falling off with
-        // distance from the landed slot. Cleared after it plays so the next
-        // landing restarts the animation from zero.
-        if (melt.push > 0) {
-          setPushAt(g)
-          if (pushTimer.current) clearTimeout(pushTimer.current)
-          pushTimer.current = setTimeout(() => setPushAt(null), melt.pushDur + 80)
+        // The chain keeps ringing across the swap: insert a resting entry
+        // for the landed avatar so indices stay aligned with the new group.
+        if (shove.current) {
+          shove.current.x.splice(g, 0, 0)
+          shove.current.v.splice(g, 0, 0)
         }
         // Re-enable transitions only after the swapped layout has painted.
         requestAnimationFrame(() => requestAnimationFrame(() => setSwapping(false)))
@@ -266,8 +342,8 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
 
   const reset = () => {
     if (absorbTimer.current) clearTimeout(absorbTimer.current)
-    if (pushTimer.current) clearTimeout(pushTimer.current)
-    setPushAt(null)
+    if (shoveTimer.current) clearTimeout(shoveTimer.current)
+    stopShove()
     stableGap.current = null
     setSwapping(true)
     setGroup(PORTRAITS.slice(0, INITIAL))
@@ -315,29 +391,22 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
           },
         }}
       >
-        <div
-          className="ap-pill"
-          ref={pillRef}
-          style={{ '--ap-push-dur': `${melt.pushDur}ms` } as CSSProperties}
-        >
+        <div className="ap-pill" ref={pillRef}>
           <span className="ap-label">Share</span>
           <span className="ap-stack" ref={stackRef}>
             {group.map((src, i) => (
               <img
                 key={src}
-                className={`ap-avatar ${pushAt != null && i !== pushAt ? 'ap-pushed' : ''}`}
+                ref={el => {
+                  avatarEls.current[i] = el
+                }}
+                className="ap-avatar"
                 src={src}
                 alt=""
                 draggable={false}
                 style={{
                   marginLeft: i === 0 ? 0 : gapIndex === i ? PITCH - 8 : -8,
                   transition: swapping ? 'none' : undefined,
-                  // Impact shove: outward from the landed slot, decaying with
-                  // distance — the row reacts like it was physically hit.
-                  '--push':
-                    pushAt != null && i !== pushAt
-                      ? `${(Math.sign(i - pushAt) * melt.push * Math.pow(0.55, Math.abs(i - pushAt) - 1)).toFixed(1)}px`
-                      : '0px',
                   // Explicit stacking: DOM order alone makes an avatar
                   // inserted mid-group drop beneath its right-hand
                   // neighbours the instant it appears — a visible flash.
@@ -488,7 +557,10 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
           <SliderRow label="Duration (ms)" value={melt.dropDur} min={120} max={1200} step={20} onChange={setM('dropDur')} />
           <SliderRow label="Bounce" value={melt.dropBounce} min={0} max={1} step={0.05} onChange={setM('dropBounce')} />
           <SliderRow label="Push (px)" value={melt.push} min={0} max={24} step={1} onChange={setM('push')} />
-          <SliderRow label="Push duration (ms)" value={melt.pushDur} min={120} max={900} step={20} onChange={setM('pushDur')} />
+          <SliderRow label="Push springiness" value={melt.pushBounce} min={0} max={1} step={0.05} onChange={setM('pushBounce')} />
+          <SliderRow label="Push delay (ms)" value={melt.pushDelay} min={0} max={600} step={10} onChange={setM('pushDelay')} />
+          <SliderRow label="Push speed" value={melt.pushSpeed} min={80} max={900} step={10} onChange={setM('pushSpeed')} />
+          <SliderRow label="Push spread" value={melt.pushSpread} min={0} max={500} step={10} onChange={setM('pushSpread')} />
         </div>
       </div>
       )}

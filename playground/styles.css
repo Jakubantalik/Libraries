@@ -406,33 +406,16 @@ body {
      jump" bug. box-shadow paints outside the box (still separating
      overlapping avatars exactly like the border did) while leaving the
      photo itself at the full 32px the chip already used. */
-  box-shadow: 0 0 0 2px #fff;
+  /* White ring first (paints on top), then the design's elevation + inner
+     hairline. Order matters: box-shadow layers paint front-to-back. */
+  box-shadow:
+    0 0 0 2px #fff,
+    0 1px 1px 0 rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(0, 0, 0, 0.2) inset;
   background: #e3e3e6;
   /* The hover gap opens/closes by animating margins; the pill's evolve
      spring turns the width change into a liquid bounce. */
   transition: margin-left 280ms cubic-bezier(0.3, 1.05, 0.4, 1);
-}
-
-/* Landing shove: neighbours kicked outward by the arriving avatar, then
-   springing back. Longhand animation properties — WebKit mis-parses the
-   `animation` shorthand when it carries var(). The class is removed after
-   each play, so the next landing restarts it from zero. */
-.ap-avatar.ap-pushed {
-  animation-name: ap-push;
-  animation-duration: var(--ap-push-dur, 420ms);
-  animation-timing-function: cubic-bezier(0.3, 1.05, 0.4, 1);
-}
-
-@keyframes ap-push {
-  0% {
-    transform: translateX(0);
-  }
-  32% {
-    transform: translateX(var(--push, 0px));
-  }
-  100% {
-    transform: translateX(0);
-  }
 }
 
 .ap-endgap {
@@ -533,7 +516,27 @@ body {
    the hover it reads 2.5px and then shrinks WITH the photo — one motion, not
    a separate ring animation. */
 .ap-ringed img {
-  box-shadow: 0 0 0 var(--ap-ring, 2.5px) #fff;
+  box-shadow:
+    0 0 0 var(--ap-ring, 2.5px) #fff,
+    0 1.25px 1.25px 0 rgba(0, 0, 0, 0.2),
+    0 0 0 1.25px rgba(0, 0, 0, 0.2) inset;
+}
+
+/* Wider-gamut variant of the same two layers (the design's P3 values). */
+@supports (color: color(display-p3 0 0 0 / 0.2)) {
+  .ap-avatar {
+    box-shadow:
+      0 0 0 2px #fff,
+      0 1px 1px 0 color(display-p3 0 0 0 / 0.2),
+      0 0 0 1px color(display-p3 0 0 0 / 0.2) inset;
+  }
+
+  .ap-ringed img {
+    box-shadow:
+      0 0 0 var(--ap-ring, 2.5px) #fff,
+      0 1.25px 1.25px 0 color(display-p3 0 0 0 / 0.2),
+      0 0 0 1.25px color(display-p3 0 0 0 / 0.2) inset;
+  }
 }
 
 /* ---------- evolve (three-dot button → dropdown) ---------- */
