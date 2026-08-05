@@ -399,19 +399,18 @@ body {
      matches the melt engine, which renders its warped copy with
      preserveAspectRatio="xMidYMid slice" (the SVG equivalent of cover). */
   object-fit: cover;
-  /* OUTSET ring (box-shadow), not an inset border: a border eats into the
-     box, so the photo itself was only a 28px circle inside a 32px box. The
-     chip that joins the group has no such ring, so at the moment it becomes
-     a "real" stack avatar the photo would visibly SHRINK 32→28 — the "resize
-     jump" bug. box-shadow paints outside the box (still separating
-     overlapping avatars exactly like the border did) while leaving the
-     photo itself at the full 32px the chip already used. */
-  /* White ring first (paints on top), then the design's elevation + inner
-     hairline. Order matters: box-shadow layers paint front-to-back. */
-  box-shadow:
-    0 0 0 2px #fff,
-    0 1px 1px 0 rgba(0, 0, 0, 0.2),
-    0 0 0 1px rgba(0, 0, 0, 0.2) inset;
+  /* The design's own edge treatment IS the separator — no white ring. The
+     ring was opaque and 2px thick, so it covered this elevation entirely
+     (`0 1px 1px 0` reaches at most ~2px) and read as a white border where
+     the shadow should be. Never use a `border` here either: it eats into
+     the box, shrinking the photo to 28px inside its 32px slot, which is the
+     old "resize jump" at the moment the dragged chip becomes a real avatar. */
+  box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.2);
+  /* Inner hairline as an OUTLINE, not `inset` box-shadow: an inset shadow on
+     a replaced element (<img>) paints beneath the image content, so it never
+     showed. A negative outline-offset draws it inside the edge, on top. */
+  outline: 1px solid rgba(0, 0, 0, 0.2);
+  outline-offset: -1px;
   background: #e3e3e6;
   /* The hover gap opens/closes by animating margins; the pill's evolve
      spring turns the width change into a liquid bounce. */
@@ -518,24 +517,21 @@ body {
 .ap-ringed img {
   box-shadow:
     0 0 0 var(--ap-ring, 2.5px) #fff,
-    0 1.25px 1.25px 0 rgba(0, 0, 0, 0.2),
-    0 0 0 1.25px rgba(0, 0, 0, 0.2) inset;
+    0 1.25px 1.25px 2.5px rgba(0, 0, 0, 0.2);
+  outline: 1.25px solid rgba(0, 0, 0, 0.2);
+  outline-offset: -1.25px;
 }
 
 /* Wider-gamut variant of the same two layers (the design's P3 values). */
 @supports (color: color(display-p3 0 0 0 / 0.2)) {
   .ap-avatar {
-    box-shadow:
-      0 0 0 2px #fff,
-      0 1px 1px 0 color(display-p3 0 0 0 / 0.2),
-      0 0 0 1px color(display-p3 0 0 0 / 0.2) inset;
+    box-shadow: 0 1px 1px 0 color(display-p3 0 0 0 / 0.2);
+    outline-color: color(display-p3 0 0 0 / 0.2);
   }
 
   .ap-ringed img {
-    box-shadow:
-      0 0 0 var(--ap-ring, 2.5px) #fff,
-      0 1.25px 1.25px 0 color(display-p3 0 0 0 / 0.2),
-      0 0 0 1.25px color(display-p3 0 0 0 / 0.2) inset;
+    box-shadow: 0 1.25px 1.25px 0 color(display-p3 0 0 0 / 0.2);
+    outline-color: color(display-p3 0 0 0 / 0.2);
   }
 }
 
