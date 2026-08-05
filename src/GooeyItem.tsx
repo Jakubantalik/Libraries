@@ -53,8 +53,11 @@ export interface DissolveOptions {
   /** While false the melt fades out over `releaseMs`, regardless of
    *  proximity. */
   active?: boolean
-  /** Fade-out time when `active` goes false, ms. */
+  /** Structural release time when `active` goes false, ms. */
   releaseMs?: number
+  /** Ms the melt takes to evaporate (opacity -> 0), independent of
+   *  `releaseMs`. Defaults to `releaseMs`. */
+  fadeMs?: number
 }
 
 export interface GooeyItemProps {
@@ -296,7 +299,7 @@ function ObservedItem({
   const hostRef = useRef<HTMLSpanElement | null>(null)
   const blobRef = useRef<SVGRectElement | null>(null)
   const meltRef = useRef<SVGGElement | null>(null)
-  const blendRef = useRef<{ active?: boolean; releaseMs?: number } | null>(null)
+  const blendRef = useRef<{ active?: boolean; releaseMs?: number; fadeMs?: number } | null>(null)
 
   const opts = typeof contactBlur === 'object' ? contactBlur : {}
   const blendBlur = opts.blur ?? 8
@@ -313,6 +316,7 @@ function ObservedItem({
   const blendDetail = opts.detail ?? 2
   const blendActive = opts.active !== false
   const blendRelease = opts.releaseMs ?? 240
+  const blendFade = opts.fadeMs
 
   const effects = toEffects(effect)
   const dynamics = {
@@ -356,6 +360,7 @@ function ObservedItem({
             detail: blendDetail,
             active: blendActive,
             releaseMs: blendRelease,
+            fadeMs: blendFade,
           }
         : undefined
     blendRef.current = blend ?? null
@@ -377,8 +382,9 @@ function ObservedItem({
     if (!blendRef.current) return
     blendRef.current.active = blendActive
     blendRef.current.releaseMs = blendRelease
+    blendRef.current.fadeMs = blendFade
     ctx.engine.wake()
-  }, [ctx, blendActive, blendRelease])
+  }, [ctx, blendActive, blendRelease, blendFade])
 
   return (
     <>

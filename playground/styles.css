@@ -283,8 +283,9 @@ body {
   position: absolute;
   inset: 0;
   border-radius: 48px;
-  background: #eeeeee;
-  /* Below the goo layer (svg at z -1): the liquid pill paints over the bar. */
+  /* No fill: the black liquid pill is the only surface now — a grey track
+     behind it read as a second, competing shape. Kept as an element (not
+     removed) since .tb-tabs still measures against this box. */
   z-index: -2;
 }
 

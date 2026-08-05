@@ -26,6 +26,7 @@ interface MeltState {
   flowSpeed: number
   detail: number
   release: number
+  fade: number
   /** Travel of the released avatar into its gap in the stack. */
   dropDur: number
   dropEase: string
@@ -48,7 +49,8 @@ function meltSnippet(m: MeltState): string {
     'contactBlur={{',
     `  warp: ${m.warp}, blur: ${m.blur}, mix: ${m.mix}, gravity: ${m.gravity},`,
     `  taper: ${m.taper}, warpFreq: ${m.warpFreq}, flowSpeed: ${m.flowSpeed},`,
-    `  detail: ${m.detail}, zone: ${m.zone}, range: ${m.range}, releaseMs: ${m.release},`,
+    `  detail: ${m.detail}, zone: ${m.zone}, range: ${m.range},`,
+    `  releaseMs: ${m.release}, fadeMs: ${m.fade},`,
     '}}',
     `// drop: duration ${m.dropDur}ms, easing '${DROP_EASES[m.dropEase]}'`,
   ].join('\n')
@@ -66,6 +68,7 @@ const MELT_DEFAULTS: MeltState = {
   flowSpeed: 22,
   detail: 2,
   release: 110,
+  fade: 320,
   dropDur: 360,
   dropEase: 'Bounce',
 }
@@ -393,6 +396,7 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
                 // into the gap — gone well before it lands.
                 active: dragging,
                 releaseMs: melt.release,
+                fadeMs: melt.fade,
               },
             },
           }}
@@ -476,7 +480,8 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
           <SliderRow label="Blur (px)" value={melt.blur} min={0} max={10} step={0.5} onChange={setM('blur')} />
           <SliderRow label="Range (px)" value={melt.range} min={4} max={50} step={1} onChange={setM('range')} />
           <div className="cp-subhead">Drop animation</div>
-          <SliderRow label="Fade-out (ms)" value={melt.release} min={20} max={600} step={10} onChange={setM('release')} />
+          <SliderRow label="Release (ms)" value={melt.release} min={20} max={600} step={10} onChange={setM('release')} />
+          <SliderRow label="Fade-out (ms)" value={melt.fade} min={40} max={1200} step={20} onChange={setM('fade')} />
           <SliderRow label="Duration (ms)" value={melt.dropDur} min={120} max={1200} step={20} onChange={setM('dropDur')} />
           <EaseRow label="Easing" value={melt.dropEase} options={DROP_EASES} onChange={setM('dropEase')} />
         </div>

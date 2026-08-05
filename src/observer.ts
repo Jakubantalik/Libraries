@@ -45,8 +45,13 @@ export interface BlendConfig {
   /** While false, the melt fades out over `releaseMs` regardless of
    *  proximity — e.g. the moment a drag is released. Default true. */
   active?: boolean
-  /** Fade-out time when `active` goes false, ms. Default 240. */
+  /** Structural release time when `active` goes false, ms. Default 240. */
   releaseMs?: number
+  /** Ms the melt takes to EVAPORATE — its opacity fades to zero over this,
+   *  independently of `releaseMs`, so the dissolve can leave gradually
+   *  instead of blinking out. May exceed `releaseMs` (the melt then lives
+   *  until the fade finishes). Defaults to `releaseMs`. */
+  fadeMs?: number
 }
 
 export interface EvolveOptions {
@@ -975,7 +980,13 @@ export class ObserveEngine {
       item.meltFade += (sTarget - item.meltFade) * Math.min(1, dt * 16)
       item.meltRel = null
     } else {
-      const relMs = Math.max(40, blend.releaseMs ?? 240)
+      // The melt lives until BOTH the structural release and the opacity
+      // fade are done, so `fadeMs` can outlast `releaseMs` and give a long,
+      // clearly readable evaporation.
+      const relMs = Math.max(
+        40,
+        Math.max(blend.releaseMs ?? 240, blend.fadeMs ?? blend.releaseMs ?? 240),
+      )
       if (!item.meltRel) item.meltRel = { from: item.meltFade, t: 0 }
       const rel = item.meltRel
       rel.t += dt * 1000
@@ -1020,8 +1031,14 @@ export class ObserveEngine {
     // release curve to zero, while the original image restores in sync with
     // the true strength `s`.
     const rel = item.meltRel
-    const relFade = rel && rel.from > 0.02 ? Math.min(1, s / rel.from) : 1
-    const sStruct = rel ? Math.min(1, rel.from * (0.55 + 0.45 * relFade)) : s
+    // Opacity runs on its OWN clock (`fadeMs`), not on the strength ratio —
+    // that tied the fade to `releaseMs`, so at the tuned 110ms release it was
+    // over before it could be read as a fade at all.
+    const fadeMs = Math.max(40, blend.fadeMs ?? blend.releaseMs ?? 240)
+    const fadeK = rel ? Math.min(1, rel.t / fadeMs) : 0
+    // Eased so it leaves gently instead of stepping off at a constant rate.
+    const relFade = rel ? (1 - fadeK) * (1 - fadeK) : 1
+    const sStruct = rel ? Math.min(1, rel.from * (0.55 + 0.45 * (1 - fadeK))) : s
     const eStruct = sStruct * sStruct * (3 - 2 * sStruct)
     // Falling follows the timed curve EXACTLY — it is already smooth, and a
     // lagging chase here left the overlay at ~0.4 opacity when the fade hit
