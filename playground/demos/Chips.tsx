@@ -394,7 +394,20 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
         <div className="ap-pill" ref={pillRef}>
           <span className="ap-label">Share</span>
           <span className="ap-stack" ref={stackRef}>
-            {group.map((src, i) => (
+            {group.map((src, i) => {
+              // White separator by MASKING, not by ring: a crescent is carved
+              // out of this avatar around its right neighbour (which paints
+              // on top), so the pill surface shows through as the gap. The
+              // photo keeps its true edge and the design shadow stays
+              // visible. Position derives from the neighbour's live margin —
+              // when the hover gap opens, the crescent slides off the box and
+              // the cut disappears on its own.
+              const nextMl = i < group.length - 1 ? (gapIndex === i + 1 ? PITCH - 8 : -8) : null
+              const sep =
+                nextMl != null
+                  ? `radial-gradient(circle 18px at ${16 + 32 + nextMl}px 16px, transparent 17.5px, #000 18px)`
+                  : undefined
+              return (
               <img
                 key={src}
                 ref={el => {
@@ -407,6 +420,8 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
                 style={{
                   marginLeft: i === 0 ? 0 : gapIndex === i ? PITCH - 8 : -8,
                   transition: swapping ? 'none' : undefined,
+                  maskImage: sep,
+                  WebkitMaskImage: sep,
                   // Explicit stacking: DOM order alone makes an avatar
                   // inserted mid-group drop beneath its right-hand
                   // neighbours the instant it appears — a visible flash.
@@ -423,7 +438,8 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
                   zIndex: absorbing && dropIndex != null && i >= dropIndex ? i + 1 : i,
                 } as CSSProperties}
               />
-            ))}
+              )
+            })}
             {/* Gap at the very end opens as trailing padding. */}
             <span
               className="ap-endgap"

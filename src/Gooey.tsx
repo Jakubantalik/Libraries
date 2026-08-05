@@ -136,7 +136,7 @@ export const GooeyRoot = forwardRef<HTMLDivElement, GooeyProps>(function Gooey(
             <GooFilterPrimitives blur={blur} contrast={contrast} shadows={shadows} />
           </filter>
         </defs>
-        <g ref={setPortal} filter={`url(#${filterId})`} style={{ fill }} />
+        <g id={`${filterId}-sil`} ref={setPortal} filter={`url(#${filterId})`} style={{ fill }} />
       </svg>
       {/* Melt overlay: warped-image copies render here, ABOVE the content
           layer. SVG content so displacement/blur filters work in WebKit. */}
@@ -158,7 +158,27 @@ export const GooeyRoot = forwardRef<HTMLDivElement, GooeyProps>(function Gooey(
           zIndex: 9999,
         }}
       >
-        <g ref={setMeltPortal} />
+        <defs>
+          {/* The melt may only paint where LIQUID exists: the mask re-renders
+              the goo-filtered silhouette (same document, <use> across the two
+              svgs), so the warped copies are clipped to the merged surface —
+              without this the smear bled past the liquid edge onto the page
+              background. Luminance mask: the white silhouette passes, the
+              faint shadow layers (≤6% alpha) are negligible. */}
+          <mask
+            id={`${filterId}-meltmask`}
+            maskUnits="userSpaceOnUse"
+            x={-pad}
+            y={-pad}
+            width={size.w + pad * 2}
+            height={size.h + pad * 2}
+          >
+            <use href={`#${filterId}-sil`} />
+          </mask>
+        </defs>
+        <g mask={`url(#${filterId}-meltmask)`}>
+          <g ref={setMeltPortal} />
+        </g>
       </svg>
       <GooeyContext.Provider value={ctx}>{children}</GooeyContext.Provider>
     </div>
