@@ -1199,8 +1199,19 @@ export class ObserveEngine {
 
     // Depth 2.2x-biased: the original's edge is FULLY erased from s ≈ 0.45 —
     // a partially faded high-contrast edge still reads as an edge, and the
-    // edge must be gone as soon as the goo neck reaches it.
-    const holeAlpha = Math.max(0, 1 - s * 2.2).toFixed(3)
+    // edge must be gone as soon as the goo neck reaches it. But ONLY then:
+    // the hole strength is gated on the actual bridging distance, not the
+    // melt's `range` — a large range starts the warp far out (anticipation),
+    // and opening the hole that early revealed the item's own white blob
+    // through the erased edge as a hard pale wedge, with no neck to justify
+    // it.
+    const bridgeRange = Math.max(10, this.gooBlur * 2.5)
+    const sBridge = bestOther
+      ? bestGap < bridgeRange
+        ? smoothstep(1 - bestGap / bridgeRange)
+        : 0
+      : s
+    const holeAlpha = Math.max(0, 1 - Math.min(s, sBridge) * 2.2).toFixed(3)
     const holeMid = ((1 + 2 * Number(holeAlpha)) / 3).toFixed(3)
     for (const entry of melt.entries) {
       const ir = entry.el.getBoundingClientRect()

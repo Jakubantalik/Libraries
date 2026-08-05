@@ -29,18 +29,17 @@ interface MeltState {
   fade: number
   /** Travel of the released avatar into its gap in the stack. */
   dropDur: number
-  dropEase: string
+  /** 0..1 — overshoot of the drop travel (bezier y1 = 1 + 0.8·bounce). */
+  dropBounce: number
+  /** Px the neighbours get shoved outward when the avatar lands. */
+  push: number
+  pushDur: number
 }
 
-/** Easings for the drop travel. "Bounce" overshoots gently — a subtle settle,
- *  not a springy wobble. */
-const DROP_EASES: Record<string, string> = {
-  Bounce: 'cubic-bezier(0.34, 1.4, 0.64, 1)',
-  'Big bounce': 'cubic-bezier(0.34, 1.8, 0.64, 1)',
-  Smooth: 'cubic-bezier(0.3, 1.05, 0.4, 1)',
-  Snappy: 'cubic-bezier(0.22, 1, 0.36, 1)',
-  'Ease in-out': 'ease-in-out',
-  Linear: 'linear',
+/** Drop easing from a 0..1 bounce knob: y1 rises past 1 for overshoot.
+ *  0.5 reproduces the old "Bounce" preset exactly (y1 = 1.4). */
+function dropEase(bounce: number): string {
+  return `cubic-bezier(0.34, ${(1 + 0.8 * bounce).toFixed(2)}, 0.64, 1)`
 }
 
 function meltSnippet(m: MeltState): string {
@@ -52,7 +51,8 @@ function meltSnippet(m: MeltState): string {
     `  detail: ${m.detail}, zone: ${m.zone}, range: ${m.range},`,
     `  releaseMs: ${m.release}, fadeMs: ${m.fade},`,
     '}}',
-    `// drop: duration ${m.dropDur}ms, easing '${DROP_EASES[m.dropEase]}'`,
+    `// drop: duration ${m.dropDur}ms, easing '${dropEase(m.dropBounce)}',`,
+    `// push: ${m.push}px over ${m.pushDur}ms`,
   ].join('\n')
 }
 
@@ -70,7 +70,9 @@ const MELT_DEFAULTS: MeltState = {
   release: 110,
   fade: 320,
   dropDur: 360,
-  dropEase: 'Bounce',
+  dropBounce: 0.5,
+  push: 10,
+  pushDur: 420,
 }
 
 function SliderRow({
@@ -102,29 +104,6 @@ function SliderRow({
         />
         <span className="cp-val">{value}</span>
       </span>
-    </div>
-  )
-}
-
-function EaseRow({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string
-  value: string
-  options: Record<string, string>
-  onChange: (v: string) => void
-}) {
-  return (
-    <div className="cp-row">
-      <span className="cp-label">{label}</span>
-      <select className="cp-ease" value={value} onChange={e => onChange(e.target.value)}>
-        {Object.keys(options).map(name => (
-          <option key={name}>{name}</option>
-        ))}
-      </select>
     </div>
   )
 }
@@ -172,6 +151,10 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
   /** Slot the released avatar is travelling into — the chip adopts that slot's
    *  stacking during the flight, so the swap doesn't flip its paint order. */
   const [dropIndex, setDropIndex] = useState<number | null>(null)
+  /** Slot that just LANDED — its neighbours play the shove animation. */
+  const [pushAt, setPushAt] = useState<number | null>(null)
+  const pushTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => () => { if (pushTimer.current) clearTimeout(pushTimer.current) }, [])
   const [melt, setMelt] = useState<MeltState>(MELT_DEFAULTS)
   const setM =
     <K extends keyof MeltState>(k: K) =>
@@ -264,6 +247,14 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
         setGapIndex(null)
         setConsumed(true)
         setAbsorbing(false)
+        // Landing shove: neighbours react to the impact, falling off with
+        // distance from the landed slot. Cleared after it plays so the next
+        // landing restarts the animation from zero.
+        if (melt.push > 0) {
+          setPushAt(g)
+          if (pushTimer.current) clearTimeout(pushTimer.current)
+          pushTimer.current = setTimeout(() => setPushAt(null), melt.pushDur + 80)
+        }
         // Re-enable transitions only after the swapped layout has painted.
         requestAnimationFrame(() => requestAnimationFrame(() => setSwapping(false)))
       }, melt.dropDur)
@@ -275,6 +266,8 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
 
   const reset = () => {
     if (absorbTimer.current) clearTimeout(absorbTimer.current)
+    if (pushTimer.current) clearTimeout(pushTimer.current)
+    setPushAt(null)
     stableGap.current = null
     setSwapping(true)
     setGroup(PORTRAITS.slice(0, INITIAL))
@@ -322,19 +315,29 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
           },
         }}
       >
-        <div className="ap-pill" ref={pillRef}>
+        <div
+          className="ap-pill"
+          ref={pillRef}
+          style={{ '--ap-push-dur': `${melt.pushDur}ms` } as CSSProperties}
+        >
           <span className="ap-label">Share</span>
           <span className="ap-stack" ref={stackRef}>
             {group.map((src, i) => (
               <img
                 key={src}
-                className="ap-avatar"
+                className={`ap-avatar ${pushAt != null && i !== pushAt ? 'ap-pushed' : ''}`}
                 src={src}
                 alt=""
                 draggable={false}
                 style={{
                   marginLeft: i === 0 ? 0 : gapIndex === i ? PITCH - 8 : -8,
                   transition: swapping ? 'none' : undefined,
+                  // Impact shove: outward from the landed slot, decaying with
+                  // distance — the row reacts like it was physically hit.
+                  '--push':
+                    pushAt != null && i !== pushAt
+                      ? `${(Math.sign(i - pushAt) * melt.push * Math.pow(0.55, Math.abs(i - pushAt) - 1)).toFixed(1)}px`
+                      : '0px',
                   // Explicit stacking: DOM order alone makes an avatar
                   // inserted mid-group drop beneath its right-hand
                   // neighbours the instant it appears — a visible flash.
@@ -349,7 +352,7 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
                   // reservation ends on the very frame the real element takes
                   // over its z-index. The swap changes no paint order at all.
                   zIndex: absorbing && dropIndex != null && i >= dropIndex ? i + 1 : i,
-                }}
+                } as CSSProperties}
               />
             ))}
             {/* Gap at the very end opens as trailing padding. */}
@@ -424,7 +427,7 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
                 // joined so the handoff to the real avatar is paint-identical.
                 zIndex: absorbing && dropIndex != null ? dropIndex : 20,
                 '--ap-absorb-dur': `${melt.dropDur}ms`,
-                '--ap-absorb-ease': DROP_EASES[melt.dropEase],
+                '--ap-absorb-ease': dropEase(melt.dropBounce),
                 // Pre-divided by the absorb scale so it RENDERS at RING_PX,
                 // exactly matching the ring the real avatar already wears.
                 '--ap-ring': `${RING_PX / ABSORB_SCALE}px`,
@@ -483,7 +486,9 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
           <SliderRow label="Release (ms)" value={melt.release} min={20} max={600} step={10} onChange={setM('release')} />
           <SliderRow label="Fade-out (ms)" value={melt.fade} min={40} max={1200} step={20} onChange={setM('fade')} />
           <SliderRow label="Duration (ms)" value={melt.dropDur} min={120} max={1200} step={20} onChange={setM('dropDur')} />
-          <EaseRow label="Easing" value={melt.dropEase} options={DROP_EASES} onChange={setM('dropEase')} />
+          <SliderRow label="Bounce" value={melt.dropBounce} min={0} max={1} step={0.05} onChange={setM('dropBounce')} />
+          <SliderRow label="Push (px)" value={melt.push} min={0} max={24} step={1} onChange={setM('push')} />
+          <SliderRow label="Push duration (ms)" value={melt.pushDur} min={120} max={900} step={20} onChange={setM('pushDur')} />
         </div>
       </div>
       )}

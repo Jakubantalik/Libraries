@@ -413,6 +413,28 @@ body {
   transition: margin-left 280ms cubic-bezier(0.3, 1.05, 0.4, 1);
 }
 
+/* Landing shove: neighbours kicked outward by the arriving avatar, then
+   springing back. Longhand animation properties — WebKit mis-parses the
+   `animation` shorthand when it carries var(). The class is removed after
+   each play, so the next landing restarts it from zero. */
+.ap-avatar.ap-pushed {
+  animation-name: ap-push;
+  animation-duration: var(--ap-push-dur, 420ms);
+  animation-timing-function: cubic-bezier(0.3, 1.05, 0.4, 1);
+}
+
+@keyframes ap-push {
+  0% {
+    transform: translateX(0);
+  }
+  32% {
+    transform: translateX(var(--push, 0px));
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
 .ap-endgap {
   display: inline-block;
   height: 1px;
