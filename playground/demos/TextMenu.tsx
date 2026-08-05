@@ -16,14 +16,9 @@ const EASES: Record<string, string> = {
   Linear: 'linear',
 }
 
-/** One morph phase. Open and close are tuned independently — a menu usually
- *  wants to arrive with some life and leave quickly and quietly. */
 interface PhaseState {
   dur: number
   ease: string
-  speed: number
-  bounce: number
-  contentBlur: number
   fadeDur: number
   fadeDelay: number
 }
@@ -31,27 +26,18 @@ interface PhaseState {
 interface MenuState {
   open: PhaseState
   close: PhaseState
+  /** Ms the toolbar waits after the circle pops in (open) — the circle must
+   *  exist first for the oval to visibly bud out of it. */
+  barDelay: number
+  /** Ms the circle lingers after the toolbar has collapsed back into it. */
+  dotLinger: number
 }
 
 const DEFAULTS: MenuState = {
-  open: {
-    dur: 380,
-    ease: 'Smooth',
-    speed: 1,
-    bounce: 0.2,
-    contentBlur: 4,
-    fadeDur: 140,
-    fadeDelay: 90,
-  },
-  close: {
-    dur: 240,
-    ease: 'Snappy',
-    speed: 1.3,
-    bounce: 0,
-    contentBlur: 4,
-    fadeDur: 90,
-    fadeDelay: 0,
-  },
+  open: { dur: 420, ease: 'Bouncy', fadeDur: 140, fadeDelay: 180 },
+  close: { dur: 260, ease: 'Snappy', fadeDur: 80, fadeDelay: 0 },
+  barDelay: 90,
+  dotLinger: 120,
 }
 
 function SliderRow({
@@ -91,42 +77,6 @@ function Subhead({ children }: { children: ReactNode }) {
   return <div className="cp-subhead">{children}</div>
 }
 
-function PhaseGroup({
-  title,
-  ph,
-  pro,
-  onChange,
-}: {
-  title: string
-  ph: PhaseState
-  pro: boolean
-  onChange: <K extends keyof PhaseState>(k: K, v: PhaseState[K]) => void
-}) {
-  return (
-    <>
-      <Subhead>{title}</Subhead>
-      <SliderRow label="Duration (ms)" value={ph.dur} min={80} max={1200} step={10} onChange={v => onChange('dur', v)} />
-      <div className="cp-row">
-        <span className="cp-label">Easing</span>
-        <select className="cp-ease" value={ph.ease} onChange={e => onChange('ease', e.target.value)}>
-          {Object.keys(EASES).map(name => (
-            <option key={name}>{name}</option>
-          ))}
-        </select>
-      </div>
-      <SliderRow label="Speed" value={ph.speed} min={0.25} max={3} step={0.05} onChange={v => onChange('speed', v)} />
-      <SliderRow label="Bounce" value={ph.bounce} min={0} max={1} step={0.05} onChange={v => onChange('bounce', v)} />
-      {pro && (
-        <>
-          <SliderRow label="Cross blur (px)" value={ph.contentBlur} min={0} max={20} step={0.5} onChange={v => onChange('contentBlur', v)} />
-          <SliderRow label="Fade (ms)" value={ph.fadeDur} min={0} max={600} step={10} onChange={v => onChange('fadeDur', v)} />
-          <SliderRow label="Fade delay (ms)" value={ph.fadeDelay} min={0} max={600} step={10} onChange={v => onChange('fadeDelay', v)} />
-        </>
-      )}
-    </>
-  )
-}
-
 /** Formatting actions. Placeholder glyphs — pending the Figma assets. */
 const ACTIONS: Array<{ key: string; label: string; glyph: ReactNode }> = [
   { key: 'bold', label: 'Bold', glyph: <span style={{ fontWeight: 700 }}>B</span> },
@@ -147,16 +97,19 @@ const ACTIONS: Array<{ key: string; label: string; glyph: ReactNode }> = [
 
 const MENU_W = 232
 const MENU_H = 44
-const DOT = 10
+const DOT = 12
 
-/** Frozen geometry for one appearance: the closed circle's box and the open
- *  toolbar's box, both in whole px. Computed ONCE when the selection is made
- *  — recomputing on re-render is what let the toolbar drift. */
+/** Frozen geometry for one appearance, whole px. The dot sits at the top
+ *  edge of the selection; the toolbar's resting spot is just above it, close
+ *  enough that the goo filter keeps a liquid neck between the two. */
 interface Anchor {
   dotL: number
   dotT: number
   barL: number
   barT: number
+  /** Toolbar-centre → dot-centre offset: its collapsed translate. */
+  dx: number
+  dy: number
 }
 
 export function TextMenu({ blur, contrast, shadow, pro }: DemoProps) {
@@ -165,15 +118,18 @@ export function TextMenu({ blur, contrast, shadow, pro }: DemoProps) {
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState<Record<string, boolean>>({})
   const [st, setSt] = useState<MenuState>(DEFAULTS)
+  const setShared =
+    <K extends 'barDelay' | 'dotLinger'>(k: K) =>
+    (v: number) =>
+      setSt(prev => ({ ...prev, [k]: v }))
   const setPhase =
     (phase: 'open' | 'close') =>
-    <K extends keyof PhaseState>(k: K, v: PhaseState[K]) =>
+    <K extends keyof PhaseState>(k: K) =>
+    (v: PhaseState[K]) =>
       setSt(prev => ({ ...prev, [phase]: { ...prev[phase], [k]: v } }))
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => () => { if (closeTimer.current) clearTimeout(closeTimer.current) }, [])
 
-  /** Anchor to the current selection. Closed = a circle ON the selected text;
-   *  open = the toolbar above it. Both boxes are frozen here in whole px. */
   const syncToSelection = () => {
     const sel = window.getSelection()
     const stage = stageRef.current
@@ -184,16 +140,18 @@ export function TextMenu({ blur, contrast, shadow, pro }: DemoProps) {
     const s = stage.getBoundingClientRect()
     if (r.width < 1) return
     const cx = r.left + r.width / 2 - s.left
-    const cy = r.top + r.height / 2 - s.top
-    // Rounded to whole px: fractional boxes let the browser resolve the
-    // animated rect differently frame to frame, which reads as a drift.
+    const selTop = r.top - s.top
+    const dotL = Math.round(cx - DOT / 2)
+    const dotT = Math.round(selTop - DOT + 2) // nudged onto the line's cap edge
+    const barL = Math.round(Math.min(s.width - MENU_W - 8, Math.max(8, cx - MENU_W / 2)))
+    const barT = Math.round(Math.max(6, dotT - 4 - MENU_H))
     setAnchor({
-      dotL: Math.round(cx - DOT / 2),
-      dotT: Math.round(cy - DOT / 2),
-      barL: Math.round(
-        Math.min(s.width - MENU_W - 8, Math.max(8, cx - MENU_W / 2)),
-      ),
-      barT: Math.round(Math.max(6, r.top - s.top - 8 - MENU_H)),
+      dotL,
+      dotT,
+      barL,
+      barT,
+      dx: dotL + DOT / 2 - (barL + MENU_W / 2),
+      dy: dotT + DOT / 2 - (barT + MENU_H / 2),
     })
     requestAnimationFrame(() => requestAnimationFrame(() => setOpen(true)))
   }
@@ -207,27 +165,24 @@ export function TextMenu({ blur, contrast, shadow, pro }: DemoProps) {
     return () => document.removeEventListener('selectionchange', onSel)
   }, [open])
 
-  // Unmount only after the close morph finishes. The clear runs
-  // UNCONDITIONALLY: the anchor mounts while `open` is still false (the
-  // two-frame circle window), which arms this timer — without the
-  // unconditional clear every menu self-destructed ~0.6s after appearing.
+  // Unmount only after the close choreography (toolbar collapse + dot
+  // linger) finishes. The clear runs UNCONDITIONALLY — the anchor mounts
+  // with `open` still false, and that window must not arm a self-destruct.
   useEffect(() => {
     if (closeTimer.current) clearTimeout(closeTimer.current)
     if (open || !anchor) return
-    closeTimer.current = setTimeout(() => setAnchor(null), st.close.dur + 200)
-  }, [open, anchor, st.close.dur])
+    closeTimer.current = setTimeout(
+      () => setAnchor(null),
+      st.close.dur + st.dotLinger + 250,
+    )
+  }, [open, anchor, st.close.dur, st.dotLinger])
 
   const ph = open ? st.open : st.close
   const vars = {
-    '--tm-dur': `${ph.dur}ms`,
-    '--tm-ease': EASES[ph.ease],
     '--tm-fade-dur': `${ph.fadeDur}ms`,
     '--tm-fade-delay': `${ph.fadeDelay}ms`,
-    // Positioning MUST be inline: <Liquid> renders its own
-    // `style={{ position: 'relative', ... , ...style }}`, and an inline
-    // declaration beats a stylesheet rule — via a class the overlay stayed
-    // `relative`, dropped into normal flow below the paragraph, and the
-    // toolbar anchored ~150px too low.
+    // Positioning MUST be inline: <Liquid> renders its own inline
+    // `position: relative`, which beats any stylesheet rule.
     position: 'absolute',
     inset: 0,
     pointerEvents: 'none',
@@ -237,60 +192,68 @@ export function TextMenu({ blur, contrast, shadow, pro }: DemoProps) {
     <div className="tm-wrap">
       <div className="stage">
         <div ref={stageRef} className="tm-stage">
-          {/* The paragraph sits OUTSIDE the liquid group. The group's liquid
-              layer paints at z-index -1 *within the group*, so with the text
-              inside it the paragraph rendered on top of the black toolbar and
-              read as transparency. As a sibling underneath, the toolbar is
-              fully opaque over the text. */}
+          {/* The paragraph sits OUTSIDE the liquid group: the liquid paints
+              at z -1 within its own group, so text inside the group would
+              render on top of the toolbar (the old fake "transparency"). */}
           <p className="tm-text" onPointerUp={syncToSelection}>
             Select any part of this paragraph to format it. The menu grows out
             of the selection as a drop of liquid — and melts away when the
             selection is dismissed.
           </p>
-          <Liquid
-            blur={blur}
-            contrast={contrast}
-            fill="#17181c"
-            shadow={shadow}
-            className="tm-overlay"
-            style={vars}
-          >
+          <Liquid blur={blur} contrast={contrast} fill="#17181c" shadow={shadow} style={vars}>
             {anchor && (
-              <Liquid.Item
-                morph={{
-                  shape: true,
-                  speed: ph.speed,
-                  bounce: ph.bounce,
-                  contentBlur: ph.contentBlur,
-                }}
-              >
-                <div
-                  className={`tm-menu ${open ? 'tm-menu-open' : ''}`}
-                  role="toolbar"
-                  aria-label="Text formatting"
-                  aria-hidden={!open}
-                  style={
-                    open
-                      ? { left: anchor.barL, top: anchor.barT, width: MENU_W, height: MENU_H }
-                      : { left: anchor.dotL, top: anchor.dotT, width: DOT, height: DOT }
-                  }
+              <>
+                {/* TWO liquid elements, both mirrored morph items driven by
+                    transform only (translate + scale — the box itself never
+                    animates, so there is no geometry left to jump):
+                    1. the circle, popping onto the selection;
+                    2. the toolbar, budding OUT of the circle — it starts
+                       collapsed at the circle's centre and springs up into
+                       place, the goo filter necking the two while they
+                       separate. At rest they stay close enough to keep a
+                       liquid tail down to the selection. */}
+                <Liquid.Item
+                  scale={open ? 1 : 0.01}
+                  transition={{
+                    duration: open ? Math.min(200, st.open.dur * 0.5) : Math.max(120, st.close.dur * 0.7),
+                    ease: EASES[open ? st.open.ease : st.close.ease],
+                  }}
+                  delay={open ? 0 : st.dotLinger}
+                  style={{ position: 'absolute', left: anchor.dotL, top: anchor.dotT }}
                 >
-                  {ACTIONS.map(a => (
-                    <button
-                      key={a.key}
-                      type="button"
-                      className={`tm-btn ${active[a.key] ? 'tm-btn-active' : ''}`}
-                      aria-label={a.label}
-                      aria-pressed={!!active[a.key]}
-                      tabIndex={open ? 0 : -1}
-                      onPointerDown={e => e.preventDefault() /* keep the selection */}
-                      onClick={() => setActive(prev => ({ ...prev, [a.key]: !prev[a.key] }))}
-                    >
-                      {a.glyph}
-                    </button>
-                  ))}
-                </div>
-              </Liquid.Item>
+                  <div className="tm-dot" aria-hidden="true" />
+                </Liquid.Item>
+                <Liquid.Item
+                  x={open ? 0 : anchor.dx}
+                  y={open ? 0 : anchor.dy}
+                  scale={open ? 1 : 0.04}
+                  transition={{ duration: ph.dur, ease: EASES[ph.ease] }}
+                  delay={open ? st.barDelay : 0}
+                  style={{ position: 'absolute', left: anchor.barL, top: anchor.barT }}
+                >
+                  <div
+                    className={`tm-menu ${open ? 'tm-menu-open' : ''}`}
+                    role="toolbar"
+                    aria-label="Text formatting"
+                    aria-hidden={!open}
+                  >
+                    {ACTIONS.map(a => (
+                      <button
+                        key={a.key}
+                        type="button"
+                        className={`tm-btn ${active[a.key] ? 'tm-btn-active' : ''}`}
+                        aria-label={a.label}
+                        aria-pressed={!!active[a.key]}
+                        tabIndex={open ? 0 : -1}
+                        onPointerDown={e => e.preventDefault() /* keep the selection */}
+                        onClick={() => setActive(prev => ({ ...prev, [a.key]: !prev[a.key] }))}
+                      >
+                        {a.glyph}
+                      </button>
+                    ))}
+                  </div>
+                </Liquid.Item>
+              </>
             )}
           </Liquid>
         </div>
@@ -306,8 +269,40 @@ export function TextMenu({ blur, contrast, shadow, pro }: DemoProps) {
               </button>
             </span>
           </div>
-          <PhaseGroup title="Open" ph={st.open} pro={pro} onChange={setPhase('open')} />
-          <PhaseGroup title="Close" ph={st.close} pro={pro} onChange={setPhase('close')} />
+          <Subhead>Open</Subhead>
+          <SliderRow label="Duration (ms)" value={st.open.dur} min={80} max={1200} step={10} onChange={setPhase('open')('dur')} />
+          <div className="cp-row">
+            <span className="cp-label">Easing</span>
+            <select className="cp-ease" value={st.open.ease} onChange={e => setPhase('open')('ease')(e.target.value)}>
+              {Object.keys(EASES).map(name => (
+                <option key={name}>{name}</option>
+              ))}
+            </select>
+          </div>
+          <SliderRow label="Bar delay (ms)" value={st.barDelay} min={0} max={400} step={10} onChange={setShared('barDelay')} />
+          {pro && (
+            <>
+              <SliderRow label="Fade (ms)" value={st.open.fadeDur} min={0} max={600} step={10} onChange={setPhase('open')('fadeDur')} />
+              <SliderRow label="Fade delay (ms)" value={st.open.fadeDelay} min={0} max={600} step={10} onChange={setPhase('open')('fadeDelay')} />
+            </>
+          )}
+          <Subhead>Close</Subhead>
+          <SliderRow label="Duration (ms)" value={st.close.dur} min={80} max={1200} step={10} onChange={setPhase('close')('dur')} />
+          <div className="cp-row">
+            <span className="cp-label">Easing</span>
+            <select className="cp-ease" value={st.close.ease} onChange={e => setPhase('close')('ease')(e.target.value)}>
+              {Object.keys(EASES).map(name => (
+                <option key={name}>{name}</option>
+              ))}
+            </select>
+          </div>
+          <SliderRow label="Dot linger (ms)" value={st.dotLinger} min={0} max={500} step={10} onChange={setShared('dotLinger')} />
+          {pro && (
+            <>
+              <SliderRow label="Fade (ms)" value={st.close.fadeDur} min={0} max={600} step={10} onChange={setPhase('close')('fadeDur')} />
+              <SliderRow label="Fade delay (ms)" value={st.close.fadeDelay} min={0} max={600} step={10} onChange={setPhase('close')('fadeDelay')} />
+            </>
+          )}
         </div>
       </div>
     </div>

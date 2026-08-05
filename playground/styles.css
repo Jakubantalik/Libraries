@@ -874,25 +874,28 @@ body {
   background: rgba(66, 133, 244, 0.22);
 }
 
-/* Closed = a liquid dot at the selection; open = the toolbar. The element's
-   own CSS transition drives the geometry — morph shape re-measures every
-   frame, so the liquid follows this exact timing with jelly physics. */
+/* The selection-anchor circle: one of the TWO liquid elements. Its liquid
+   surface is the blob — the element only carries geometry. */
+.tm-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* The toolbar: a STATIC box — all open/close motion is the mirrored item's
+   transform (translate + scale), so there is no width/height/left/top
+   animation left to jump or drift. */
 .tm-menu {
-  position: absolute;
+  width: 232px;
+  height: 44px;
   border-radius: 999px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 2px;
   overflow: hidden;
-  /* The closed circle sits ON the text — it must never eat the pointer,
-     or it blocks re-selecting the words underneath while it melts away. */
   pointer-events: none;
-  transition:
-    width var(--tm-dur, 380ms) var(--tm-ease, cubic-bezier(0.3, 1.05, 0.4, 1)),
-    height var(--tm-dur, 380ms) var(--tm-ease, cubic-bezier(0.3, 1.05, 0.4, 1)),
-    left var(--tm-dur, 380ms) var(--tm-ease, cubic-bezier(0.3, 1.05, 0.4, 1)),
-    top var(--tm-dur, 380ms) var(--tm-ease, cubic-bezier(0.3, 1.05, 0.4, 1));
 }
 
 .tm-btn {
@@ -915,6 +918,8 @@ body {
   transition: opacity var(--tm-fade-dur, 140ms) ease, background-color 120ms ease;
 }
 
+/* Re-enable the pointer only once open — the overlay and collapsed states
+   must never block re-selecting the text underneath. */
 .tm-menu-open {
   pointer-events: auto;
 }
