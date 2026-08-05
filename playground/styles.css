@@ -382,7 +382,11 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 0 17px;
+  /* Right padding matches the vertical breathing room the avatars get:
+     (56px pill - 32px avatar) / 2 = 12px, so the last avatar sits equally
+     far from the pill's right edge as from its top and bottom. The left
+     side keeps its larger inset — that's optical spacing for the label. */
+  padding: 0 12px 0 17px;
 }
 
 .ap-label {
