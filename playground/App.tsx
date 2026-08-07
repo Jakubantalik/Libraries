@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Cards } from './demos/Cards'
 import { Chips } from './demos/Chips'
 import { PlusMenu } from './demos/PlusMenu'
 import { Slider } from './demos/Slider'
@@ -106,6 +107,15 @@ export function App() {
           <p className="card-note">
             Drag the avatar into the pill — it dissolves in on contact and the group grows, the
             pill resizing with a liquid follow. <code>morph=&#123;&#123; dissolve &#125;&#125;</code>
+          </p>
+        </section>
+        <section className="card">
+          <p className="card-label">Morph — melting cards</p>
+          <Cards {...demo} />
+          <p className="card-note">
+            Drag either photo — bring them close and the surfaces neck into one
+            liquid while the images melt into each other at the seam.{' '}
+            <code>morph=&#123;&#123; dissolve &#125;&#125;</code>
           </p>
         </section>
         <section className="card">

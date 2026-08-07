@@ -567,6 +567,49 @@ body {
   }
 }
 
+/* ---------- melting cards (two draggable images) ---------- */
+
+.dc-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.dc {
+  width: 320px;
+  height: 210px;
+}
+
+/* Anchored at the stage centre; drag state drives the translate. The blob is
+   the card's liquid surface — the full-bleed image covers its own blob
+   (blobInset) and the coat necks out toward the neighbour (bridgeGrow). */
+.dc-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 96px;
+  height: 96px;
+  margin: -48px 0 0 -48px;
+  border-radius: 16px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.dc-card:active {
+  cursor: grabbing;
+}
+
+.dc-card img {
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+  background: #e3e3e6;
+}
+
 /* ---------- control panel (prototypes-pro cp design) ---------- */
 
 .cp-panel {
