@@ -1132,13 +1132,16 @@ export class ObserveEngine {
     // radius. Stacked, that approximates a continuous gradient — a two-step
     // version banded visibly once blur got large.
     //
-    // All masks are CONCENTRIC, biased slightly into the item so its edge is
-    // inside the melt. Pointiness comes from the content's gravity stretch —
-    // an earlier version pushed each mask disc along the flow instead, and a
-    // pushed-away disc separates from the body and shows a detached circular
-    // fragment of the image floating at the tip.
-    const bx = cx - gux * d * 0.15
-    const by = cy - guy * d * 0.15
+    // All masks are CONCENTRIC and centred AT the seam (tiny bias toward the
+    // neighbour): the warped imagery must cover the white liquid bridge, and
+    // with two melting items their copies overlap and interleave in the neck
+    // — colour mixes with colour. Centred into the item instead, the copies
+    // hugged their own edge and the neck showed as bare white fog between
+    // them. Pointiness comes from the content's gravity stretch — a
+    // per-layer pushed disc separates from the body and shows a detached
+    // circular fragment.
+    const bx = cx + gux * d * 0.05
+    const by = cy + guy * d * 0.05
     melt.layers.forEach((layer, i) => {
       const t = n > 1 ? i / (n - 1) : 1 // 0 = outermost rim, 1 = tip
       // Blur eases in with a curve so the rim stays nearly sharp and the
@@ -1267,13 +1270,15 @@ export class ObserveEngine {
       // item's own edge genuinely dissolves — centred at the contact, half
       // the hole was wasted over the neighbour.
       const ky = (entry.el.offsetHeight || ir.height) / ir.height
-      const hx = round((cx - gux * d * 0.25 - ix) * kx)
-      const hy = round((cy - guy * d * 0.25 - iy) * ky)
+      // Centred AT the seam, radius kept to the neck's width: the hole may
+      // only eat the sliver of image the neck is consuming. Biased into the
+      // item it excavated a crater from the photo's BODY, and what's behind
+      // an erased photo is the item's own white blob — a glowing white
+      // circle on the image with no liquid to justify it.
+      const hx = round((cx - ix) * kx)
+      const hy = round((cy - iy) * ky)
       const hd = d * Math.min(kx, ky)
-      // Wide erased core (0.5·hd, not 0.2) so the edge is genuinely gone
-      // across the melt zone — the warped, noise-displaced copy supplies the
-      // liquid edge there instead — with a soft ramp back to intact.
-      const hole = `radial-gradient(circle at ${hx}px ${hy}px, rgba(0,0,0,${holeAlpha}) ${round(hd * 0.5)}px, rgba(0,0,0,${holeMid}) ${round(hd * 0.78)}px, black ${round(hd * 1.05)}px)`
+      const hole = `radial-gradient(circle at ${hx}px ${hy}px, rgba(0,0,0,${holeAlpha}) ${round(hd * 0.32)}px, rgba(0,0,0,${holeMid}) ${round(hd * 0.55)}px, black ${round(hd * 0.8)}px)`
       entry.el.style.setProperty('mask-image', hole)
       entry.el.style.setProperty('-webkit-mask-image', hole)
     }

@@ -101,7 +101,9 @@ export function Cards({ blur, contrast, shadow, pro }: DemoProps) {
   const k = st.strength
   const dissolve = {
     warp: st.warp * k,
-    blur: 8 * k,
+    // Lower than the avatar tuning: at the seam of two large photos a heavy
+    // blur reads as fog over the neck, not as liquid.
+    blur: 5 * k,
     mix: st.mix * k,
     gravity: st.gravity * k,
     taper: 0.95,
