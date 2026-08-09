@@ -24,9 +24,6 @@ export interface MorphTuning {
    *  travels as a droplet and settles like jelly. Off by default — plain
    *  merge needs no engine. */
   shape?: boolean
-  /** Melt the item's imagery into a touching neighbour. `true` for the full
-   *  tuned look, or 0..1 to scale the intensity. */
-  dissolve?: boolean | number
   /** Speed multiplier for the shape physics. 1 = default, 2 = twice as fast. */
   speed?: number
   /** 0..1 — how much the shape physics overshoot and wobble. 0 = calm and
@@ -39,7 +36,6 @@ export interface MorphTuning {
   /** Full escape hatch: raw engine options, merged over the mapped values. */
   advanced?: {
     evolve?: EvolveOptions
-    dissolve?: DissolveOptions
     /** Shrink the blob by px per side so opaque content fully covers its own
      *  liquid (e.g. round photos). */
     blobInset?: number
@@ -72,6 +68,12 @@ export interface LiquidItemProps {
   morph?: MorphTuning
   /** Tuning for effect="move". */
   move?: MoveTuning
+  /** Melt this item's imagery into a touching neighbour at the contact point
+   *  — a liquid warp, not a blur. Orthogonal to `effect`: it describes what
+   *  your CONTENT does where two surfaces meet, not how the surface moves.
+   *  `true` for the tuned look, `0..1` to scale it, or the raw
+   *  `DissolveOptions` for full control (wire `active` to your drag). */
+  dissolve?: boolean | number | DissolveOptions
   /** Component-driven position: the library animates both the element and its
    *  liquid in perfect sync. Omit x/y and animate the child yourself (CSS,
    *  Framer Motion, …) — the liquid follows automatically when the effect
@@ -84,7 +86,7 @@ export interface LiquidItemProps {
   /** Transition delay in ms (stagger). */
   delay?: number
   /** Plain-merge items animated by YOUR code: makes the liquid follow the
-   *  child's rendered rect. Implied by morph.shape / morph.dissolve /
+   *  child's rendered rect. Implied by `morph.shape`, `dissolve` and
    *  effect="move". */
   observe?: boolean
   /** Override the measured border-radius for the liquid (px). */
@@ -166,19 +168,32 @@ function mapMove(t: MoveTuning | undefined): MoveOptions {
 /** The public item: two effects, simple normalized knobs, `advanced` escape
  *  hatches into the raw engine options. */
 export function LiquidItem(props: LiquidItemProps) {
-  const { effect = 'morph', morph, move, observe, ...rest } = props
+  const { effect = 'morph', morph, move, dissolve, observe, ...rest } = props
 
+  // `dissolve` is positioned as orthogonal to `effect`, but the melt is drawn
+  // from the element's MEASURED rect while move's liquid deliberately lags on
+  // a spring — the melt would sit on the element with the surface trailing
+  // behind it. Refuse loudly rather than ship the mismatch; lifting this means
+  // feeding writeBlend the sprung position.
   if (effect === 'move') {
+    if (process.env.NODE_ENV !== 'production' && dissolve !== undefined && dissolve !== false) {
+      console.warn(
+        '[liquid-gooey] `dissolve` is ignored with effect="move": the melt ' +
+          'follows the element while the liquid lags on its spring, so the two ' +
+          'would visibly disagree. Use it on a morph item.',
+      )
+    }
     return <GooeyItem {...rest} observe effect="move" move={mapMove(move)} />
   }
 
   const adv = morph?.advanced
   const shape = !!morph?.shape
-  const dissolve = morph?.dissolve
   const wantsDissolve = dissolve !== undefined && dissolve !== false
   const contactBlur = wantsDissolve
-    ? { ...mapDissolve(dissolve!), ...adv?.dissolve }
-    : adv?.dissolve
+    ? typeof dissolve === 'object'
+      ? { ...mapDissolve(true), ...dissolve }
+      : mapDissolve(dissolve!)
+    : undefined
   const evolve = shape ? { ...mapMorphSprings(morph), ...adv?.evolve } : undefined
 
   return (

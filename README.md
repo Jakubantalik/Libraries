@@ -1,9 +1,11 @@
 # liquid-gooey
 
-Liquid effects for React UI. Two effects cover the whole family:
+Liquid effects for React UI. Two effects and one modifier cover the whole family:
 
-- **Morph** — touching pieces merge gooily, change shape like jelly, and can dissolve into each other on contact. Menus, avatar groups, morphing panels.
+- **Morph** — touching pieces merge gooily and change shape like jelly. Menus, avatar groups, morphing panels.
 - **Move** — the surface trails a moving element as liquid rubber with a droplet tail. Sliders, tab indicators, dragged things.
+
+Plus **`dissolve`**, an orthogonal modifier: your imagery melts into whatever it touches. It isn't a third effect — the effects describe how the *surface moves*, dissolve describes what your *content* does where two surfaces meet.
 
 Cross-browser (Safari included), crisp text/icons/images at all times, real shadows on the merged liquid, zero idle cost.
 
@@ -19,7 +21,7 @@ liquid-gooey splits it in two — a silhouette layer carries the goo and the sha
 - **Safari included.** Filters run on SVG content, never CSS `url()` on HTML — that's the specific thing WebKit gets wrong.
 - **It's real UI, not decoration.** The content layer is live DOM: focus rings, hit targets, ARIA and handlers all intact.
 - **Zero idle cost.** Component-driven springs compile to GPU-composited CSS `linear()` easings; the measurement loop sleeps completely when nothing moves.
-- **Two effects, not fifty knobs.** Morph and Move take 3–4 normalized knobs each, with the full physics underneath when you want it.
+- **Two effects, not fifty knobs.** Morph and Move take 3–4 normalized knobs each, plus a `dissolve` modifier — with the full physics underneath when you want it.
 
 ```bash
 npm install liquid-gooey
@@ -46,7 +48,7 @@ Run the playground: `npm install && npm run dev` — add `?pro` to the URL for t
 
 ### Morph (default)
 
-Merging is automatic: blobs share the group's goo filter, so touching pieces bridge and merge. Two optional powers:
+Merging is automatic: blobs share the group's goo filter, so touching pieces bridge and merge. One optional power:
 
 ```tsx
 // Shape change: the liquid mass flows toward the new centre first, then size
@@ -54,23 +56,28 @@ Merging is automatic: blobs share the group's goo filter, so touching pieces bri
 <Liquid.Item morph={{ shape: true }}>
   <div className={open ? 'panel-open' : 'panel-closed'}>…</div>
 </Liquid.Item>
-
-// Dissolve: the item's imagery melts into a touching neighbour at the
-// contact point — a liquid warp, not a blur. Wire `active` to your drag.
-<Liquid.Item morph={{ dissolve: true }}>
-  <img className="avatar" … />
-</Liquid.Item>
 ```
 
 | Knob | Default | Meaning |
 | --- | --- | --- |
 | `shape` | `false` | Liquid shape-change physics (springs + droplet travel + corner timeline). |
-| `dissolve` | off | `true` for the tuned look, or `0..1` intensity. |
 | `speed` | `1` | Tempo multiplier for the shape physics (2 = twice as fast, same character). |
 | `bounce` | `0.5` | `0..1` — how much the physics overshoot and wobble. `0` = calm, critically damped. |
 | `contentBlur` | `7` | Max px **your content** cross-blurs by while the liquid is in motion, sharpening as it settles. `0` disables. |
 
-Morph acts on both halves of the effect: the *surface* (merge, springs, corner timeline) and your *content* (`contentBlur` while moving, `dissolve` melting imagery at a contact point).
+Morph acts on both halves of the effect: the *surface* (merge, springs, corner timeline) and your *content* (`contentBlur` while moving).
+
+### Dissolve (a modifier, not an effect)
+
+```tsx
+<Liquid.Item dissolve />                      // the tuned look
+<Liquid.Item dissolve={0.5} />                // scaled intensity
+<Liquid.Item dissolve={{ mix: 0.7, active: dragging }} />   // full DissolveOptions
+```
+
+The item's imagery melts into a touching neighbour at the contact point — a liquid warp with two-liquid mixing, not a blur. Strength ramps with proximity, tracking where the goo bridge actually forms, so it needs no gating of its own; wire `active` to your drag state if you want it to clear on release. Text is never melted, only imagery.
+
+Today it applies to morph items. Under `effect="move"` it is ignored with a dev warning: the melt is drawn from the element's measured rect while move's liquid deliberately lags on a spring, so the two would visibly disagree.
 
 ### Move
 
@@ -111,8 +118,9 @@ Plus all standard `div` props. **Size the group to contain the full travel of it
 | --- | --- |
 | `effect` | `'morph'` (default) or `'move'`. |
 | `morph` / `move` | The knobs above, plus `advanced` (below). |
+| `dissolve` | `true`, `0..1`, or raw `DissolveOptions` — melts imagery where surfaces meet. Orthogonal to `effect`. |
 | `x` `y` `scale` `transition` `delay` | Component-driven position: the library animates element + liquid in one commit — pixel-perfect sync. `transition` is `'snappy' \| 'smooth' \| 'bouncy'`, `{ stiffness, damping, mass }` or `{ duration, ease }`. |
-| `observe` | Plain-merge items animated by *your* code: the liquid follows the child's rendered rect. Implied by `morph.shape`, `morph.dissolve` and `effect="move"`. |
+| `observe` | Plain-merge items animated by *your* code: the liquid follows the child's rendered rect. Implied by `morph.shape`, `dissolve` and `effect="move"`. |
 | `radius` | Override the measured border-radius (`number` or `[tl, tr, br, bl]`). |
 
 Border-radius is measured from computed style; percentage radii, circles and pills just work.
@@ -125,14 +133,14 @@ Every raw engine value stays reachable — the slim knobs map onto them, and `ad
 <Liquid.Item
   morph={{
     shape: true,
-    dissolve: true,
     advanced: {
       evolve: { massStiffness: 320, cornerDuration: 820, roundness: 1 /* EvolveOptions */ },
-      dissolve: { warp: 26, mix: 0.7, gravity: 60, active: dragging /* DissolveOptions */ },
       blobInset: 2,   // shrink the blob so an opaque photo covers its own liquid
       bridgeGrow: 8,  // liquid coat that swells out and necks into a neighbour
     },
   }}
+  // dissolve takes its raw options directly — no `advanced` detour
+  dissolve={{ warp: 26, mix: 0.7, gravity: 60, active: dragging /* DissolveOptions */ }}
 />
 
 <Liquid.Item effect="move" move={{ advanced: { stiffness: 380, damping: 18 /* MoveOptions */ } }} />

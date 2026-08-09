@@ -123,13 +123,11 @@ export function Cards({ blur, contrast, shadow, pro }: DemoProps) {
           {[cardA, cardB].map((src, i) => (
             <Liquid.Item
               key={i}
-              morph={{
-                // Both cards dissolve: each melts its own imagery toward the
-                // other, so the seam mixes two liquids — always armed, the
-                // engine's proximity ramp does the gating.
-                dissolve: true,
-                advanced: { blobInset: 2, bridgeGrow: 10, dissolve },
-              }}
+              // Both cards dissolve: each melts its own imagery toward the
+              // other, so the seam mixes two liquids — always armed, the
+              // engine's proximity ramp does the gating.
+              dissolve={dissolve}
+              morph={{ advanced: { blobInset: 2, bridgeGrow: 10 } }}
             >
               <div
                 className="dc-card"

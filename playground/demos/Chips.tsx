@@ -56,7 +56,7 @@ function dropEase(bounce: number): string {
 function meltSnippet(m: MeltState): string {
   return [
     '// liquid-gooey — Dissolve values',
-    'contactBlur={{',
+    'dissolve={{',
     `  strength: ${m.strength}, warp: ${m.warp}, blur: ${m.blur}, mix: ${m.mix}, gravity: ${m.gravity},`,
     `  taper: ${m.taper}, warpFreq: ${m.warpFreq}, flowSpeed: ${m.flowSpeed},`,
     `  detail: ${m.detail}, zone: ${m.zone}, range: ${m.range},`,
@@ -493,38 +493,31 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
            coat that necks into the surface, and a warp melt dissolves the
            image ONLY in the mixing zone around the contact point. */
         <Liquid.Item
-          morph={{
-            // Simple mode: one knob. Pro overrides every raw dissolve value
-            // through the advanced hatch below.
-            dissolve: pro ? true : slimDissolve,
-            advanced: {
-              blobInset: 2,
-              bridgeGrow: 8,
-              dissolve: {
-                strength: melt.strength,
-                ...(pro
-                  ? {
-                      blur: melt.blur,
-                      warp: melt.warp,
-                      range: melt.range,
-                      zone: melt.zone,
-                      mix: melt.mix,
-                      gravity: melt.gravity,
-                      taper: melt.taper,
-                      warpFreq: melt.warpFreq,
-                      flowSpeed: melt.flowSpeed,
-                      detail: melt.detail,
-                    }
-                  : null),
-                pull: 0,
-                // Dissolve only while actually dragging: on release the melt
-                // clears over `releaseMs` while the avatar travels its 420ms
-                // into the gap — gone well before it lands.
-                active: dragging,
-                releaseMs: melt.release,
-                fadeMs: melt.fade,
-              },
-            },
+          morph={{ advanced: { blobInset: 2, bridgeGrow: 8 } }}
+          // Simple mode rides `strength` alone; pro overrides every raw value.
+          dissolve={{
+            strength: pro ? melt.strength : slimDissolve,
+            ...(pro
+              ? {
+                  blur: melt.blur,
+                  warp: melt.warp,
+                  range: melt.range,
+                  zone: melt.zone,
+                  mix: melt.mix,
+                  gravity: melt.gravity,
+                  taper: melt.taper,
+                  warpFreq: melt.warpFreq,
+                  flowSpeed: melt.flowSpeed,
+                  detail: melt.detail,
+                }
+              : null),
+            pull: 0,
+            // Dissolve only while actually dragging: on release the melt
+            // clears over `releaseMs` while the avatar travels its 420ms
+            // into the gap — gone well before it lands.
+            active: dragging,
+            releaseMs: melt.release,
+            fadeMs: melt.fade,
           }}
         >
           <div

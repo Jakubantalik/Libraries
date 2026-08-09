@@ -107,7 +107,7 @@ export function App() {
           <Chips {...demo} />
           <p className="card-note">
             Drag the avatar into the pill — it dissolves in on contact and the group grows, the
-            pill resizing with a liquid follow. <code>morph=&#123;&#123; dissolve &#125;&#125;</code>
+            pill resizing with a liquid follow. <code>dissolve</code>
           </p>
         </section>
         <section className="card">
