@@ -15,15 +15,27 @@ interface EbState {
   dur: number
   ease: string
   crossBlur: number
-  travel: number
+  /** Resting gap between field and button when open — beyond the goo
+   *  bridging distance, so the circle fully detaches at rest. */
+  gap: number
 }
 
 const DEFAULTS: EbState = {
   dur: 360,
   ease: 'Bounce',
   crossBlur: 2,
-  travel: 54,
+  gap: 20,
 }
+
+/** Stage 290 / field 202 / button 44. The ensemble stays horizontally
+ *  centred in BOTH states: closed it is just the pill (field at left 44),
+ *  open it is field + gap + button — the field shifts left while the button
+ *  detaches right, symmetric about the stage centre. */
+const BTN_W = 44
+const openX = (gap: number) => ({
+  field: -(BTN_W + gap) / 2,
+  btn: BTN_W / 2 + 2 + gap / 2,
+})
 
 function SliderRow({
   label,
@@ -110,7 +122,11 @@ export function EmailInput({ blur, contrast, shadow, pro }: DemoProps) {
               second one hidden INSIDE its right end. Focus slides the button
               out — the goo necks, stretches and lets go: one shape morphs
               into input + circular button, in perfect element/liquid sync. */}
-          <Liquid.Item className="eb-slot eb-field-slot">
+          <Liquid.Item
+            className="eb-slot eb-field-slot"
+            x={open ? openX(st.gap).field : 0}
+            transition={{ duration: st.dur, ease: EASES[st.ease] }}
+          >
             <div className="eb-field">
               <input
                 ref={inputRef}
@@ -125,7 +141,7 @@ export function EmailInput({ blur, contrast, shadow, pro }: DemoProps) {
           </Liquid.Item>
           <Liquid.Item
             className="eb-slot eb-btn-slot"
-            x={open ? st.travel : 0}
+            x={open ? openX(st.gap).btn : 0}
             transition={{ duration: st.dur, ease: EASES[st.ease] }}
           >
             <button
@@ -167,7 +183,7 @@ export function EmailInput({ blur, contrast, shadow, pro }: DemoProps) {
           </div>
           <SliderRow label="Cross blur (px)" value={st.crossBlur} min={0} max={6} step={0.5} onChange={set('crossBlur')} />
           {pro && (
-            <SliderRow label="Travel (px)" value={st.travel} min={44} max={90} step={2} onChange={set('travel')} />
+            <SliderRow label="Gap (px)" value={st.gap} min={8} max={40} step={2} onChange={set('gap')} />
           )}
         </div>
       </div>

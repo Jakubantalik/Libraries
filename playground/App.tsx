@@ -124,8 +124,8 @@ export function App() {
           <EmailInput {...demo} />
           <p className="card-note">
             Click the field — the submit button buds out of its end as a
-            droplet, with a subtle bounce and cross-blur.{' '}
-            <code>x=&#123;open ? 54 : 0&#125;</code>
+            droplet and fully detaches, the pair recentring symmetrically,
+            with a subtle bounce and cross-blur.
           </p>
         </section>
         <section className="card">

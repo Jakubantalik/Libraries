@@ -631,14 +631,15 @@ body {
 }
 
 .eb-field-slot {
-  left: 20px;
+  /* (290 - 202) / 2 — the pill alone is the closed composite, centred. */
+  left: 44px;
   top: 81px;
 }
 
 /* Closed: the 44px button circle hides INSIDE the pill's right end, its blob
    fully inside the pill's blob — the union silhouette is just the pill. */
 .eb-btn-slot {
-  left: 176px;
+  left: 200px;
   top: 83px;
 }
 
