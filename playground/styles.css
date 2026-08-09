@@ -614,6 +614,110 @@ body {
   background: #e3e3e6;
 }
 
+/* ---------- email input (field morphs out a submit button) ---------- */
+
+.eb-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.eb {
+  width: 290px;
+  height: 210px;
+}
+
+.eb-slot {
+  position: absolute;
+}
+
+.eb-field-slot {
+  left: 20px;
+  top: 81px;
+}
+
+/* Closed: the 44px button circle hides INSIDE the pill's right end, its blob
+   fully inside the pill's blob — the union silhouette is just the pill. */
+.eb-btn-slot {
+  left: 176px;
+  top: 83px;
+}
+
+.eb-field {
+  width: 202px;
+  height: 48px;
+  border-radius: 999px;
+}
+
+.eb-input {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  border-radius: 999px;
+  padding: 0 44px 0 18px;
+  font: inherit;
+  font-size: 14px;
+  color: #17181c;
+  outline: none;
+}
+
+.eb-input::placeholder {
+  color: #8a8b92;
+}
+
+.eb-btn {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #17181c;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.eb-btn:focus-visible {
+  outline: 2px solid #17181c;
+  outline-offset: 2px;
+}
+
+/* The arrow materialises once the button has pulled clear — same hold-back
+   pattern as the plus-menu icons. */
+.eb-arrow {
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.eb-btn-open .eb-arrow {
+  opacity: 1;
+  transition-delay: calc(var(--eb-dur, 360ms) * 0.35);
+}
+
+/* Subtle cross-blur pulse on the CONTENT while the liquid morphs: blur in,
+   sharpen out, one pass per toggle. Longhand animation properties — WebKit
+   mis-parses var() inside the shorthand. */
+@keyframes eb-cross {
+  0% {
+    filter: blur(0);
+  }
+  35% {
+    filter: blur(var(--eb-blur, 2px));
+  }
+  100% {
+    filter: blur(0);
+  }
+}
+
+.eb-pulsing .eb-input,
+.eb-pulsing .eb-arrow {
+  animation-name: eb-cross;
+  animation-duration: var(--eb-dur, 360ms);
+  animation-timing-function: ease-in-out;
+}
+
 /* ---------- control panel (prototypes-pro cp design) ---------- */
 
 .cp-panel {
@@ -840,7 +944,9 @@ body {
   }
 
   .pm-anticipating [data-gooey-svg],
-  .pm-anticipating .pm-main {
+  .pm-anticipating .pm-main,
+  .eb-pulsing .eb-input,
+  .eb-pulsing .eb-arrow {
     animation: none !important;
   }
 }

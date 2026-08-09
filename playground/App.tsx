@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Cards } from './demos/Cards'
+import { EmailInput } from './demos/EmailInput'
 import { Chips } from './demos/Chips'
 import { PlusMenu } from './demos/PlusMenu'
 import { Slider } from './demos/Slider'
@@ -116,6 +117,15 @@ export function App() {
             Drag either photo — bring them close and the surfaces neck into one
             liquid while the images melt into each other at the seam.{' '}
             <code>morph=&#123;&#123; dissolve &#125;&#125;</code>
+          </p>
+        </section>
+        <section className="card">
+          <p className="card-label">Morph — email input</p>
+          <EmailInput {...demo} />
+          <p className="card-note">
+            Click the field — the submit button buds out of its end as a
+            droplet, with a subtle bounce and cross-blur.{' '}
+            <code>x=&#123;open ? 54 : 0&#125;</code>
           </p>
         </section>
         <section className="card">
