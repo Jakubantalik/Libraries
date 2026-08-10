@@ -220,6 +220,8 @@ interface MeltLayer {
    *  primitives — a matching frame skips every write, so WebKit does not
    *  re-rasterize the layer at all. */
   last?: string
+  /** The layer's <filter>; its region is resized per frame to the melt zone. */
+  filter: SVGElement
   disp: SVGElement
   blurEl: SVGElement
   erode: SVGElement
@@ -485,7 +487,7 @@ export class ObserveEngine {
         item.baseW = t.target.offsetWidth || 1
         item.baseH = t.target.offsetHeight || 1
         item.radiusPx = this.resolveRadius(t)
-        this.refreshMelt(item)
+        this.syncMelt(item)
         this.wake()
       }),
     }
@@ -542,6 +544,41 @@ export class ObserveEngine {
    *  so several ripple wavelengths fit across it — a fixed low frequency
    *  displaces the whole zone as one chunk, which reads as a shifted ghost
    *  copy instead of liquid. */
+  /** Resize response. The melt DOM only needs REBUILDING when the set of
+   *  images changes; a resize alone just makes the cached corner radii stale.
+   *
+   *  Rebuilding on every resize tore down and recreated three turbulence
+   *  filters plus a pattern + <image> per photo, and WebKit re-decodes and
+   *  re-rasterises all of it synchronously. The pill resizes the moment the
+   *  hover gap opens — i.e. exactly as the flight begins — so that landed as
+   *  a ~120ms main-thread stall. CSS transitions keep running on the
+   *  compositor through a stall, but the silhouette is written from this
+   *  loop, so the liquid froze while the content sailed on: the timing
+   *  mismatch, and it never showed in Chromium because the rebuild is cheap
+   *  enough there to fit in a frame. */
+  private syncMelt(item: Item): void {
+    if (!item.blend) return
+    const melt = item.melt
+    const t = item.target
+    const imgs =
+      t instanceof HTMLImageElement
+        ? [t]
+        : (Array.from(t.querySelectorAll('img')) as HTMLImageElement[])
+    const same =
+      !!melt &&
+      melt.entries.length === imgs.length &&
+      melt.entries.every((e, i) => e.el === imgs[i])
+    if (!same) {
+      this.refreshMelt(item)
+      return
+    }
+    for (const entry of melt.entries) {
+      entry.radiusPx = measureRadius(entry.el, entry.el.offsetWidth, entry.el.offsetHeight)[0]
+      // Geometry is re-derived from the new radius on the next write.
+      entry.lastGeom = null
+    }
+  }
+
   private refreshMelt(item: Item): void {
     const blend = item.blend
     if (!blend) return
@@ -574,12 +611,21 @@ export class ObserveEngine {
     defs.append(gradient)
 
     const mkLayer = (suffix: string) => {
+      // Region in USER SPACE, resized per frame to the melt zone (see the
+      // write pass). As a %-of-bbox region it covered the whole group — and
+      // feTurbulence is generated on the CPU across the entire region, so the
+      // cost scaled with the group, not with the small area the mask actually
+      // reveals. That was the ~110ms main-thread stall at the start of a
+      // flight: the content kept moving on the compositor while this loop —
+      // which writes the silhouette — was blocked, so the liquid visibly fell
+      // behind the UI.
       const filter = svg('filter', {
         id: `${uid}-f${suffix}`,
-        x: '-60%',
-        y: '-60%',
-        width: '220%',
-        height: '220%',
+        filterUnits: 'userSpaceOnUse',
+        x: '0',
+        y: '0',
+        width: '0',
+        height: '0',
         'color-interpolation-filters': 'sRGB',
       })
       const turb = svg('feTurbulence', {
@@ -650,7 +696,7 @@ export class ObserveEngine {
       const shift = svg('g', {})
       filtered.append(shift)
       gl.append(filtered)
-      return { disp, blurEl, erode, turb, noiseOffset, circle, gl, shift }
+      return { filter, disp, blurEl, erode, turb, noiseOffset, circle, gl, shift }
     }
     // Outermost first so inner (stronger) layers paint on top.
     const layers = Array.from({ length: MELT_LAYERS }, (_, i) => mkLayer(`l${i}`))
@@ -1358,14 +1404,30 @@ export class ObserveEngine {
     // ONE fingerprint-guarded write pass per layer: any single primitive
     // write re-rasterizes the layer's turbulence filter, so all of a layer's
     // values must be compared — and skipped — together.
+    // Filter region: the mask only reveals a disc around the contact, so the
+    // region only has to cover that disc plus however far blur/warp/gravity
+    // can carry pixels into it. Quantized to 8px so small movements don't
+    // re-trigger a raster.
+    const spread = blend.blur * 2.5 + blend.warp + gAmt * 0.5 + 8
+    const rr = q(d * 1.15 + spread, 8)
+    const regionX = String(q(bx - rr, 8))
+    const regionY = String(q(by - rr, 8))
+    const regionW = String(q(rr * 2, 8))
+
     melt.layers.forEach((layer, i) => {
       const t = n > 1 ? i / (n - 1) : 1
       const v = layerVals[i]
       const shiftT = flow(0.4 + 0.6 * t)
       const erodeV = erodeRow(q(mixAmt * (0.15 + 0.85 * t), 0.01))
-      const fp = v.join(',') + '|' + bfStr + '|' + shiftT + '|' + erodeV
+      const fp =
+        v.join(',') + '|' + bfStr + '|' + shiftT + '|' + erodeV +
+        '|' + regionX + ',' + regionY + ',' + regionW
       if (layer.last === fp) return
       layer.last = fp
+      layer.filter.setAttribute('x', regionX)
+      layer.filter.setAttribute('y', regionY)
+      layer.filter.setAttribute('width', regionW)
+      layer.filter.setAttribute('height', regionW)
       layer.disp.setAttribute('scale', v[0])
       layer.blurEl.setAttribute('stdDeviation', v[1])
       if (layer.turb.getAttribute('baseFrequency') !== bfStr) {
@@ -1412,8 +1474,10 @@ export class ObserveEngine {
         ? smoothstep(1 - bestGap / bridgeRange)
         : 0
       : s
-    const holeAlpha = Math.max(0, 1 - Math.min(s, sBridge) * 2.2).toFixed(3)
-    const holeMid = ((1 + 2 * Number(holeAlpha)) / 3).toFixed(3)
+    // Quantized alongside the geometry below, for the same reason: a new
+    // alpha means a new mask string means a re-raster of every photo.
+    const holeAlpha = q(Math.max(0, 1 - Math.min(s, sBridge) * 2.2), 0.05).toFixed(2)
+    const holeMid = (Math.round(((1 + 2 * Number(holeAlpha)) / 3) * 20) / 20).toFixed(2)
     for (const entry of melt.entries) {
       const ir = entry.measured
       if (!ir || ir.w < 1 || ir.h < 1) continue
@@ -1487,17 +1551,36 @@ export class ObserveEngine {
         lx = ow / 2 + vx * rim
         ly = oh / 2 + vy * rim
       }
-      const hx = round(lx)
-      const hy = round(ly)
-      const hd = Math.min(d * Math.min(kx, ky), rim)
+      // Quantized to whole pixels. Every distinct mask string makes WebKit
+      // re-rasterise that <img>, and with a photo per group member this ran on
+      // every frame of a drag — the dominant cost behind the main-thread
+      // stalls that desynced the silhouette. The hole is a soft gradient, so
+      // 1px steps are invisible, and most frames now reuse the cached string
+      // and write nothing.
+      const hx = Math.round(lx)
+      const hy = Math.round(ly)
+      const hd = q(Math.min(d * Math.min(kx, ky), rim), 1)
       // White stops (opaque under both alpha- and luminance-mode masking), and
-      // a FAR final keep-stop. The hole's own stops only span the neck, so on
-      // any image bigger than the neck every pixel past them is outside the
-      // gradient's stop range: Chromium extends the last colour (opaque, image
-      // intact) but WebKit paints nothing there and erases the image. The
-      // `#fff 9999px` stop puts an in-range keep value over every pixel, which
-      // changes nothing in Chromium and stops WebKit from dropping the image.
-      const hole = `radial-gradient(circle at ${hx}px ${hy}px, rgba(255,255,255,${holeAlpha}) ${round(hd * 0.32)}px, rgba(255,255,255,${holeMid}) ${round(hd * 0.55)}px, #fff ${round(hd * 0.8)}px, #fff 9999px)`
+      // a final keep-stop that reaches the image's farthest corner. The hole's
+      // own stops only span the neck, so on any image bigger than the neck
+      // every pixel past them is outside the gradient's stop range: Chromium
+      // extends the last colour (opaque, image intact) but WebKit paints
+      // nothing there and erases the image.
+      //
+      // The stop is sized to the element, NOT some huge constant: WebKit sizes
+      // the gradient's raster by its declared extent, so a `9999px` stop asked
+      // it to rasterise an enormous buffer and cost ~130ms of main thread on
+      // the frame the mask changed.
+      const far =
+        round(
+          Math.max(
+            Math.hypot(hx, hy),
+            Math.hypot(hx - ow, hy),
+            Math.hypot(hx, hy - oh),
+            Math.hypot(hx - ow, hy - oh),
+          ),
+        ) + 2
+      const hole = `radial-gradient(circle at ${hx}px ${hy}px, rgba(255,255,255,${holeAlpha}) ${round(hd * 0.32)}px, rgba(255,255,255,${holeMid}) ${round(hd * 0.55)}px, #fff ${round(hd * 0.8)}px, #fff ${far}px)`
       if (hole !== entry.lastHole) {
         entry.lastHole = hole
         entry.el.style.setProperty('mask-image', hole)
