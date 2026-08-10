@@ -848,13 +848,17 @@ html[data-theme='light'] .tab-btn:focus-visible {
  * had the groove sitting at the active level (0.07) with the fill brighter
  * still (0.1), so the filled portion didn't match the active tab it sits
  * next to. */
+/* No `overflow: hidden`. The fill carries the active tab's elevation, whose
+ * first layer is an OUTER drop shadow — clipping the track cut it off, so the
+ * filled portion read flat next to the raised tab it is meant to match. The
+ * fill is absolutely positioned and never exceeds the track (width <= 100%,
+ * same 8px radius), so there is nothing here that needs clipping. */
 .strength-track {
   position: relative;
   width: 100%;
   height: 36px;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.03);
-  overflow: hidden;
   cursor: grab;
   transition: background-color 0.15s ease;
 }
