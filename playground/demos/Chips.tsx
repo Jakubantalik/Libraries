@@ -375,7 +375,7 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
   return (
     <div className="ap-wrap">
       <div className="stage">
-    <Liquid blur={blur} contrast={contrast} fill="#fff" shadow={shadow} className="ap">
+    <Liquid blur={blur} contrast={contrast} fill="var(--modal-bg)" shadow={shadow} className="ap">
       <button type="button" className="ap-reset" onClick={reset}>
         Reset
       </button>

@@ -196,7 +196,7 @@ export function PlusMenu({ blur, contrast, shadow, pro }: DemoProps) {
         <Liquid
           blur={blur}
           contrast={contrast}
-          fill="#fff"
+          fill="var(--modal-bg)"
           shadow={shadow}
           className={`pm ${open ? 'pm-open' : ''} ${anticipating ? 'pm-anticipating' : ''}`}
           style={vars}

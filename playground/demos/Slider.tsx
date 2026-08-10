@@ -10,7 +10,10 @@ const MAX = 188
  *  silhouette so it follows the lagging drop instead of the pointer. Inset
  *  layers from the design are approximated with the outer ring — the goo
  *  shadow chain doesn't support inset. */
-const THUMB_SHADOW = '0 0 0 1px rgba(0, 0, 0, 0.08), 0 1px 5px rgba(0, 0, 0, 0.08)'
+const THUMB_SHADOW = {
+  light: '0 0 0 1px rgba(0, 0, 0, 0.08), 0 1px 5px rgba(0, 0, 0, 0.08)',
+  dark: '0 0 0 1px rgba(255, 255, 255, 0.12), 0 1px 5px rgba(0, 0, 0, 0.5)',
+}
 
 function SliderRow({
   label,
@@ -45,7 +48,7 @@ function SliderRow({
   )
 }
 
-export function Slider({ blur, contrast }: DemoProps) {
+export function Slider({ blur, contrast, dark }: DemoProps) {
   const [x, setX] = useState(84)
   const drag = useRef<number | null>(null)
   /** The public Move knobs; defaults reproduce the tuned look. */
@@ -70,7 +73,7 @@ export function Slider({ blur, contrast }: DemoProps) {
   return (
     <div className="sl-wrap">
       <div className="stage">
-        <Liquid blur={blur} contrast={contrast} fill="#fff" shadow={THUMB_SHADOW} className="sl">
+        <Liquid blur={blur} contrast={contrast} fill="var(--modal-bg)" shadow={dark ? THUMB_SHADOW.dark : THUMB_SHADOW.light} className="sl">
           <div className="sl-track" aria-hidden="true" />
           <Liquid.Item effect="move" move={mv}>
             <div

@@ -2,11 +2,104 @@
   box-sizing: border-box;
 }
 
+/* ---------- theme tokens ----------
+   Vocabulary and light values taken from the PRO7 gooey-menu prototype
+   (transitions-pro/prototypes-pro.html): --modal-bg is the LIQUID surface,
+   --btn-text the icon colour, --shadow the Figma soft elevation. That file
+   is light-only, so the dark values are authored here.
+
+   Dark is not a simple inversion of the liquid: on a dark page the surface
+   must READ as raised, so it sits lighter than the page (#2a2d33 on #0f1012)
+   — inverting to near-black would make the goo silhouette vanish into the
+   background and take the whole effect with it. */
+:root {
+  color-scheme: light;
+
+  --bg: #f5f5f6;
+  --text: #17181c;
+  --muted: #5e6773;
+  --label: #8a8b92;
+  --note: #7c7d84;
+
+  /* The liquid surface + the icons riding on it. */
+  --modal-bg: #ffffff;
+  --btn-text: #17181c;
+
+  --card-bg: #ffffff;
+  --card-border: rgba(0, 0, 0, 0.07);
+  --panel-bg: #fbfbfc;
+  --panel-border: rgba(0, 0, 0, 0.08);
+  --stage-bg: rgba(225, 225, 225, 0.3);
+  --skeleton: #e3e3e6;
+
+  --ctl-bg: rgba(0, 0, 0, 0.05);
+  --ctl-bg-hover: rgba(0, 0, 0, 0.09);
+  --ctl-border: rgba(0, 0, 0, 0.12);
+  --field-bg: #ffffff;
+  --track: #eaeaea;
+  --track-ring: rgba(0, 0, 0, 0.08);
+  --accent: #17181c;
+  --on-accent: #ffffff;
+  --hover-veil: rgba(0, 0, 0, 0.04);
+
+  /* Photo edges (avatar hairline + contact shadow). */
+  --photo-edge: rgba(0, 0, 0, 0.2);
+  --photo-lift: rgba(0, 0, 0, 0.16);
+
+  /* Tabs indicator is its own liquid: dark pill, light label. */
+  --tab-ind: #0f0f0f;
+  --tab-ind-text: #ffffff;
+  --tab-label: rgba(15, 15, 15, 0.8);
+  --tab-label-hover: #0f0f0f;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #0f1012;
+  --text: #f3f4f6;
+  --muted: #9aa1ab;
+  --label: #7a818c;
+  --note: #868d97;
+
+  --modal-bg: #2a2d33;
+  --btn-text: #f3f4f6;
+
+  --card-bg: #17191d;
+  --card-border: rgba(255, 255, 255, 0.08);
+  --panel-bg: #1b1e22;
+  --panel-border: rgba(255, 255, 255, 0.07);
+  --stage-bg: rgba(255, 255, 255, 0.03);
+  --skeleton: #3a3d44;
+
+  --ctl-bg: rgba(255, 255, 255, 0.08);
+  --ctl-bg-hover: rgba(255, 255, 255, 0.14);
+  --ctl-border: rgba(255, 255, 255, 0.14);
+  --field-bg: #22252a;
+  --track: #33363c;
+  --track-ring: rgba(255, 255, 255, 0.08);
+  --accent: #f3f4f6;
+  --on-accent: #17181c;
+  --hover-veil: rgba(255, 255, 255, 0.07);
+
+  /* A dark hairline is invisible on a dark surface — the edge has to come
+     from light instead, or overlapping photos lose their separation. */
+  --photo-edge: rgba(255, 255, 255, 0.22);
+  --photo-lift: rgba(0, 0, 0, 0.55);
+
+  /* Inverted in dark so the active tab still reads as the raised one. */
+  --tab-ind: #f3f4f6;
+  --tab-ind-text: #17181c;
+  --tab-label: rgba(243, 244, 246, 0.72);
+  --tab-label-hover: #ffffff;
+}
+
+
 body {
   margin: 0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #f5f5f6;
-  color: #17181c;
+  background: var(--bg);
+  color: var(--text);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -26,7 +119,7 @@ body {
 .header .tag {
   font-size: 14px;
   font-weight: 500;
-  color: #8a8b92;
+  color: var(--label);
   margin-left: 8px;
   letter-spacing: 0;
 }
@@ -36,7 +129,7 @@ body {
   margin: 0;
   font-size: 14px;
   line-height: 1.6;
-  color: #55565e;
+  color: var(--muted);
 }
 
 /* ---------- knobs ---------- */
@@ -45,18 +138,18 @@ body {
   align-self: center;
   font-size: 12px;
   font-weight: 500;
-  color: #5e6773;
+  color: var(--muted);
   text-decoration: none;
   padding: 5px 11px;
   border-radius: 7px;
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--ctl-bg);
   white-space: nowrap;
   transition: background-color 120ms ease, color 120ms ease;
 }
 
 .knob-link:hover {
-  background: rgba(0, 0, 0, 0.09);
-  color: #17181c;
+  background: var(--ctl-bg-hover);
+  color: var(--text);
 }
 
 .knobs {
@@ -65,8 +158,8 @@ body {
   gap: 24px;
   margin: 28px 0 32px;
   padding: 14px 18px;
-  background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.07);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
   border-radius: 14px;
   width: fit-content;
 }
@@ -77,18 +170,18 @@ body {
   gap: 10px;
   font-size: 13px;
   font-weight: 500;
-  color: #55565e;
+  color: var(--muted);
 }
 
 .knob input[type='range'] {
   width: 120px;
-  accent-color: #17181c;
+  accent-color: var(--accent);
 }
 
 .knob code {
   font-family: 'Roboto Mono', ui-monospace, monospace;
   font-size: 12px;
-  color: #17181c;
+  color: var(--text);
   min-width: 28px;
   text-align: right;
 }
@@ -97,8 +190,9 @@ body {
   font: inherit;
   padding: 4px 8px;
   border-radius: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  background: #fff;
+  border: 1px solid var(--ctl-border);
+  background: var(--field-bg);
+  color: var(--text);
 }
 
 .melt-panel {
@@ -109,7 +203,7 @@ body {
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
-  color: #55565e;
+  color: var(--muted);
   user-select: none;
 }
 
@@ -132,8 +226,8 @@ body {
 }
 
 .card {
-  background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.07);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
   border-radius: 20px;
   padding: 20px;
 }
@@ -144,21 +238,21 @@ body {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #8a8b92;
+  color: var(--label);
 }
 
 .card-note {
   margin: 14px 0 0;
   font-size: 12.5px;
   line-height: 1.55;
-  color: #7c7d84;
+  color: var(--note);
 }
 
 .stage {
   display: grid;
   place-items: center;
   height: 280px;
-  background: rgba(225, 225, 225, 0.3);
+  background: var(--stage-bg);
   border-radius: 10px;
   overflow: hidden;
 }
@@ -186,12 +280,12 @@ body {
   display: grid;
   place-items: center;
   cursor: pointer;
-  color: #17181c;
+  color: var(--btn-text);
   -webkit-tap-highlight-color: transparent;
 }
 
 .pm-btn:focus-visible {
-  outline: 2px solid #17181c;
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -204,7 +298,7 @@ body {
 }
 
 .pm-open .pm-sat:hover {
-  background: rgba(0, 0, 0, 0.04);
+  background: var(--hover-veil);
 }
 
 /* Icons hold back while the blob is merged, then materialise with a soft
@@ -304,7 +398,7 @@ body {
   font-size: 13px;
   font-weight: 500;
   line-height: 1.4;
-  color: rgba(15, 15, 15, 0.8);
+  color: var(--tab-label);
   cursor: pointer;
   border-radius: 48px;
   z-index: 1;
@@ -316,18 +410,18 @@ body {
 }
 
 .tb-tab:not([aria-selected='true']):hover {
-  color: #0f0f0f;
+  color: var(--tab-label-hover);
 }
 
 /* The indicator liquid is black (see Tabs.tsx `fill`), so the selected label
    inverts. It transitions on the same curve as the pill's slide, so the
    colour crosses over while the liquid is arriving underneath. */
 .tb-tab[aria-selected='true'] {
-  color: #fff;
+  color: var(--tab-ind-text);
 }
 
 .tb-tab:focus-visible {
-  outline: 2px solid #17181c;
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -392,7 +486,7 @@ body {
 .ap-label {
   font-size: 14px;
   line-height: 22px;
-  color: #17181c;
+  color: var(--text);
   white-space: nowrap;
 }
 
@@ -419,13 +513,13 @@ body {
      the shadow should be. Never use a `border` here either: it eats into
      the box, shrinking the photo to 28px inside its 32px slot, which is the
      old "resize jump" at the moment the dragged chip becomes a real avatar. */
-  box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 1px 0 var(--photo-edge);
   /* Inner hairline as an OUTLINE, not `inset` box-shadow: an inset shadow on
      a replaced element (<img>) paints beneath the image content, so it never
      showed. A negative outline-offset draws it inside the edge, on top. */
-  outline: 1px solid rgba(0, 0, 0, 0.2);
+  outline: 1px solid var(--photo-edge);
   outline-offset: -1px;
-  background: #e3e3e6;
+  background: var(--skeleton);
   /* The hover gap opens/closes by animating margins; the pill's evolve
      spring turns the width change into a liquid bounce. --seat drives the
      separator crescent's growth at landing. */
@@ -493,8 +587,8 @@ body {
   border: 0;
   padding: 4px 10px;
   border-radius: 6px;
-  background: rgba(0, 0, 0, 0.05);
-  color: #5e6773;
+  background: var(--ctl-bg);
+  color: var(--muted);
   font: inherit;
   font-size: 11px;
   font-weight: 500;
@@ -503,8 +597,8 @@ body {
 }
 
 .ap-reset:hover {
-  background: rgba(0, 0, 0, 0.09);
-  color: #17181c;
+  background: var(--ctl-bg-hover);
+  color: var(--text);
 }
 
 /* No white RING by default — the loose avatar is a bare photo with its own
@@ -524,9 +618,9 @@ body {
   object-fit: cover;
   display: block;
   pointer-events: none;
-  background: #e3e3e6;
-  box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.16), 0 1px 1px 0 rgba(0, 0, 0, 0.2);
-  outline: 1px solid rgba(0, 0, 0, 0.2);
+  background: var(--skeleton);
+  box-shadow: 0 2px 6px 0 var(--photo-lift), 0 1px 1px 0 var(--photo-edge);
+  outline: 1px solid var(--photo-edge);
   outline-offset: -1px;
   /* Short and independent of the flight: the ring is finished during the
      hover, long before the drop starts, so nothing about it is still moving
@@ -552,9 +646,9 @@ body {
    a separate ring animation. */
 .ap-ringed img {
   box-shadow:
-    0 0 0 var(--ap-ring, 2.5px) #fff,
-    0 1.25px 1.25px 2.5px rgba(0, 0, 0, 0.2);
-  outline: 1.25px solid rgba(0, 0, 0, 0.2);
+    0 0 0 var(--ap-ring, 2.5px) var(--modal-bg),
+    0 1.25px 1.25px 2.5px var(--photo-edge);
+  outline: 1.25px solid var(--photo-edge);
   outline-offset: -1.25px;
 }
 
@@ -611,7 +705,7 @@ body {
   object-fit: cover;
   display: block;
   pointer-events: none;
-  background: #e3e3e6;
+  background: var(--skeleton);
 }
 
 /* ---------- email input (field morphs out a submit button) ---------- */
@@ -658,12 +752,12 @@ body {
   padding: 0 44px 0 18px;
   font: inherit;
   font-size: 14px;
-  color: #17181c;
+  color: var(--text);
   outline: none;
 }
 
 .eb-input::placeholder {
-  color: #8a8b92;
+  color: var(--label);
 }
 
 .eb-btn {
@@ -673,7 +767,7 @@ body {
   padding: 0;
   border-radius: 50%;
   background: transparent;
-  color: #17181c;
+  color: var(--btn-text);
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -681,7 +775,7 @@ body {
 }
 
 .eb-btn:focus-visible {
-  outline: 2px solid #17181c;
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -726,8 +820,8 @@ body {
 
 .cp-panel {
   margin-top: 14px;
-  background: #fbfbfc;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
   border-radius: 12px;
   -webkit-font-smoothing: antialiased;
 }
@@ -747,7 +841,7 @@ body {
   font-family: 'Roboto Mono', ui-monospace, monospace;
   font-size: 11px;
   font-weight: 500;
-  color: #17181c;
+  color: var(--text);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   opacity: 0.72;
@@ -756,8 +850,8 @@ body {
 .cp-export {
   appearance: none;
   border: 0;
-  background: #17181c;
-  color: #ffffff;
+  background: var(--accent);
+  color: var(--on-accent);
   font-family: inherit;
   font-size: 11px;
   font-weight: 500;
@@ -771,11 +865,12 @@ body {
 }
 
 .cp-export:hover {
-  background: #000;
+  background: var(--accent);
+  opacity: 0.82;
 }
 
 .cp-export.is-copied {
-  background: #0b8a3e;
+  background: #178a4a;
 }
 
 .cp-actions {
@@ -798,7 +893,7 @@ body {
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(0, 0, 0, 0.35);
+  color: var(--label);
 }
 
 .cp-subhead:first-of-type {
@@ -806,7 +901,7 @@ body {
 }
 
 .cp-label {
-  color: #5e6773;
+  color: var(--muted);
   font-size: 11.5px;
   line-height: 1.3;
   font-weight: 400;
@@ -818,12 +913,12 @@ body {
   width: 86px;
   height: 24px;
   padding: 0 6px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--ctl-border);
   border-radius: 4px;
   font-family: 'Roboto Mono', ui-monospace, monospace;
   font-size: 11px;
-  color: #17181c;
-  background: #ffffff;
+  color: var(--text);
+  background: var(--field-bg);
   text-align: right;
   -moz-appearance: textfield;
 }
@@ -836,7 +931,7 @@ body {
 
 .cp-row input:focus,
 .cp-row select:focus {
-  outline: 2px solid #17181c;
+  outline: 2px solid var(--accent);
   outline-offset: 1px;
   border-color: transparent;
 }
@@ -854,13 +949,13 @@ body {
   padding: 0;
   border: 0;
   background: transparent;
-  accent-color: #17181c;
+  accent-color: var(--accent);
 }
 
 .cp-slider .cp-val {
   font-family: 'Roboto Mono', ui-monospace, monospace;
   font-size: 11px;
-  color: #17181c;
+  color: var(--text);
   min-width: 34px;
   text-align: right;
 }
@@ -873,8 +968,8 @@ body {
   appearance: none;
   -webkit-appearance: none;
   background-image:
-    linear-gradient(45deg, transparent 50%, #5e6773 50%),
-    linear-gradient(135deg, #5e6773 50%, transparent 50%);
+    linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
   background-position:
     calc(100% - 10px) 10px,
     calc(100% - 6px) 10px;
@@ -906,8 +1001,8 @@ body {
   top: 38px;
   height: 8px;
   border-radius: 4px;
-  background: #eaeaea;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+  background: var(--track);
+  box-shadow: inset 0 0 0 1px var(--track-ring);
   /* Below the goo layer (svg sits at z -1): the liquid thumb and its tail
      must paint OVER the track, not be sliced by it. */
   z-index: -2;
@@ -935,7 +1030,7 @@ body {
 }
 
 .sl-thumb:focus-visible {
-  outline: 2px solid #17181c;
+  outline: 2px solid var(--accent);
   outline-offset: 4px;
 }
 

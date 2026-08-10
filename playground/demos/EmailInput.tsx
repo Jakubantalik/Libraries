@@ -165,7 +165,7 @@ export function EmailInput({ shadow, pro }: DemoProps) {
         <Liquid
           blur={st.gooBlur}
           contrast={st.gooContrast}
-          fill="#fff"
+          fill="var(--modal-bg)"
           shadow={shadow}
           className={`eb ${pulsing ? 'eb-pulsing' : ''}`}
           style={vars}

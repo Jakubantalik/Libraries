@@ -12,8 +12,12 @@ import type { DemoProps } from '../App'
 const TABS = ['Plan', 'Debug', 'Ask']
 
 /** The indicator pill's own elevation, rendered on the liquid silhouette so
- *  it travels (and stretches) with the drop, never detaching from it. */
-const PILL_SHADOW = '0 1px 3px rgba(0, 0, 0, 0.11), 0 1px 1px rgba(0, 0, 0, 0.07)'
+ *  it travels (and stretches) with the drop, never detaching from it. Dark
+ *  gets a light hairline: an 11%-black shadow vanishes on a dark track. */
+const PILL_SHADOW = {
+  light: '0 1px 3px rgba(0, 0, 0, 0.11), 0 1px 1px rgba(0, 0, 0, 0.07)',
+  dark: '0 0 0 1px rgba(255, 255, 255, 0.10), 0 1px 3px rgba(0, 0, 0, 0.5)',
+}
 
 const EASES: Record<string, string> = {
   Smooth: 'cubic-bezier(0.3, 1.05, 0.4, 1)',
@@ -94,7 +98,7 @@ function tabsSnippet(s: TabState): string {
   ].join('\n')
 }
 
-export function Tabs({ contrast, pro }: DemoProps) {
+export function Tabs({ contrast, dark, pro }: DemoProps) {
   const [active, setActive] = useState(0)
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([])
   const [ind, setInd] = useState({ x: 3, w: 0 })
@@ -127,8 +131,8 @@ export function Tabs({ contrast, pro }: DemoProps) {
         <Liquid
           blur={st.gooBlur}
           contrast={contrast}
-          fill="#0f0f0f"
-          shadow={PILL_SHADOW}
+          fill="var(--tab-ind)"
+          shadow={dark ? PILL_SHADOW.dark : PILL_SHADOW.light}
           className="tb"
           style={
             {

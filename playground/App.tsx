@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Cards } from './demos/Cards'
 import { EmailInput } from './demos/EmailInput'
 import { Chips } from './demos/Chips'
@@ -6,29 +6,77 @@ import { PlusMenu } from './demos/PlusMenu'
 import { Slider } from './demos/Slider'
 import { Tabs } from './demos/Tabs'
 
+export type Theme = 'light' | 'dark'
+
 export interface DemoProps {
   blur: number
   contrast: number
   shadow: string
+  /** Demos that carry their OWN shadow (tabs pill, slider thumb) need to pick
+   *  a variant: the liquid `fill` themes itself through a CSS variable, but
+   *  `shadow` is PARSED by the library into filter primitives, so it can't be
+   *  a var() — and dark wants different geometry anyway, not a recolour. */
+  dark: boolean
   /** Pro mode (?pro in the URL): full raw-physics control panels. The default
    *  playground shows only the slim public knobs. */
   pro: boolean
 }
 
-const SHADOWS: Record<string, string> = {
-  'Figma soft':
-    '0 0 0 1px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.05), 0 4px 42px rgba(0, 0, 0, 0.06)',
-  Floating: '0 2px 6px rgba(0, 0, 0, 0.08), 0 12px 32px rgba(0, 0, 0, 0.18)',
-  None: '',
+/** Light keeps the prototype's Figma elevation. Dark can't: a 6%-black
+ *  hairline is invisible on a dark surface, so the ring flips to light and
+ *  the ambient layers deepen to hold the shape off the page. */
+const SHADOWS: Record<Theme, Record<string, string>> = {
+  light: {
+    'Figma soft':
+      '0 0 0 1px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.05), 0 4px 42px rgba(0, 0, 0, 0.06)',
+    Floating: '0 2px 6px rgba(0, 0, 0, 0.08), 0 12px 32px rgba(0, 0, 0, 0.18)',
+    None: '',
+  },
+  dark: {
+    'Figma soft':
+      '0 0 0 1px rgba(255, 255, 255, 0.10), 0 2px 6px rgba(0, 0, 0, 0.45), 0 4px 42px rgba(0, 0, 0, 0.55)',
+    Floating: '0 2px 6px rgba(0, 0, 0, 0.5), 0 12px 32px rgba(0, 0, 0, 0.7)',
+    None: '',
+  },
 }
 
 const PRO = new URLSearchParams(window.location.search).has('pro')
+
+const STORE_KEY = 'liquid-gooey-theme'
+/** Stored choice wins; otherwise follow the OS. */
+function initialTheme(): Theme {
+  try {
+    const saved = localStorage.getItem(STORE_KEY)
+    if (saved === 'light' || saved === 'dark') return saved
+  } catch {
+    /* private mode / storage disabled */
+  }
+  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}
 
 export function App() {
   const [blur, setBlur] = useState(6)
   const [contrast, setContrast] = useState(18)
   const [shadowName, setShadowName] = useState('Figma soft')
-  const demo: DemoProps = { blur, contrast, shadow: SHADOWS[shadowName], pro: PRO }
+  const [theme, setTheme] = useState<Theme>(initialTheme)
+  const dark = theme === 'dark'
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    try {
+      localStorage.setItem(STORE_KEY, theme)
+    } catch {
+      /* private mode / storage disabled */
+    }
+  }, [theme])
+
+  const demo: DemoProps = {
+    blur,
+    contrast,
+    shadow: SHADOWS[theme][shadowName],
+    dark,
+    pro: PRO,
+  }
 
   return (
     <div className="page">
@@ -73,11 +121,19 @@ export function App() {
         <label className="knob">
           <span>Shadow</span>
           <select value={shadowName} onChange={e => setShadowName(e.target.value)}>
-            {Object.keys(SHADOWS).map(name => (
+            {Object.keys(SHADOWS[theme]).map(name => (
               <option key={name}>{name}</option>
             ))}
           </select>
         </label>
+        <button
+          type="button"
+          className="knob-link"
+          aria-pressed={dark}
+          onClick={() => setTheme(dark ? 'light' : 'dark')}
+        >
+          {dark ? '☀ Light' : '☾ Dark'}
+        </button>
         {/* The pro panels were previously only reachable by typing ?pro — a
             hidden flag reads as "the controls disappeared". */}
         <a className="knob-link" href={PRO ? '/' : '/?pro'}>

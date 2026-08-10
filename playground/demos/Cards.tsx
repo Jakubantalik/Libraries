@@ -119,7 +119,7 @@ export function Cards({ blur, contrast, shadow, pro }: DemoProps) {
   return (
     <div className="dc-wrap">
       <div className="stage">
-        <Liquid blur={blur} contrast={contrast} fill="#fff" shadow={shadow} className="dc">
+        <Liquid blur={blur} contrast={contrast} fill="var(--modal-bg)" shadow={shadow} className="dc">
           {[cardA, cardB].map((src, i) => (
             <Liquid.Item
               key={i}
