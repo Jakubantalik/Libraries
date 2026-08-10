@@ -56,41 +56,48 @@
 [data-theme='dark'] {
   color-scheme: dark;
 
-  --bg: #0f1012;
-  --text: #f3f4f6;
-  --muted: #9aa1ab;
-  --label: #7a818c;
-  --note: #868d97;
+  /* Values read off transitions.dev's own dark theme (detail page of the
+     gooey plus menu): page #121212, demo stage #131313, LIQUID #181818,
+     icons #fff — near-neutral greys, the liquid barely lighter than the
+     page, and the shape held by SHADOW rather than surface lightness.
+     Critically, shadows STAY BLACK in dark mode (same 6% ring, ambient
+     deepened) — white hairlines were the giveaway that this wasn't the
+     designer's hand. */
+  --bg: #121212;
+  --text: #fbfbfb;
+  --muted: #9a9a9a;
+  --label: #7f7f7f;
+  --note: #8a8a8a;
 
-  --modal-bg: #2a2d33;
-  --btn-text: #f3f4f6;
+  --modal-bg: #181818;
+  --btn-text: #ffffff;
 
-  --card-bg: #17191d;
-  --card-border: rgba(255, 255, 255, 0.08);
-  --panel-bg: #1b1e22;
-  --panel-border: rgba(255, 255, 255, 0.07);
-  --stage-bg: rgba(255, 255, 255, 0.03);
-  --skeleton: #3a3d44;
+  --card-bg: #181818;
+  --card-border: rgba(255, 255, 255, 0.06);
+  --panel-bg: #161616;
+  --panel-border: rgba(255, 255, 255, 0.05);
+  --stage-bg: #131313;
+  --skeleton: #2e2e2e;
 
-  --ctl-bg: rgba(255, 255, 255, 0.08);
-  --ctl-bg-hover: rgba(255, 255, 255, 0.14);
-  --ctl-border: rgba(255, 255, 255, 0.14);
-  --field-bg: #22252a;
-  --track: #33363c;
-  --track-ring: rgba(255, 255, 255, 0.08);
-  --accent: #f3f4f6;
-  --on-accent: #17181c;
-  --hover-veil: rgba(255, 255, 255, 0.07);
+  --ctl-bg: rgba(255, 255, 255, 0.06);
+  --ctl-bg-hover: rgba(255, 255, 255, 0.1);
+  --ctl-border: rgba(255, 255, 255, 0.12);
+  --field-bg: #1e1e1e;
+  --track: #0d0d0d;
+  --track-ring: rgba(255, 255, 255, 0.06);
+  --accent: #ffffff;
+  --on-accent: #0d0d0d;
+  --hover-veil: rgba(255, 255, 255, 0.06);
 
-  /* A dark hairline is invisible on a dark surface — the edge has to come
-     from light instead, or overlapping photos lose their separation. */
-  --photo-edge: rgba(255, 255, 255, 0.22);
+  /* Photos are the one place a black edge can't work (black on a dark
+     photo is invisible) — kept light but subtle. */
+  --photo-edge: rgba(255, 255, 255, 0.14);
   --photo-lift: rgba(0, 0, 0, 0.55);
 
-  /* Inverted in dark so the active tab still reads as the raised one. */
-  --tab-ind: #f3f4f6;
-  --tab-ind-text: #17181c;
-  --tab-label: rgba(243, 244, 246, 0.72);
+  /* Inverted like the site's primary button (white on dark). */
+  --tab-ind: #ffffff;
+  --tab-ind-text: #0d0d0d;
+  --tab-label: rgba(251, 251, 251, 0.72);
   --tab-label-hover: #ffffff;
 }
 

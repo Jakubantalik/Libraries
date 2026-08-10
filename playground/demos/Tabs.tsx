@@ -12,11 +12,12 @@ import type { DemoProps } from '../App'
 const TABS = ['Plan', 'Debug', 'Ask']
 
 /** The indicator pill's own elevation, rendered on the liquid silhouette so
- *  it travels (and stretches) with the drop, never detaching from it. Dark
- *  gets a light hairline: an 11%-black shadow vanishes on a dark track. */
+ *  it travels (and stretches) with the drop, never detaching from it. */
 const PILL_SHADOW = {
   light: '0 1px 3px rgba(0, 0, 0, 0.11), 0 1px 1px rgba(0, 0, 0, 0.07)',
-  dark: '0 0 0 1px rgba(255, 255, 255, 0.10), 0 1px 3px rgba(0, 0, 0, 0.5)',
+  // The indicator inverts to WHITE in dark (site primary-button pattern), so
+  // black shadows keep working — no light hairline.
+  dark: '0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 1px rgba(0, 0, 0, 0.35)',
 }
 
 const EASES: Record<string, string> = {

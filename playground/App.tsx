@@ -22,9 +22,10 @@ export interface DemoProps {
   pro: boolean
 }
 
-/** Light keeps the prototype's Figma elevation. Dark can't: a 6%-black
- *  hairline is invisible on a dark surface, so the ring flips to light and
- *  the ambient layers deepen to hold the shape off the page. */
+/** Light keeps the prototype's Figma elevation. Dark follows the designer's
+ *  dark theme on transitions.dev: the passes stay black with a deeper
+ *  ambient — the raised read comes from the liquid sitting a step lighter
+ *  than the page, not from light outlines. */
 const SHADOWS: Record<Theme, Record<string, string>> = {
   light: {
     'Figma soft':
@@ -32,10 +33,12 @@ const SHADOWS: Record<Theme, Record<string, string>> = {
     Floating: '0 2px 6px rgba(0, 0, 0, 0.08), 0 12px 32px rgba(0, 0, 0, 0.18)',
     None: '',
   },
+  // transitions.dev's own dark --menu-shadow: shadows stay BLACK, same 6%
+  // ring, ambient deepened to 0.24 — no white hairlines anywhere.
   dark: {
     'Figma soft':
-      '0 0 0 1px rgba(255, 255, 255, 0.10), 0 2px 6px rgba(0, 0, 0, 0.45), 0 4px 42px rgba(0, 0, 0, 0.55)',
-    Floating: '0 2px 6px rgba(0, 0, 0, 0.5), 0 12px 32px rgba(0, 0, 0, 0.7)',
+      '0 0 0 1px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.05), 0 4px 42px rgba(0, 0, 0, 0.24)',
+    Floating: '0 2px 6px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.55)',
     None: '',
   },
 }
@@ -172,7 +175,7 @@ export function App() {
           <p className="card-note">
             Drag either photo — bring them close and the surfaces neck into one
             liquid while the images melt into each other at the seam.{' '}
-            <code>morph=&#123;&#123; dissolve &#125;&#125;</code>
+            <code>dissolve</code>
           </p>
         </section>
         <section className="card">

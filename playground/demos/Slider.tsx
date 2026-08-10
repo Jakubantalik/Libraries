@@ -12,7 +12,9 @@ const MAX = 188
  *  shadow chain doesn't support inset. */
 const THUMB_SHADOW = {
   light: '0 0 0 1px rgba(0, 0, 0, 0.08), 0 1px 5px rgba(0, 0, 0, 0.08)',
-  dark: '0 0 0 1px rgba(255, 255, 255, 0.12), 0 1px 5px rgba(0, 0, 0, 0.5)',
+  // Black passes, designer style: the thumb reads raised because it sits
+  // lighter than the near-black track, not because of a light ring.
+  dark: '0 0 0 1px rgba(0, 0, 0, 0.35), 0 1px 5px rgba(0, 0, 0, 0.5)',
 }
 
 function SliderRow({
