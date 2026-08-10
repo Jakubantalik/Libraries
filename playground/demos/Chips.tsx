@@ -459,9 +459,17 @@ export function Chips({ blur, contrast, shadow, pro, bare }: DemoProps) {
               // Radius rides --seat (0..1, registered + transitioned): resting
               // avatars sit at the default 1 (full 18px cut); the landing
               // pair starts at 0 and grows open at the impact.
+              // The trailing `#000 999px` stop is load-bearing, not padding.
+              // A mask gradient whose stops all fall OUTSIDE the element's box
+              // (which is exactly what happens here when the hover gap opens
+              // and the cut circle slides off, or when --seat is 0) should
+              // paint the last stop's colour everywhere — Chromium does, but
+              // WebKit paints nothing and erases the whole avatar. Pinning a
+              // far keep-stop guarantees an in-range stop over every pixel, so
+              // the cut still animates and the avatar can never vanish.
               const sep =
                 nextMl != null
-                  ? `radial-gradient(circle at ${16 + 32 + nextMl}px 16px, transparent calc(var(--seat, 1) * 18px - 0.5px), #000 calc(var(--seat, 1) * 18px))`
+                  ? `radial-gradient(circle at ${16 + 32 + nextMl}px 16px, transparent calc(var(--seat, 1) * 18px - 0.5px), #000 calc(var(--seat, 1) * 18px), #000 999px)`
                   : undefined
               return (
               <img
@@ -572,12 +580,16 @@ export function Chips({ blur, contrast, shadow, pro, bare }: DemoProps) {
                 // centre 24px right => 30px local, radius 18 => 22.5 local.
                 // On the wrapper div, not the img — the engine owns the img's
                 // mask for the dissolve hole.
+                // The far `#000 999px` stop is required — see the note on
+                // `sep` above: without an in-range stop covering the box,
+                // WebKit erases the element instead of extending the last
+                // colour, which is fatal here because --seat starts at 0.
                 ...(absorbing && dropIndex != null && dropIndex < group.length
                   ? {
                       maskImage:
-                        'radial-gradient(circle at 50px 20px, transparent calc(var(--seat, 1) * 22.5px - 0.6px), #000 calc(var(--seat, 1) * 22.5px))',
+                        'radial-gradient(circle at 50px 20px, transparent calc(var(--seat, 1) * 22.5px - 0.6px), #000 calc(var(--seat, 1) * 22.5px), #000 999px)',
                       WebkitMaskImage:
-                        'radial-gradient(circle at 50px 20px, transparent calc(var(--seat, 1) * 22.5px - 0.6px), #000 calc(var(--seat, 1) * 22.5px))',
+                        'radial-gradient(circle at 50px 20px, transparent calc(var(--seat, 1) * 22.5px - 0.6px), #000 calc(var(--seat, 1) * 22.5px), #000 999px)',
                     }
                   : null),
                 // Pinned to 0 outside the flight so the registered property

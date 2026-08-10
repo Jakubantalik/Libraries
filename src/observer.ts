@@ -633,12 +633,23 @@ export class ObserveEngine {
       const circle = svg('circle', { cx: '0', cy: '0', r: '0', fill: `url(#${uid}-g)` })
       mask.append(circle)
       defs.append(filter, mask)
+      // `filter` and `mask` MUST live on separate elements. SVG orders them
+      // filter → mask, so masking a filtered layer should clip the blur to
+      // the contact zone; with both on ONE <g>, WebKit effectively masks
+      // first and then blurs, so the melt's blurred copy bleeds far outside
+      // its zone and paints a washed-out blob over whatever is next to it —
+      // the neighbouring avatar "disappearing" in Safari while Chromium (which
+      // orders them per spec) renders the identical values correctly.
+      // Outer <g> owns the mask + opacity, inner <g> owns the filter, so the
+      // order is unambiguous in every engine.
       const gl = svg('g', {})
-      gl.setAttribute('filter', `url(#${uid}-f${suffix})`)
       gl.setAttribute('mask', `url(#${uid}-m${suffix})`)
       gl.setAttribute('opacity', '0')
+      const filtered = svg('g', {})
+      filtered.setAttribute('filter', `url(#${uid}-f${suffix})`)
       const shift = svg('g', {})
-      gl.append(shift)
+      filtered.append(shift)
+      gl.append(filtered)
       return { disp, blurEl, erode, turb, noiseOffset, circle, gl, shift }
     }
     // Outermost first so inner (stronger) layers paint on top.
@@ -1431,28 +1442,62 @@ export class ObserveEngine {
         entry.image.setAttribute('height', String(round(ir.h)))
       }
       // Edge dissolve on the original image, imagery only — labels around it
-      // stay sharp. Coordinates in the image's untransformed layout space; an
-      // image far from the contact gets an off-canvas hole, i.e. no effect.
-      // The hole is biased 0.25·d INTO the item (opposite gravity) so the
-      // item's own edge genuinely dissolves — centred at the contact, half
-      // the hole was wasted over the neighbour.
+      // stay sharp. Coordinates in the image's untransformed layout space.
       const ky = (ir.oh || ir.h) / ir.h
-      // Centred AT the seam, radius kept to the neck's width: the hole may
-      // only eat the sliver of image the neck is consuming. Biased into the
-      // item it excavated a crater from the photo's BODY, and what's behind
-      // an erased photo is the item's own white blob — a glowing white
-      // circle on the image with no liquid to justify it.
-      const hx = round((cx - ix) * kx)
-      const hy = round((cy - iy) * ky)
-      const hd = d * Math.min(kx, ky)
-      // WHITE, not black. The mask must be read through its ALPHA channel, but
-      // `mask-mode: match-source` resolves to luminance in some engines (and
-      // WebKit's prefixed path historically did too) — under that reading a
-      // black gradient is luminance 0 everywhere and erases the ENTIRE image,
-      // which is exactly the "avatars disappear mid-drag" bug in Safari. White
-      // is opaque under BOTH readings, so the alpha stops keep doing the work
-      // and no engine can reinterpret the hole into a full erase.
-      const hole = `radial-gradient(circle at ${hx}px ${hy}px, rgba(255,255,255,${holeAlpha}) ${round(hd * 0.32)}px, rgba(255,255,255,${holeMid}) ${round(hd * 0.55)}px, #fff ${round(hd * 0.8)}px)`
+      // Only images the neck actually REACHES may dissolve. Relying on the
+      // hole landing off-canvas is not enough: once the two items overlap
+      // (a chip dragged onto the pill) the contact point sits INSIDE the
+      // group, so every image in it got a live hole — including ones the
+      // neck is nowhere near.
+      const gapToImg = Math.hypot(
+        Math.max(ix - cx, cx - (ix + ir.w), 0),
+        Math.max(iy - cy, cy - (iy + ir.h), 0),
+      )
+      if (gapToImg > d) {
+        if (entry.lastHole !== null) {
+          entry.lastHole = null
+          entry.el.style.removeProperty('mask-image')
+          entry.el.style.removeProperty('-webkit-mask-image')
+        }
+        continue
+      }
+      // The hole must always eat an EDGE, never the middle. `cx,cy` is the
+      // centre of the contact SPAN, so as soon as the boxes overlap deeply it
+      // lands inside a photo — a hole centred on a 32px avatar with the neck's
+      // radius erases the whole face, which is the "avatars disappear while
+      // dragging" report. Push the centre out to the image's own rim along the
+      // contact direction, and cap the radius to that rim, so the far side of
+      // every image always survives.
+      const ow = ir.ow || ir.w
+      const oh = ir.oh || ir.h
+      const rim = Math.min(ow, oh) / 2
+      let lx = (cx - ix) * kx
+      let ly = (cy - iy) * ky
+      let vx = lx - ow / 2
+      let vy = ly - oh / 2
+      const vlen = Math.hypot(vx, vy)
+      if (vlen < rim) {
+        if (vlen < 1e-3) {
+          vx = gux
+          vy = guy
+        } else {
+          vx /= vlen
+          vy /= vlen
+        }
+        lx = ow / 2 + vx * rim
+        ly = oh / 2 + vy * rim
+      }
+      const hx = round(lx)
+      const hy = round(ly)
+      const hd = Math.min(d * Math.min(kx, ky), rim)
+      // White stops (opaque under both alpha- and luminance-mode masking), and
+      // a FAR final keep-stop. The hole's own stops only span the neck, so on
+      // any image bigger than the neck every pixel past them is outside the
+      // gradient's stop range: Chromium extends the last colour (opaque, image
+      // intact) but WebKit paints nothing there and erases the image. The
+      // `#fff 9999px` stop puts an in-range keep value over every pixel, which
+      // changes nothing in Chromium and stops WebKit from dropping the image.
+      const hole = `radial-gradient(circle at ${hx}px ${hy}px, rgba(255,255,255,${holeAlpha}) ${round(hd * 0.32)}px, rgba(255,255,255,${holeMid}) ${round(hd * 0.55)}px, #fff ${round(hd * 0.8)}px, #fff 9999px)`
       if (hole !== entry.lastHole) {
         entry.lastHole = hole
         entry.el.style.setProperty('mask-image', hole)
