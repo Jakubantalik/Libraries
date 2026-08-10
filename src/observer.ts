@@ -205,6 +205,14 @@ interface MeltEntry {
   pattern: SVGPatternElement
   image: SVGImageElement
   radiusPx: number
+  /** Geometry sampled during the frame's READ pass (group coordinates).
+   *  Measuring lazily inside the write pass meant every item's mask write
+   *  invalidated layout for the next item's read — one forced synchronous
+   *  layout per item per frame. */
+  measured: { x: number; y: number; w: number; h: number; ow: number; oh: number } | null
+  /** Last geometry + mask written, so unchanged frames stay DOM-silent. */
+  lastGeom: string | null
+  lastHole: string | null
 }
 
 interface MeltLayer {
@@ -311,6 +319,8 @@ interface Item extends ObservedTarget {
   lastTail: string | null
   /** Last effective blob inset written (bridgeGrow makes it proximity-driven). */
   lastBi: number
+  /** Time-smoothed bridgeGrow inset; null until the first frame seeds it. */
+  biSmooth: number | null
   /** Smoothed melt strength: fast attack, gradual release-time decay. */
   meltFade: number
   /** In-flight release: start strength + elapsed ms, so the fade completes in
@@ -414,6 +424,7 @@ export class ObserveEngine {
       lastPaint: null,
       lastTail: null,
       lastBi: t.blobInset ?? 0,
+      biSmooth: null,
       meltFade: 0,
       meltRel: null,
       meltOp: 1,
@@ -603,7 +614,7 @@ export class ObserveEngine {
         return rect
       })
       const radiusPx = measureRadius(el, el.offsetWidth, el.offsetHeight)[0]
-      return { el, rects, pattern, image, radiusPx }
+      return { el, rects, pattern, image, radiusPx, measured: null, lastGeom: null, lastHole: null }
     })
 
     host.setAttribute('opacity', '0')
@@ -616,6 +627,10 @@ export class ObserveEngine {
     for (const entry of item.melt?.entries ?? []) {
       entry.el.style.removeProperty('mask-image')
       entry.el.style.removeProperty('-webkit-mask-image')
+      // The DOM no longer matches the caches — drop them, or the next melt
+      // would skip the write that re-applies the mask.
+      entry.lastHole = null
+      entry.lastGeom = null
     }
   }
 
@@ -644,24 +659,53 @@ export class ObserveEngine {
     if (!group || this.items.size === 0) return false
     const g = group.getBoundingClientRect()
     let changed = false
-    // Frames first: bridgeGrow proximity needs every neighbour's frame before
-    // any blob is written.
+    // ONE read pass, before any write. bridgeGrow proximity needs every
+    // neighbour's frame before any blob is written — and the melt entries must
+    // be measured here too: reading them lazily inside writeBlend meant each
+    // item's mask-image write invalidated layout for the next item's read, so
+    // a 4-item group forced four synchronous layouts every frame. Safari pays
+    // for those far more than Chromium does, which is most of why the same
+    // component ran smooth in one and stuttered in the other.
     for (const item of this.items) {
       const r = item.target.getBoundingClientRect()
       item.frame = { x: r.left - g.left, y: r.top - g.top, w: r.width, h: r.height }
     }
     for (const item of this.items) {
+      if (!item.blend || !item.melt) continue
+      for (const entry of item.melt.entries) {
+        const ir = entry.el.getBoundingClientRect()
+        entry.measured = {
+          x: ir.left - g.left,
+          y: ir.top - g.top,
+          w: ir.width,
+          h: ir.height,
+          ow: entry.el.offsetWidth,
+          oh: entry.el.offsetHeight,
+        }
+      }
+    }
+    for (const item of this.items) {
       if (this.writeBlob(item, dt)) changed = true
     }
     for (const item of this.items) {
-      if (item.blend && this.writeBlend(item, g, dt)) changed = true
+      if (item.blend && this.writeBlend(item, dt)) changed = true
     }
     return changed
   }
 
   /** Effective blob inset: bridgeGrow pulls it toward negative (a visible
-   *  liquid coat) as the nearest neighbour approaches. */
-  private effectiveInset(item: Item): number {
+   *  liquid coat) as the nearest neighbour approaches.
+   *
+   *  Smoothed on a time constant rather than tracking proximity instantly.
+   *  The raw value is a function of the dragged neighbour's position, so it
+   *  moves as fast as the pointer does and lands on a different value every
+   *  frame; the blob grows symmetrically from it, so that per-frame step is
+   *  visible on the silhouette's far edge as a size flicker. It stayed small
+   *  enough to read as smooth at 60fps, but a frame-rate drop multiplies the
+   *  per-frame delta — which is why the pill's left edge flashed in Safari
+   *  and not in Chromium. dt-based smoothing makes the growth rate identical
+   *  at any frame rate. */
+  private effectiveInset(item: Item, dt: number): number {
     let bi = item.blobInset ?? 0
     const grow = item.bridgeGrow ?? 0
     if (grow > 0 && item.frame) {
@@ -678,14 +722,20 @@ export class ObserveEngine {
       }
       if (best < range) bi -= grow * smoothstep(1 - best / range)
     }
-    return bi
+    if (grow <= 0) {
+      item.biSmooth = bi
+      return bi
+    }
+    if (item.biSmooth === null) item.biSmooth = bi
+    else item.biSmooth += (bi - item.biSmooth) * Math.min(1, dt * 18)
+    return item.biSmooth
   }
 
   private writeBlob(item: Item, dt: number): boolean {
     const f = item.frame!
     const dyn = item.dynamics
     if (!dyn || (!dyn.evolve && !dyn.move)) {
-      const bi = this.effectiveInset(item)
+      const bi = this.effectiveInset(item, dt)
       const last = item.last
       const frameChanged =
         !last ||
@@ -975,7 +1025,7 @@ export class ObserveEngine {
    *  a gradual `releaseMs` decay whenever the target drops — whether from a
    *  drag release (`active: false`), moving out of range, or absorption. No
    *  path clears instantly. */
-  private writeBlend(item: Item, g: DOMRect, dt: number): boolean {
+  private writeBlend(item: Item, dt: number): boolean {
     const f = item.frame!
     const blend = item.blend!
     const melt = item.melt
@@ -1268,35 +1318,39 @@ export class ObserveEngine {
     const holeAlpha = Math.max(0, 1 - Math.min(s, sBridge) * 2.2).toFixed(3)
     const holeMid = ((1 + 2 * Number(holeAlpha)) / 3).toFixed(3)
     for (const entry of melt.entries) {
-      const ir = entry.el.getBoundingClientRect()
-      if (ir.width < 1 || ir.height < 1) continue
-      const ix = ir.left - g.left
-      const iy = ir.top - g.top
+      const ir = entry.measured
+      if (!ir || ir.w < 1 || ir.h < 1) continue
+      const ix = ir.x
+      const iy = ir.y
       // Warped copy geometry (group coordinates), written to every layer.
-      const kx = (entry.el.offsetWidth || ir.width) / ir.width
-      for (const rect of entry.rects) {
-        rect.setAttribute('x', String(round(ix)))
-        rect.setAttribute('y', String(round(iy)))
-        rect.setAttribute('width', String(round(ir.width)))
-        rect.setAttribute('height', String(round(ir.height)))
-        rect.setAttribute(
-          'rx',
-          String(round(pillRadius(entry.radiusPx / (kx || 1), ir.width, ir.height))),
-        )
+      const kx = (ir.ow || ir.w) / ir.w
+      const geom = `${round(ix)},${round(iy)},${round(ir.w)},${round(ir.h)},${round(pillRadius(entry.radiusPx / (kx || 1), ir.w, ir.h))}`
+      if (geom !== entry.lastGeom) {
+        entry.lastGeom = geom
+        for (const rect of entry.rects) {
+          rect.setAttribute('x', String(round(ix)))
+          rect.setAttribute('y', String(round(iy)))
+          rect.setAttribute('width', String(round(ir.w)))
+          rect.setAttribute('height', String(round(ir.h)))
+          rect.setAttribute(
+            'rx',
+            String(round(pillRadius(entry.radiusPx / (kx || 1), ir.w, ir.h))),
+          )
+        }
+        entry.pattern.setAttribute('x', String(round(ix)))
+        entry.pattern.setAttribute('y', String(round(iy)))
+        entry.pattern.setAttribute('width', String(round(ir.w)))
+        entry.pattern.setAttribute('height', String(round(ir.h)))
+        entry.image.setAttribute('width', String(round(ir.w)))
+        entry.image.setAttribute('height', String(round(ir.h)))
       }
-      entry.pattern.setAttribute('x', String(round(ix)))
-      entry.pattern.setAttribute('y', String(round(iy)))
-      entry.pattern.setAttribute('width', String(round(ir.width)))
-      entry.pattern.setAttribute('height', String(round(ir.height)))
-      entry.image.setAttribute('width', String(round(ir.width)))
-      entry.image.setAttribute('height', String(round(ir.height)))
       // Edge dissolve on the original image, imagery only — labels around it
       // stay sharp. Coordinates in the image's untransformed layout space; an
       // image far from the contact gets an off-canvas hole, i.e. no effect.
       // The hole is biased 0.25·d INTO the item (opposite gravity) so the
       // item's own edge genuinely dissolves — centred at the contact, half
       // the hole was wasted over the neighbour.
-      const ky = (entry.el.offsetHeight || ir.height) / ir.height
+      const ky = (ir.oh || ir.h) / ir.h
       // Centred AT the seam, radius kept to the neck's width: the hole may
       // only eat the sliver of image the neck is consuming. Biased into the
       // item it excavated a crater from the photo's BODY, and what's behind
@@ -1305,9 +1359,19 @@ export class ObserveEngine {
       const hx = round((cx - ix) * kx)
       const hy = round((cy - iy) * ky)
       const hd = d * Math.min(kx, ky)
-      const hole = `radial-gradient(circle at ${hx}px ${hy}px, rgba(0,0,0,${holeAlpha}) ${round(hd * 0.32)}px, rgba(0,0,0,${holeMid}) ${round(hd * 0.55)}px, black ${round(hd * 0.8)}px)`
-      entry.el.style.setProperty('mask-image', hole)
-      entry.el.style.setProperty('-webkit-mask-image', hole)
+      // WHITE, not black. The mask must be read through its ALPHA channel, but
+      // `mask-mode: match-source` resolves to luminance in some engines (and
+      // WebKit's prefixed path historically did too) — under that reading a
+      // black gradient is luminance 0 everywhere and erases the ENTIRE image,
+      // which is exactly the "avatars disappear mid-drag" bug in Safari. White
+      // is opaque under BOTH readings, so the alpha stops keep doing the work
+      // and no engine can reinterpret the hole into a full erase.
+      const hole = `radial-gradient(circle at ${hx}px ${hy}px, rgba(255,255,255,${holeAlpha}) ${round(hd * 0.32)}px, rgba(255,255,255,${holeMid}) ${round(hd * 0.55)}px, #fff ${round(hd * 0.8)}px)`
+      if (hole !== entry.lastHole) {
+        entry.lastHole = hole
+        entry.el.style.setProperty('mask-image', hole)
+        entry.el.style.setProperty('-webkit-mask-image', hole)
+      }
     }
     item.lastBlend = { cx, cy, s, d }
     return true

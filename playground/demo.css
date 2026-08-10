@@ -842,21 +842,24 @@ html[data-theme='light'] .tab-btn:focus-visible {
   width: 140px;
 }
 
+/* The groove takes the INACTIVE tab's level and the fill takes the ACTIVE
+ * tab's, so the slider reads as the same control family as the Morph/Move
+ * tabs beside it. Light already did this (#ebebeb groove, white fill); dark
+ * had the groove sitting at the active level (0.07) with the fill brighter
+ * still (0.1), so the filled portion didn't match the active tab it sits
+ * next to. */
 .strength-track {
   position: relative;
   width: 100%;
   height: 36px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.07);
-  box-shadow:
-    inset 0 0 0 0.5px rgba(255, 255, 255, 0.02),
-    inset 0 0.5px 0 0 rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
   overflow: hidden;
   cursor: grab;
   transition: background-color 0.15s ease;
 }
 .strength-track:hover {
-  background: rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.06);
 }
 .strength-track:active {
   cursor: grabbing;
@@ -875,7 +878,8 @@ html[data-theme='light'] .strength-track:hover {
   left: 0;
   bottom: 0;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.1);
+  /* Matches `.tab-btn[data-active='true']` exactly. */
+  background: rgba(255, 255, 255, 0.07);
   box-shadow:
     inset 0 0 0 0.5px rgba(255, 255, 255, 0.02),
     inset 0 0.5px 0 0 rgba(255, 255, 255, 0.06);

@@ -301,7 +301,19 @@ export function Chips({ blur, contrast, shadow, pro, bare }: DemoProps) {
   }
   const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (!dragging) return
-    setPos({ x: e.clientX - origin.current.x, y: e.clientY - origin.current.y })
+    const next = { x: e.clientX - origin.current.x, y: e.clientY - origin.current.y }
+    // Write the transform NOW, not just via state. pointermove is a
+    // continuous-priority event, so React may commit this position after the
+    // frame's rAF has already run — and the liquid engine measures at rAF.
+    // The silhouette then renders a frame behind the photo, which at 60fps
+    // reads as softness and at Safari's lower frame rate reads as the white
+    // shape visibly detaching from the avatar. The state update still runs
+    // (drag maths, hit-testing and the React commit all read `pos`); it just
+    // writes the same value the DOM already has.
+    if (!absorbing && chipRef.current) {
+      chipRef.current.style.transform = `translate(${next.x}px, ${next.y}px)`
+    }
+    setPos(next)
     setGapIndex(hoverGap())
   }
   const endDrag = () => {
