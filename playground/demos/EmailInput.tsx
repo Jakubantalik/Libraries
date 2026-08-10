@@ -29,13 +29,13 @@ interface EbState {
 }
 
 const DEFAULTS: EbState = {
-  dur: 360,
-  ease: 'Bounce',
-  bez: [0.34, 1.4, 0.64, 1],
+  dur: 600,
+  ease: 'Custom',
+  bez: [0.22, 1.17, 0.71, 1],
   crossBlur: 2,
   gap: 20,
-  gooBlur: 6,
-  gooContrast: 18,
+  gooBlur: 9,
+  gooContrast: 22,
 }
 
 const bezStr = (b: Bez) => `cubic-bezier(${b.map(v => Number(v.toFixed(2))).join(', ')})`
@@ -87,7 +87,7 @@ function snippet(s: EbState): string {
   return [
     '// liquid-gooey — Email input values',
     `transition: { duration: ${s.dur}, ease: '${bezStr(s.bez)}' },`,
-    `// gap: ${s.gap}px, cross blur: ${s.crossBlur}px`,
+    `// gap: ${s.gap}px, icon cross blur: ${s.crossBlur}px`,
     `// goo: blur ${s.gooBlur}, contrast ${s.gooContrast}`,
   ].join('\n')
 }
@@ -251,7 +251,7 @@ export function EmailInput({ shadow, pro }: DemoProps) {
               <SliderRow label="y2" value={st.bez[3]} min={-1} max={2} step={0.01} onChange={setBez(3)} />
             </>
           )}
-          <SliderRow label="Cross blur (px)" value={st.crossBlur} min={0} max={6} step={0.5} onChange={set('crossBlur')} />
+          <SliderRow label="Icon cross blur (px)" value={st.crossBlur} min={0} max={6} step={0.5} onChange={set('crossBlur')} />
           {pro && (
             <>
               <div className="cp-subhead">Layout & goo</div>

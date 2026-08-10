@@ -694,12 +694,16 @@ body {
 
 .eb-btn-open .eb-arrow {
   opacity: 1;
-  transition-delay: calc(var(--eb-dur, 360ms) * 0.35);
+  /* Early enough to feel attached to the button's exit rather than an
+     afterthought: the circle clears the field well before the overshoot
+     settles, so waiting a third of the morph read as a lag. */
+  transition-delay: calc(var(--eb-dur, 360ms) * 0.12);
 }
 
-/* Subtle cross-blur pulse on the CONTENT while the liquid morphs: blur in,
-   sharpen out, one pass per toggle. Longhand animation properties — WebKit
-   mis-parses var() inside the shorthand. */
+/* Subtle cross-blur pulse while the liquid morphs: blur in, sharpen out, one
+   pass per toggle. Longhand animation properties — WebKit mis-parses var()
+   inside the shorthand. The INPUT is deliberately excluded: blurring a text
+   placeholder reads as a rendering fault, not as liquid. */
 @keyframes eb-cross {
   0% {
     filter: blur(0);
@@ -712,7 +716,6 @@ body {
   }
 }
 
-.eb-pulsing .eb-input,
 .eb-pulsing .eb-arrow {
   animation-name: eb-cross;
   animation-duration: var(--eb-dur, 360ms);
@@ -946,7 +949,6 @@ body {
 
   .pm-anticipating [data-gooey-svg],
   .pm-anticipating .pm-main,
-  .eb-pulsing .eb-input,
   .eb-pulsing .eb-arrow {
     animation: none !important;
   }
