@@ -301,6 +301,14 @@ interface Item extends ObservedTarget {
   tailR: number
   /** True while an evolve morph has a motion blur written onto the target. */
   contentBlurred: boolean
+  /** Last values painted to the blob by the dynamics branch. Writes are
+   *  skipped when unchanged: the 300ms asleep-check calls writeBlob too, and
+   *  an unconditional setAttribute — even with an identical value — dirties
+   *  the SVG filter, which Safari answers by re-rasterizing the whole filter
+   *  region. A settled sim must be DOM-silent. */
+  lastPaint: { t: string; w: string; h: string; rx: string } | null
+  /** Last tail-circle write ('hidden' when parked at r=0), same reason. */
+  lastTail: string | null
   /** Last effective blob inset written (bridgeGrow makes it proximity-driven). */
   lastBi: number
   /** Smoothed melt strength: fast attack, gradual release-time decay. */
@@ -403,6 +411,8 @@ export class ObserveEngine {
       tailVy: 0,
       tailR: 0,
       contentBlurred: false,
+      lastPaint: null,
+      lastTail: null,
       lastBi: t.blobInset ?? 0,
       meltFade: 0,
       meltRel: null,
@@ -696,6 +706,9 @@ export class ObserveEngine {
         const scale = item.baseW > 0 ? f.w / item.baseW : 1
         item.blob.setAttribute('rx', String(pillRadius(item.radiusPx * scale - bi, bw, bh)))
       }
+      // This branch bypasses the dynamics paint cache — drop it so a later
+      // dynamics frame can't mistake the DOM for already matching.
+      item.lastPaint = null
       item.last = f
       item.lastBi = bi
       return true
@@ -837,11 +850,18 @@ export class ObserveEngine {
       )
       item.tailR += (targetR - item.tailR) * Math.min(1, dt * 10)
       if (item.tailR < 0.3) {
-        item.tailEl.setAttribute('r', '0')
+        if (item.lastTail !== 'hidden') {
+          item.tailEl.setAttribute('r', '0')
+          item.lastTail = 'hidden'
+        }
       } else {
-        item.tailEl.setAttribute('cx', String(round(item.tailX)))
-        item.tailEl.setAttribute('cy', String(round(item.tailY)))
-        item.tailEl.setAttribute('r', String(round(item.tailR)))
+        const tail = `${round(item.tailX)},${round(item.tailY)},${round(item.tailR)}`
+        if (tail !== item.lastTail) {
+          item.tailEl.setAttribute('cx', String(round(item.tailX)))
+          item.tailEl.setAttribute('cy', String(round(item.tailY)))
+          item.tailEl.setAttribute('r', String(round(item.tailR)))
+          item.lastTail = tail
+        }
       }
     }
     let renderR = Math.max(0, s.r)
@@ -923,11 +943,18 @@ export class ObserveEngine {
     const bi = item.blobInset ?? 0
     const bw = Math.max(0, s.w - bi * 2)
     const bh = Math.max(0, s.h - bi * 2)
-    item.blob.style.transform =
-      `translate(${s.cx - s.w / 2 + bi}px, ${s.cy - s.h / 2 + bi}px)` + extra
-    item.blob.setAttribute('width', String(bw))
-    item.blob.setAttribute('height', String(bh))
-    item.blob.setAttribute('rx', String(pillRadius(renderR - bi, bw, bh)))
+    const paint = {
+      t: `translate(${s.cx - s.w / 2 + bi}px, ${s.cy - s.h / 2 + bi}px)` + extra,
+      w: String(bw),
+      h: String(bh),
+      rx: String(pillRadius(renderR - bi, bw, bh)),
+    }
+    const lp = item.lastPaint
+    if (!lp || lp.t !== paint.t) item.blob.style.transform = paint.t
+    if (!lp || lp.w !== paint.w) item.blob.setAttribute('width', paint.w)
+    if (!lp || lp.h !== paint.h) item.blob.setAttribute('height', paint.h)
+    if (!lp || lp.rx !== paint.rx) item.blob.setAttribute('rx', paint.rx)
+    item.lastPaint = paint
     item.last = f
     const settled =
       Math.abs(s.cx - tcx) < 0.05 &&
