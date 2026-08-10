@@ -382,7 +382,7 @@ export function SliderThumb({ x }: { x: number }) {
           <div className="header-icon" aria-hidden="true">
             <img
               className="header-icon-img header-icon-img--dark"
-              src="/icon-main-2x-dark.png"
+              src="/icon-main-2x-dark.jpg"
               alt=""
               width={207}
               height={138}
