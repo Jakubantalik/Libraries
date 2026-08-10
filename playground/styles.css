@@ -69,8 +69,10 @@
   --label: #7f7f7f;
   --note: #8a8a8a;
 
-  --modal-bg: #181818;
-  --btn-text: #ffffff;
+  /* Logram dropdown spec (Figma 2572:83262): surface #202020 with a light
+     inner hairline — see the dark Figma-soft shadow set in App.tsx. */
+  --modal-bg: #202020;
+  --btn-text: #fbfbfb;
 
   --card-bg: #181818;
   --card-border: rgba(255, 255, 255, 0.06);

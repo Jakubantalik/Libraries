@@ -33,11 +33,14 @@ const SHADOWS: Record<Theme, Record<string, string>> = {
     Floating: '0 2px 6px rgba(0, 0, 0, 0.08), 0 12px 32px rgba(0, 0, 0, 0.18)',
     None: '',
   },
-  // transitions.dev's own dark --menu-shadow: shadows stay BLACK, same 6%
-  // ring, ambient deepened to 0.24 — no white hairlines anywhere.
+  // Logram dropdown spec (Figma 2572:83262): the outer chain stays BLACK
+  // (6% ring, 5% mid, ambient 0.24) and the surface carries a LIGHT INNER
+  // hairline + top inner highlight — inset passes, rendered on the merged
+  // liquid silhouette by the engine's inset support.
   dark: {
     'Figma soft':
-      '0 0 0 1px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.05), 0 4px 42px rgba(0, 0, 0, 0.24)',
+      '0 0 0 1px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.05), 0 4px 42px rgba(0, 0, 0, 0.24), ' +
+      'inset 0 0 0 1px rgba(255, 255, 255, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.03)',
     Floating: '0 2px 6px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.55)',
     None: '',
   },

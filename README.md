@@ -107,7 +107,7 @@ Renders a `position: relative` div; the liquid silhouette svg sits behind all ch
 | `blur` | `6` | Goo blur sigma (px). Larger = pieces bridge from farther away. **Bridging is a ratio of blur to gap** — roughly, neighbours merge once `blur` ≳ the gap between them. Items 8px apart barely bridge at `blur={5}` and merge cleanly at `blur={12}`. If pieces that should merge look separate, raise `blur` (or close the gap) before suspecting anything else. |
 | `contrast` | `18` | Alpha-contrast slope. Larger = sharper liquid edge. |
 | `fill` | `'#fff'` | Liquid surface color. Any CSS color; `var(--surface)` works (theming). |
-| `shadow` | — | `box-shadow` syntax, multi-layer supported. Rendered on the **merged** silhouette, so one consistent shadow hugs the liquid through every merge and split. `inset` unsupported. |
+| `shadow` | — | `box-shadow` syntax, multi-layer supported. Rendered on the **merged** silhouette, so one consistent shadow hugs the liquid through every merge and split. `inset` layers paint INSIDE the liquid edge — inner rings and top highlights follow the merged goo too. |
 | `filterPadding` | `24` | Extra filter-region slack (px) if blobs travel outside the group's box. |
 
 Plus all standard `div` props. **Size the group to contain the full travel of its items** (like a menu reserving its open footprint).

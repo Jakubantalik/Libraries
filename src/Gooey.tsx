@@ -22,7 +22,8 @@ export interface GooeyProps extends HTMLAttributes<HTMLDivElement> {
   contrast?: number
   /** Fill of the liquid surface. Any CSS color, `var()` welcome. Default '#fff'. */
   fill?: string
-  /** `box-shadow` syntax; rendered on the MERGED silhouette (inset unsupported). */
+  /** `box-shadow` syntax; rendered on the MERGED silhouette. `inset` layers
+   *  paint inside the liquid edge (inner rings / top highlights). */
   shadow?: string
   /** Extra filter-region slack in px for blobs travelling outside the group box. Default 24. */
   filterPadding?: number
