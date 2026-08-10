@@ -98,9 +98,11 @@
   --on-accent: #0d0d0d;
   --hover-veil: rgba(255, 255, 255, 0.06);
 
-  /* Photos are the one place a black edge can't work (black on a dark
-     photo is invisible) — kept light but subtle. */
-  --photo-edge: rgba(255, 255, 255, 0.14);
+  /* Inverted from light mode's black hairline, but NOT to white: a light
+     edge on the dark pill read as a bright ring drawn around every face
+     rather than as the photo's own edge. Black deepens the seam instead —
+     the portraits are bright enough to separate from it on their own. */
+  --photo-edge: rgba(0, 0, 0, 0.5);
   --photo-lift: rgba(0, 0, 0, 0.55);
 
   /* Inverted like the site's primary button (white on dark). */
@@ -110,6 +112,24 @@
   --tab-label-hover: #ffffff;
 }
 
+
+/* Wide-gamut photo edges, on the TOKENS rather than per component. The P3
+   values used to be re-declared inside each component rule, which pinned
+   them to light mode's black-at-20% — so a P3 browser ignored the dark
+   theme's own edge entirely. The `.ap-ringed img` copy also dropped that
+   rule's first box-shadow layer (the pill-coloured ring), losing the ring on
+   the flying chip. Overriding the tokens keeps every rule's own geometry. */
+@supports (color: color(display-p3 0 0 0 / 0.2)) {
+  :root {
+    --photo-edge: color(display-p3 0 0 0 / 0.2);
+    --photo-lift: color(display-p3 0 0 0 / 0.16);
+  }
+
+  [data-theme='dark'] {
+    --photo-edge: color(display-p3 0 0 0 / 0.5);
+    --photo-lift: color(display-p3 0 0 0 / 0.55);
+  }
+}
 
 body {
   margin: 0;
@@ -606,9 +626,13 @@ body {
    overriding .ap-chip img's box-shadow/outline (same specificity, later in
    the cascade), so nothing extra is needed here. */
 .ap-absorbing {
-  transition:
-    transform var(--ap-absorb-dur, 420ms) var(--ap-absorb-ease, cubic-bezier(0.34, 1.4, 0.64, 1)),
-    --seat var(--ap-seat-dur, 240ms) cubic-bezier(0.22, 1, 0.36, 1);
+  /* No `transform` transition: the flight is driven by the demo's own rAF so
+     it shares a clock with the liquid engine — a compositor-run transition
+     kept gliding through Safari main-thread stalls while the silhouette
+     froze, leaving a ghost liquid bump hanging above the pill. `--seat` is a
+     registered custom property, which always animates on the main thread, so
+     it stays in step with the rAF by construction. */
+  transition: --seat var(--ap-seat-dur, 240ms) cubic-bezier(0.22, 1, 0.36, 1);
   pointer-events: none;
 }
 
@@ -699,15 +723,6 @@ body {
   transition: box-shadow 180ms ease-out, outline-color 180ms ease-out;
 }
 
-@supports (color: color(display-p3 0 0 0 / 0.2)) {
-  .ap-chip img {
-    box-shadow:
-      0 2px 6px 0 color(display-p3 0 0 0 / 0.16),
-      0 1px 1px 0 color(display-p3 0 0 0 / 0.2);
-    outline-color: color(display-p3 0 0 0 / 0.2);
-  }
-}
-
 /* Applied from the moment a slot is engaged (hover) and held through the
    flight — see the class note in Chips.tsx.
    --ap-ring is 2px DIVIDED by the absorb scale: the chip scales down as it
@@ -723,18 +738,6 @@ body {
   outline-offset: -1.25px;
 }
 
-/* Wider-gamut variant of the same two layers (the design's P3 values). */
-@supports (color: color(display-p3 0 0 0 / 0.2)) {
-  .ap-avatar {
-    box-shadow: 0 1px 1px 0 color(display-p3 0 0 0 / 0.2);
-    outline-color: color(display-p3 0 0 0 / 0.2);
-  }
-
-  .ap-ringed img {
-    box-shadow: 0 1.25px 1.25px 0 color(display-p3 0 0 0 / 0.2);
-    outline-color: color(display-p3 0 0 0 / 0.2);
-  }
-}
 
 /* ---------- melting cards (two draggable images) ---------- */
 

@@ -413,6 +413,10 @@ export function SliderThumb({ x }: { x: number }) {
           <div className="example-row-full">
             <Chips {...heroProps} />
           </div>
+          {/* Move's showcase: the one hero piece that isn't a morph. */}
+          <div className="example-row-full example-row-short">
+            <Slider {...heroProps} />
+          </div>
         </section>
 
         <section className="section" aria-label="Installation">

@@ -18,7 +18,7 @@ import {
 } from './geometry'
 import { useIsoLayoutEffect, useReducedMotion } from './hooks'
 import { EVOLVE_DEFAULTS, MOVE_DEFAULTS, type EvolveOptions, type MoveOptions } from './observer'
-import { resolveTransition, type Transition } from './spring'
+import { easingFunction, resolveTransition, type Transition } from './spring'
 
 export type GooeyEffect = 'morph' | 'evolve' | 'move'
 
@@ -191,32 +191,52 @@ function MirroredItem({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ctx, radiusKey])
 
-  const tf = `translate(${x}px, ${y}px)` + (scale !== 1 ? ` scale(${scale})` : '')
-  // Classic `transform`/`transition`, never individual translate properties:
-  // WebKit's individual-property support on SVG elements is what breaks sync.
-  const tr = duration > 0 ? `transform ${duration}ms ${easing} ${delay}ms` : 'none'
-
-  // The blob does NOT run its own transition: it samples the wrapper's actual
-  // animated matrix each frame while the wrapper animates. Two identical CSS
-  // transitions are only identical in theory — the blob lives inside a
-  // filtered <g>, and WebKit rasterises that filtered layer behind plain DOM,
-  // so the crisp content visibly runs ahead of its own liquid surface (icons
-  // detaching from their buttons). Sampling the real value is the same curve
-  // by construction, in every browser, and costs frames only while animating.
+  // Content and blob are animated by ONE JS clock — no CSS transition on the
+  // wrapper. A compositor transition keeps playing through a main-thread
+  // stall while the blob (always written from JS) freezes; under Safari's
+  // SVG-filter load that read as icons and photos sailing away from their own
+  // liquid. With both written in the same rAF tick from the same easing
+  // curve, they can only ever move together: a stall holds the whole
+  // ensemble, which reads as a hitch, never a tear. The curve is identical to
+  // the CSS one (same duration/easing via easingFunction), so browsers that
+  // never stall render exactly what they did before.
+  const cur = useRef<{ x: number; y: number; s: number } | null>(null)
+  const writeTransform = (px: number, py: number, ps: number) => {
+    const t = `translate(${px}px, ${py}px)` + (ps !== 1 ? ` scale(${ps})` : '')
+    if (wrapRef.current) wrapRef.current.style.transform = t
+    if (blobRef.current) blobRef.current.style.transform = t
+  }
   useIsoLayoutEffect(() => {
-    const wrap = wrapRef.current
-    const blob = blobRef.current
-    if (!wrap || !blob) return
-    let raf = 0
-    const until = performance.now() + duration + delay + 80
-    const tick = () => {
-      const m = getComputedStyle(wrap).transform
-      blob.style.transform = m && m !== 'none' ? m : tf
-      if (performance.now() < until) raf = requestAnimationFrame(tick)
+    const from = cur.current
+    if (
+      !from ||
+      duration <= 0 ||
+      (from.x === x && from.y === y && from.s === scale)
+    ) {
+      cur.current = { x, y, s: scale }
+      writeTransform(x, y, scale)
+      return
     }
-    tick()
+    // Retarget like a CSS transition: from the currently rendered value, full
+    // duration. `delay` holds at the start value first (stagger).
+    const f = { ...from }
+    const ease = easingFunction(easing)
+    const start = performance.now() + delay
+    let raf = 0
+    const tick = (now: number) => {
+      const p = Math.min(1, Math.max(0, (now - start) / duration))
+      const e = ease(p)
+      const cx = f.x + (x - f.x) * e
+      const cy = f.y + (y - f.y) * e
+      const cs = f.s + (scale - f.s) * e
+      cur.current = { x: cx, y: cy, s: cs }
+      writeTransform(cx, cy, cs)
+      if (p < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
-  }, [tf, duration, delay, box])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [x, y, scale, duration, easing, delay])
 
   return (
     <>
@@ -226,8 +246,8 @@ function MirroredItem({
         style={{
           display: 'inline-block',
           ...style,
-          transform: tf,
-          transition: tr,
+          // `transform` is owned imperatively (see above) — React must never
+          // render it, or a re-render mid-flight would snap to the target.
           willChange: 'transform',
         }}
       >
@@ -239,13 +259,19 @@ function MirroredItem({
           renderBlob(
             box,
             {
-              transform: tf,
               transformBox: 'fill-box',
               transformOrigin: 'center',
               willChange: 'transform',
             },
             el => {
               blobRef.current = el
+              // The blob (re)mounts whenever the measured box changes; catch
+              // it up to the currently rendered value immediately.
+              if (el) {
+                const c = cur.current ?? { x, y, s: scale }
+                el.style.transform =
+                  `translate(${c.x}px, ${c.y}px)` + (c.s !== 1 ? ` scale(${c.s})` : '')
+              }
             },
           ),
           ctx.portal,

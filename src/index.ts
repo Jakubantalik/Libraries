@@ -17,6 +17,6 @@ export type {
 export type { DissolveOptions } from './GooeyItem'
 export { EVOLVE_DEFAULTS, MOVE_DEFAULTS } from './observer'
 export type { EvolveOptions, MoveOptions } from './observer'
-export { presets } from './spring'
+export { easingFunction, presets } from './spring'
 export type { SpringConfig, Transition, TransitionPreset } from './spring'
 export type { CornerRadii } from './geometry'

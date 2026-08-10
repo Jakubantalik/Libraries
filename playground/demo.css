@@ -368,6 +368,12 @@ html[data-theme='light'] .example-row-full {
   background: #f7f7f7;
 }
 
+/* The slider is a single thin track — the 370px hero height would strand it
+   in a sea of empty card. */
+.example-row-short {
+  height: 220px;
+}
+
 .example-row-split {
   display: grid;
   grid-template-columns: 271fr 552fr;

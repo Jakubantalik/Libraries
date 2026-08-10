@@ -1,4 +1,4 @@
-import { Liquid } from 'liquid-gooey'
+import { Liquid, easingFunction } from 'liquid-gooey'
 import {
   useEffect,
   useRef,
@@ -263,6 +263,14 @@ export function Chips({ blur, contrast, shadow, pro, bare }: DemoProps) {
   const stackRef = useRef<HTMLSpanElement | null>(null)
   const [pos, setPos] = useState({ x: 0, y: 0 })
   const [dragging, setDragging] = useState(false)
+  /** React never renders the chip's transform (see the style comment below).
+   *  Outside a flight, keep the DOM in step with `pos` here — this covers
+   *  mount, the snap-back of a missed release, and Reset. */
+  useEffect(() => {
+    if (!absorbing) {
+      chipRef.current?.style.setProperty('transform', `translate(${pos.x}px, ${pos.y}px)`)
+    }
+  })
   const origin = useRef({ x: 0, y: 0 })
   const absorbTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => () => { if (absorbTimer.current) clearTimeout(absorbTimer.current) }, [])
@@ -324,6 +332,33 @@ export function Chips({ blur, contrast, shadow, pro, bare }: DemoProps) {
     setPos(next)
     setGapIndex(hoverGap())
   }
+  /** The flight runs on OUR rAF, not a CSS transition. A compositor-run
+   *  transition keeps gliding through a Safari main-thread stall while the
+   *  liquid engine (rAF) is frozen — the silhouette bump visibly hung above
+   *  the pill after the photo had already landed. Driven from the same clock
+   *  as the engine, a stall freezes photo and liquid together. Same bezier,
+   *  same duration, so Chromium's motion is unchanged. */
+  const flightRaf = useRef(0)
+  const flyChip = (from: { x: number; y: number }, to: { x: number; y: number }) => {
+    cancelAnimationFrame(flightRaf.current)
+    const ease = easingFunction(dropEase(meltRef.current.dropBounce))
+    const dur = meltRef.current.dropDur
+    const start = performance.now()
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - start) / dur)
+      const e = ease(p)
+      const x = from.x + (to.x - from.x) * e
+      const y = from.y + (to.y - from.y) * e
+      const s = 1 + (ABSORB_SCALE - 1) * e
+      chipRef.current?.style.setProperty(
+        'transform',
+        `translate(${x}px, ${y}px) scale(${s})`,
+      )
+      if (p < 1) flightRaf.current = requestAnimationFrame(tick)
+    }
+    flightRaf.current = requestAnimationFrame(tick)
+  }
+  useEffect(() => () => cancelAnimationFrame(flightRaf.current), [])
   const endDrag = () => {
     if (!dragging) return
     setDragging(false)
@@ -337,10 +372,12 @@ export function Chips({ blur, contrast, shadow, pro, bare }: DemoProps) {
       const targetCy = s.top + s.height / 2
       setAbsorbing(true)
       setDropIndex(g)
-      setPos(prev => ({
-        x: prev.x + (targetCx - (c.left + c.width / 2)),
-        y: prev.y + (targetCy - (c.top + c.height / 2)),
-      }))
+      const to = {
+        x: pos.x + (targetCx - (c.left + c.width / 2)),
+        y: pos.y + (targetCy - (c.top + c.height / 2)),
+      }
+      flyChip(pos, to)
+      setPos(to)
       // The crescents GROW ACROSS THE FLIGHT: released at 0, fully open by
       // ~60% of the drop (the bounce bezier front-loads travel, so the
       // avatar is visually seated long before dropDur). A fixed impact
@@ -377,6 +414,7 @@ export function Chips({ blur, contrast, shadow, pro, bare }: DemoProps) {
   }
 
   const reset = () => {
+    cancelAnimationFrame(flightRaf.current)
     if (absorbTimer.current) clearTimeout(absorbTimer.current)
     if (shoveTimer.current) clearTimeout(shoveTimer.current)
     if (seatTimer.current) clearTimeout(seatTimer.current)
@@ -565,13 +603,13 @@ export function Chips({ blur, contrast, shadow, pro, bare }: DemoProps) {
             }`}
             style={
               {
-                // Scale (not width/height) for the 40px → 32px handoff: the
-                // chip is anchored by `right`/`top`, so resizing the box would
-                // shift its centre and miss the slot; a centre-origin scale
-                // lands exactly where the inserted avatar appears.
-                transform:
-                  `translate(${pos.x}px, ${pos.y}px)` +
-                  (absorbing ? ` scale(${ABSORB_SCALE})` : ''),
+                // NO `transform` here: it is owned imperatively (drag writes
+                // it per pointermove, the flight writes it per rAF — see
+                // endDrag). Rendering it from React state would snap the chip
+                // to the target on any mid-flight re-render, and a CSS
+                // transition on it runs on Safari's compositor thread, which
+                // keeps gliding while the liquid's rAF is stalled — the ghost
+                // silhouette bump left hanging above the pill.
                 // While travelling, adopt the stacking of the slot being
                 // joined so the handoff to the real avatar is paint-identical.
                 zIndex: absorbing && dropIndex != null ? dropIndex : 20,
@@ -598,8 +636,6 @@ export function Chips({ blur, contrast, shadow, pro, bare }: DemoProps) {
                 // mounts (a phantom cut shrinking right at release).
                 '--seat': absorbing ? (seated ? 1 : 0) : 0,
                 '--ap-seat-dur': `${Math.round(melt.dropDur * 0.6)}ms`,
-                '--ap-absorb-dur': `${melt.dropDur}ms`,
-                '--ap-absorb-ease': dropEase(melt.dropBounce),
                 // Pre-divided by the absorb scale so it RENDERS at RING_PX,
                 // exactly matching the ring the real avatar already wears.
                 '--ap-ring': `${RING_PX / ABSORB_SCALE}px`,
