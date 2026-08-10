@@ -62,7 +62,7 @@ function SliderRow({
   )
 }
 
-export function Cards({ blur, contrast, shadow, pro }: DemoProps) {
+export function Cards({ blur, contrast, shadow, pro, bare }: DemoProps) {
   const [st, setSt] = useState<CardState>(DEFAULTS)
   const set =
     <K extends keyof CardState>(k: K) =>
@@ -116,9 +116,7 @@ export function Cards({ blur, contrast, shadow, pro }: DemoProps) {
     fadeMs: 320,
   }
 
-  return (
-    <div className="dc-wrap">
-      <div className="stage">
+  const stage = (
         <Liquid blur={blur} contrast={contrast} fill="var(--modal-bg)" shadow={shadow} className="dc">
           {[cardA, cardB].map((src, i) => (
             <Liquid.Item
@@ -144,7 +142,12 @@ export function Cards({ blur, contrast, shadow, pro }: DemoProps) {
             </Liquid.Item>
           ))}
         </Liquid>
-      </div>
+  )
+  if (bare) return stage
+
+  return (
+    <div className="dc-wrap">
+      <div className="stage">{stage}</div>
 
       <div className="cp-panel">
         <div className="cp-section">

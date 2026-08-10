@@ -142,7 +142,7 @@ function menuSnippet(s: MenuState): string {
   ].join('\n')
 }
 
-export function PlusMenu({ blur, contrast, shadow, pro }: DemoProps) {
+export function PlusMenu({ blur, contrast, shadow, pro, bare }: DemoProps) {
   const [open, setOpen] = useState(false)
   const [anticipating, setAnticipating] = useState(false)
   const [st, setSt] = useState<MenuState>(DEFAULTS)
@@ -190,9 +190,7 @@ export function PlusMenu({ blur, contrast, shadow, pro }: DemoProps) {
     ? { dur: st.openDur, ease: EASES[st.openEase], stagger: st.openStagger }
     : { dur: st.closeDur, ease: EASES[st.closeEase], stagger: st.closeStagger }
 
-  return (
-    <div className="pm-wrap">
-      <div className="stage">
+  const stage = (
         <Liquid
           blur={blur}
           contrast={contrast}
@@ -244,7 +242,12 @@ export function PlusMenu({ blur, contrast, shadow, pro }: DemoProps) {
             </button>
           </Liquid.Item>
         </Liquid>
-      </div>
+  )
+  if (bare) return stage
+
+  return (
+    <div className="pm-wrap">
+      <div className="stage">{stage}</div>
 
       {!pro && (
         <div className="cp-panel">

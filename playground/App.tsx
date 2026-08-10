@@ -5,8 +5,9 @@ import { Chips } from './demos/Chips'
 import { PlusMenu } from './demos/PlusMenu'
 import { Slider } from './demos/Slider'
 import { Tabs } from './demos/Tabs'
+import { SHADOWS, getSystemTheme, type Theme } from './theme'
 
-export type Theme = 'light' | 'dark'
+export type { Theme }
 
 export interface DemoProps {
   blur: number
@@ -20,42 +21,9 @@ export interface DemoProps {
   /** Pro mode (?pro in the URL): full raw-physics control panels. The default
    *  playground shows only the slim public knobs. */
   pro: boolean
-}
-
-/** Wider-gamut colours when the browser has them, matching how the design's
- *  own CSS ships a `color(display-p3 ...)` variant beside every rgba one.
- *  The library parses this string into filter primitives, so the swap has to
- *  happen here rather than in a stylesheet @supports block. */
-const P3 =
-  typeof CSS !== 'undefined' && CSS.supports?.('color', 'color(display-p3 0 0 0 / 0.2)')
-const p3 = (tpl: string) =>
-  tpl
-    .replace(/\{w4\}/g, P3 ? 'color(display-p3 1 1 1 / 0.04)' : 'rgba(255, 255, 255, 0.04)')
-    .replace(/\{w3\}/g, P3 ? 'color(display-p3 1 1 1 / 0.03)' : 'rgba(255, 255, 255, 0.03)')
-    .replace(/\{k6\}/g, P3 ? 'color(display-p3 0 0 0 / 0.06)' : 'rgba(0, 0, 0, 0.06)')
-    .replace(/\{k5\}/g, P3 ? 'color(display-p3 0 0 0 / 0.05)' : 'rgba(0, 0, 0, 0.05)')
-    .replace(/\{k24\}/g, P3 ? 'color(display-p3 0 0 0 / 0.24)' : 'rgba(0, 0, 0, 0.24)')
-
-/** Light keeps the prototype's Figma elevation. Dark is the Logram spec. */
-const SHADOWS: Record<Theme, Record<string, string>> = {
-  light: {
-    'Figma soft':
-      '0 0 0 1px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.05), 0 4px 42px rgba(0, 0, 0, 0.06)',
-    Floating: '0 2px 6px rgba(0, 0, 0, 0.08), 0 12px 32px rgba(0, 0, 0, 0.18)',
-    None: '',
-  },
-  // Logram dropdown spec (Figma 2572:83262), verbatim and in the design's
-  // layer order: two light inset layers (inner hairline + top highlight),
-  // then the black outer chain. The engine renders inset passes on the
-  // MERGED silhouette, so the inner edge survives every neck and split.
-  dark: {
-    'Figma soft': p3(
-      '0 0 0 1px {w4} inset, 0 1px 0 0 {w3} inset, ' +
-        '0 0 0 1px {k6}, 0 2px 6px 0 {k5}, 0 4px 42px 0 {k24}',
-    ),
-    Floating: '0 2px 6px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.55)',
-    None: '',
-  },
+  /** Marketing-page mode: render ONLY the liquid stage — no .stage wrapper,
+   *  no control panel, no note. The host page provides the framing. */
+  bare?: boolean
 }
 
 const PRO = new URLSearchParams(window.location.search).has('pro')
@@ -69,7 +37,7 @@ function initialTheme(): Theme {
   } catch {
     /* private mode / storage disabled */
   }
-  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  return getSystemTheme()
 }
 
 export function App() {

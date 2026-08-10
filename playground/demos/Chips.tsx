@@ -151,7 +151,7 @@ const PITCH = 24
 /** The one draggable face; it JOINS the group on drop (never respawns). */
 const CHIP_SRC = PORTRAITS[INITIAL]
 
-export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
+export function Chips({ blur, contrast, shadow, pro, bare }: DemoProps) {
   const [group, setGroup] = useState(PORTRAITS.slice(0, INITIAL))
   /** Simple mode: dissolve intensity, the one public knob. 1 = tuned look. */
   const [slimDissolve, setSlimDissolve] = useState(1)
@@ -374,9 +374,7 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
     requestAnimationFrame(() => requestAnimationFrame(() => setSwapping(false)))
   }
 
-  return (
-    <div className="ap-wrap">
-      <div className="stage">
+  const stage = (
     <Liquid blur={blur} contrast={contrast} fill="var(--modal-bg)" shadow={shadow} className="ap">
       <button type="button" className="ap-reset" onClick={reset}>
         Reset
@@ -584,7 +582,12 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
         </Liquid.Item>
       )}
     </Liquid>
-      </div>
+  )
+  if (bare) return stage
+
+  return (
+    <div className="ap-wrap">
+      <div className="stage">{stage}</div>
       {!pro && (
         <div className="cp-panel">
           <div className="cp-section">

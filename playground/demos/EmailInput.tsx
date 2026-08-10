@@ -92,7 +92,7 @@ function snippet(s: EbState): string {
   ].join('\n')
 }
 
-export function EmailInput({ shadow, pro }: DemoProps) {
+export function EmailInput({ shadow, pro, bare }: DemoProps) {
   const [open, setOpen] = useState(false)
   const [st, setSt] = useState<EbState>(DEFAULTS)
   const set =
@@ -159,9 +159,7 @@ export function EmailInput({ shadow, pro }: DemoProps) {
     '--eb-blur': `${st.crossBlur}px`,
   } as CSSProperties
 
-  return (
-    <div className="eb-wrap">
-      <div className="stage">
+  const stage = (
         <Liquid
           blur={st.gooBlur}
           contrast={st.gooContrast}
@@ -210,7 +208,12 @@ export function EmailInput({ shadow, pro }: DemoProps) {
             </button>
           </Liquid.Item>
         </Liquid>
-      </div>
+  )
+  if (bare) return stage
+
+  return (
+    <div className="eb-wrap">
+      <div className="stage">{stage}</div>
 
       <div className="cp-panel">
         <div className="cp-section">

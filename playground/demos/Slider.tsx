@@ -60,7 +60,7 @@ function SliderRow({
   )
 }
 
-export function Slider({ blur, contrast, dark }: DemoProps) {
+export function Slider({ blur, contrast, dark, bare }: DemoProps) {
   const [x, setX] = useState(84)
   const drag = useRef<number | null>(null)
   /** The public Move knobs; defaults reproduce the tuned look. */
@@ -82,9 +82,7 @@ export function Slider({ blur, contrast, dark }: DemoProps) {
     drag.current = null
   }
 
-  return (
-    <div className="sl-wrap">
-      <div className="stage">
+  const stage = (
         <Liquid blur={blur} contrast={contrast} fill="var(--sl-thumb)" shadow={dark ? THUMB_SHADOW.dark : THUMB_SHADOW.light} className="sl">
           <div className="sl-track" aria-hidden="true" />
           <Liquid.Item effect="move" move={mv}>
@@ -103,7 +101,12 @@ export function Slider({ blur, contrast, dark }: DemoProps) {
             />
           </Liquid.Item>
         </Liquid>
-      </div>
+  )
+  if (bare) return stage
+
+  return (
+    <div className="sl-wrap">
+      <div className="stage">{stage}</div>
 
       <div className="cp-panel">
         <div className="cp-section">
