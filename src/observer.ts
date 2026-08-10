@@ -216,6 +216,10 @@ interface MeltEntry {
 }
 
 interface MeltLayer {
+  /** Compact fingerprint of the last values written to this layer's filter
+   *  primitives — a matching frame skips every write, so WebKit does not
+   *  re-rasterize the layer at all. */
+  last?: string
   disp: SVGElement
   blurEl: SVGElement
   erode: SVGElement
@@ -335,6 +339,14 @@ interface Item extends ObservedTarget {
   meltPrev: { x: number; y: number } | null
   /** Last contact geometry, so the fading tail keeps its position. */
   meltGeom: { o: Frame } | null
+  /** performance.now() of the last melt layer/entry write pass — writes are
+   *  throttled to ~28fps because each one re-rasterizes turbulence filters,
+   *  which WebKit runs on the CPU. The melt is soft organic noise; 28fps is
+   *  visually indistinguishable, and the halved raster load is what keeps
+   *  Safari's paint loop breathing. */
+  meltWroteAt: number
+  /** Last host opacity/transform written. */
+  meltHostLast: string | null
   ro: ResizeObserver
 }
 
@@ -350,6 +362,42 @@ function springStep(
   const a = k * (target - cur) - c * vel
   const v = vel + a * dt
   return [cur + v * dt, v]
+}
+
+/** Spring advance over a WALL-CLOCK dt, substepped at ≤1/60s so the
+ *  integration stays stable no matter how long the frame gap was.
+ *
+ *  The loop used to clamp dt to 1/24 per FRAME instead: at Safari's worst
+ *  (~1 paint per 2s under filter load) the simulation then advanced 42ms per
+ *  2000ms of wall time — everything ran in ~50x slow motion, so timed melt
+ *  releases visibly never finished (avatars stayed erased) and silhouettes
+ *  trailed their elements by seconds. Time must follow the wall clock; only
+ *  the integration STEP is capped. */
+function springSteps(
+  cur: number,
+  vel: number,
+  target: number,
+  k: number,
+  c: number,
+  dt: number,
+): [number, number] {
+  let n = Math.max(1, Math.ceil(dt * 60))
+  const h = dt / n
+  let p = cur
+  let v = vel
+  while (n-- > 0) {
+    const step = springStep(p, v, target, k, c, h)
+    p = step[0]
+    v = step[1]
+  }
+  return [p, v]
+}
+
+/** Quantize a value so near-identical frames produce IDENTICAL strings and
+ *  the dirty-checks can skip the DOM write — WebKit re-rasterizes a filter's
+ *  whole region on any primitive-attribute write, identical value or not. */
+function q(v: number, step: number): number {
+  return Math.round(v / step) * step
 }
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
@@ -431,6 +479,8 @@ export class ObserveEngine {
       meltPhase: 0,
       meltPrev: null,
       meltGeom: null,
+      meltWroteAt: 0,
+      meltHostLast: null,
       ro: new ResizeObserver(() => {
         item.baseW = t.target.offsetWidth || 1
         item.baseH = t.target.offsetHeight || 1
@@ -624,11 +674,14 @@ export class ObserveEngine {
   /** Remove all melt traces: hide the warped overlay, restore image masks. */
   private clearBlend(item: Item): void {
     item.blend?.host.setAttribute('opacity', '0')
+    // The DOM no longer matches the caches — drop them all, or the next melt
+    // would skip the writes that re-apply the state.
+    item.meltHostLast = null
+    item.meltWroteAt = 0
+    for (const layer of item.melt?.layers ?? []) layer.last = undefined
     for (const entry of item.melt?.entries ?? []) {
       entry.el.style.removeProperty('mask-image')
       entry.el.style.removeProperty('-webkit-mask-image')
-      // The DOM no longer matches the caches — drop them, or the next melt
-      // would skip the write that re-applies the mask.
       entry.lastHole = null
       entry.lastGeom = null
     }
@@ -642,7 +695,10 @@ export class ObserveEngine {
       this.lastNow = 0
       return
     }
-    const dt = this.lastNow ? Math.min(1 / 24, Math.max(1 / 240, (now - this.lastNow) / 1000)) : 1 / 60
+    // WALL-CLOCK dt (capped only against tab-switch gaps): timed fades and
+    // smoothing must complete in real time even when paints are slow —
+    // springs handle large dt via substepping (see springSteps).
+    const dt = this.lastNow ? Math.min(0.25, Math.max(1 / 240, (now - this.lastNow) / 1000)) : 1 / 60
     this.lastNow = now
     if (this.measureAll(dt)) this.clean = 0
     else this.clean++
@@ -800,8 +856,8 @@ export class ObserveEngine {
     if (dyn.move) {
       // Lag + wobble: liquid rubber trailing the element.
       const mo = dyn.moveOpts ?? MOVE_DEFAULTS
-      ;[s.cx, s.vcx] = springStep(s.cx, s.vcx, tcx, mo.stiffness, mo.damping, dt)
-      ;[s.cy, s.vcy] = springStep(s.cy, s.vcy, tcy, mo.stiffness, mo.damping, dt)
+      ;[s.cx, s.vcx] = springSteps(s.cx, s.vcx, tcx, mo.stiffness, mo.damping, dt)
+      ;[s.cy, s.vcy] = springSteps(s.cy, s.vcy, tcy, mo.stiffness, mo.damping, dt)
     } else if (dyn.evolve) {
       // Mass moves first: springs can only chase, so aim AHEAD of the moving
       // target by its (smoothed) velocity — the droplet travels toward the
@@ -837,8 +893,8 @@ export class ObserveEngine {
       const reach = Math.min(Math.max(0, eo.travel) * item.lead01, rem)
       const ox = dx * reach
       const oy = dy * reach
-      ;[s.cx, s.vcx] = springStep(s.cx, s.vcx, tcx + ox, eo.massStiffness, eo.massDamping, dt)
-      ;[s.cy, s.vcy] = springStep(s.cy, s.vcy, tcy + oy, eo.massStiffness, eo.massDamping, dt)
+      ;[s.cx, s.vcx] = springSteps(s.cx, s.vcx, tcx + ox, eo.massStiffness, eo.massDamping, dt)
+      ;[s.cy, s.vcy] = springSteps(s.cy, s.vcy, tcy + oy, eo.massStiffness, eo.massDamping, dt)
     } else {
       s.cx = tcx
       s.cy = tcy
@@ -848,11 +904,11 @@ export class ObserveEngine {
     if (dyn.evolve) {
       // Size adapts after the mass, radius after the size.
       const eo = dyn.evolveOpts ?? EVOLVE_DEFAULTS
-      ;[s.w, s.vw] = springStep(s.w, s.vw, f.w, eo.sizeStiffness, eo.sizeDamping, dt)
-      ;[s.h, s.vh] = springStep(s.h, s.vh, f.h, eo.sizeStiffness, eo.sizeDamping, dt)
+      ;[s.w, s.vw] = springSteps(s.w, s.vw, f.w, eo.sizeStiffness, eo.sizeDamping, dt)
+      ;[s.h, s.vh] = springSteps(s.h, s.vh, f.h, eo.sizeStiffness, eo.sizeDamping, dt)
       // Default near-critical damping: the corner radius must land without
       // bouncing — the roundness envelope already supplies the liquid overshoot.
-      ;[s.r, s.vr] = springStep(s.r, s.vr, tr, eo.radiusStiffness, eo.radiusDamping, dt)
+      ;[s.r, s.vr] = springSteps(s.r, s.vr, tr, eo.radiusStiffness, eo.radiusDamping, dt)
     } else {
       s.w = f.w
       s.h = f.h
@@ -882,8 +938,8 @@ export class ObserveEngine {
         item.tailX = s.cx
         item.tailY = s.cy
       }
-      ;[item.tailX, item.tailVx] = springStep(item.tailX, item.tailVx, s.cx, 170, 22, dt)
-      ;[item.tailY, item.tailVy] = springStep(item.tailY, item.tailVy, s.cy, 170, 22, dt)
+      ;[item.tailX, item.tailVx] = springSteps(item.tailX, item.tailVx, s.cx, 170, 22, dt)
+      ;[item.tailY, item.tailVy] = springSteps(item.tailY, item.tailVy, s.cy, 170, 22, dt)
       const bi = item.blobInset ?? 0
       const base = Math.max(4, Math.min(s.w, s.h) - bi * 2)
       const lagX = item.tailX - s.cx
@@ -1160,7 +1216,9 @@ export class ObserveEngine {
       ? Math.hypot(f.x - prevPos.x, f.y - prevPos.y) / Math.max(1e-3, dt)
       : 0
     item.meltPrev = { x: f.x, y: f.y }
-    const phaseAdv = dt * flowSpeed * 0.12 * Math.min(1, moveSpeed / 40)
+    // Phase advance capped per frame: dt is wall-clock, and after a slow
+    // frame a full-dt advance would visibly teleport the noise field.
+    const phaseAdv = Math.min(dt, 1 / 24) * flowSpeed * 0.12 * Math.min(1, moveSpeed / 40)
     item.meltPhase += phaseAdv
     const lb = item.lastBlend
     if (
@@ -1173,6 +1231,15 @@ export class ObserveEngine {
     ) {
       return false
     }
+    // Throttle the write pass to ~28fps. Every write below dirties a
+    // turbulence/displacement filter, and WebKit re-rasterizes those on the
+    // CPU — at full frame rate the paint loop drowns (measured: ~1 paint per
+    // 2s in the iOS simulator). The simulation state above is already
+    // advanced; only the DOM flush waits for the next slot. The active flag
+    // stays true so the loop keeps ticking.
+    const nowMs = performance.now()
+    if (nowMs - item.meltWroteAt < 35) return true
+    item.meltWroteAt = nowMs
     const round = (v: number) => Math.round(v * 10) / 10
     const host = blend.host
 
@@ -1219,38 +1286,32 @@ export class ObserveEngine {
     // circular fragment.
     const bx = cx + gux * d * 0.05
     const by = cy + guy * d * 0.05
-    melt.layers.forEach((layer, i) => {
+    // Every value below is QUANTIZED before writing, and each layer keeps a
+    // fingerprint of its last-written values: a frame that lands on the same
+    // quantized values skips the layer's writes entirely, so its turbulence
+    // filter is not re-rasterized. The steps are chosen below what the soft
+    // noise can visually resolve.
+    const layerVals: string[][] = melt.layers.map((_, i) => {
       const t = n > 1 ? i / (n - 1) : 1 // 0 = outermost rim, 1 = tip
-      // Blur eases in with a curve so the rim stays nearly sharp and the
-      // core carries the full radius: gentle at first, then rising.
       const blurK = 0.06 + 0.94 * Math.pow(t, 1.7)
       const warpK = 0.2 + 0.8 * t
-      layer.disp.setAttribute('scale', String(round(blend.warp * warpK * eStruct)))
-      layer.blurEl.setAttribute('stdDeviation', String(round(blend.blur * blurK * eStruct)))
-      if (layer.turb.getAttribute('baseFrequency') !== bfStr) {
-        layer.turb.setAttribute('baseFrequency', bfStr)
-      }
-      // BOUNDED, flow-aligned noise oscillation (Lissajous, ±9px along the
-      // flow, ±3px across), each layer at its own rate so the field shears —
-      // melting slides along gravity. It must stay bounded: a linearly
-      // growing offset drags the noise image's own region boundary across
-      // the melt, which shows as hard moving lines.
       const pr = 0.7 + 0.45 * t
       const oa = 6 * Math.sin(item.meltPhase * pr)
       const ob = 2 * Math.sin(item.meltPhase * pr * 1.31 + 1.7)
-      layer.noiseOffset.setAttribute('dx', String(round(gux * oa - guy * ob)))
-      layer.noiseOffset.setAttribute('dy', String(round(guy * oa + gux * ob)))
-      layer.circle.setAttribute('cx', String(round(bx)))
-      layer.circle.setAttribute('cy', String(round(by)))
-      // Wider radius spread than before (rim reaches past the zone, tip
-      // concentrates): with the longer gradient tail this turns the zone
-      // into a continuous ramp instead of a soft-edged disc.
-      layer.circle.setAttribute('r', String(round(d * (1.15 - 0.75 * t))))
-      // Rim layer slightly translucent so the onset is gradual; the core
-      // still stacks to full alpha.
-      layer.gl.setAttribute('opacity', String(round(Math.min(1, eStruct * (0.75 + 0.25 * t)))))
+      return [
+        String(q(blend.warp * warpK * eStruct, 0.25)),
+        String(q(blend.blur * blurK * eStruct, 0.25)),
+        String(q(gux * oa - guy * ob, 0.5)),
+        String(q(guy * oa + gux * ob, 0.5)),
+        String(q(bx, 0.5)),
+        String(q(by, 0.5)),
+        String(q(d * (1.15 - 0.75 * t), 0.5)),
+        String(q(Math.min(1, eStruct * (0.75 + 0.25 * t)), 0.02)),
+      ]
     })
-    host.setAttribute('opacity', r3(item.meltOp).toString())
+    // (The single fingerprint-guarded write pass for the layers sits below,
+    // once the shift transform and erosion row are computable too — they
+    // dirty the same filters, so they must share the fingerprint.)
     // Anchored stretch, NOT translation: scaling from the trailing edge of
     // the melt zone keeps the warped copy aligned with the original at the
     // back (a translated copy shows its silhouette as an offset ghost ring),
@@ -1269,11 +1330,6 @@ export class ObserveEngine {
         `rotate(${-gDeg}) translate(${round(-anchorX)}, ${round(-anchorY)})`
       )
     }
-    melt.layers.forEach((layer, i) => {
-      const t = n > 1 ? i / (n - 1) : 1
-      layer.shift.setAttribute('transform', flow(0.4 + 0.6 * t))
-    })
-
     // Two-liquid mixing by EROSION, not by painting: threshold the same noise
     // into an alpha map (alpha = k·R + c) and clip the melted copy with it.
     // The image breaks into tendrils and the liquid already behind shows
@@ -1288,9 +1344,30 @@ export class ObserveEngine {
       const c = r3(1 - k * (0.38 + 0.12 * amt))
       return `0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  ${k} 0 0 0 ${c}`
     }
+    // ONE fingerprint-guarded write pass per layer: any single primitive
+    // write re-rasterizes the layer's turbulence filter, so all of a layer's
+    // values must be compared — and skipped — together.
     melt.layers.forEach((layer, i) => {
       const t = n > 1 ? i / (n - 1) : 1
-      layer.erode.setAttribute('values', erodeRow(mixAmt * (0.15 + 0.85 * t)))
+      const v = layerVals[i]
+      const shiftT = flow(0.4 + 0.6 * t)
+      const erodeV = erodeRow(q(mixAmt * (0.15 + 0.85 * t), 0.01))
+      const fp = v.join(',') + '|' + bfStr + '|' + shiftT + '|' + erodeV
+      if (layer.last === fp) return
+      layer.last = fp
+      layer.disp.setAttribute('scale', v[0])
+      layer.blurEl.setAttribute('stdDeviation', v[1])
+      if (layer.turb.getAttribute('baseFrequency') !== bfStr) {
+        layer.turb.setAttribute('baseFrequency', bfStr)
+      }
+      layer.noiseOffset.setAttribute('dx', v[2])
+      layer.noiseOffset.setAttribute('dy', v[3])
+      layer.circle.setAttribute('cx', v[4])
+      layer.circle.setAttribute('cy', v[5])
+      layer.circle.setAttribute('r', v[6])
+      layer.gl.setAttribute('opacity', v[7])
+      layer.shift.setAttribute('transform', shiftT)
+      layer.erode.setAttribute('values', erodeV)
     })
     // Gentle magnetic pull of the melted body toward the contact.
     const icx = f.x + f.w / 2
@@ -1299,7 +1376,16 @@ export class ObserveEngine {
     // Pull holds with the structure during the fade — the overlay must not
     // glide back while it evaporates.
     const pull = blend.pull * sStruct
-    host.style.transform = `translate(${round(Math.cos(ang) * pull)}px, ${round(Math.sin(ang) * pull)}px)`
+    const hostStr =
+      r3(item.meltOp).toString() +
+      '|' +
+      `translate(${round(Math.cos(ang) * pull)}px, ${round(Math.sin(ang) * pull)}px)`
+    if (hostStr !== item.meltHostLast) {
+      item.meltHostLast = hostStr
+      const parts = hostStr.split('|')
+      host.setAttribute('opacity', parts[0])
+      host.style.transform = parts[1]
+    }
 
     // Depth 2.2x-biased: the original's edge is FULLY erased from s ≈ 0.45 —
     // a partially faded high-contrast edge still reads as an edge, and the

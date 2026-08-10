@@ -194,22 +194,30 @@ export function Chips({ blur, contrast, shadow, pro, bare }: DemoProps) {
   const stepShove = (now: number) => {
     const st = shove.current
     if (!st) return
-    const dt = Math.min(1 / 30, (now - st.last) / 1000)
+    // Wall-clock dt, SUBSTEPPED at ≤1/120s rather than clamped per frame:
+    // clamping made the wave run in slow motion whenever Safari dropped
+    // frames under filter load, and the coupled springs go unstable if fed
+    // one big step directly.
+    const wall = Math.min(0.25, (now - st.last) / 1000)
     st.last = now
     const K = meltRef.current.pushSpeed // anchor spring (1/s^2)
     const KC = meltRef.current.pushSpread // coupling — carries the wave out
     const zeta = 1.05 - 0.85 * Math.min(1, Math.max(0, meltRef.current.pushBounce))
     const C = 2 * zeta * Math.sqrt(K)
     const n = st.x.length
+    let steps = Math.max(1, Math.ceil(wall * 120))
+    const dt = wall / steps
+    while (steps-- > 0) {
+      for (let i = 0; i < n; i++) {
+        let f = -K * st.x[i] - C * st.v[i]
+        if (i > 0) f += KC * (st.x[i - 1] - st.x[i])
+        if (i < n - 1) f += KC * (st.x[i + 1] - st.x[i])
+        st.v[i] += f * dt
+      }
+      for (let i = 0; i < n; i++) st.x[i] += st.v[i] * dt
+    }
     let live = false
     for (let i = 0; i < n; i++) {
-      let f = -K * st.x[i] - C * st.v[i]
-      if (i > 0) f += KC * (st.x[i - 1] - st.x[i])
-      if (i < n - 1) f += KC * (st.x[i + 1] - st.x[i])
-      st.v[i] += f * dt
-    }
-    for (let i = 0; i < n; i++) {
-      st.x[i] += st.v[i] * dt
       if (Math.abs(st.x[i]) > 0.05 || Math.abs(st.v[i]) > 2) live = true
       avatarEls.current[i]?.style.setProperty('transform', `translateX(${st.x[i].toFixed(2)}px)`)
     }
