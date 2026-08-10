@@ -70,13 +70,13 @@ function meltSnippet(m: MeltState): string {
 
 const MELT_DEFAULTS: MeltState = {
   strength: 1,
-  warp: 26,
+  warp: 7,
   blur: 8,
   zone: 18,
   range: 49,
   mix: 0.7,
   gravity: 60,
-  taper: 1,
+  taper: 0.4,
   warpFreq: 1.7,
   flowSpeed: 22,
   detail: 2,
