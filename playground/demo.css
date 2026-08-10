@@ -6,6 +6,20 @@
    - img-fx shader-card rules dropped (hero cells host live liquid demos);
    - the reduced-motion kill-switch is scoped to this page. */
 
+/* The template's universal reset, scoped to this page (the lab stylesheet
+   only resets box-sizing). Without it, UA margins on h1/p push the header
+   title and subtitle out of the template's flex-end stack. The scope must
+   sit inside :where() so the reset keeps the template's zero specificity —
+   a bare `html[data-page] *` (0,1,1) would out-rank every class rule and
+   strip .dm-header/.app/.header-icon of their padding and margins. */
+:where(html[data-page='demo'] *),
+:where(html[data-page='demo'] *)::before,
+:where(html[data-page='demo'] *)::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 html[data-page='demo'],
 html[data-page='demo'] body {
   min-height: 100dvh;
@@ -1231,19 +1245,6 @@ html[data-theme='light'] .footer-name:hover {
   }
 }
 
-/* --- liquid-gooey deviations from the template ------------------------- */
-
-/* The exported icon is 294x217 (2x -> 147x108.5 CSS px), not the template's
-   414x276 — contain it in the template's 207x138 slot instead of stretching. */
-.header-icon-img {
-  object-fit: contain;
-}
-
-/* Both exported JPGs have a PURE WHITE background, which reads as a glaring
-   box on the #070707 page. The artwork is all neutral greys, so inverting
-   produces a legitimate dark icon: bg -> black (seamless on the page), tile
-   -> near-black, glyph -> light grey. Replace with a real dark export when
-   one exists and delete this rule. */
-html:not([data-theme='light']) .header-icon-img--dark {
-  filter: invert(1);
-}
+/* The header icon assets in public/ are recomposed to the template's exact
+   414x276 canvas with the tile at the template's position, and the dark
+   variant's inversion is baked into the file — no CSS deviations needed. */

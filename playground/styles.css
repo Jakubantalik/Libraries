@@ -595,26 +595,63 @@ body {
   pointer-events: none;
 }
 
+/* The transitions.dev "Animate" pill (detail.html .btn-animate), verbatim:
+   36px pill, 13px/16px Inter 500, 6/12 padding. Light lays a near-opaque
+   #f3f3f3 gradient over a lavender #bfc0cb tint (the tint whispers through
+   the 0.9 alpha) and dims via filter; dark swaps to flat white-alpha fills
+   and drops the filter. Only the stage positioning is ours. */
 .ap-reset {
   position: absolute;
   right: 10px;
   bottom: 10px;
   z-index: 3;
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 6px 12px;
   border: 0;
-  padding: 4px 10px;
-  border-radius: 6px;
-  background: var(--ctl-bg);
-  color: var(--muted);
-  font: inherit;
-  font-size: 11px;
+  border-radius: 40px;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 16px;
   font-weight: 500;
+  color: #17181c;
+  background-color: #bfc0cb;
+  background-image: linear-gradient(90deg, rgba(243, 243, 243, 0.9) 0%, rgba(243, 243, 243, 0.9) 100%);
   cursor: pointer;
-  transition: background-color 120ms ease, color 120ms ease;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.15s, filter 0.15s;
 }
 
 .ap-reset:hover {
-  background: var(--ctl-bg-hover);
-  color: var(--text);
+  filter: brightness(0.98);
+}
+.ap-reset:active {
+  filter: brightness(0.95);
+}
+.ap-reset:focus-visible {
+  outline: 2px solid #17181c;
+  outline-offset: 2px;
+}
+
+[data-theme='dark'] .ap-reset {
+  background: rgba(255, 255, 255, 0.04);
+  color: #e3e3e3;
+}
+[data-theme='dark'] .ap-reset:hover {
+  background: rgba(255, 255, 255, 0.06);
+  filter: none;
+}
+[data-theme='dark'] .ap-reset:active {
+  background: rgba(255, 255, 255, 0.08);
+  filter: none;
+}
+[data-theme='dark'] .ap-reset:focus-visible {
+  outline-color: #e3e3e3;
 }
 
 /* No white RING by default — the loose avatar is a bare photo with its own

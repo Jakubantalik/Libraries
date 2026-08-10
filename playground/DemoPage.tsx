@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import type { DemoProps } from './App'
-import { Cards } from './demos/Cards'
 import { Chips } from './demos/Chips'
 import { EmailInput } from './demos/EmailInput'
 import { PlusMenu } from './demos/PlusMenu'
@@ -307,14 +306,17 @@ export function Menu({ open }: { open: boolean }) {
     effect === 'morph'
       ? `import { Liquid } from 'liquid-gooey'
 
-export function MeltingCards() {
+export function PlusMenu({ open }: { open: boolean }) {
   return (
     <Liquid blur={${gooBlur}} contrast={${contrast}} fill="#fff">
-      <Liquid.Item dissolve>
-        <img className="card" src="/a.jpg" />
+      <Liquid.Item x={open ? -54 : 0} y={open ? -34 : 0} transition="bouncy">
+        <button className="round-btn">…</button>
       </Liquid.Item>
-      <Liquid.Item dissolve>
-        <img className="card" src="/b.jpg" />
+      <Liquid.Item x={0} y={open ? -64 : 0} transition="bouncy" delay={40}>
+        <button className="round-btn">…</button>
+      </Liquid.Item>
+      <Liquid.Item>
+        <button className="round-btn">+</button>
       </Liquid.Item>
     </Liquid>
   )
@@ -502,7 +504,7 @@ export function SliderThumb({ x }: { x: number }) {
 
           <div className="playground-preview">
             {effect === 'morph' ? (
-              <Cards {...playgroundProps} />
+              <PlusMenu {...playgroundProps} />
             ) : (
               <Slider {...playgroundProps} />
             )}
