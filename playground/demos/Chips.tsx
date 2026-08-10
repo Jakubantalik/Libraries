@@ -175,9 +175,10 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
   const avatarEls = useRef<Array<HTMLImageElement | null>>([])
   const shove = useRef<{ x: number[]; v: number[]; raf: number; last: number } | null>(null)
   const shoveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  /** True once the flier has IMPACTED (same clock as the shove): the
-   *  separator crescents grow open at this moment, not at release and not
-   *  at the swap — the hit is what visually seats the avatar. */
+  /** Armed one frame after release: the separator crescents grow across
+   *  the FLIGHT (duration ~0.6·dropDur, fast-out), completing as the avatar
+   *  visually arrives — the bounce bezier front-loads travel, so a fixed
+   *  post-release clock always finished too late. */
   const [seated, setSeated] = useState(false)
   const seatTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => () => { if (seatTimer.current) clearTimeout(seatTimer.current) }, [])
@@ -320,13 +321,14 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
         x: prev.x + (targetCx - (c.left + c.width / 2)),
         y: prev.y + (targetCy - (c.top + c.height / 2)),
       }))
-      // Impact timing is an explicit knob, not a fraction of the flight: at
-      // 0 the row reacts the instant you let go (the shove leads the avatar
-      // in, which reads as anticipation); larger values wait for it.
+      // The crescents GROW ACROSS THE FLIGHT: released at 0, fully open by
+      // ~60% of the drop (the bounce bezier front-loads travel, so the
+      // avatar is visually seated long before dropDur). A fixed impact
+      // clock (240ms from pushDelay) finished after the avatar already
+      // looked landed — the cuts read as appearing too late.
       setSeated(false)
       if (seatTimer.current) clearTimeout(seatTimer.current)
-      if (melt.pushDelay <= 0) setSeated(true)
-      else seatTimer.current = setTimeout(() => setSeated(true), melt.pushDelay)
+      seatTimer.current = setTimeout(() => setSeated(true), 30)
       if (melt.push > 0) {
         if (shoveTimer.current) clearTimeout(shoveTimer.current)
         const count = group.length
@@ -407,7 +409,11 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
           },
         }}
       >
-        <div className="ap-pill" ref={pillRef}>
+        <div
+          className="ap-pill"
+          ref={pillRef}
+          style={{ '--ap-seat-dur': `${Math.round(melt.dropDur * 0.6)}ms` } as CSSProperties}
+        >
           <span className="ap-label">Share</span>
           <span className="ap-stack" ref={stackRef}>
             {group.map((src, i) => {
@@ -560,6 +566,7 @@ export function Chips({ blur, contrast, shadow, pro }: DemoProps) {
                 // does not TRANSITION from its initial 1 the moment the mask
                 // mounts (a phantom cut shrinking right at release).
                 '--seat': absorbing ? (seated ? 1 : 0) : 0,
+                '--ap-seat-dur': `${Math.round(melt.dropDur * 0.6)}ms`,
                 '--ap-absorb-dur': `${melt.dropDur}ms`,
                 '--ap-absorb-ease': dropEase(melt.dropBounce),
                 // Pre-divided by the absorb scale so it RENDERS at RING_PX,

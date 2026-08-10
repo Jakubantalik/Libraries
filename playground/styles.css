@@ -541,7 +541,7 @@ body {
      separator crescent's growth at landing. */
   transition:
     margin-left 280ms cubic-bezier(0.3, 1.05, 0.4, 1),
-    --seat 240ms cubic-bezier(0.3, 1.05, 0.4, 1);
+    --seat var(--ap-seat-dur, 240ms) cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .ap-endgap {
@@ -565,7 +565,7 @@ body {
   -webkit-user-select: none;
   transition:
     transform 550ms cubic-bezier(0.34, 1.56, 0.64, 1),
-    --seat 240ms cubic-bezier(0.3, 1.05, 0.4, 1);
+    --seat var(--ap-seat-dur, 240ms) cubic-bezier(0.22, 1, 0.36, 1);
   /* Elevation lives on the IMG now (box-shadow + outline) — see .ap-chip img.
      A `filter: drop-shadow(...)` on this div doesn't compose with that: the
      old approach used filter because it follows the circular alpha of a
@@ -591,7 +591,7 @@ body {
 .ap-absorbing {
   transition:
     transform var(--ap-absorb-dur, 420ms) var(--ap-absorb-ease, cubic-bezier(0.34, 1.4, 0.64, 1)),
-    --seat 240ms cubic-bezier(0.3, 1.05, 0.4, 1);
+    --seat var(--ap-seat-dur, 240ms) cubic-bezier(0.22, 1, 0.36, 1);
   pointer-events: none;
 }
 
