@@ -80,15 +80,15 @@ const MELT_DEFAULTS: MeltState = {
   warpFreq: 1.7,
   flowSpeed: 22,
   detail: 2,
-  release: 110,
+  release: 380,
   fade: 320,
-  dropDur: 360,
+  dropDur: 400,
   dropBounce: 0.5,
-  push: 5,
-  pushBounce: 0.25,
+  push: 9,
+  pushBounce: 0,
   pushDelay: 110,
   pushSpeed: 80,
-  pushSpread: 210,
+  pushSpread: 0,
 }
 
 function SliderRow({
