@@ -396,6 +396,7 @@ export function Chips({ blur, contrast, shadow, pro, bare }: DemoProps) {
 
   const stage = (
     <Liquid blur={blur} contrast={contrast} fill="var(--modal-bg)" shadow={shadow} className="ap">
+      <p className="ap-hint">Drag the avatar into the group to merge it in</p>
       <button type="button" className="ap-reset" onClick={reset}>
         Reset
       </button>

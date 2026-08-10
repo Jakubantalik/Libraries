@@ -9,4 +9,5 @@ images
 
 # Loose design exports at the root (canonical copies live in public/)
 /icon-main-2x*.jpg
+/icon-main-2x*.png
 /gooey-*.svg
