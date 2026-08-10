@@ -402,9 +402,6 @@ export function SliderThumb({ x }: { x: number }) {
         </header>
 
         <section className="examples-section" aria-label="Effect demonstrations">
-          <div className="example-row-full">
-            <Chips {...heroProps} />
-          </div>
           <div className="example-row-split">
             <div className="example-cell">
               <PlusMenu {...heroProps} />
@@ -412,6 +409,9 @@ export function SliderThumb({ x }: { x: number }) {
             <div className="example-cell">
               <EmailInput {...heroProps} />
             </div>
+          </div>
+          <div className="example-row-full">
+            <Chips {...heroProps} />
           </div>
         </section>
 
