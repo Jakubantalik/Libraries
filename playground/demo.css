@@ -867,6 +867,13 @@ html[data-theme='light'] .tab-btn:focus-visible {
   background: rgba(255, 255, 255, 0.03);
   cursor: grab;
   transition: background-color 0.15s ease;
+  /* The track owns the drag (see StrengthSlider). `none` because a touch
+     anywhere in it must drive the value rather than scroll the page — with
+     the default, the browser claims the horizontal swipe for scrolling and
+     the drag never reaches us. */
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 .strength-track:hover {
   background: rgba(255, 255, 255, 0.06);
@@ -941,12 +948,13 @@ html[data-theme='light'] .strength-value {
   cursor: grab;
   opacity: 0;
   z-index: 2;
-  /* Mobile drag fix: without `touch-action: none` the browser steals
-   * horizontal swipes for scroll/zoom gestures, so the slider never
-   * receives the touchmove stream and dragging silently no-ops on iOS
-   * / Android. `none` is the right value here (not `pan-y`) because the
-   * input fills its parent and we want every touch inside the track to
-   * drive the slider, not page-scroll. */
+  /* Keyboard/AT only — the TRACK handles pointers now. A native range
+   * responds solely to presses that land on its thumb (and iOS has no
+   * jump-to-position on tap), so while this element was the pointer target,
+   * a drag that started anywhere else on the track did nothing on a phone.
+   * `pointer-events: none` does not affect focus, so Tab + arrow keys still
+   * work exactly as before. */
+  pointer-events: none;
   touch-action: none;
   /* Kill the browser-native focus outline; some Chromium builds draw
    * the range-input focus ring as a layer that ignores `opacity: 0` on

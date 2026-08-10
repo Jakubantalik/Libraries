@@ -234,6 +234,94 @@ function CopyButton({ text, label }: { text: string; label: string }): JSX.Eleme
   )
 }
 
+/** Track-wide drag, rather than leaning on the native range input.
+ *
+ *  A native `<input type="range">` only responds to a press that LANDS ON THE
+ *  THUMB — on iOS there is no jump-to-position on tap either — so with the
+ *  input invisible over a 36px-wide thumb, dragging anywhere else on the
+ *  track silently did nothing on a phone. Handling pointer events on the
+ *  track means tap-anywhere and drag-from-anywhere behave the same on touch
+ *  and mouse. The input stays for keyboard and screen readers (arrows still
+ *  work); it is just no longer the pointer target. */
+function StrengthSlider({
+  id,
+  label,
+  value,
+  min,
+  max,
+  step,
+  onChange,
+}: {
+  id: string
+  label: string
+  value: number
+  min: number
+  max: number
+  step: number
+  onChange: (v: number) => void
+}) {
+  const trackRef = useRef<HTMLDivElement | null>(null)
+  const dragging = useRef(false)
+  const setFromX = (clientX: number) => {
+    const el = trackRef.current
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    if (!r.width) return
+    const p = Math.min(1, Math.max(0, (clientX - r.left) / r.width))
+    const snapped = Math.round((min + p * (max - min)) / step) * step
+    // Re-round after the step multiply: 0.5-steps accumulate float dust that
+    // would render as "6.000000000000001".
+    onChange(Math.min(max, Math.max(min, Math.round(snapped / step) * step)))
+  }
+  const pct = ((value - min) / (max - min)) * 100
+  return (
+    <div className="control-group control-group--strength">
+      <label className="control-label" htmlFor={id}>
+        {label}
+      </label>
+      <div
+        ref={trackRef}
+        className="strength-track"
+        onPointerDown={e => {
+          dragging.current = true
+          // Capture keeps the drag alive past the track's edges. Guarded: it
+          // throws for a pointer id the element never really owned, and an
+          // exception here would abort the press entirely.
+          try {
+            e.currentTarget.setPointerCapture(e.pointerId)
+          } catch {
+            /* not a live pointer — the drag flag still tracks it */
+          }
+          setFromX(e.clientX)
+        }}
+        onPointerMove={e => {
+          if (dragging.current) setFromX(e.clientX)
+        }}
+        onPointerUp={() => {
+          dragging.current = false
+        }}
+        onPointerCancel={() => {
+          dragging.current = false
+        }}
+      >
+        {pct > 0 && <div className="strength-fill" style={{ width: `${pct}%` }} />}
+        <span className="strength-value">{value}</span>
+        <input
+          id={id}
+          type="range"
+          className="strength-input"
+          value={value}
+          onChange={e => onChange(parseFloat(e.target.value))}
+          min={min}
+          max={max}
+          step={step}
+          aria-label={label}
+        />
+      </div>
+    </div>
+  )
+}
+
 /** The playground's two types — the library's two effects. */
 type EffectType = 'morph' | 'move'
 const TYPE_OPTIONS: Array<{ value: EffectType; label: string }> = [
@@ -458,52 +546,25 @@ export function SliderThumb({ x }: { x: number }) {
               </div>
             </div>
 
-            <div className="control-group control-group--strength">
-              <label className="control-label" htmlFor={blurId}>
-                Goo blur
-              </label>
-              <div className="strength-track">
-                {gooBlur > 0 && (
-                  <div className="strength-fill" style={{ width: `${(gooBlur / 16) * 100}%` }} />
-                )}
-                <span className="strength-value">{gooBlur}</span>
-                <input
-                  id={blurId}
-                  type="range"
-                  className="strength-input"
-                  value={gooBlur}
-                  onChange={e => setGooBlur(parseFloat(e.target.value))}
-                  min={0}
-                  max={16}
-                  step={0.5}
-                  aria-label="Goo blur"
-                />
-              </div>
-            </div>
+            <StrengthSlider
+              id={blurId}
+              label="Goo blur"
+              value={gooBlur}
+              min={0}
+              max={16}
+              step={0.5}
+              onChange={setGooBlur}
+            />
 
-            <div className="control-group control-group--strength">
-              <label className="control-label" htmlFor={contrastId}>
-                Contrast
-              </label>
-              <div className="strength-track">
-                <div
-                  className="strength-fill"
-                  style={{ width: `${((contrast - 4) / 36) * 100}%` }}
-                />
-                <span className="strength-value">{contrast}</span>
-                <input
-                  id={contrastId}
-                  type="range"
-                  className="strength-input"
-                  value={contrast}
-                  onChange={e => setContrast(parseInt(e.target.value, 10))}
-                  min={4}
-                  max={40}
-                  step={1}
-                  aria-label="Contrast"
-                />
-              </div>
-            </div>
+            <StrengthSlider
+              id={contrastId}
+              label="Contrast"
+              value={contrast}
+              min={4}
+              max={40}
+              step={1}
+              onChange={setContrast}
+            />
           </div>
 
           <div className="playground-preview">
