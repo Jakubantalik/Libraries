@@ -10,11 +10,21 @@ const MAX = 188
  *  silhouette so it follows the lagging drop instead of the pointer. Inset
  *  layers from the design are approximated with the outer ring — the goo
  *  shadow chain doesn't support inset. */
+const P3 =
+  typeof CSS !== 'undefined' && CSS.supports?.('color', 'color(display-p3 0 0 0 / 0.2)')
+const c = (rgba: string, p3: string) => (P3 ? p3 : rgba)
+
 const THUMB_SHADOW = {
   light: '0 0 0 1px rgba(0, 0, 0, 0.08), 0 1px 5px rgba(0, 0, 0, 0.08)',
-  // Black passes, designer style: the thumb reads raised because it sits
-  // lighter than the near-black track, not because of a light ring.
-  dark: '0 0 0 1px rgba(0, 0, 0, 0.35), 0 1px 5px rgba(0, 0, 0, 0.5)',
+  // Decoded from the Logram slider export's own filter chain (dilate 1 @ .06,
+  // dy2/blur6 @ .05, dy4/blur42 @ .24, inner dy1 @ .03, inner erode1 @ .04):
+  // the thumb wears the same stack as every other Logram surface.
+  dark:
+    `0 0 0 1px ${c('rgba(255, 255, 255, 0.04)', 'color(display-p3 1 1 1 / 0.04)')} inset, ` +
+    `0 1px 0 0 ${c('rgba(255, 255, 255, 0.03)', 'color(display-p3 1 1 1 / 0.03)')} inset, ` +
+    `0 0 0 1px ${c('rgba(0, 0, 0, 0.06)', 'color(display-p3 0 0 0 / 0.06)')}, ` +
+    `0 2px 6px 0 ${c('rgba(0, 0, 0, 0.05)', 'color(display-p3 0 0 0 / 0.05)')}, ` +
+    `0 4px 42px 0 ${c('rgba(0, 0, 0, 0.24)', 'color(display-p3 0 0 0 / 0.24)')}`,
 }
 
 function SliderRow({
@@ -75,7 +85,7 @@ export function Slider({ blur, contrast, dark }: DemoProps) {
   return (
     <div className="sl-wrap">
       <div className="stage">
-        <Liquid blur={blur} contrast={contrast} fill="var(--modal-bg)" shadow={dark ? THUMB_SHADOW.dark : THUMB_SHADOW.light} className="sl">
+        <Liquid blur={blur} contrast={contrast} fill="var(--sl-thumb)" shadow={dark ? THUMB_SHADOW.dark : THUMB_SHADOW.light} className="sl">
           <div className="sl-track" aria-hidden="true" />
           <Liquid.Item effect="move" move={mv}>
             <div

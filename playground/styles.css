@@ -38,6 +38,8 @@
   --field-bg: #ffffff;
   --track: #eaeaea;
   --track-ring: rgba(0, 0, 0, 0.08);
+  /* The slider thumb is its own surface, not the generic --modal-bg. */
+  --sl-thumb: #ffffff;
   --accent: #17181c;
   --on-accent: #ffffff;
   --hover-veil: rgba(0, 0, 0, 0.04);
@@ -85,8 +87,13 @@
   --ctl-bg-hover: rgba(255, 255, 255, 0.1);
   --ctl-border: rgba(255, 255, 255, 0.12);
   --field-bg: #1e1e1e;
-  --track: #0d0d0d;
-  --track-ring: rgba(255, 255, 255, 0.06);
+  /* Logram slider (Figma 2573:83647, read off the exported SVG): the track
+     is a translucent grey wash with a barely-there white inner hairline, and
+     the thumb is a LIGHTER grey than the surrounding surfaces — it reads as
+     the one grabbable thing, so it can't share --modal-bg. */
+  --track: rgba(115, 115, 115, 0.2);
+  --track-ring: rgba(255, 255, 255, 0.02);
+  --sl-thumb: #525252;
   --accent: #ffffff;
   --on-accent: #0d0d0d;
   --hover-veil: rgba(255, 255, 255, 0.06);
@@ -984,6 +991,14 @@ body {
     calc(100% - 6px) 10px;
   background-size: 4px 4px, 4px 4px;
   background-repeat: no-repeat;
+}
+
+@supports (color: color(display-p3 0 0 0 / 0.2)) {
+  [data-theme='dark'] {
+    --track: color(display-p3 0.451 0.451 0.451 / 0.2);
+    --track-ring: color(display-p3 1 1 1 / 0.02);
+    --sl-thumb: color(display-p3 0.3213 0.3213 0.3213);
+  }
 }
 
 /* ---------- move (slider) ----------
