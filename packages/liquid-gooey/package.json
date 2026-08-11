@@ -27,9 +27,11 @@
     "url": "https://github.com/Jakubantalik/Libraries/issues"
   },
   "homepage": "https://gooey.jakubantalik.com",
+  "author": "Jakub Antalik",
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts --sourcemap --clean",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
     "react": ">=18",

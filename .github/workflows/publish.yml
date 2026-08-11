@@ -2,6 +2,15 @@ name: Publish to npm
 
 on:
   workflow_dispatch:
+    inputs:
+      package:
+        description: Package to publish
+        required: true
+        default: liquid-gooey
+        type: choice
+        options:
+          - liquid-gooey
+          - border-beam
   release:
     types: [published]
 
@@ -11,6 +20,10 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    env:
+      # A release event carries no inputs, so that path keeps publishing
+      # border-beam — what this workflow did before gooey joined the repo.
+      PKG: ${{ inputs.package || 'border-beam' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,7 +39,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # The workspace's own prepublishOnly builds dist before packing, so a
+      # publish can't ship a stale or missing build.
       - name: Publish
-        run: npm publish -w border-beam --access public
+        run: npm publish -w "$PKG" --access public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.BEAM2 }}
+          # One npm token per package, so a leak can't reach the other.
+          NODE_AUTH_TOKEN: ${{ (inputs.package || 'border-beam') == 'liquid-gooey' && secrets.GOOEY || secrets.BEAM2 }}
