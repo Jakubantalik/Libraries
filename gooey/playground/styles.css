@@ -1,0 +1,1132 @@
+* {
+  box-sizing: border-box;
+}
+
+/* ---------- theme tokens ----------
+   Vocabulary and light values taken from the PRO7 gooey-menu prototype
+   (transitions-pro/prototypes-pro.html): --modal-bg is the LIQUID surface,
+   --btn-text the icon colour, --shadow the Figma soft elevation. That file
+   is light-only, so the dark values are authored here.
+
+   Dark is not a simple inversion of the liquid: on a dark page the surface
+   must READ as raised, so it sits lighter than the page (#2a2d33 on #0f1012)
+   — inverting to near-black would make the goo silhouette vanish into the
+   background and take the whole effect with it. */
+:root {
+  color-scheme: light;
+
+  --bg: #f5f5f6;
+  --text: #17181c;
+  --muted: #5e6773;
+  --label: #8a8b92;
+  --note: #7c7d84;
+
+  /* The liquid surface + the icons riding on it. */
+  --modal-bg: #ffffff;
+  --btn-text: #17181c;
+
+  --card-bg: #ffffff;
+  --card-border: rgba(0, 0, 0, 0.07);
+  --panel-bg: #fbfbfc;
+  --panel-border: rgba(0, 0, 0, 0.08);
+  --stage-bg: rgba(225, 225, 225, 0.3);
+  --skeleton: #e3e3e6;
+
+  --ctl-bg: rgba(0, 0, 0, 0.05);
+  --ctl-bg-hover: rgba(0, 0, 0, 0.09);
+  --ctl-border: rgba(0, 0, 0, 0.12);
+  --field-bg: #ffffff;
+  --track: #eaeaea;
+  --track-ring: rgba(0, 0, 0, 0.08);
+  /* The slider thumb is its own surface, not the generic --modal-bg. */
+  --sl-thumb: #ffffff;
+  --accent: #17181c;
+  --on-accent: #ffffff;
+  --hover-veil: rgba(0, 0, 0, 0.04);
+
+  /* Photo edges (avatar hairline + contact shadow). */
+  --photo-edge: rgba(0, 0, 0, 0.2);
+  --photo-lift: rgba(0, 0, 0, 0.16);
+
+  /* Tabs indicator is its own liquid: dark pill, light label. */
+  --tab-ind: #0f0f0f;
+  --tab-ind-text: #ffffff;
+  --tab-label: rgba(15, 15, 15, 0.8);
+  --tab-label-hover: #0f0f0f;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  /* Values read off transitions.dev's own dark theme (detail page of the
+     gooey plus menu): page #121212, demo stage #131313, LIQUID #181818,
+     icons #fff — near-neutral greys, the liquid barely lighter than the
+     page, and the shape held by SHADOW rather than surface lightness.
+     Critically, shadows STAY BLACK in dark mode (same 6% ring, ambient
+     deepened) — white hairlines were the giveaway that this wasn't the
+     designer's hand. */
+  --bg: #121212;
+  --text: #fbfbfb;
+  --muted: #9a9a9a;
+  --label: #7f7f7f;
+  --note: #8a8a8a;
+
+  /* Logram dropdown spec (Figma 2572:83262): surface #202020 with a light
+     inner hairline — see the dark Figma-soft shadow set in App.tsx. */
+  --modal-bg: #202020;
+  --btn-text: #fbfbfb;
+
+  --card-bg: #181818;
+  --card-border: rgba(255, 255, 255, 0.06);
+  --panel-bg: #161616;
+  --panel-border: rgba(255, 255, 255, 0.05);
+  --stage-bg: #131313;
+  --skeleton: #2e2e2e;
+
+  --ctl-bg: rgba(255, 255, 255, 0.06);
+  --ctl-bg-hover: rgba(255, 255, 255, 0.1);
+  --ctl-border: rgba(255, 255, 255, 0.12);
+  --field-bg: #1e1e1e;
+  /* Logram slider (Figma 2573:83647, read off the exported SVG): the track
+     is a translucent grey wash with a barely-there white inner hairline, and
+     the thumb is a LIGHTER grey than the surrounding surfaces — it reads as
+     the one grabbable thing, so it can't share --modal-bg. */
+  --track: rgba(115, 115, 115, 0.2);
+  --track-ring: rgba(255, 255, 255, 0.02);
+  --sl-thumb: #525252;
+  --accent: #ffffff;
+  --on-accent: #0d0d0d;
+  --hover-veil: rgba(255, 255, 255, 0.06);
+
+  /* Inverted from light mode's black hairline, but NOT to white: a light
+     edge on the dark pill read as a bright ring drawn around every face
+     rather than as the photo's own edge. Black deepens the seam instead —
+     the portraits are bright enough to separate from it on their own. */
+  --photo-edge: rgba(0, 0, 0, 0.5);
+  --photo-lift: rgba(0, 0, 0, 0.55);
+
+  /* Inverted like the site's primary button (white on dark). */
+  --tab-ind: #ffffff;
+  --tab-ind-text: #0d0d0d;
+  --tab-label: rgba(251, 251, 251, 0.72);
+  --tab-label-hover: #ffffff;
+}
+
+
+/* Wide-gamut photo edges, on the TOKENS rather than per component. The P3
+   values used to be re-declared inside each component rule, which pinned
+   them to light mode's black-at-20% — so a P3 browser ignored the dark
+   theme's own edge entirely. The `.ap-ringed img` copy also dropped that
+   rule's first box-shadow layer (the pill-coloured ring), losing the ring on
+   the flying chip. Overriding the tokens keeps every rule's own geometry. */
+@supports (color: color(display-p3 0 0 0 / 0.2)) {
+  :root {
+    --photo-edge: color(display-p3 0 0 0 / 0.2);
+    --photo-lift: color(display-p3 0 0 0 / 0.16);
+  }
+
+  [data-theme='dark'] {
+    --photo-edge: color(display-p3 0 0 0 / 0.5);
+    --photo-lift: color(display-p3 0 0 0 / 0.55);
+  }
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 48px 32px 80px;
+}
+
+.header h1 {
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+}
+
+.header .tag {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--label);
+  margin-left: 8px;
+  letter-spacing: 0;
+}
+
+.header p {
+  max-width: 620px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* ---------- knobs ---------- */
+
+.knob-link {
+  align-self: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 5px 11px;
+  border-radius: 7px;
+  background: var(--ctl-bg);
+  white-space: nowrap;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.knob-link:hover {
+  background: var(--ctl-bg-hover);
+  color: var(--text);
+}
+
+.knobs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin: 28px 0 32px;
+  padding: 14px 18px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  width: fit-content;
+}
+
+.knob {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.knob input[type='range'] {
+  width: 120px;
+  accent-color: var(--accent);
+}
+
+.knob code {
+  font-family: 'Roboto Mono', ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--text);
+  min-width: 28px;
+  text-align: right;
+}
+
+.knob select {
+  font: inherit;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--ctl-border);
+  background: var(--field-bg);
+  color: var(--text);
+}
+
+.melt-panel {
+  flex-basis: 100%;
+}
+
+.melt-panel summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  user-select: none;
+}
+
+.melt-panel[open] summary {
+  margin-bottom: 10px;
+}
+
+.melt-knobs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+}
+
+/* ---------- cards ---------- */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  padding: 20px;
+}
+
+.card-label {
+  margin: 0 0 14px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--label);
+}
+
+.card-note {
+  margin: 14px 0 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--note);
+}
+
+.stage {
+  display: grid;
+  place-items: center;
+  height: 280px;
+  background: var(--stage-bg);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* ---------- plus menu ---------- */
+
+.pm {
+  width: 200px;
+  height: 140px;
+}
+
+.pm-slot {
+  position: absolute;
+  left: 80px;
+  top: 80px;
+}
+
+.pm-btn {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: var(--btn-text);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pm-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.pm-sat {
+  pointer-events: none;
+}
+
+.pm-open .pm-sat {
+  pointer-events: auto;
+}
+
+.pm-open .pm-sat:hover {
+  background: var(--hover-veil);
+}
+
+/* Icons hold back while the blob is merged, then materialise with a soft
+   cross-blur as the satellite pulls clear. */
+.pm-sat-icon {
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  filter: blur(2px);
+  transition: opacity 120ms ease, filter 120ms ease;
+}
+
+.pm-open .pm-sat-icon {
+  opacity: 1;
+  filter: blur(0);
+  transition-duration: var(--pm-icon-dur, 180ms);
+}
+
+/* Close anticipation: the whole liquid layer — and the main button riding it
+   — dips toward the returning satellites' momentum, then settles. Moving the
+   LAYER (not one blob) is what reads as the button physically dipping: with
+   every blob stacked at the centre when closed, moving one inside the union
+   would merely stretch the silhouette. */
+@keyframes pm-anticipate {
+  0% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(var(--pm-anticip, 5px));
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* Longhands on purpose: WebKit mis-parses var() inside the `animation`
+   shorthand and falls back to 0s. */
+.pm-anticipating [data-gooey-svg],
+.pm-anticipating .pm-main {
+  animation-name: pm-anticipate;
+  animation-duration: var(--pm-anticip-dur, 700ms);
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-fill-mode: both;
+}
+
+.pm-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.pm-plus {
+  display: grid;
+  place-items: center;
+  transform: rotate(0deg);
+  transition: transform 250ms ease-in-out;
+}
+
+.pm-open .pm-plus {
+  transform: rotate(45deg);
+}
+
+/* ---------- gooey tabs (move) ----------
+   transitions.dev P16 "Tabs with sliding active indicator": 36px pill bar on
+   #eee, 30px tabs, 13px Inter Medium, white pill indicator — here the
+   indicator is the liquid. */
+
+.tb {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 48px;
+}
+
+.tb-bar {
+  position: absolute;
+  inset: 0;
+  border-radius: 48px;
+  /* No fill: the black liquid pill is the only surface now — a grey track
+     behind it read as a second, competing shape. Kept as an element (not
+     removed) since .tb-tabs still measures against this box. */
+  z-index: -2;
+}
+
+.tb-tabs {
+  display: contents;
+}
+
+.tb-tab {
+  appearance: none;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  background: transparent;
+  height: 30px;
+  padding: 4px 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--tab-label);
+  cursor: pointer;
+  border-radius: 48px;
+  z-index: 1;
+  transition:
+    color 250ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 250ms cubic-bezier(0.22, 1, 0.36, 1);
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+
+.tb-tab:not([aria-selected='true']):hover {
+  color: var(--tab-label-hover);
+}
+
+/* The indicator liquid is black (see Tabs.tsx `fill`), so the selected label
+   inverts. It transitions on the same curve as the pill's slide, so the
+   colour crosses over while the liquid is arriving underneath. */
+.tb-tab[aria-selected='true'] {
+  color: var(--tab-ind-text);
+}
+
+.tb-tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Invisible geometry carrier: CSS slides it, the liquid blob renders it. */
+.tb-ind {
+  position: absolute;
+  top: 3px;
+  left: 0;
+  height: 30px;
+  border-radius: 48px;
+  pointer-events: none;
+  transition:
+    transform var(--tb-dur, 320ms) var(--tb-ease, cubic-bezier(0.3, 1.05, 0.4, 1)),
+    width var(--tb-dur, 320ms) var(--tb-ease, cubic-bezier(0.3, 1.05, 0.4, 1));
+}
+
+.tb-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Seating factor for the separator crescents: 0 = no cut, 1 = full cut.
+   Registered so it TRANSITIONS — the gap grows open organically at the
+   moment of impact instead of popping. Browsers without @property fall back
+   to a discrete (but correctly timed) appearance. */
+@property --seat {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 1;
+}
+
+/* ---------- avatar group (evolve + move) ----------
+   Figma: "Share" pill, 56px tall, radius 58, overlapping 32px avatars;
+   loose 32px draggable avatar (Logram — 2468:1766 / 2468:1785). */
+
+.ap-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.ap {
+  width: 290px;
+  /* 210px of stage (the pill ends at y=138) plus a 40px footer strip for the
+     centred hint + Reset, so neither crowds the liquid. */
+  height: 250px;
+}
+
+/* Centred under the prototype: what to actually do with it. */
+.ap-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 56px;
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--note);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.ap-pill {
+  position: absolute;
+  left: 20px;
+  top: 82px;
+  height: 56px;
+  border-radius: 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  /* Right padding matches the vertical breathing room the avatars get:
+     (56px pill - 32px avatar) / 2 = 12px, so the last avatar sits equally
+     far from the pill's right edge as from its top and bottom. The left
+     side keeps its larger inset — that's optical spacing for the label. */
+  padding: 0 12px 0 17px;
+}
+
+.ap-label {
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.ap-stack {
+  display: flex;
+  align-items: center;
+}
+
+/* Positioned so the explicit z-index applies — see the stacking note in
+   Chips.tsx (an avatar inserted mid-group must not change paint order). */
+.ap-avatar {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  /* The portraits are portrait/landscape (e.g. 640x500), never square —
+     without cover they are non-uniformly squashed into the circle. It also
+     matches the melt engine, which renders its warped copy with
+     preserveAspectRatio="xMidYMid slice" (the SVG equivalent of cover). */
+  object-fit: cover;
+  /* The design's own edge treatment IS the separator — no white ring. The
+     ring was opaque and 2px thick, so it covered this elevation entirely
+     (`0 1px 1px 0` reaches at most ~2px) and read as a white border where
+     the shadow should be. Never use a `border` here either: it eats into
+     the box, shrinking the photo to 28px inside its 32px slot, which is the
+     old "resize jump" at the moment the dragged chip becomes a real avatar. */
+  box-shadow: 0 1px 1px 0 var(--photo-edge);
+  /* Inner hairline as an OUTLINE, not `inset` box-shadow: an inset shadow on
+     a replaced element (<img>) paints beneath the image content, so it never
+     showed. A negative outline-offset draws it inside the edge, on top. */
+  outline: 1px solid var(--photo-edge);
+  outline-offset: -1px;
+  background: var(--skeleton);
+  /* The hover gap opens/closes by animating margins; the pill's evolve
+     spring turns the width change into a liquid bounce. --seat drives the
+     separator crescent's growth at landing. */
+  transition:
+    margin-left 280ms cubic-bezier(0.3, 1.05, 0.4, 1),
+    --seat var(--ap-seat-dur, 240ms) cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ap-endgap {
+  display: inline-block;
+  height: 1px;
+  transition: width 280ms cubic-bezier(0.3, 1.05, 0.4, 1);
+}
+
+.ap-chip {
+  position: absolute;
+  right: 20px;
+  top: 22px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: grab;
+  touch-action: none;
+  /* A fast mouse drag can otherwise start a text selection instead of the
+     pointer drag — the chip briefly paints with the blue selection tint. */
+  user-select: none;
+  -webkit-user-select: none;
+  transition:
+    transform 550ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    --seat var(--ap-seat-dur, 240ms) cubic-bezier(0.22, 1, 0.36, 1);
+  /* Elevation lives on the IMG now (box-shadow + outline) — see .ap-chip img.
+     A `filter: drop-shadow(...)` on this div doesn't compose with that: the
+     old approach used filter because it follows the circular alpha of a
+     square box, but the box itself is already a circle (border-radius:50%),
+     so a plain box-shadow renders identically without needing filter. */
+}
+
+.ap-dragging {
+  /* Listing only properties that AREN'T transform: this suppresses the
+     div's own transform transition (position must track the pointer
+     instantly) while leaving the img's box-shadow/outline transitions,
+     declared on the img itself, untouched. */
+  transition: none;
+  cursor: grabbing;
+}
+
+/* Travelling into its gap in the stack after release — a gentle overshoot so
+   the avatar settles into the group with a subtle bounce. The elevation drops
+   away as it merges: it's becoming part of the pill's surface, which carries
+   its own shadow on the liquid silhouette — handled by .ap-ringed img fully
+   overriding .ap-chip img's box-shadow/outline (same specificity, later in
+   the cascade), so nothing extra is needed here. */
+.ap-absorbing {
+  /* No `transform` transition: the flight is driven by the demo's own rAF so
+     it shares a clock with the liquid engine — a compositor-run transition
+     kept gliding through Safari main-thread stalls while the silhouette
+     froze, leaving a ghost liquid bump hanging above the pill. `--seat` is a
+     registered custom property, which always animates on the main thread, so
+     it stays in step with the rAF by construction. */
+  transition: --seat var(--ap-seat-dur, 240ms) cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+
+/* The transitions.dev "Animate" pill (detail.html .btn-animate), verbatim:
+   36px pill, 13px/16px Inter 500, 6/12 padding. Light lays a near-opaque
+   #f3f3f3 gradient over a lavender #bfc0cb tint (the tint whispers through
+   the 0.9 alpha) and dims via filter; dark swaps to flat white-alpha fills
+   and drops the filter. Only the stage positioning is ours. */
+.ap-reset {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 10px;
+  z-index: 3;
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 40px;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 500;
+  color: #17181c;
+  background-color: #bfc0cb;
+  background-image: linear-gradient(90deg, rgba(243, 243, 243, 0.9) 0%, rgba(243, 243, 243, 0.9) 100%);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.15s, filter 0.15s;
+}
+
+.ap-reset:hover {
+  filter: brightness(0.98);
+}
+.ap-reset:active {
+  filter: brightness(0.95);
+}
+.ap-reset:focus-visible {
+  outline: 2px solid #17181c;
+  outline-offset: 2px;
+}
+
+[data-theme='dark'] .ap-reset {
+  background: rgba(255, 255, 255, 0.04);
+  color: #e3e3e3;
+}
+[data-theme='dark'] .ap-reset:hover {
+  background: rgba(255, 255, 255, 0.06);
+  filter: none;
+}
+[data-theme='dark'] .ap-reset:active {
+  background: rgba(255, 255, 255, 0.08);
+  filter: none;
+}
+[data-theme='dark'] .ap-reset:focus-visible {
+  outline-color: #e3e3e3;
+}
+
+/* No white RING by default — the loose avatar is a bare photo with its own
+   floating elevation (ambient + contact shadow, inner hairline). The ring
+   grows in only as it joins the group (matching .ap-avatar's box-shadow ring
+   exactly — see .ap-ringed img, which fully replaces this elevation), so
+   it's already at full strength by the moment of the swap — nothing changes
+   at that frame, which is what made the join read as a jump/flicker before.
+   Inset box-shadow does not paint on <img> (a replaced element) — WebKit
+   silently drops it — so the inner hairline is an `outline` with a negative
+   offset instead, which draws inside the edge and on top of the photo. */
+.ap-chip img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  /* See .ap-avatar — non-square sources must be cropped, not squashed. */
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+  background: var(--skeleton);
+  box-shadow: 0 2px 6px 0 var(--photo-lift), 0 1px 1px 0 var(--photo-edge);
+  outline: 1px solid var(--photo-edge);
+  outline-offset: -1px;
+  /* Short and independent of the flight: the ring is finished during the
+     hover, long before the drop starts, so nothing about it is still moving
+     at the landing. */
+  transition: box-shadow 180ms ease-out, outline-color 180ms ease-out;
+}
+
+/* Applied from the moment a slot is engaged (hover) and held through the
+   flight — see the class note in Chips.tsx.
+   --ap-ring is 2px DIVIDED by the absorb scale: the chip scales down as it
+   flies and that scale shrinks its box-shadow too, so a flat 2px here would
+   render 1.6px and pop to the avatar's 2px at the swap. At full size during
+   the hover it reads 2.5px and then shrinks WITH the photo — one motion, not
+   a separate ring animation. */
+.ap-ringed img {
+  box-shadow:
+    0 0 0 var(--ap-ring, 2.5px) var(--modal-bg),
+    0 1.25px 1.25px 2.5px var(--photo-edge);
+  outline: 1.25px solid var(--photo-edge);
+  outline-offset: -1.25px;
+}
+
+
+/* ---------- melting cards (two draggable images) ---------- */
+
+.dc-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.dc {
+  width: 320px;
+  height: 210px;
+}
+
+/* Anchored at the stage centre; drag state drives the translate. The blob is
+   the card's liquid surface — the full-bleed image covers its own blob
+   (blobInset) and the coat necks out toward the neighbour (bridgeGrow). */
+.dc-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 96px;
+  height: 96px;
+  margin: -48px 0 0 -48px;
+  border-radius: 16px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.dc-card:active {
+  cursor: grabbing;
+}
+
+.dc-card img {
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+  background: var(--skeleton);
+}
+
+/* ---------- email input (field morphs out a submit button) ---------- */
+
+.eb-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.eb {
+  width: 290px;
+  height: 210px;
+}
+
+.eb-slot {
+  position: absolute;
+}
+
+.eb-field-slot {
+  /* (290 - 202) / 2 — the pill alone is the closed composite, centred. */
+  left: 44px;
+  top: 81px;
+}
+
+/* Closed: the 44px button circle hides INSIDE the pill's right end, its blob
+   fully inside the pill's blob — the union silhouette is just the pill. */
+.eb-btn-slot {
+  left: 200px;
+  top: 83px;
+}
+
+.eb-field {
+  width: 202px;
+  height: 48px;
+  border-radius: 999px;
+}
+
+.eb-input {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  border-radius: 999px;
+  padding: 0 44px 0 18px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+}
+
+.eb-input::placeholder {
+  color: var(--label);
+}
+
+.eb-btn {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--btn-text);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.eb-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* The arrow materialises once the button has pulled clear — same hold-back
+   pattern as the plus-menu icons. */
+.eb-arrow {
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.eb-btn-open .eb-arrow {
+  opacity: 1;
+  /* Early enough to feel attached to the button's exit rather than an
+     afterthought: the circle clears the field well before the overshoot
+     settles, so waiting a third of the morph read as a lag. */
+  transition-delay: calc(var(--eb-dur, 360ms) * 0.12);
+}
+
+/* Subtle cross-blur pulse while the liquid morphs: blur in, sharpen out, one
+   pass per toggle. Longhand animation properties — WebKit mis-parses var()
+   inside the shorthand. The INPUT is deliberately excluded: blurring a text
+   placeholder reads as a rendering fault, not as liquid. */
+@keyframes eb-cross {
+  0% {
+    filter: blur(0);
+  }
+  35% {
+    filter: blur(var(--eb-blur, 2px));
+  }
+  100% {
+    filter: blur(0);
+  }
+}
+
+.eb-pulsing .eb-arrow {
+  animation-name: eb-cross;
+  animation-duration: var(--eb-dur, 360ms);
+  animation-timing-function: ease-in-out;
+}
+
+/* ---------- control panel (prototypes-pro cp design) ---------- */
+
+.cp-panel {
+  margin-top: 14px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.cp-section {
+  padding: 14px 16px 16px;
+}
+
+.cp-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.cp-section-title {
+  font-family: 'Roboto Mono', ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.72;
+}
+
+.cp-export {
+  appearance: none;
+  border: 0;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex: none;
+  transition: background-color 120ms ease;
+}
+
+.cp-export:hover {
+  background: var(--accent);
+  opacity: 0.82;
+}
+
+.cp-export.is-copied {
+  background: #178a4a;
+}
+
+.cp-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cp-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 3px 0;
+}
+
+.cp-subhead {
+  margin: 14px 0 2px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--label);
+}
+
+.cp-subhead:first-of-type {
+  margin-top: 4px;
+}
+
+.cp-label {
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.3;
+  font-weight: 400;
+  user-select: none;
+}
+
+.cp-row input,
+.cp-row select {
+  width: 86px;
+  height: 24px;
+  padding: 0 6px;
+  border: 1px solid var(--ctl-border);
+  border-radius: 4px;
+  font-family: 'Roboto Mono', ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--text);
+  background: var(--field-bg);
+  text-align: right;
+  -moz-appearance: textfield;
+}
+
+.cp-row input::-webkit-outer-spin-button,
+.cp-row input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.cp-row input:focus,
+.cp-row select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+.cp-slider {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cp-slider input[type='range'] {
+  width: 110px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  accent-color: var(--accent);
+}
+
+.cp-slider .cp-val {
+  font-family: 'Roboto Mono', ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--text);
+  min-width: 34px;
+  text-align: right;
+}
+
+.cp-row select.cp-ease {
+  width: 128px;
+  text-align: left;
+  padding-right: 4px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 10px) 10px,
+    calc(100% - 6px) 10px;
+  background-size: 4px 4px, 4px 4px;
+  background-repeat: no-repeat;
+}
+
+@supports (color: color(display-p3 0 0 0 / 0.2)) {
+  [data-theme='dark'] {
+    --track: color(display-p3 0.451 0.451 0.451 / 0.2);
+    --track-ring: color(display-p3 1 1 1 / 0.02);
+    --sl-thumb: color(display-p3 0.3213 0.3213 0.3213);
+  }
+}
+
+/* ---------- move (slider) ----------
+   Exact values read from the Figma reference SVG (Logram — asset
+   844c7d8e…, node 2468:1762): 8px track, radius 4, 1px inset border at
+   6% black; 24px thumb, white, with the file's own three-layer glossy
+   shadow (outer blur + two inset rings), identical recipe to the other
+   round buttons in this design. */
+
+.sl-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.sl {
+  width: 240px;
+  height: 80px;
+}
+
+.sl-track {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  top: 38px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--track);
+  box-shadow: inset 0 0 0 1px var(--track-ring);
+  /* Below the goo layer (svg sits at z -1): the liquid thumb and its tail
+     must paint OVER the track, not be sliced by it. */
+  z-index: -2;
+}
+
+/* The thumb element itself must stay unstyled: its surface AND shadow are
+   the liquid blob below — a box-shadow here would stick to the pointer while
+   the liquid lags, reading as a detached ring. The Figma thumb shadow is
+   passed as the Gooey `shadow` prop instead, so it rides the silhouette. */
+.sl-thumb {
+  position: absolute;
+  left: 14px;
+  top: 30px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.sl-thumb:active {
+  cursor: grabbing;
+}
+
+.sl-thumb:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tb-ind,
+  .ap-chip,
+  .pm-plus,
+  .pm-sat-icon {
+    transition: none !important;
+  }
+
+  .pm-anticipating [data-gooey-svg],
+  .pm-anticipating .pm-main,
+  .eb-pulsing .eb-arrow {
+    animation: none !important;
+  }
+}

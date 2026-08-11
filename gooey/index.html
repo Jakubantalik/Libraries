@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script>
+      // Resolve theme synchronously, before React boots, by reading the OS
+      // `prefers-color-scheme` preference and stamping `data-theme` on
+      // <html>. Doing it here (not in a React effect) keeps a light-mode
+      // visitor from seeing a frame of dark chrome while React mounts.
+      (function () {
+        try {
+          var isLight =
+            window.matchMedia &&
+            window.matchMedia('(prefers-color-scheme: light)').matches;
+          document.documentElement.setAttribute(
+            'data-theme',
+            isLight ? 'light' : 'dark'
+          );
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <title>Liquid Gooey — liquid UI for React</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/playground/main.tsx"></script>
+  </body>
+</html>
