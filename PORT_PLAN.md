@@ -97,6 +97,13 @@ The one structural change that makes everything else cheap:
 
 ## Phase 1 — React Native package (`ports/react-native/thinking-orbs-native`)
 
+**Spike done. Two planned decisions were overturned by measurement — see
+"Findings" below.** The package exists, typechecks against real
+Skia/RN/Reanimated types, reproduces the golden vectors exactly (70,115
+values), and its Skia draw sequence pixel-diffs against the web canvas at
+worst mean 1.4/255. It has **not** run on a device or simulator yet; that
+is the remaining gate before it can ship.
+
 Layout mirrors `border-beam-native` (`package.json` peer-dep pattern, `src/`,
 `tsc` build, plus an Expo `example/` app).
 
@@ -177,21 +184,52 @@ Layout mirrors `BorderBeamKit` (SPM `Package.swift`, `Sources`, `Tests`,
   golden tests" whenever web tunings change (the mini-page → bake → ship loop
   now ends with two extra generated files, nothing more).
 
+## Findings worth keeping
+
+- **Worklets are unnecessary here, and the plan was wrong to want them.**
+  Measured geometry cost per frame (desktop V8, post-JIT): `composing` 566
+  dots = 0.116 ms, `working` 516 dots = 0.086 ms, `searching` 204 dots =
+  0.044 ms. The heaviest mode is under 1% of a 60 fps budget. Meanwhile the
+  Babel experiment was unambiguous: plain engine code through
+  `react-native-worklets/plugin` produces **zero** worklets, so a UI-thread
+  call would throw at runtime. Making it work needs `'worklet'` directives
+  on every engine function *including the closure `makeProj` returns* (that
+  form does workletize correctly — 5 worklets from 3 directives). Paying
+  that cost — coupling the web library to Reanimated's toolchain, and
+  risking a bundler stripping inert string directives — to reclaim 0.1 ms
+  is a bad trade. Geometry runs on JS, rasterisation on the UI thread.
+- **`react-dom` was a spurious peer dependency** and it hard-blocked React
+  Native: npm refused to install `thinking-orbs` next to `react-native` at
+  all. Nothing in the library ever imported it. Fixed in web `0.3.1` — the
+  first real dividend of building a port.
+- **Skia and Chrome canvas disagree on sub-pixel circles, and these
+  animations are full of them.** Isolated-circle ink at radius 20 matches to
+  0.14% (so colour space, gamma, alpha and premultiplication are all
+  correct), but at r=1 Skia is *lighter*, at r=0.5 it is 1.5× heavier, and
+  at r=0.35 Chrome draws **nothing at all** while Skia still renders. Net:
+  the port shows the faintest far-depth dots slightly more than the web.
+  Not worth compensating — the bias is not monotonic in radius, so any
+  correction is a fitted curve chasing a sub-1%-mean difference, and Skia's
+  behaviour is arguably the more faithful one.
+- **Verify a rasteriser with a rasteriser, not with a simulator.** Replaying
+  the port's exact draw sequence through CanvasKit (the WASM build of the
+  same Skia) and pixel-diffing against the browser caught the sub-pixel
+  issue above without any device involvement, and the centroid/ink/multi-
+  scale-downsample diagnostic is what separated "antialiasing noise" from
+  "systematic bias" — a raw pixel diff alone could not.
+
 ## Risks
 
-1. **Worklet compatibility** of the shared engine — pure `Math` functions
-   should workletize as-is, but Reanimated's Babel plugin has opinions;
-   the RN spike exists to prove this before anything else is built. Fallback:
-   run geometry on the JS thread (still fine at ≤600 dots) and move on.
+1. ~~Worklet compatibility~~ — resolved by measurement; see Findings.
 2. **Per-frame `SkPicture` allocation churn** on low-end Android — mitigated by
    paint reuse; escalation path is `drawAtlas` with a small sprite ramp, only
-   if profiling demands it.
+   if profiling demands it. Still unmeasured on real hardware.
 3. **Transcription errors in the Swift math port** — exactly what the
    golden-vector tests catch, dot by dot, mode by mode.
-4. **Blend/alpha semantics drift** — web canvas, Skia, and SwiftUI Canvas are
-   all premultiplied source-over, but the globe spike verifies overlapping-dot
-   rendering on all three before scaling out (border-beam's opacity>1 clamp
-   lesson: check the extremes, not the average case).
+4. **Blend/alpha semantics drift** — the CanvasKit diff confirms web canvas
+   and Skia agree once geometry is above a pixel; SwiftUI `Canvas` still
+   needs the same check (border-beam's opacity>1 clamp lesson: check the
+   extremes, not the average case).
 
 ## Execution order
 

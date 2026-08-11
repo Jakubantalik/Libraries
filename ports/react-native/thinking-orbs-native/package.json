@@ -1,7 +1,7 @@
 {
   "name": "thinking-orbs-native",
   "version": "0.1.0",
-  "description": "Dotted thought-orb loading indicators for React Native (Skia) — port of thinking-orbs",
+  "description": "Dotted thought-orb loading indicators for React Native (Skia) \u2014 port of thinking-orbs",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "files": [
@@ -12,7 +12,9 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "verify:golden": "node scripts/verify-golden.mjs"
+    "verify:golden": "node scripts/verify-golden.mjs",
+    "render:canvaskit": "node scripts/render-canvaskit.mjs",
+    "diff": "node scripts/diff-png.mjs canvaskit-out web-out"
   },
   "peerDependencies": {
     "@shopify/react-native-skia": ">=1.0.0",
@@ -21,11 +23,13 @@
     "react-native-reanimated": ">=3.0.0"
   },
   "dependencies": {
-    "thinking-orbs": "^0.3.0"
+    "thinking-orbs": "^0.3.1"
   },
   "devDependencies": {
     "@shopify/react-native-skia": "^1.5.0",
     "@types/react": "^18.2.0",
+    "canvaskit-wasm": "^0.41.1",
+    "pngjs": "^7.0.0",
     "react": "^18.2.0",
     "react-native": "^0.75.0",
     "react-native-reanimated": "^3.16.0",

@@ -17,9 +17,9 @@
 // bundler silently stripping the directives. Rasterisation — the part that
 // actually must not jank — is on the UI thread either way.
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
-import { Canvas, Picture, Skia, createPicture } from '@shopify/react-native-skia';
+import { Canvas, PaintStyle, Picture, Skia, createPicture } from '@shopify/react-native-skia';
 import type { SkPicture } from '@shopify/react-native-skia';
 import { MODE_FRAMES, resolvePreset } from 'thinking-orbs/engine';
 import { nowSeconds, useAppActive, useReducedMotion, useResolvedDark } from './theme';
@@ -68,7 +68,7 @@ export function ThinkingOrb({
     const { fill, stroke } = paints;
     fill.setAntiAlias(true);
     stroke.setAntiAlias(true);
-    stroke.setStyle(1); // PaintStyle.Stroke
+    stroke.setStyle(PaintStyle.Stroke);
 
     const build = MODE_FRAMES[mode];
 
