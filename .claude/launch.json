@@ -2,11 +2,16 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "demo",
+      "name": "beam",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
-      "cwd": "demo",
+      "runtimeArgs": ["run", "dev", "-w", "@sites/beam"],
       "port": 5173
+    },
+    {
+      "name": "gooey",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "-w", "@sites/gooey", "--", "--port", "5174", "--strictPort"],
+      "port": 5174
     }
   ]
 }
