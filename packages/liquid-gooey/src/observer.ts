@@ -341,12 +341,15 @@ interface Item extends ObservedTarget {
   meltPrev: { x: number; y: number } | null
   /** Last contact geometry, so the fading tail keeps its position. */
   meltGeom: { o: Frame } | null
-  /** performance.now() of the last melt layer/entry write pass — writes are
-   *  throttled to ~28fps because each one re-rasterizes turbulence filters,
-   *  which WebKit runs on the CPU. The melt is soft organic noise; 28fps is
-   *  visually indistinguishable, and the halved raster load is what keeps
-   *  Safari's paint loop breathing. */
+  /** performance.now() of the last melt layer/entry write pass — writes back
+   *  off to ~28fps when the frame clock degrades (see frameEma), because each
+   *  one re-rasterizes turbulence filters, which WebKit runs on the CPU. */
   meltWroteAt: number
+  /** Dominant flow axis of the anisotropic noise ('x' = features elongated
+   *  horizontally), held with hysteresis — re-aiming exactly at |gux|==|guy|
+   *  flipped the whole texture 90° on every crossing of the diagonal while
+   *  dragging around the contact, a hard visible flicker. */
+  meltAxis: 'x' | 'y' | null
   /** Last host opacity/transform written. */
   meltHostLast: string | null
   ro: ResizeObserver
@@ -482,6 +485,7 @@ export class ObserveEngine {
       meltPrev: null,
       meltGeom: null,
       meltWroteAt: 0,
+      meltAxis: null,
       meltHostLast: null,
       ro: new ResizeObserver(() => {
         item.baseW = t.target.offsetWidth || 1
@@ -735,6 +739,7 @@ export class ObserveEngine {
     // would skip the writes that re-apply the state.
     item.meltHostLast = null
     item.meltWroteAt = 0
+    item.meltAxis = null
     for (const layer of item.melt?.layers ?? []) layer.last = undefined
     for (const entry of item.melt?.entries ?? []) {
       entry.el.style.removeProperty('mask-image')
@@ -746,6 +751,12 @@ export class ObserveEngine {
 
   private lastNow = 0
 
+  /** EMA of the raw frame interval (ms) — the melt write pass consults it to
+   *  pick its cadence: every frame while the clock is healthy, backed off to
+   *  ~28fps when frames are dropping (WebKit under CPU-raster load is exactly
+   *  the case that degrades the clock). Seeded at 60Hz-healthy. */
+  private frameEma = 17
+
   private loop = (now: number): void => {
     if (this.items.size === 0) {
       this.awake = false
@@ -756,6 +767,10 @@ export class ObserveEngine {
     // smoothing must complete in real time even when paints are slow —
     // springs handle large dt via substepping (see springSteps).
     const dt = this.lastNow ? Math.min(0.25, Math.max(1 / 240, (now - this.lastNow) / 1000)) : 1 / 60
+    if (this.lastNow) {
+      // Spikes clamped so one GC hitch doesn't flip the cadence for long.
+      this.frameEma += (Math.min(now - this.lastNow, 80) - this.frameEma) * 0.12
+    }
     this.lastNow = now
     if (this.measureAll(dt)) this.clean = 0
     else this.clean++
@@ -1288,14 +1303,21 @@ export class ObserveEngine {
     ) {
       return false
     }
-    // Throttle the write pass to ~28fps. Every write below dirties a
+    // Write cadence, ADAPTIVE on frame health. Every write below dirties a
     // turbulence/displacement filter, and WebKit re-rasterizes those on the
-    // CPU — at full frame rate the paint loop drowns (measured: ~1 paint per
-    // 2s in the iOS simulator). The simulation state above is already
-    // advanced; only the DOM flush waits for the next slot. The active flag
+    // CPU — at full frame rate on a struggling device the paint loop drowns
+    // (measured: ~1 paint per 2s in the iOS simulator). But a fixed 35ms
+    // throttle on a healthy 60Hz clock quantizes to every THIRD frame: the
+    // warped copy held still while the dragged photo glided, then hopped
+    // 3-5px to catch up — a 20Hz strobe that reads as the dissolve
+    // flickering during any in-contact move. So: while the frame clock is
+    // healthy the overlay is written every frame and tracks the photo
+    // exactly; when frames drop (the CPU-raster case the throttle protects)
+    // the 35ms backoff re-engages by itself. The simulation state above is
+    // already advanced either way; only the DOM flush waits. The active flag
     // stays true so the loop keeps ticking.
     const nowMs = performance.now()
-    if (nowMs - item.meltWroteAt < 35) return true
+    if (this.frameEma > 20 && nowMs - item.meltWroteAt < 35) return true
     item.meltWroteAt = nowMs
     const round = (v: number) => Math.round(v * 10) / 10
     const host = blend.host
@@ -1324,8 +1346,21 @@ export class ObserveEngine {
     const bfBase = Math.min(0.3, Math.max(0.01, freqK / (zoneBase * 1.1)))
     const alongF = (bfBase * 0.35).toFixed(4)
     const acrossF = (bfBase * 1.6).toFixed(4)
-    const bfStr =
-      Math.abs(gux) >= Math.abs(guy) ? `${alongF} ${acrossF}` : `${acrossF} ${alongF}`
+    // Dominant axis held with HYSTERESIS: re-aiming exactly at |gux|==|guy|
+    // rotated the whole noise field 90° on every crossing of the diagonal —
+    // dragging around the contact wobbles the gravity vector across it
+    // repeatedly, and each flip re-generates the turbulence: a hard texture
+    // flicker. The axis only flips once the other component clearly wins.
+    const ax = Math.abs(gux)
+    const ay = Math.abs(guy)
+    const axis: 'x' | 'y' =
+      item.meltAxis === 'x'
+        ? ay > ax * 1.25 ? 'y' : 'x'
+        : item.meltAxis === 'y'
+          ? ax > ay * 1.25 ? 'x' : 'y'
+          : ax >= ay ? 'x' : 'y'
+    item.meltAxis = axis
+    const bfStr = axis === 'x' ? `${alongF} ${acrossF}` : `${acrossF} ${alongF}`
 
     // Progressive melt: every layer shares one noise field (so they stay in
     // phase and read as a single liquid) but blur, warp and erosion ramp
