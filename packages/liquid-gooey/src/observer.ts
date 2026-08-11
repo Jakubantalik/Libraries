@@ -213,6 +213,8 @@ interface MeltEntry {
   rects: SVGRectElement[]
   pattern: SVGPatternElement
   image: SVGImageElement
+  /** True once the pattern feeds a pre-downscaled copy (see downscaleHref). */
+  lowRes: boolean
   radiusPx: number
   /** Geometry sampled during the frame's READ pass (group coordinates).
    *  Measuring lazily inside the write pass meant every item's mask write
@@ -412,6 +414,37 @@ function springSteps(
  *  whole region on any primitive-attribute write, identical value or not. */
 function q(v: number, step: number): number {
   return Math.round(v / step) * step
+}
+
+/** Pre-downscaled copy of an <img> for the melt patterns. The pattern draws
+ *  its source at display size on EVERY filter-graph execution — megapixel
+ *  photos inside a 40px avatar meant layers x entries full-resolution
+ *  rescales per animated frame, a dominant slice of the melt's cost on
+ *  WebKit's CPU rasterizer. The copy keeps 3x the display size (device
+ *  pixels on a 3x phone plus warp-stretch headroom), so nothing visible is
+ *  lost. Returns null when the image is not decodable yet, is already
+ *  small, or would taint the canvas (cross-origin) — caller keeps the
+ *  original then. */
+function downscaleHref(el: HTMLImageElement): string | null {
+  try {
+    if (!el.complete || !el.naturalWidth) return null
+    const dw = Math.max(2, Math.min(el.naturalWidth, Math.round((el.offsetWidth || 40) * 3)))
+    const dh = Math.max(2, Math.min(el.naturalHeight, Math.round((el.offsetHeight || 40) * 3)))
+    if (el.naturalWidth <= dw * 1.5) return null
+    const cv = document.createElement('canvas')
+    cv.width = dw
+    cv.height = dh
+    const c2 = cv.getContext('2d')
+    if (!c2) return null
+    // Mirror `preserveAspectRatio: slice`: cover-crop, centred.
+    const scale = Math.max(dw / el.naturalWidth, dh / el.naturalHeight)
+    const sw = dw / scale
+    const sh = dh / scale
+    c2.drawImage(el, (el.naturalWidth - sw) / 2, (el.naturalHeight - sh) / 2, sw, sh, 0, 0, dw, dh)
+    return cv.toDataURL()
+  } catch {
+    return null
+  }
 }
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
@@ -734,7 +767,7 @@ export class ObserveEngine {
         return rect
       })
       const radiusPx = measureRadius(el, el.offsetWidth, el.offsetHeight)[0]
-      return { el, rects, pattern, image, radiusPx, measured: null, lastGeom: null, lastHole: null }
+      return { el, rects, pattern, image, radiusPx, lowRes: false, measured: null, lastGeom: null, lastHole: null }
     })
 
     host.setAttribute('opacity', '0')
@@ -1477,19 +1510,33 @@ export class ObserveEngine {
     // values must be compared — and skipped — together.
     // Filter region: the mask only reveals a disc around the contact, so the
     // region only has to cover that disc plus however far blur/warp/gravity
-    // can carry pixels into it. Quantized to 8px so small movements don't
-    // re-trigger a raster.
-    const spread = blend.blur * 2.5 + blend.warp + gAmt * 0.5 + 8
-    const rr = q(d * 1.15 + spread, 8)
-    const regionX = String(q(bx - rr, 8))
-    const regionY = String(q(by - rr, 8))
-    const regionW = String(q(rr * 2, 8))
-
+    // can carry pixels into it.
+    //
+    // Each layer's region TRACKS the contact tightly, quantized to 8px, and
+    // is sized PER LAYER: turbulence pixels are the melt's dominant cost on
+    // WebKit (the graph re-executes on every repaint — an anchored
+    // 1.5x-slack shared region measured ~30% slower, scaling with area, so
+    // the only lever is area). A layer can only paint inside its own mask
+    // disc — radius d·(1.15 − 0.75t) — plus what its own blur can bleed
+    // across that edge (3σ), what its displacement can pull in (±scale/2),
+    // and how far the gravity stretch actually carries sources (kFlow·d,
+    // not the old gravity/2 overestimate). The tip layer's disc is a third
+    // of the rim's radius; sizing it to the rim's reach tripled its pixels
+    // for nothing.
     melt.layers.forEach((layer, i) => {
       const t = n > 1 ? i / (n - 1) : 1
       const v = layerVals[i]
       const shiftT = flow(0.4 + 0.6 * t)
       const erodeV = erodeRow(q(mixAmt * (0.15 + 0.85 * t), 0.01))
+      const blurPx = blend.blur * (0.06 + 0.94 * Math.pow(t, 1.7))
+      const warpPx = blend.warp * (0.2 + 0.8 * t)
+      const rr = q(
+        d * (1.15 - 0.75 * t) + blurPx * 3 + warpPx * 0.5 + kFlow * d + 10,
+        8,
+      )
+      const regionX = String(q(bx - rr, 8))
+      const regionY = String(q(by - rr, 8))
+      const regionW = String(rr * 2)
       const fp =
         v.join(',') + '|' + bfStr + '|' + shiftT + '|' + erodeV +
         '|' + regionX + ',' + regionY + ',' + regionW
@@ -1550,6 +1597,17 @@ export class ObserveEngine {
     const holeAlpha = q(Math.max(0, 1 - Math.min(s, sBridge) * 2.2), 0.05).toFixed(2)
     const holeMid = (Math.round(((1 + 2 * Number(holeAlpha)) / 3) * 20) / 20).toFixed(2)
     for (const entry of melt.entries) {
+      // Swap in the downscaled pattern source once the image has decoded —
+      // at mount (refreshMelt) it usually hasn't, so this must be lazy.
+      if (!entry.lowRes) {
+        const lo = downscaleHref(entry.el)
+        if (lo) {
+          entry.image.setAttribute('href', lo)
+          entry.lowRes = true
+        } else if (entry.el.complete && entry.el.naturalWidth) {
+          entry.lowRes = true // already small, or tainted: original is final
+        }
+      }
       const ir = entry.measured
       if (!ir || ir.w < 1 || ir.h < 1) continue
       const ix = ir.x

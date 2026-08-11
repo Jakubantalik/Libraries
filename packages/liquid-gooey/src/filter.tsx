@@ -11,10 +11,11 @@ const BINARIZE = '1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 60 -29.5'
  *  the silhouette — an inner ring (spread), inner edge line (offset) or soft
  *  inner shadow (blur) that follows the merged goo through every state. */
 function InsetPass({ i, s }: { i: number; s: ShadowLayer }): ReactElement {
-  const parts: ReactElement[] = [
-    <feColorMatrix key="bin" in="shape" type="matrix" values={BINARIZE} result={`s${i}-bin`} />,
-  ]
-  let src = `s${i}-bin`
+  const parts: ReactElement[] = []
+  // `bin` is computed once for the whole stack (see GooFilterPrimitives) —
+  // every full-region pass costs real milliseconds on WebKit's CPU
+  // rasterizer, and each pass here used to re-binarize `shape` identically.
+  let src = 'bin'
   // Erode by the SPREAD only. An offset-only inset (`inset 0 1px 0 0`) must
   // leave a 1px strip along the TOP edge and nothing else — eroding for it
   // too shrinks the shape all round and paints a spurious ring on the sides
@@ -41,7 +42,7 @@ function InsetPass({ i, s }: { i: number; s: ShadowLayer }): ReactElement {
   }
   parts.push(
     // The band: silhouette minus its shrunk/offset self.
-    <feComposite key="band" in={`s${i}-bin`} in2={src} operator="out" result={`s${i}-band`} />,
+    <feComposite key="band" in="bin" in2={src} operator="out" result={`s${i}-band`} />,
     <feFlood key="c" floodColor={s.color} result={`s${i}-c`} />,
     <feComposite key="f" in={`s${i}-c`} in2={`s${i}-band`} operator="in" result={`s${i}`} />,
   )
@@ -53,10 +54,9 @@ function ShadowPass({ i, s }: { i: number; s: ShadowLayer }): ReactElement {
   let src = 'shape'
   if (s.spread !== 0) {
     parts.push(
-      <feColorMatrix key="bin" in="shape" type="matrix" values={BINARIZE} result={`s${i}-bin`} />,
       <feMorphology
         key="sp"
-        in={`s${i}-bin`}
+        in="bin"
         operator={s.spread > 0 ? 'dilate' : 'erode'}
         radius={Math.abs(s.spread)}
         result={`s${i}-sp`}
@@ -101,6 +101,13 @@ export function GooFilterPrimitives({
         result="goo"
       />
       <feComposite in="SourceGraphic" in2="goo" operator="atop" result="shape" />
+      {/* Binarized silhouette, computed ONCE and shared by every pass that
+          needs it. Each inset pass and each spread pass used to run this
+          identical feColorMatrix themselves — on a 5-layer stack that was
+          three redundant full-region passes per repaint. */}
+      {shadows.some(s => s.inset || s.spread !== 0) && (
+        <feColorMatrix in="shape" type="matrix" values={BINARIZE} result="bin" />
+      )}
       {shadows.map((s, i) =>
         s.inset ? <InsetPass key={i} i={i} s={s} /> : <ShadowPass key={i} i={i} s={s} />,
       )}
