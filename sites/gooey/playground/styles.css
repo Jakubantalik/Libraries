@@ -100,11 +100,12 @@
   --on-accent: #0d0d0d;
   --hover-veil: rgba(255, 255, 255, 0.06);
 
-  /* Inverted from light mode's black hairline, but NOT to white: a light
-     edge on the dark pill read as a bright ring drawn around every face
-     rather than as the photo's own edge. Black deepens the seam instead —
-     the portraits are bright enough to separate from it on their own. */
-  --photo-edge: rgba(0, 0, 0, 0.5);
+  /* A faint white hairline, not a black one. Black at 50% was strong enough
+     to read as a dark gap gouged around every face — the photos already sit
+     on a dark surface, so darkening their edge only removed the boundary. 8%
+     white defines the edge without becoming a visible ring. The contact
+     shadow underneath stays black; it is doing a different job. */
+  --photo-edge: rgba(255, 255, 255, 0.08);
   --photo-lift: rgba(0, 0, 0, 0.55);
 
   /* Inverted like the site's primary button (white on dark). */
@@ -129,7 +130,7 @@
   }
 
   [data-theme='dark'] {
-    --photo-edge: color(display-p3 0 0 0 / 0.5);
+    --photo-edge: color(display-p3 1 1 1 / 0.08);
     --photo-lift: color(display-p3 0 0 0 / 0.55);
   }
 }
