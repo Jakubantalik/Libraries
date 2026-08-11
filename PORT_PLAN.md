@@ -138,6 +138,11 @@ Note the plan's iOS/RN order was swapped in practice: RN went first because
 its risk (worklets) was cheap to settle with a Babel experiment, and doing
 so surfaced the `react-dom` peer bug that would have blocked it either way.
 
+Pixel parity done too: `snapshot.sh` captures all 144 combinations headless
+via `ImageRenderer` and they diff against the web at worst mean 4.9/255
+(1.9%), centroids within half a device pixel. See Findings for what the
+residual is and the frozen-time bug the harness caught.
+
 Layout mirrors `BorderBeamKit` (SPM `Package.swift`, `Sources`, `Tests`,
 `snapshot.sh`) plus a `ThinkingOrbsDemo` XcodeGen app like `BorderBeamDemo`.
 
@@ -243,6 +248,27 @@ Layout mirrors `BorderBeamKit` (SPM `Package.swift`, `Sources`, `Tests`,
   values, so near-ties with duplicate x sorted differently on each side and
   the pairwise walk compared unrelated dots. The multiset check that settled
   it was written separately, outside the failing test.
+- **The pixel harness earned its keep immediately.** The first iOS↔web diff
+  came back at worst mean 38/255 — an order of magnitude past anything
+  antialiasing explains. Cause: `.orbFrozenTime` multiplied the frozen
+  instant by the preset speed, while the web harness and the golden vectors
+  both evaluate the engine at raw `t`. The two sides were rendering
+  different moments. The golden tests could never have caught this: they
+  call the engine directly and never go through the view. Fixed; worst mean
+  dropped to 4.9/255. Any port with a "freeze time" hook should diff one
+  frame against the reference before trusting the hook.
+- **Every rasteriser disagrees with every other one on sub-pixel circles,
+  and this design is built from them.** Isolated-circle ink vs Chrome
+  canvas: Skia matches to 0.14% at r=20 but is 1.5× heavy at r=0.5;
+  CoreGraphics matches to 0.08% at r=20, is 8% *light* at r=1, then 2.6×
+  heavy at r=0.5 and draws a visible mark at r=0.35 where Chrome draws
+  nothing at all. Large-circle agreement is the control that proves colour
+  space, gamma, alpha and premultiplication are right on both ports; what
+  remains is a property of the rasterisers. Net: iOS carries 10–26% more
+  ink than the web, concentrated at 20pt and on dark themes. Left
+  uncompensated on both ports — the bias is not monotonic in radius, so a
+  correction is a fitted curve, and not dropping requested dots is the
+  better default.
 - **Verify a rasteriser with a rasteriser, not with a simulator.** Replaying
   the port's exact draw sequence through CanvasKit (the WASM build of the
   same Skia) and pixel-diffing against the browser caught the sub-pixel

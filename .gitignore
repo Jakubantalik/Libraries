@@ -6,3 +6,4 @@ dist-playground
 .DS_Store
 *.log
 .wrangler
+demo/ios-snapshots

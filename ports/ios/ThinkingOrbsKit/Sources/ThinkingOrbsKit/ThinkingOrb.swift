@@ -55,7 +55,11 @@ public struct ThinkingOrb: View {
 
         Group {
             if let frozenTime {
-                canvas(preset: preset, t: frozenTime * effSpeed)
+                // Raw engine time, NOT scaled by speed: the golden vectors and
+                // the web parity harness both evaluate the engine at this t
+                // directly, so applying the preset speed here would compare
+                // two different instants and report a false mismatch.
+                canvas(preset: preset, t: frozenTime)
             } else if reduceMotion || paused {
                 // one static, deterministic frame — same instant as the web
                 canvas(preset: preset, t: OrbSpec.reducedMotionT * effSpeed)
