@@ -2,10 +2,10 @@
 // on the sphere under slow value noise; any pair closer than `thr` grows an
 // edge, and bright packets run along randomly re-picked node pairs.
 
-import type { Dot, Line, ModeDraw } from './types';
-import { fibDir, frac, hashD, lerp, makeProj, paint, paintLines, radiusScale, vnoise } from './core';
+import type { Dot, Line, ModeFrame } from './types';
+import { fibDir, finalizeFrame, frac, hashD, lerp, makeProj, radiusScale, vnoise } from './core';
 
-export const drawWeb: ModeDraw = (ctx, size, t, dark, o) => {
+export const frameWeb: ModeFrame = (size, t, o) => {
   const cx = size / 2;
   const cy = size / 2;
   const R = (size / 2) * 0.8 * (o.spread ?? 1);
@@ -93,6 +93,5 @@ export const drawWeb: ModeDraw = (ctx, size, t, dark, o) => {
     });
   }
 
-  paintLines(ctx, lines, dark);
-  paint(ctx, dots, dark, o.rMin);
+  return finalizeFrame(dots, lines, o.rMin);
 };

@@ -2,8 +2,8 @@
 // wave (listening). All draw a lat/long dot field with mode-specific
 // motion, then hand off to the shared z-sorted painter.
 
-import type { Dot, ModeDraw } from './types';
-import { angleDelta, hashD, makeProj, paint, radiusScale } from './core';
+import type { Dot, ModeFrame } from './types';
+import { angleDelta, finalizeFrame, hashD, makeProj, radiusScale } from './core';
 
 // --- the shared solver heartbeat (rubik) ------------------------------
 // Rapid eased moves scramble, then replay in reverse (palindrome) so
@@ -86,7 +86,7 @@ function makeMoves(count: number): Move[] {
 
 // --- Globe: lat/long field, a scan meridian sweeps — searching --------
 
-export const drawGlobe: ModeDraw = (ctx, size, t, dark, o) => {
+export const frameGlobe: ModeFrame = (size, t, o) => {
   const spin = 0.5;
   const cx = size / 2;
   const cy = size / 2;
@@ -124,12 +124,12 @@ export const drawGlobe: ModeDraw = (ctx, size, t, dark, o) => {
       });
     }
   }
-  paint(ctx, dots, dark, o.rMin);
+  return finalizeFrame(dots, [], o.rMin);
 };
 
 // --- Rubik: bands twist in quarter turns, scramble → solve — solving --
 
-export const drawRubik: ModeDraw = (ctx, size, t, dark, o) => {
+export const frameRubik: ModeFrame = (size, t, o) => {
   const cx = size / 2;
   const cy = size / 2;
   const R = (size / 2) * 0.82;
@@ -162,12 +162,12 @@ export const drawRubik: ModeDraw = (ctx, size, t, dark, o) => {
       });
     }
   }
-  paint(ctx, dots, dark, o.rMin);
+  return finalizeFrame(dots, [], o.rMin);
 };
 
 // --- Wave: a waveform rolls through the rings — listening -------------
 
-export const drawWave: ModeDraw = (ctx, size, t, dark, o) => {
+export const frameWave: ModeFrame = (size, t, o) => {
   const cx = size / 2;
   const cy = size / 2;
   // 0.76 base × 1.15 — the undulation pulls the sphere inward, so wave read
@@ -201,5 +201,5 @@ export const drawWave: ModeDraw = (ctx, size, t, dark, o) => {
       });
     }
   }
-  paint(ctx, dots, dark, o.rMin);
+  return finalizeFrame(dots, [], o.rMin);
 };

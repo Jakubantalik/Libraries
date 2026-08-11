@@ -2,10 +2,10 @@
 // (the tuned preset runs coreless): just ghost paths and the particles
 // doing the work.
 
-import type { Dot, ModeDraw } from './types';
-import { hashD, makeProj, paint, radiusScale } from './core';
+import type { Dot, ModeFrame } from './types';
+import { finalizeFrame, hashD, makeProj, radiusScale } from './core';
 
-export const drawOrbits: ModeDraw = (ctx, size, t, dark, o) => {
+export const frameOrbits: ModeFrame = (size, t, o) => {
   const cx = size / 2;
   const cy = size / 2;
   const R = (size / 2) * 0.82;
@@ -76,5 +76,5 @@ export const drawOrbits: ModeDraw = (ctx, size, t, dark, o) => {
       });
     }
   }
-  paint(ctx, dots, dark, o.rMin);
+  return finalizeFrame(dots, [], o.rMin);
 };

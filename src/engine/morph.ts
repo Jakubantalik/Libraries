@@ -6,8 +6,8 @@
 // every instant of the morph, holds and transitions alike. Plain
 // circle fills only: no canvas/SVG filters, fully cross-browser.
 
-import type { Dot, ModeDraw } from './types';
-import { paint } from './core';
+import type { Dot, ModeFrame } from './types';
+import { finalizeFrame } from './core';
 
 type Path = (f: number) => [number, number];
 
@@ -76,7 +76,7 @@ const SEG = HOLD + MORPH;
 // dots read a touch softer than inkform's. Don't "correct" for that by
 // shrinking the radius: it makes the mark genuinely smaller than the tuning.
 
-export const drawMorph: ModeDraw = (ctx, size, t, dark, o) => {
+export const frameMorph: ModeFrame = (size, t, o) => {
   const K = CYCLE.length;
   const tc = t % (SEG * K);
   const k = Math.floor(tc / SEG);
@@ -134,5 +134,5 @@ export const drawMorph: ModeDraw = (ctx, size, t, dark, o) => {
       white: 0.1
     });
   }
-  paint(ctx, dots, dark, o.rMin);
+  return finalizeFrame(dots, [], o.rMin);
 };

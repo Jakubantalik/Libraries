@@ -8,17 +8,23 @@ export default defineConfig({
     react(),
     dts({
       include: ['src'],
-      rollupTypes: true
+      // two entry points now, so types are emitted per-file rather than
+      // rolled into one index.d.ts
+      rollupTypes: false
     })
   ],
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
+      // `engine` is the React-free geometry surface the native ports consume.
+      entry: {
+        index: resolve(__dirname, 'src/index.ts'),
+        engine: resolve(__dirname, 'src/engine/index.ts')
+      },
       name: 'ThinkingOrbs',
       // The package is type:module, so the CJS bundle needs a real `.cjs`
       // extension — a `.js` file would be parsed as ESM and its
       // `exports.*` assignments would silently produce an empty require().
-      fileName: (format) => (format === 'es' ? 'index.es.js' : 'index.cjs'),
+      fileName: (format, entryName) => (format === 'es' ? `${entryName}.es.js` : `${entryName}.cjs`),
       formats: ['es', 'cjs']
     },
     rollupOptions: {

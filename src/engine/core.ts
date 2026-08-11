@@ -26,6 +26,17 @@ export interface Line {
   w: number;
 }
 
+/**
+ * One rendered instant: a complete, final set of draw instructions.
+ * `dots` is already z-sorted into draw order and radius-clamped; `lines`
+ * are drawn first. Nothing here needs further interpretation, which is what
+ * makes a frame portable to any 2D renderer.
+ */
+export interface OrbFrame {
+  dots: Dot[];
+  lines: Line[];
+}
+
 export type Projector = (x: number, y: number, z: number) => [number, number, number];
 
 export function lerp(a: number, b: number, f: number): number {
@@ -92,15 +103,13 @@ export function makeProj(yaw: number, tilt: number, cx: number, cy: number, scal
  * depth language on an inverted substrate.
  */
 export function paint(ctx: CanvasRenderingContext2D, dots: Dot[], dark: boolean, rMin = 0.3): void {
-  dots.sort((a, b) => a.z - b.z);
   for (const d of dots) {
     const alpha = d.a ?? 1;
-    if (alpha < 0.02) continue;
     const w = Math.min(1, Math.max(0, d.white));
     const g = Math.round((dark ? 1 - w : w) * 255);
     ctx.fillStyle = `rgba(${g},${g},${g},${alpha})`;
     ctx.beginPath();
-    ctx.arc(d.x, d.y, Math.max(rMin, d.r), 0, Math.PI * 2);
+    ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
     ctx.fill();
   }
 }
@@ -109,7 +118,6 @@ export function paint(ctx: CanvasRenderingContext2D, dots: Dot[], dark: boolean,
 export function paintLines(ctx: CanvasRenderingContext2D, lines: Line[], dark: boolean): void {
   for (const l of lines) {
     const alpha = l.a ?? 1;
-    if (alpha < 0.02) continue;
     const w = Math.min(1, Math.max(0, l.white));
     const g = Math.round((dark ? 1 - w : w) * 255);
     ctx.strokeStyle = `rgba(${g},${g},${g},${alpha})`;
@@ -119,6 +127,33 @@ export function paintLines(ctx: CanvasRenderingContext2D, lines: Line[], dark: b
     ctx.lineTo(l.x2, l.y2);
     ctx.stroke();
   }
+}
+
+/**
+ * Turn raw mode output into a finished frame: drop invisible marks, clamp
+ * radii to the mode's floor, and z-sort far→near into draw order.
+ *
+ * This runs in the GEOMETRY step, not the painter, so a frame is a complete
+ * set of draw instructions: every value is final and the array order is the
+ * order to draw in. That is what lets the RN and SwiftUI ports share this
+ * output verbatim — a port draws the list, it never re-derives anything —
+ * and what lets the golden-vector tests compare numbers instead of pixels.
+ */
+export function finalizeFrame(dots: Dot[], lines: Line[], rMin = 0.3): OrbFrame {
+  const visible: Dot[] = [];
+  for (const d of dots) {
+    if ((d.a ?? 1) < 0.02) continue;
+    d.r = Math.max(rMin, d.r);
+    visible.push(d);
+  }
+  visible.sort((a, b) => a.z - b.z);
+  return { dots: visible, lines: lines.filter((l) => (l.a ?? 1) >= 0.02) };
+}
+
+/** Paint a finished frame. Lines first, so nodes sit on top of their edges. */
+export function paintFrame(ctx: CanvasRenderingContext2D, frame: OrbFrame, dark: boolean): void {
+  if (frame.lines.length) paintLines(ctx, frame.lines, dark);
+  paint(ctx, frame.dots, dark);
 }
 
 /**

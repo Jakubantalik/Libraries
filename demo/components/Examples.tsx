@@ -24,6 +24,13 @@ const CHIP_STATES: OrbState[] = [
 // Chip states that render as full large pills (the rest stay compact).
 const LARGE_CHIPS = new Set<OrbState>(['working', 'searching', 'connecting']);
 
+// Small-chip copy that reads better than the literal state name.
+const LABEL_OVERRIDES: Partial<Record<OrbState, string>> = {
+  weaving: 'planning',
+  breathing: 'thinking',
+  connecting: 'solving',
+};
+
 const HERO_PILLS: Array<{ state: OrbState; label: string }> = [
   { state: 'solving', label: 'Solving….' },
   { state: 'composing', label: 'Thinking….' },
@@ -74,7 +81,8 @@ export function Examples({
       <div className="grid grid-cols-2 gap-3 [grid-auto-rows:151px] max-sm:grid-cols-1 max-sm:auto-rows-auto">
         {CHIP_STATES.map((state) => {
           const large = !smallAll && (bigChips || LARGE_CHIPS.has(state));
-          const label = large ? `${cap(state)}….` : `Agent ${state}…`;
+          const copy = LABEL_OVERRIDES[state] ?? state;
+          const label = large ? `${cap(copy)}….` : `Agent ${copy}…`;
           return (
           <div
             key={state}

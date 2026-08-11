@@ -30,7 +30,7 @@ export const STATE_TO_MODE: Record<OrbState, ModeKey> = {
   shaping: 'morph'
 };
 
-interface Preset {
+export interface Preset {
   speed: number;
   count: number;
   size: number;
@@ -38,7 +38,8 @@ interface Preset {
   extra?: ModeOpts;
 }
 
-const PRESETS: Record<ModeKey, Record<OrbSize, Preset>> = {
+/** Exported so `scripts/extract-spec.ts` can emit them for the native ports. */
+export const PRESETS: Record<ModeKey, Record<OrbSize, Preset>> = {
   orbits: {
     64: { speed: 1.885, count: 1, size: 1 },
     20: { speed: 3.9, count: 0.238, size: 2.4 }

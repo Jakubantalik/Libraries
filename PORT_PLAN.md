@@ -43,7 +43,33 @@ Platform equivalents for the behaviors:
 | IntersectionObserver / `visibilitychange` pause | `AppState` background pause (+ `paused` prop) | `TimelineView` pauses off-screen by itself |
 | `aria-label` | `accessibilityRole="image"` + label | `.accessibilityLabel` |
 
-## Phase 0 — geometry-first refactor + spec extraction (web repo)
+## Phase 0 — geometry-first refactor + spec extraction (web repo) ✅ DONE
+
+**Result: complete, and byte-identical.** All 144 frozen-frame pixel hashes
+(9 states × 2 sizes × 2 themes × 4 timestamps) are unchanged from before the
+refactor, so the split carries zero visual risk. `thinking-orbs/engine` now
+ships the React-free geometry surface, verified from a clean `npm pack`
+install in both ESM and CJS, and its output matches `spec/orbs-golden.json`
+to the digit. `MODE_DRAWS` is unchanged for existing consumers — the canvas
+painters are now derived from the frame functions, so this is additive.
+
+Shipped in this phase:
+
+- `src/engine/index.ts` + `exports["./engine"]`, built as a second Vite entry
+  (`dist/engine.es.js` / `dist/engine.cjs`; the main entry imports it, so
+  nothing is duplicated).
+- `finalizeFrame()` in `core.ts` — culls invisible marks, clamps radii to the
+  mode floor, z-sorts into draw order. Runs in geometry, so a frame is a
+  finished draw list and a port never re-derives anything.
+- `demo/parity.html` + `demo/parity.ts` — the frozen-time capture harness,
+  hash mode for regressions, PNG mode for Phase 3 cross-platform diffing.
+- `scripts/extract-spec.ts` → `spec/orbs-spec.json` (presets, base profiles,
+  scaling rules, paint contract, timing constants, a11y labels).
+- `scripts/extract-golden.ts` → `spec/orbs-golden.json` (72 cases, 11,288
+  dots, 341 lines, 6-decimal precision, 1e-4 tolerance).
+- `npm run spec` regenerates both.
+
+Remaining before the ports: cut web `0.3.0` (below).
 
 The one structural change that makes everything else cheap:
 

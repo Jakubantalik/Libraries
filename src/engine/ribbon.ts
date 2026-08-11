@@ -6,10 +6,10 @@
 // a face-on circle whose radius — not its out-of-plane offset — undulates,
 // so it reads as a ring slowly morphing rather than a sash in orbit.
 
-import type { Dot, ModeDraw } from './types';
-import { fibDir, makeProj, paint, radiusScale } from './core';
+import type { Dot, ModeFrame } from './types';
+import { fibDir, finalizeFrame, makeProj, radiusScale } from './core';
 
-export const drawRibbon: ModeDraw = (ctx, size, t, dark, o) => {
+export const frameRibbon: ModeFrame = (size, t, o) => {
   const cx = size / 2;
   const cy = size / 2;
   const R = (size / 2) * 0.78;
@@ -89,5 +89,5 @@ export const drawRibbon: ModeDraw = (ctx, size, t, dark, o) => {
       });
     }
   }
-  paint(ctx, dots, dark, o.rMin);
+  return finalizeFrame(dots, [], o.rMin);
 };

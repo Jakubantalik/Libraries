@@ -2,10 +2,10 @@
 // Each strand runs pole to pole on a helix, and a radial breathing term
 // makes them trade places, reading as the over/under of a plait.
 
-import type { Dot, ModeDraw } from './types';
-import { fibDir, frac, makeProj, paint, radiusScale } from './core';
+import type { Dot, ModeFrame } from './types';
+import { fibDir, finalizeFrame, frac, makeProj, radiusScale } from './core';
 
-export const drawBraid: ModeDraw = (ctx, size, t, dark, o) => {
+export const frameBraid: ModeFrame = (size, t, o) => {
   const cx = size / 2;
   const cy = size / 2;
   const R = (size / 2) * 0.76;
@@ -46,5 +46,5 @@ export const drawBraid: ModeDraw = (ctx, size, t, dark, o) => {
       });
     }
   }
-  paint(ctx, dots, dark, o.rMin);
+  return finalizeFrame(dots, [], o.rMin);
 };
