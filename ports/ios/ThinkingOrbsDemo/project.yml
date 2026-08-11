@@ -1,0 +1,30 @@
+name: ThinkingOrbsDemo
+options:
+  bundleIdPrefix: com.jakubantalik
+  deploymentTarget:
+    iOS: "15.0"
+  createIntermediateGroups: true
+
+packages:
+  ThinkingOrbsKit:
+    path: ../ThinkingOrbsKit
+
+targets:
+  ThinkingOrbsDemo:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+    dependencies:
+      - package: ThinkingOrbsKit
+        product: ThinkingOrbsKit
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Thinking Orbs
+        INFOPLIST_KEY_UIUserInterfaceStyle: Automatic
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        PRODUCT_BUNDLE_IDENTIFIER: com.jakubantalik.ThinkingOrbsDemo
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1,2"

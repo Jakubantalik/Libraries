@@ -125,7 +125,18 @@ Layout mirrors `border-beam-native` (`package.json` peer-dep pattern, `src/`,
 - **Example app:** Expo, mirroring the web demo chips (all 9 states × 2 sizes,
   theme toggle, speed slider).
 
-## Phase 2 — iOS Swift package (`ports/ios/ThinkingOrbsKit`)
+## Phase 2 — iOS Swift package (`ports/ios/ThinkingOrbsKit`) ✅ RUNNING
+
+**Done and verified on the simulator.** All nine states render at both sizes
+in dark and light on an iPhone 16 Pro (iOS 18.6), animating, via
+`TimelineView` + `Canvas` with no Metal. `swift test` passes all 70,115
+golden values. Geometry costs 72.6 µs/frame for the heaviest mode
+(`composing`, 566 dots) — 0.44% of a 60 fps budget. Launch with
+`ports/ios/ThinkingOrbsDemo/run.sh`.
+
+Note the plan's iOS/RN order was swapped in practice: RN went first because
+its risk (worklets) was cheap to settle with a Babel experiment, and doing
+so surfaced the `react-dom` peer bug that would have blocked it either way.
 
 Layout mirrors `BorderBeamKit` (SPM `Package.swift`, `Sources`, `Tests`,
 `snapshot.sh`) plus a `ThinkingOrbsDemo` XcodeGen app like `BorderBeamDemo`.
@@ -211,6 +222,27 @@ Layout mirrors `BorderBeamKit` (SPM `Package.swift`, `Sources`, `Tests`,
   Not worth compensating — the bias is not monotonic in radius, so any
   correction is a fitted curve chasing a sub-1%-mean difference, and Skia's
   behaviour is arguably the more faithful one.
+- **Exact array position is not part of the rendering contract, and
+  asserting it produces false failures.** The Swift golden test failed at
+  first on `breathing`@64 — and only there. Cause: that mode has an odd lane
+  count, so its centre lane sits exactly on the view plane, where z is
+  computed as `y·sin(tilt) + z₁·cos(tilt)` and the terms cancel to a
+  mathematical zero. Floating point does not cancel exactly, so those 44
+  dots carry ±1e-17 noise whose sign depends on the platform's libm; JS and
+  Swift z-sort them differently. Confirmed independently that the two
+  engines emit an IDENTICAL multiset of dots (zero difference), and that
+  every dot in the tie group has depth 0.5 — identical radius, ink and
+  alpha — so the order among them cannot change a pixel. The test now
+  asserts "same dots, drawn far to near" instead. Worth noting for the
+  general case: a golden comparison should assert what the renderer
+  actually depends on, not the incidental order an algorithm happened to
+  emit. `breathing`@20 has an even lane count and never tripped this.
+- **Beware a diagnostic that is itself buggy.** The first order-independent
+  check reported "worst Δ 46 points", implying real geometry error. It was
+  the diagnostic: it sorted full-precision values against 6-decimal golden
+  values, so near-ties with duplicate x sorted differently on each side and
+  the pairwise walk compared unrelated dots. The multiset check that settled
+  it was written separately, outside the failing test.
 - **Verify a rasteriser with a rasteriser, not with a simulator.** Replaying
   the port's exact draw sequence through CanvasKit (the WASM build of the
   same Skia) and pixel-diffing against the browser caught the sub-pixel

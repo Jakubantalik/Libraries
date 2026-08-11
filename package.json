@@ -1,7 +1,7 @@
 {
   "name": "thinking-orbs",
   "version": "0.3.1",
-  "description": "Dotted thought-orb loading indicators for AI & agent UIs — nine tuned states, two sizes, auto dark/light",
+  "description": "Dotted thought-orb loading indicators for AI & agent UIs \u2014 nine tuned states, two sizes, auto dark/light",
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.es.js",
@@ -38,8 +38,9 @@
     "build": "vite build",
     "build:demo": "vite build --config vite.config.demo.ts",
     "typecheck": "tsc --noEmit",
-    "spec": "tsx scripts/extract-spec.ts && tsx scripts/extract-golden.ts",
-    "prepublishOnly": "npm run build"
+    "spec": "tsx scripts/extract-spec.ts && tsx scripts/extract-golden.ts && tsx scripts/codegen-swift.ts",
+    "prepublishOnly": "npm run build",
+    "codegen:swift": "tsx scripts/codegen-swift.ts"
   },
   "peerDependencies": {
     "react": ">=18.0.0"
