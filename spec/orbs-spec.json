@@ -2,7 +2,7 @@
   "specVersion": "1.0.0",
   "sourceLibrary": {
     "name": "thinking-orbs",
-    "version": "0.3.0"
+    "version": "0.3.1"
   },
   "reference": "Web demo at https://orbs.jakubantalik.com is the visual ground truth.",
   "enums": {
