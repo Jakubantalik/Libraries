@@ -14,4 +14,9 @@ export default defineConfig({
       ),
     },
   },
+  server: {
+    // Honour PORT so a busy 5173 reassigns cleanly — the two sites in this
+    // repo are often run side by side.
+    port: process.env.PORT ? Number(process.env.PORT) : 5173,
+  },
 })

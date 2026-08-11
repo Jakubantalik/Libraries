@@ -880,6 +880,21 @@ body {
   outline: none;
 }
 
+/* iOS Safari zooms the page in when you focus an input whose text is under
+   16px, and it does not zoom back out — which shoves this prototype's fixed
+   290px layout off-screen mid-demo. 16px is the threshold, so touch devices
+   get exactly that while the desktop keeps its 14px.
+
+   Keyed on `pointer: coarse` rather than a width breakpoint, because the zoom
+   depends on the input method, not the viewport: a narrowed desktop window
+   would be bumped for nothing, and an iPad wide enough to clear a 768px
+   breakpoint would still zoom. */
+@media (pointer: coarse) {
+  .eb-input {
+    font-size: 16px;
+  }
+}
+
 .eb-input::placeholder {
   color: var(--label);
 }
