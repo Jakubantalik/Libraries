@@ -62,6 +62,13 @@ export interface DissolveOptions {
    *  far the melt can develop even at full contact (scales warp/blur/
    *  gravity/mix and the hole depth together). Default 1. */
   strength?: number
+  /** How deep this piece may sink into its neighbour before the melt is fully
+   *  gone, as a fraction of the smaller body (1 = completely engulfed).
+   *  Melting is a surface event — once a piece is well inside the other there
+   *  is no seam left to mix at, so the melt recedes and the content resolves
+   *  back to crisp. Default 0.8; raise toward (or past) 1 to keep melting
+   *  while deeply overlapped. */
+  sink?: number
 }
 
 export interface GooeyItemProps {
@@ -334,6 +341,7 @@ function ObservedItem({
     releaseMs?: number
     fadeMs?: number
     strength?: number
+    sink?: number
   } | null>(null)
 
   const opts = typeof contactBlur === 'object' ? contactBlur : {}
@@ -353,6 +361,8 @@ function ObservedItem({
   const blendRelease = opts.releaseMs ?? 240
   const blendFade = opts.fadeMs
   const blendStrength = opts.strength ?? 1
+  // Left undefined when unset so the engine owns the default in one place.
+  const blendSink = opts.sink
 
   const effects = toEffects(effect)
   const dynamics = {
@@ -398,6 +408,7 @@ function ObservedItem({
             releaseMs: blendRelease,
             fadeMs: blendFade,
             strength: blendStrength,
+            sink: blendSink,
           }
         : undefined
     blendRef.current = blend ?? null
@@ -413,17 +424,18 @@ function ObservedItem({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ctx, radiusKey, blendKey, effectKey, blobInset, bridgeGrow])
 
-  // `active` / `releaseMs` / `fadeMs` / `strength` are pushed straight into
-  // the live config so a drag release (or a strength slider) updates the
-  // melt without rebuilding its SVG structure.
+  // `active` / `releaseMs` / `fadeMs` / `strength` / `sink` are pushed
+  // straight into the live config so a drag release (or a strength slider)
+  // updates the melt without rebuilding its SVG structure.
   useEffect(() => {
     if (!blendRef.current) return
     blendRef.current.active = blendActive
     blendRef.current.releaseMs = blendRelease
     blendRef.current.fadeMs = blendFade
     blendRef.current.strength = blendStrength
+    blendRef.current.sink = blendSink
     ctx.engine.wake()
-  }, [ctx, blendActive, blendRelease, blendFade, blendStrength])
+  }, [ctx, blendActive, blendRelease, blendFade, blendStrength, blendSink])
 
   return (
     <>

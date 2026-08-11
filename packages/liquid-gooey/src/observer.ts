@@ -58,6 +58,15 @@ export interface BlendConfig {
    *  reads as a shallower liquid rather than an erased edge with no melt to
    *  justify it. 1 = full strength (default). */
   strength?: number
+  /** How deep this piece may sink into its neighbour before the melt is fully
+   *  gone, as a fraction of the smaller body (1 = completely engulfed).
+   *  Melting is a SURFACE event: it belongs to the moment two skins meet, and
+   *  once a piece is well inside the other there is no seam left to mix at —
+   *  it has simply joined. Without this the proximity gap pins to zero on
+   *  first overlap and the melt stays at full while the piece buries itself,
+   *  which reads as a smear that should have resolved. Default 0.8; raise
+   *  toward (or past) 1 to keep melting while deeply overlapped. */
+  sink?: number
 }
 
 export interface EvolveOptions {
@@ -1174,6 +1183,23 @@ export class ObserveEngine {
         bestOther = o
       }
     }
+    // How far INSIDE the neighbour this piece has travelled. `bestGap` is an
+    // outside distance and clamps to 0 the instant the boxes touch, so on its
+    // own it cannot tell "just met" from "buried" — everything past first
+    // contact looks identical to it. Overlap depth is the missing half of the
+    // measurement: the shallower of the two axis overlaps, which is how deep
+    // the piece has actually sunk rather than how much area happens to
+    // intersect. Normalized by the SMALLER body, since that is the most
+    // overlap the pair can ever produce, so 1 means fully engulfed and the
+    // two items agree on the number from either side.
+    let embed = 0
+    if (bestOther && bestGap === 0) {
+      const o = bestOther
+      const ox = Math.min(f.x + f.w, o.x + o.w) - Math.max(f.x, o.x)
+      const oy = Math.min(f.y + f.h, o.y + o.h) - Math.max(f.y, o.y)
+      const span = Math.max(1, Math.min(f.w, f.h, o.w, o.h))
+      embed = Math.max(0, Math.min(ox, oy)) / span
+    }
     // Target strength from proximity and activity; squared smoothstep biases
     // the ramp late — barely anything at first neck.
     let sTarget = 0
@@ -1187,7 +1213,17 @@ export class ObserveEngine {
       // scaling sRaw itself would also slow the ramp, reading as "farther
       // away" rather than "weaker".
       const strength = Math.max(0, Math.min(1, blend.strength ?? 1))
-      sTarget = Math.pow(sRaw, 1.25) * strength
+      // Sink-out: the melt belongs to the seam, so it recedes as the seam is
+      // swallowed. The ramp begins as soon as the piece is properly overlapping
+      // rather than merely touching, and is finished by `sink` — well before
+      // the piece is buried, since by then it reads as joined, not melting.
+      // Smoothstep at both ends so neither the onset nor the finish shows an
+      // edge as the piece is dragged in and out.
+      const sink = Math.max(0.01, blend.sink ?? 0.45)
+      const sunk = smoothstep(
+        Math.max(0, Math.min(1, (embed - sink * 0.2) / Math.max(0.01, sink * 0.8))),
+      )
+      sTarget = Math.pow(sRaw, 1.25) * strength * (1 - sunk)
     }
     // Asymmetric smoothing: quick attack; the release is a TIMED fade that
     // reaches the target in exactly `releaseMs`. An exponential chase here
