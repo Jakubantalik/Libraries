@@ -27,6 +27,6 @@ jobs:
         run: npm ci
 
       - name: Publish
-        run: npm publish --access public
+        run: npm publish -w border-beam --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.BEAM2 }}

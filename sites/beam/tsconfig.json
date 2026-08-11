@@ -13,9 +13,9 @@
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "paths": {
-      "border-beam": ["../src/index.ts"]
+      "border-beam": ["../../packages/border-beam/src/index.ts"]
     }
   },
   "include": ["src"],
-  "references": [{ "path": ".." }]
+  "references": [{ "path": "../../packages/border-beam" }]
 }

@@ -11,7 +11,11 @@ export default defineConfig({
   base: '/',
   resolve: {
     alias: {
-      'border-beam': resolve(__dirname, '../src/index.ts'),
+      // Aliased to the library SOURCE (not its built dist) so editing the
+      // library hot-reloads the site with no rebuild — the behaviour this
+      // demo has always had. Only the path changed when the library moved
+      // from the repo root into packages/.
+      'border-beam': resolve(__dirname, '../../packages/border-beam/src/index.ts'),
     },
   },
   build: {

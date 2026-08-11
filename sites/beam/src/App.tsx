@@ -295,7 +295,7 @@ const PLATFORM_OPTIONS: { value: Platform; label: string }[] = [
 
 const INSTALL_BY_PLATFORM: Record<Platform, string> = {
   react: 'npm install border-beam',
-  swiftui: '.package(url: "https://github.com/Jakubantalik/border-beam.git", from: "1.4.0")',
+  swiftui: '.package(url: "https://github.com/Jakubantalik/Libraries.git", from: "1.4.0")',
   native: 'npm install @shopify/react-native-skia react-native-reanimated',
 };
 
@@ -324,7 +324,7 @@ YourCard().borderBeam(.md, colorVariant: .ocean)`,
 const INSTALL_NOTE_BY_PLATFORM: Record<Platform, string | null> = {
   react: null,
   swiftui: 'Swift Package Manager · requires iOS 17+ · Add via File \u203a Add Package Dependencies in Xcode.',
-  native: 'In beta \u2014 not yet published. Copy ports/react-native/border-beam-native from the repo, then install the two peer dependencies above.',
+  native: 'In beta \u2014 not yet published. Copy packages/border-beam/ports/react-native/border-beam-native from the repo, then install the two peer dependencies above.',
 };
 
 const COLOR_OPTIONS: { value: BorderBeamColorVariant; label: string }[] = [
@@ -511,7 +511,7 @@ export default function App() {
                 </span>
               </button>
             )}
-            <a className="icon-btn" href="https://github.com/Jakubantalik/border-beam" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+            <a className="icon-btn" href="https://github.com/Jakubantalik/Libraries" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
               <GitHubIcon />
             </a>
             <a className="icon-btn" href="https://x.com/jakubantalik" target="_blank" rel="noopener noreferrer" aria-label="Follow on X (Twitter)">

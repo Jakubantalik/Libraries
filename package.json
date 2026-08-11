@@ -1,66 +1,17 @@
 {
-  "name": "border-beam",
-  "version": "1.4.0",
-  "description": "Animated border beam effect for React",
-  "type": "module",
-  "main": "dist/index.cjs.js",
-  "module": "dist/index.es.js",
-  "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.es.js"
-      },
-      "require": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.cjs.js"
-      }
-    }
-  },
-  "files": [
-    "dist"
-  ],
-  "sideEffects": false,
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "typecheck": "tsc --noEmit",
-    "spec": "tsx scripts/extract-spec.ts",
-    "prepublishOnly": "npm run build"
-  },
-  "peerDependencies": {
-    "react": ">=18.0.0",
-    "react-dom": ">=18.0.0"
-  },
-  "devDependencies": {
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
-    "@vitejs/plugin-react": "^4.2.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "tsx": "^4.23.1",
-    "typescript": "^5.3.0",
-    "vite": "^5.0.0",
-    "vite-plugin-dts": "^3.7.0"
-  },
-  "keywords": [
-    "react",
-    "animation",
-    "border",
-    "beam",
-    "glow",
-    "effect",
-    "css"
-  ],
-  "author": "Jakub Antalik",
+  "name": "@jakubantalik/libraries",
+  "private": true,
+  "description": "Home of Jakub Antalik's React libraries: border-beam and liquid-gooey.",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Jakubantalik/border-beam.git"
-  },
-  "bugs": {
-    "url": "https://github.com/Jakubantalik/border-beam/issues"
-  },
-  "homepage": "https://beam.jakubantalik.com"
+  "workspaces": [
+    "packages/*",
+    "sites/*"
+  ],
+  "scripts": {
+    "build:beam": "npm run build -w border-beam",
+    "build:gooey": "npm run build -w liquid-gooey",
+    "build:site-beam": "npm run build:beam && npm run build -w @sites/beam",
+    "build:site-gooey": "npm run build:gooey && npm run build -w @sites/gooey",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  }
 }
