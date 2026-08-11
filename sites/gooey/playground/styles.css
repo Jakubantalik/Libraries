@@ -116,9 +116,10 @@
 /* Wide-gamut photo edges, on the TOKENS rather than per component. The P3
    values used to be re-declared inside each component rule, which pinned
    them to light mode's black-at-20% — so a P3 browser ignored the dark
-   theme's own edge entirely. The `.ap-ringed img` copy also dropped that
-   rule's first box-shadow layer (the pill-coloured ring), losing the ring on
-   the flying chip. Overriding the tokens keeps every rule's own geometry. */
+   theme's own edge entirely. Redeclaring per rule also meant each copy had
+   to restate that rule's whole box-shadow stack, and a copy that missed a
+   layer silently dropped it. Overriding the tokens keeps every rule's own
+   geometry and leaves only the colour here. */
 @supports (color: color(display-p3 0 0 0 / 0.2)) {
   :root {
     --photo-edge: color(display-p3 0 0 0 / 0.2);
@@ -505,19 +506,60 @@ body {
   height: 250px;
 }
 
-/* Centred under the prototype: what to actually do with it. */
-.ap-hint {
+/* Drag affordance, anchored off the same corner as .ap-chip (right: 20px,
+   top: 22px) so the label and its arrow travel with the loose avatar rather
+   than with the stage. Right edge sits 6px clear of the avatar. */
+.ap-dragme {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 56px;
+  right: 66px;
+  top: 2px;
   margin: 0;
-  text-align: center;
-  font-size: 12px;
-  line-height: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 3px;
+  font-size: 13px;
+  line-height: 19px;
   color: var(--note);
-  opacity: 0.7;
+  opacity: 0.55;
+  white-space: nowrap;
   pointer-events: none;
+  transition: opacity 220ms ease;
+}
+
+/* Once the drag is under way the affordance has done its job, and it sits
+   right where the hand is. */
+.ap-dragme.is-dragging {
+  opacity: 0;
+}
+
+/* The arrow rises above the text, as in the design. */
+.ap-dragme-text {
+  margin-top: 27px;
+}
+
+/* Box sized to hold the rotated graphic; the arrow itself is centred in it,
+   mirroring how the design nests a rotated frame inside a fixed one. */
+.ap-dragme-arrow {
+  flex: none;
+  width: 50px;
+  height: 49px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* The exported Figma asset, painted THROUGH A MASK rather than dropped in as
+   an <img>: the export bakes in fill="black", which disappears against the
+   dark theme. As a mask it is a shape, and `currentColor` gives it the same
+   themed ink as the label beside it. */
+.ap-dragme-arrow::before {
+  content: '';
+  width: 38px;
+  height: 33px;
+  background-color: currentColor;
+  -webkit-mask: url('./assets/drag-me-arrow.svg') no-repeat center / contain;
+  mask: url('./assets/drag-me-arrow.svg') no-repeat center / contain;
+  transform: rotate(-141.14deg) scaleY(-1);
 }
 
 .ap-pill {
@@ -696,12 +738,12 @@ body {
   outline-color: #e3e3e3;
 }
 
-/* No white RING by default — the loose avatar is a bare photo with its own
-   floating elevation (ambient + contact shadow, inner hairline). The ring
-   grows in only as it joins the group (matching .ap-avatar's box-shadow ring
-   exactly — see .ap-ringed img, which fully replaces this elevation), so
-   it's already at full strength by the moment of the swap — nothing changes
-   at that frame, which is what made the join read as a jump/flicker before.
+/* The loose avatar is a bare photo with its own floating elevation (ambient
+   + contact shadow, inner hairline) — correct while it is genuinely above
+   the surface, and only then. It hands over to the seated treatment as soon
+   as a slot is engaged (see .ap-ringed img, which fully replaces this), so
+   the edge is already final by the moment of the swap — nothing changes at
+   that frame, which is what made the join read as a jump/flicker before.
    Inset box-shadow does not paint on <img> (a replaced element) — WebKit
    silently drops it — so the inner hairline is an `outline` with a negative
    offset instead, which draws inside the edge and on top of the photo. */
@@ -724,18 +766,23 @@ body {
 }
 
 /* Applied from the moment a slot is engaged (hover) and held through the
-   flight — see the class note in Chips.tsx.
-   --ap-ring is 2px DIVIDED by the absorb scale: the chip scales down as it
-   flies and that scale shrinks its box-shadow too, so a flat 2px here would
-   render 1.6px and pop to the avatar's 2px at the swap. At full size during
-   the hover it reads 2.5px and then shrinks WITH the photo — one motion, not
-   a separate ring animation. */
+   flight — see the class note in Chips.tsx. This is the chip ADOPTING the
+   seated avatar's edge treatment: the target look is `.ap-avatar`, so the
+   swap at the landing changes nothing.
+   It must drop `.ap-chip img`'s elevation entirely. That shadow says
+   "floating above the surface", which is true while the avatar is out in
+   the open and false the moment it is in the liquid — held inside the pill
+   it painted a lit disc casting a shadow onto a surface it is supposed to
+   be part of. A white ring lived here too, back when `.ap-avatar` wore one;
+   the separator is a mask crescent now (see `sep` in Chips.tsx), so the ring
+   was left drawing a second, contradictory edge.
+   --ap-ring is the hairline DIVIDED by the absorb scale: the chip shrinks as
+   it flies and that scale shrinks its outline too, so a flat 1px here would
+   render 0.8px and pop to the avatar's 1px at the swap. */
 .ap-ringed img {
-  box-shadow:
-    0 0 0 var(--ap-ring, 2.5px) var(--modal-bg),
-    0 1.25px 1.25px 2.5px var(--photo-edge);
-  outline: 1.25px solid var(--photo-edge);
-  outline-offset: -1.25px;
+  box-shadow: 0 1px 1px 0 var(--photo-edge);
+  outline: var(--ap-ring, 1.25px) solid var(--photo-edge);
+  outline-offset: calc(-1 * var(--ap-ring, 1.25px));
 }
 
 

@@ -18,6 +18,9 @@ interface MeltState {
   /** 0..1 — master ceiling on how far the dissolve can develop; scales the
    *  liquid intensity AND the image-edge erasure together. */
   strength: number
+  /** How deep the avatar may sink into the pill before the melt is fully
+   *  gone (fraction of the avatar; 1 = only once completely engulfed). */
+  sink: number
   warp: number
   blur: number
   zone: number
@@ -57,7 +60,7 @@ function meltSnippet(m: MeltState): string {
   return [
     '// liquid-gooey — Dissolve values',
     'dissolve={{',
-    `  strength: ${m.strength}, warp: ${m.warp}, blur: ${m.blur}, mix: ${m.mix}, gravity: ${m.gravity},`,
+    `  strength: ${m.strength}, sink: ${m.sink}, warp: ${m.warp}, blur: ${m.blur}, mix: ${m.mix}, gravity: ${m.gravity},`,
     `  taper: ${m.taper}, warpFreq: ${m.warpFreq}, flowSpeed: ${m.flowSpeed},`,
     `  detail: ${m.detail}, zone: ${m.zone}, range: ${m.range},`,
     `  releaseMs: ${m.release}, fadeMs: ${m.fade},`,
@@ -70,6 +73,7 @@ function meltSnippet(m: MeltState): string {
 
 const MELT_DEFAULTS: MeltState = {
   strength: 1,
+  sink: 0.45,
   warp: 7,
   blur: 8,
   zone: 18,
@@ -143,8 +147,8 @@ const INITIAL = 3
 const CHIP_PX = 40
 const SLOT_PX = 32
 const ABSORB_SCALE = SLOT_PX / CHIP_PX
-/** Ring thickness as it must LOOK — matches .ap-avatar's box-shadow. */
-const RING_PX = 2
+/** Edge hairline as it must LOOK once seated — matches .ap-avatar's outline. */
+const RING_PX = 1
 /** Avatars are 32px overlapped by 8 → 24px pitch between slots. The hover gap
  *  opens by exactly one pitch, so insertion swaps in with zero movement. */
 const PITCH = 24
@@ -434,7 +438,20 @@ export function Chips({ blur, contrast, shadow, pro, bare }: DemoProps) {
 
   const stage = (
     <Liquid blur={blur} contrast={contrast} fill="var(--modal-bg)" shadow={shadow} className="ap">
-      <p className="ap-hint">Drag the avatar into the group to merge it in</p>
+      {/* Drag affordance: a label and a hand-drawn arrow aimed at the loose
+          avatar, instead of a sentence explaining the interaction. Retired
+          once the avatar is consumed — an arrow pointing at an empty corner
+          reads as a bug — and faded while dragging, when it has served its
+          purpose and would only sit under the user's hand. */}
+      {!consumed && (
+        <p
+          className={`ap-dragme ${dragging ? 'is-dragging' : ''}`}
+          aria-hidden="true"
+        >
+          <span className="ap-dragme-text">Drag me</span>
+          <span className="ap-dragme-arrow" />
+        </p>
+      )}
       <button type="button" className="ap-reset" onClick={reset}>
         Reset
       </button>
@@ -570,6 +587,7 @@ export function Chips({ blur, contrast, shadow, pro, bare }: DemoProps) {
             strength: pro ? melt.strength : slimDissolve,
             ...(pro
               ? {
+                  sink: melt.sink,
                   blur: melt.blur,
                   warp: melt.warp,
                   range: melt.range,
@@ -686,6 +704,7 @@ export function Chips({ blur, contrast, shadow, pro, bare }: DemoProps) {
             </span>
           </div>
           <SliderRow label="Strength" value={melt.strength} min={0} max={1} step={0.05} onChange={setM('strength')} />
+          <SliderRow label="Sink fade" value={melt.sink} min={0.1} max={1.2} step={0.05} onChange={setM('sink')} />
           <SliderRow label="Warp" value={melt.warp} min={0} max={90} step={1} onChange={setM('warp')} />
           <SliderRow label="Mix (two-liquid)" value={melt.mix} min={0} max={1} step={0.05} onChange={setM('mix')} />
           <SliderRow label="Gravity (px)" value={melt.gravity} min={0} max={60} step={1} onChange={setM('gravity')} />
