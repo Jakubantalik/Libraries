@@ -526,9 +526,10 @@ body {
   transition: opacity 220ms ease;
 }
 
-/* Once the drag is under way the affordance has done its job, and it sits
-   right where the hand is. */
-.ap-dragme.is-dragging {
+/* Once the gesture is under way the affordance has done its job, and it sits
+   right where the hand is. Held through the release flight too — see the
+   note in Chips.tsx. */
+.ap-dragme.is-hidden {
   opacity: 0;
 }
 

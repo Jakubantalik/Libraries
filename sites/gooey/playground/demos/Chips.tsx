@@ -441,11 +441,16 @@ export function Chips({ blur, contrast, shadow, pro, bare }: DemoProps) {
       {/* Drag affordance: a label and a hand-drawn arrow aimed at the loose
           avatar, instead of a sentence explaining the interaction. Retired
           once the avatar is consumed — an arrow pointing at an empty corner
-          reads as a bug — and faded while dragging, when it has served its
-          purpose and would only sit under the user's hand. */}
+          reads as a bug.
+          Hidden for the WHOLE gesture, the flight included. `dragging` goes
+          false the instant you let go, but the avatar is still travelling and
+          `consumed` (which unmounts this) only lands a dropDur later — so
+          keying on `dragging` alone let the affordance fade back in over that
+          window and then vanish, a flash on every successful drop. A missed
+          drop sets neither flag, so there it correctly returns. */}
       {!consumed && (
         <p
-          className={`ap-dragme ${dragging ? 'is-dragging' : ''}`}
+          className={`ap-dragme ${dragging || absorbing ? 'is-hidden' : ''}`}
           aria-hidden="true"
         >
           <span className="ap-dragme-text">Drag me</span>
