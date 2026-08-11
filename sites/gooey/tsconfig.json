@@ -13,8 +13,8 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "paths": {
-      "liquid-gooey": ["./src/index.ts"]
+      "liquid-gooey": ["../../packages/liquid-gooey/src/index.ts"]
     }
   },
-  "include": ["src", "playground", "vite.config.ts"]
+  "include": ["playground", "vite.config.ts"]
 }

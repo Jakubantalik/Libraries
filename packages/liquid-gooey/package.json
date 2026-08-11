@@ -18,10 +18,17 @@
   "files": [
     "dist"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jakubantalik/Libraries.git",
+    "directory": "packages/liquid-gooey"
+  },
+  "bugs": {
+    "url": "https://github.com/Jakubantalik/Libraries/issues"
+  },
+  "homepage": "https://gooey.jakubantalik.com",
   "scripts": {
-    "dev": "vite",
     "build": "tsup src/index.ts --format esm,cjs --dts --sourcemap --clean",
-    "build:playground": "vite build",
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
@@ -29,15 +36,10 @@
     "react-dom": ">=18"
   },
   "devDependencies": {
-    "@types/node": "^26.1.2",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
-    "@vitejs/plugin-react": "^4.3.1",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
     "tsup": "^8.1.0",
-    "typescript": "^5.5.3",
-    "vite": "^5.3.3"
+    "typescript": "^5.5.3"
   },
   "keywords": [
     "react",
