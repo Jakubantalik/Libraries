@@ -36,8 +36,10 @@
   --ctl-bg-hover: rgba(0, 0, 0, 0.09);
   --ctl-border: rgba(0, 0, 0, 0.12);
   --field-bg: #ffffff;
-  --track: #eaeaea;
-  --track-ring: rgba(0, 0, 0, 0.08);
+  /* Both at 70% — the light track sat heavier against its stage than the
+     dark one does. Dark overrides these below, so it is unaffected. */
+  --track: rgba(234, 234, 234, 0.7);
+  --track-ring: rgba(0, 0, 0, 0.056);
   /* The slider thumb is its own surface, not the generic --modal-bg. */
   --sl-thumb: #ffffff;
   --accent: #17181c;

@@ -31,10 +31,10 @@ interface EbState {
 const DEFAULTS: EbState = {
   dur: 600,
   ease: 'Custom',
-  bez: [0.22, 1.17, 0.71, 1],
+  bez: [0.22, 1.3, 0.71, 1],
   crossBlur: 2,
   gap: 20,
-  gooBlur: 9,
+  gooBlur: 8,
   gooContrast: 22,
 }
 
