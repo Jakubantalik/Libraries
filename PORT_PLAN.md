@@ -101,8 +101,12 @@ The one structural change that makes everything else cheap:
 "Findings" below.** The package exists, typechecks against real
 Skia/RN/Reanimated types, reproduces the golden vectors exactly (70,115
 values), and its Skia draw sequence pixel-diffs against the web canvas at
-worst mean 1.4/255. It has **not** run on a device or simulator yet; that
-is the remaining gate before it can ship.
+worst mean 1.4/255. The Expo example app in `ports/react-native/example`
+bundles clean — 1475 modules, no errors — which also proves
+`thinking-orbs/engine`'s subpath export resolves under Metro.
+
+It has **not** run on a device or simulator yet; that is the remaining gate
+before it can ship.
 
 Layout mirrors `border-beam-native` (`package.json` peer-dep pattern, `src/`,
 `tsc` build, plus an Expo `example/` app).

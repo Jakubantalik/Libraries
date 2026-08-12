@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "thinking-orbs example",
+    "slug": "thinking-orbs-example",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.jakubantalik.thinkingorbsexample"
+    },
+    "android": {
+      "package": "com.jakubantalik.thinkingorbsexample"
+    }
+  }
+}
