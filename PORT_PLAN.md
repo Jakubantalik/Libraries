@@ -105,8 +105,10 @@ worst mean 1.4/255. The Expo example app in `ports/react-native/example`
 bundles clean — 1475 modules, no errors — which also proves
 `thinking-orbs/engine`'s subpath export resolves under Metro.
 
-It has **not** run on a device or simulator yet; that is the remaining gate
-before it can ship.
+**Now running on the iOS simulator** (iPhone 16 Pro / iOS 18.6) via the
+example app, which was rebuilt to the Logram Figma design: a swipeable glass
+pill that morphs into a modal sheet. Remaining: a physical device, and
+Android.
 
 Layout mirrors `border-beam-native` (`package.json` peer-dep pattern, `src/`,
 `tsc` build, plus an Expo `example/` app).
@@ -273,6 +275,30 @@ Layout mirrors `BorderBeamKit` (SPM `Package.swift`, `Sources`, `Tests`,
   uncompensated on both ports — the bias is not monotonic in radius, so a
   correction is a fitted curve, and not dropping requested dots is the
   better default.
+- **Three React Native new-architecture (Fabric) touch traps, each found
+  only by running it.** (1) A `Pressable` child under a `PanResponder`
+  parent never fires — swipes worked, presses silently died. (2) Reanimated
+  layout-prop animation repaints the view but leaves the shadow tree's
+  hit-test frame at the OLD geometry, so after the pill morphed into the
+  sheet, taps only registered inside the former pill rect; the fix is to put
+  the responder on a STATIC view and route by page-coordinate rects, keeping
+  the animated view purely visual. (3) Skia canvases absorb touches natively
+  without bubbling to the responder system — the close button was dead
+  precisely because the X is a Skia canvas, fixed with
+  `pointerEvents="none"` on all decorative content. None of this is visible
+  to a bundler, a typechecker, or a pixel diff.
+- **Two build-environment traps on this machine, unrelated to the library.**
+  CocoaPods under Ruby 4.0.6 dies with `Encoding::CompatibilityError` unless
+  `RUBYOPT=-EUTF-8:UTF-8` is set, and React Native's codegen script cannot
+  build from a path containing spaces (`/Work 2023+/`), failing with
+  `/bin/sh: /Users/jakub/Dropbox/Work: is a directory`. The simulator build
+  therefore runs from a space-free copy. Worth noting that border-beam's
+  "RN is blocked on this machine" conclusion was partly these, not the
+  Xcode/Expo ceiling.
+- **`displaySize` exists because a transform is not a re-render.** Scaling a
+  64dp orb up 2x with a view transform upscales an already-rasterised
+  canvas. Sizing the Skia canvas to the target and scaling the DRAWING keeps
+  the tuned geometry and stays vector-sharp at any factor.
 - **Verify a rasteriser with a rasteriser, not with a simulator.** Replaying
   the port's exact draw sequence through CanvasKit (the WASM build of the
   same Skia) and pixel-diffing against the browser caught the sub-pixel

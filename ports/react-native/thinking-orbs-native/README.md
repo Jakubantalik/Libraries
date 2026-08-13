@@ -4,10 +4,10 @@ Dotted thought-orb loading indicators for React Native, rendered with Skia.
 Port of [thinking-orbs](https://orbs.jakubantalik.com) — nine hand-tuned
 animated states, two purpose-tuned sizes, automatic dark/light.
 
-> **Status: not yet runtime-verified on a device or simulator.** Geometry,
-> types and the Skia draw sequence are verified as described below, but
-> nobody has watched this render on a phone yet. Do not ship it to users
-> until that happens.
+> **Status: running on the iOS simulator** (iPhone 16 Pro, iOS 18.6, Expo
+> SDK 53 / RN 0.79.6 / Skia 2.0.0-next.4) via `../example`. Geometry, types
+> and the Skia draw sequence are verified as described below. Still
+> unverified: a physical device and Android.
 
 ## Install
 
@@ -25,7 +25,15 @@ import { ThinkingOrb } from 'thinking-orbs-native';
 
 Props mirror the web package: `state`, `size` (`64 | 20`), `theme`
 (`'auto' | 'dark' | 'light'`), `speed`, `paused`, `accessibilityLabel`,
-`style`.
+`style` — plus one addition, `displaySize`.
+
+`displaySize` renders the orb at an arbitrary dp size while keeping the
+tuned `size` preset's geometry: the Skia canvas is sized to `displaySize`
+and the drawing is scaled into it. Since a frame is a list of vector
+circles, that stays sharp at any factor, unlike a transform on the view,
+which upscales an already-rasterised canvas. Use it when a layout needs the
+64 design at some other size — the example app's pill-to-sheet morph grows
+its orb from 48 to 133dp this way.
 
 ## How parity is achieved
 

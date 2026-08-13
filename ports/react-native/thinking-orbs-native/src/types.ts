@@ -24,6 +24,18 @@ export interface ThinkingOrbProps {
   speed?: number;
   /** Freeze on the current frame. @default false */
   paused?: boolean;
+  /**
+   * Render the orb at this many dp instead of `size`.
+   *
+   * The GEOMETRY still comes from the `size` preset — these are two tuned
+   * designs, not one design at two scales — but the Skia canvas is sized to
+   * `displaySize` and the drawing is scaled into it. Because the frame is a
+   * list of vector circles, that stays crisp at any factor, unlike putting a
+   * transform on the view (which upscales an already-rasterised 64dp canvas).
+   *
+   * Use it when a layout needs the 64 design at, say, 133dp.
+   */
+  displaySize?: number;
   /** Overrides the per-state default. */
   accessibilityLabel?: string;
   style?: ViewStyle;

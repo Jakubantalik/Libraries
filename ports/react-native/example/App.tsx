@@ -74,6 +74,15 @@ const SHEET_R = 42.54;
 const SHEET_BOTTOM = 24;
 const SHEET_MARGIN = 24;
 
+// Orb geometry at both ends of the morph, from Figma. The orb is rendered
+// ONCE at ORB_SHEET dp and scaled DOWN for the pill, so the large end (where
+// detail matters) is native resolution and the small end is a downscale.
+const ORB_PILL = 48;
+const ORB_SHEET = 133;
+const ORB_PILL_CX = 13 + ORB_PILL / 2; // 13 from the pill's left edge
+const ORB_PILL_CY = PILL_H / 2;
+const ORB_SHEET_CY = 72 + ORB_SHEET / 2; // 72 from the sheet's top edge
+
 const SWIPE_THRESHOLD = 56;
 
 const SPRING = { damping: 26, stiffness: 260, mass: 1 };
@@ -228,11 +237,20 @@ export default function App() {
     opacity: interpolate(morph.value, [0.55, 1], [0, 1], Extrapolation.CLAMP),
   }));
 
-  // rim highlight must track the container's radius, or the hairline gets
-  // clipped away at the corners while the shape is mid-morph
-  const rimStyle = useAnimatedStyle(() => ({
-    borderRadius: interpolate(morph.value, [0, 1], [PILL_R, SHEET_R]),
-  }));
+  // ONE orb for both states: it travels from the pill's left inset to the
+  // sheet's centre and scales 48 -> 133 continuously, instead of two
+  // instances crossfading. Positioned by its centre so the scale, which RN
+  // applies about the view's middle, does not drag the orb off its mark.
+  const orbStyle = useAnimatedStyle(() => {
+    const cx = interpolate(morph.value, [0, 1], [ORB_PILL_CX, sheetW / 2]);
+    const cy = interpolate(morph.value, [0, 1], [ORB_PILL_CY, ORB_SHEET_CY]);
+    const scale = interpolate(morph.value, [0, 1], [ORB_PILL / ORB_SHEET, 1]);
+    return {
+      left: cx - ORB_SHEET / 2,
+      top: cy - ORB_SHEET / 2,
+      transform: [{ scale }],
+    };
+  });
 
   return (
     <View style={styles.root} {...pan.panHandlers}>
@@ -251,19 +269,17 @@ export default function App() {
           style={[StyleSheet.absoluteFill, styles.sheetGlass, sheetGlassStyle]}
           pointerEvents="none"
         />
-        {/* rim highlight, shared by both shapes */}
-        <Animated.View style={[styles.rim, rimStyle]} pointerEvents="none" />
 
         {/* pill content */}
+        {/* the orb spans both states — see orbStyle */}
+        <Animated.View style={[styles.orb, orbStyle]} pointerEvents="none">
+          <ThinkingOrb state={state} size={64} displaySize={ORB_SHEET} theme="dark" />
+        </Animated.View>
+
         {/* tap is handled by the pan responder above, not a Pressable */}
         <Animated.View style={[styles.pillContent, pillContentStyle]} pointerEvents="none">
-          <View style={styles.pillPress}>
-            <View style={styles.pillOrb}>
-              <ThinkingOrb state={state} size={64} theme="dark" />
-            </View>
-            <View style={styles.pillLabel}>
-              <ShimmerText text={`${VERBS[state]}....`} fontSize={16} />
-            </View>
+          <View style={styles.pillLabel}>
+            <ShimmerText text={`${VERBS[state]}....`} fontSize={16} />
           </View>
         </Animated.View>
 
@@ -274,9 +290,6 @@ export default function App() {
             verified on-device: the close button was dead precisely because
             the X is a Skia canvas. */}
         <Animated.View style={[StyleSheet.absoluteFill, sheetContentStyle]} pointerEvents="none">
-          <View style={styles.sheetOrb}>
-            <ThinkingOrb state={state} size={64} theme="dark" style={styles.sheetOrbScale} />
-          </View>
           <View style={styles.sheetTitle}>
             <ShimmerText text={`${VERBS[state]}....`} fontSize={16} />
           </View>
@@ -315,62 +328,35 @@ const styles = StyleSheet.create({
   container: {
     position: 'absolute',
     overflow: 'hidden',
-    // Figma: 0 12 26 rgba(0,0,0,0.24). CSS box-shadow blur maps to roughly
-    // TWICE CoreGraphics' shadowRadius, so 26 CSS blur = 13 here — using 26
-    // reads as a much softer, bigger halo than the design.
-    shadowColor: '#000',
-    shadowOpacity: 0.24,
-    shadowRadius: 13,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 12,
-    // Figma's third shadow layer: 0 0 0 0.5 rgba(0,0,0,0.12) — a hairline
-    // dark ring around the glass, separate from the white inner rim
-    borderWidth: 0.5,
-    borderColor: 'rgba(0,0,0,0.12)',
+    // The design's shadow stack, verbatim. React Native 0.76+ on the new
+    // architecture implements the real CSS box-shadow model including inset,
+    // so this needs no approximating: one outer drop plus three DIRECTIONAL
+    // white insets (top-left bright, bottom-right and bottom faint) that a
+    // single uniform border could never reproduce.
+    //
+    // The design also ships a display-p3 variant of the same stack; RN has no
+    // wide-gamut colour syntax, so these are the sRGB values, which is what
+    // the first CSS declaration falls back to anyway.
+    boxShadow: [
+      { offsetX: 0, offsetY: 12, blurRadius: 26, spreadDistance: 0, color: 'rgba(0,0,0,0.24)' },
+      { offsetX: 1, offsetY: 2, blurRadius: 3, spreadDistance: -2, color: 'rgba(255,255,255,0.24)', inset: true },
+      { offsetX: -1, offsetY: -2, blurRadius: 1, spreadDistance: -2, color: 'rgba(255,255,255,0.24)', inset: true },
+      { offsetX: 0, offsetY: -2, blurRadius: 1, spreadDistance: -2, color: 'rgba(255,255,255,0.24)', inset: true },
+    ],
   },
   sheetGlass: {
     backgroundColor: 'rgba(0,0,0,0.8)',
   },
-  // Figma's inset highlights are directional (strongest top-left, faint
-  // bottom); RN borders can't vary per edge, so this is a uniform hairline
-  // at the average weight of the three inset layers (white alpha 0.24 with
-  // negative spread)
-  rim: {
-    ...StyleSheet.absoluteFillObject,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255,255,255,0.22)',
-  },
   pillContent: {
     ...StyleSheet.absoluteFillObject,
   },
-  pillPress: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  pillOrb: {
-    marginLeft: 13,
-    width: 48,
-    height: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    transform: [{ scale: 48 / 64 }],
+  orb: {
+    position: 'absolute',
   },
   pillLabel: {
     position: 'absolute',
     left: 71.3,
-  },
-  sheetOrb: {
-    position: 'absolute',
-    top: 72,
-    alignSelf: 'center',
-    width: 133,
-    height: 133,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sheetOrbScale: {
-    transform: [{ scale: 133 / 64 }],
+    top: (PILL_H - 22) / 2,
   },
   sheetTitle: {
     position: 'absolute',

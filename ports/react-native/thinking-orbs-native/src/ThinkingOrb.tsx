@@ -46,6 +46,7 @@ export function ThinkingOrb({
   theme = 'auto',
   speed = 1,
   paused = false,
+  displaySize,
   accessibilityLabel,
   style
 }: ThinkingOrbProps) {
@@ -63,6 +64,8 @@ export function ThinkingOrb({
 
   const { mode, speed: baseSpeed, opts } = useMemo(() => resolvePreset(state, size), [state, size]);
   const effSpeed = baseSpeed * speed;
+  const box = displaySize ?? size;
+  const zoom = box / size;
 
   useEffect(() => {
     const { fill, stroke } = paints;
@@ -87,6 +90,8 @@ export function ThinkingOrb({
     const record = (t: number) => {
       const frame = build(size, t, opts);
       const pic = createPicture((canvas) => {
+        // draw the tuned `size` geometry into a `displaySize` canvas
+        if (zoom !== 1) canvas.scale(zoom, zoom);
         // lines first, so nodes sit on top of their edges
         for (const l of frame.lines) {
           setInk(stroke, l.white, l.a ?? 1);
@@ -98,7 +103,7 @@ export function ThinkingOrb({
           setInk(fill, d.white, d.a ?? 1);
           canvas.drawCircle(d.x, d.y, d.r, fill);
         }
-      }, Skia.XYWHRect(0, 0, size, size));
+      }, Skia.XYWHRect(0, 0, box, box));
       setPicture(pic);
     };
 
@@ -122,16 +127,16 @@ export function ThinkingOrb({
       running = false;
       cancelAnimationFrame(raf);
     };
-  }, [mode, opts, size, dark, effSpeed, paused, reduced, appActive, paints, rgba]);
+  }, [mode, opts, size, box, zoom, dark, effSpeed, paused, reduced, appActive, paints, rgba]);
 
   return (
     <View
       accessible
       accessibilityRole="image"
       accessibilityLabel={accessibilityLabel ?? LABELS[state]}
-      style={[{ width: size, height: size }, style]}
+      style={[{ width: box, height: box }, style]}
     >
-      <Canvas style={{ width: size, height: size }}>
+      <Canvas style={{ width: box, height: box }}>
         {picture ? <Picture picture={picture} /> : null}
       </Canvas>
     </View>
