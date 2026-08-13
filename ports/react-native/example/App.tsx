@@ -20,12 +20,13 @@
 //          subtitle y277 w271 #898989  close 36x36 r100 @ 24/24, bg white/9%
 
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { PanResponder, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { PanResponder, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ImageSVG, useSVG } from '@shopify/react-native-skia';
 import { Canvas as SkiaCanvas } from '@shopify/react-native-skia';
 import Animated, {
+  Easing,
   Extrapolation,
   interpolate,
   runOnJS,
@@ -36,6 +37,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { ThinkingOrb } from 'thinking-orbs-native';
 import type { OrbState } from 'thinking-orbs-native';
+import { ShimmerText } from './ShimmerText';
 
 // swipe order; starts on `breathing`, whose label the design shows
 const STATES: OrbState[] = [
@@ -76,8 +78,13 @@ const SWIPE_THRESHOLD = 56;
 
 const SPRING = { damping: 26, stiffness: 260, mass: 1 };
 
+// transitions.dev "Card resize" (01-card-resize.md): the morph between the
+// pill and sheet geometries tweens with the recipe's exact timing —
+// --resize-dur 300ms, --resize-ease cubic-bezier(0.22, 1, 0.36, 1).
+const RESIZE = { duration: 300, easing: Easing.bezier(0.22, 1, 0.36, 1) };
+
 export default function App() {
-  const { width: screenW } = useWindowDimensions();
+  const { width: screenW, height: screenH } = useWindowDimensions();
   const sheetW = screenW - SHEET_MARGIN * 2;
 
   const [index, setIndex] = useState(0);
@@ -101,24 +108,70 @@ export default function App() {
   const expandedRef = useRef(expanded);
   expandedRef.current = expanded;
 
+  // One responder owns the pill: it claims every touch while collapsed, so
+  // drag = swipe and a release that never moved = tap. A Pressable child
+  // under a PanResponder parent silently loses presses on the new
+  // architecture (Fabric) — verified on-device: swipes fired, presses never
+  // did — so the tap must live here, not in a Pressable.
   const pan = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: () => false,
-        onMoveShouldSetPanResponder: (_e, g) =>
-          !expandedRef.current && Math.abs(g.dx) > 8 && Math.abs(g.dx) > Math.abs(g.dy),
-        onMoveShouldSetPanResponderCapture: (_e, g) =>
-          !expandedRef.current && Math.abs(g.dx) > 8 && Math.abs(g.dx) > Math.abs(g.dy),
-        onPanResponderMove: (_e, g) => {
-          swipeX.value = g.dx;
+        onStartShouldSetPanResponder: (e) => {
+          // Hit-testing must be done here, in page coordinates, because the
+          // ANIMATED view cannot be the touch target at all: Reanimated
+          // layout-prop animation on Fabric repaints the view but leaves the
+          // shadow tree's hit-test frame at the previous geometry — verified
+          // on-device (sheet taps landed nowhere after the morph). So a
+          // static wrapper spanning the SHEET frame owns every touch, and
+          // this filter decides what a touch means by where it starts.
+          const g2 = geomRef.current;
+          if (expandedRef.current) return true;
+          const { pageX, pageY } = e.nativeEvent;
+          const pillLeft = (g2.screenW - PILL_W) / 2;
+          const pillTop = g2.screenH - PILL_BOTTOM - PILL_H;
+          return (
+            pageX > pillLeft - 8 &&
+            pageX < pillLeft + PILL_W + 8 &&
+            pageY > pillTop - 8 &&
+            pageY < pillTop + PILL_H + 8
+          );
         },
-        onPanResponderRelease: (_e, g) => {
-          if (Math.abs(g.dx) > SWIPE_THRESHOLD) {
+        onPanResponderMove: (_e, g) => {
+          if (!expandedRef.current) swipeX.value = g.dx;
+        },
+        onPanResponderRelease: (e, g) => {
+          const isTap = Math.abs(g.dx) < 8 && Math.abs(g.dy) < 8;
+          if (expandedRef.current) {
+            // Sheet: the X closes; so does a tap anywhere outside the sheet.
+            // Page coordinates against the sheet's absolute frame — location
+            // coords are relative to whichever child got hit, so they are
+            // useless for this.
+            const { pageX, pageY } = e.nativeEvent;
+            const g2 = geomRef.current;
+            const sheetTop = g2.screenH - SHEET_BOTTOM - SHEET_H;
+            const right = g2.screenW - SHEET_MARGIN;
+            const onClose =
+              pageX > right - 24 - 36 - 10 &&
+              pageX < right - 24 + 10 &&
+              pageY > sheetTop + 24 - 10 &&
+              pageY < sheetTop + 24 + 36 + 10;
+            const outsideSheet =
+              pageX < SHEET_MARGIN || pageX > right || pageY < sheetTop;
+            if (isTap && (onClose || outsideSheet)) closeRef.current();
+            return;
+          }
+          if (isTap) {
+            swipeX.value = withSpring(0, SPRING);
+            openRef.current();
+          } else if (Math.abs(g.dx) > SWIPE_THRESHOLD) {
             const dir = g.dx < 0 ? 1 : -1; // swipe left → next
-            swipeX.value = withTiming(-dir * PILL_W, { duration: 110 }, () => {
+            // the WHOLE pill exits the way the finger went, the state swaps
+            // off-screen, and a fresh pill slides in from the other side
+            const off = screenW / 2 + PILL_W / 2 + 30;
+            swipeX.value = withTiming(-dir * off, { duration: 140 }, () => {
               runOnJS(advance)(dir);
-              swipeX.value = dir * PILL_W;
-              swipeX.value = withTiming(0, { duration: 150 });
+              swipeX.value = dir * off;
+              swipeX.value = withTiming(0, { duration: 180, easing: Easing.bezier(0.22, 1, 0.36, 1) });
             });
           } else {
             swipeX.value = withSpring(0, SPRING);
@@ -128,26 +181,35 @@ export default function App() {
           swipeX.value = withSpring(0, SPRING);
         },
       }),
-    [advance, swipeX]
+    [advance, swipeX, screenW]
   );
 
   const open = useCallback(() => {
     setExpanded(true);
-    morph.value = withSpring(1, SPRING);
+    morph.value = withTiming(1, RESIZE);
   }, [morph]);
+  const openRef = useRef(open);
+  openRef.current = open;
 
   const close = useCallback(() => {
     setExpanded(false);
-    morph.value = withSpring(0, SPRING);
+    morph.value = withTiming(0, RESIZE);
   }, [morph]);
+  const closeRef = useRef(close);
+  closeRef.current = close;
+  const geomRef = useRef({ screenW, screenH });
+  geomRef.current = { screenW, screenH };
 
   // ---- animated styles ----------------------------------------------------
 
+  // swipe rides on the container, so the whole pill — glass, rim, shadow —
+  // moves together rather than the label sliding inside a static shell
   const containerStyle = useAnimatedStyle(() => ({
     width: interpolate(morph.value, [0, 1], [PILL_W, sheetW]),
     height: interpolate(morph.value, [0, 1], [PILL_H, SHEET_H]),
     borderRadius: interpolate(morph.value, [0, 1], [PILL_R, SHEET_R]),
-    bottom: interpolate(morph.value, [0, 1], [PILL_BOTTOM, SHEET_BOTTOM]),
+    bottom: interpolate(morph.value, [0, 1], [PILL_BOTTOM - SHEET_BOTTOM, 0]),
+    transform: [{ translateX: swipeX.value }],
   }));
 
   // pill's gradient glass fades into the sheet's solid glass
@@ -160,7 +222,6 @@ export default function App() {
 
   const pillContentStyle = useAnimatedStyle(() => ({
     opacity: interpolate(morph.value, [0, 0.35], [1, 0], Extrapolation.CLAMP),
-    transform: [{ translateX: swipeX.value }],
   }));
 
   const sheetContentStyle = useAnimatedStyle(() => ({
@@ -174,10 +235,11 @@ export default function App() {
   }));
 
   return (
-    <View style={styles.root}>
+    <View style={styles.root} {...pan.panHandlers}>
       <StatusBar style="light" />
 
-      <Animated.View style={[styles.container, containerStyle]} {...pan.panHandlers}>
+      <View style={[styles.hitArea, { width: sheetW }]}>
+      <Animated.View style={[styles.container, containerStyle]}>
         {/* glass backgrounds */}
         <Animated.View style={[StyleSheet.absoluteFill, pillGlassStyle]} pointerEvents="none">
           <LinearGradient
@@ -193,36 +255,45 @@ export default function App() {
         <Animated.View style={[styles.rim, rimStyle]} pointerEvents="none" />
 
         {/* pill content */}
-        <Animated.View style={[styles.pillContent, pillContentStyle]} pointerEvents={expanded ? 'none' : 'auto'}>
-          <Pressable style={styles.pillPress} onPress={open}>
+        {/* tap is handled by the pan responder above, not a Pressable */}
+        <Animated.View style={[styles.pillContent, pillContentStyle]} pointerEvents="none">
+          <View style={styles.pillPress}>
             <View style={styles.pillOrb}>
               <ThinkingOrb state={state} size={64} theme="dark" />
             </View>
-            <Text style={styles.pillLabel}>{VERBS[state]}....</Text>
-          </Pressable>
+            <View style={styles.pillLabel}>
+              <ShimmerText text={`${VERBS[state]}....`} fontSize={16} />
+            </View>
+          </View>
         </Animated.View>
 
         {/* sheet content */}
-        <Animated.View
-          style={[StyleSheet.absoluteFill, sheetContentStyle]}
-          pointerEvents={expanded ? 'auto' : 'none'}
-        >
+        {/* pointerEvents none ALWAYS: the root pan responder owns every
+            touch, and Skia canvases (orb, X icon) would otherwise absorb
+            taps natively without bubbling to the responder system —
+            verified on-device: the close button was dead precisely because
+            the X is a Skia canvas. */}
+        <Animated.View style={[StyleSheet.absoluteFill, sheetContentStyle]} pointerEvents="none">
           <View style={styles.sheetOrb}>
             <ThinkingOrb state={state} size={64} theme="dark" style={styles.sheetOrbScale} />
           </View>
-          <Text style={styles.sheetTitle}>{VERBS[state]}....</Text>
+          <View style={styles.sheetTitle}>
+            <ShimmerText text={`${VERBS[state]}....`} fontSize={16} />
+          </View>
           <Text style={styles.sheetSubtitle}>
             Agent is processing your request. Please wait, it might take a few seconds.
           </Text>
-          <Pressable style={styles.close} onPress={close} hitSlop={10}>
+          {/* visual only — the tap is resolved by the pan responder's hit rect */}
+          <View style={styles.close}>
             {closeSvg && (
               <SkiaCanvas style={styles.closeIcon}>
                 <ImageSVG svg={closeSvg} x={0} y={0} width={11.17} height={11.17} />
               </SkiaCanvas>
             )}
-          </Pressable>
+          </View>
         </Animated.View>
       </Animated.View>
+      </View>
     </View>
   );
 }
@@ -233,23 +304,41 @@ const styles = StyleSheet.create({
     backgroundColor: '#3b3b3b',
     alignItems: 'center',
   },
+  // static touch target at the SHEET's frame — never animated, so its
+  // hit-test rect is always where the eye thinks the surface is
+  hitArea: {
+    position: 'absolute',
+    bottom: SHEET_BOTTOM,
+    height: SHEET_H,
+    alignItems: 'center',
+  },
   container: {
     position: 'absolute',
     overflow: 'hidden',
-    // Figma: 0 12 26 rgba(0,0,0,0.24)
+    // Figma: 0 12 26 rgba(0,0,0,0.24). CSS box-shadow blur maps to roughly
+    // TWICE CoreGraphics' shadowRadius, so 26 CSS blur = 13 here — using 26
+    // reads as a much softer, bigger halo than the design.
     shadowColor: '#000',
     shadowOpacity: 0.24,
-    shadowRadius: 26,
+    shadowRadius: 13,
     shadowOffset: { width: 0, height: 12 },
     elevation: 12,
+    // Figma's third shadow layer: 0 0 0 0.5 rgba(0,0,0,0.12) — a hairline
+    // dark ring around the glass, separate from the white inner rim
+    borderWidth: 0.5,
+    borderColor: 'rgba(0,0,0,0.12)',
   },
   sheetGlass: {
     backgroundColor: 'rgba(0,0,0,0.8)',
   },
+  // Figma's inset highlights are directional (strongest top-left, faint
+  // bottom); RN borders can't vary per edge, so this is a uniform hairline
+  // at the average weight of the three inset layers (white alpha 0.24 with
+  // negative spread)
   rim: {
     ...StyleSheet.absoluteFillObject,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255,255,255,0.14)',
+    borderColor: 'rgba(255,255,255,0.22)',
   },
   pillContent: {
     ...StyleSheet.absoluteFillObject,
@@ -270,8 +359,6 @@ const styles = StyleSheet.create({
   pillLabel: {
     position: 'absolute',
     left: 71.3,
-    fontSize: 16,
-    color: '#a8a8a8',
   },
   sheetOrb: {
     position: 'absolute',
