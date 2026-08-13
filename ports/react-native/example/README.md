@@ -1,7 +1,13 @@
 # thinking-orbs-native example
 
-Expo app exercising the React Native port: all nine states at both sizes,
-theme toggle, speed presets.
+Expo app exercising the React Native port, built to the Logram Figma
+reference (Logram-.App, node 2584:83673): a glass status pill bottom-centre
+with the orb and its verb. Swipe horizontally to page through the nine orb
+states; tap to morph the pill into the modal sheet (big orb, title,
+subtitle); tap X to morph back. The morph is one animated container
+interpolating between the two Figma geometries, with the pill's gradient
+glass crossfading into the sheet's solid glass. Both orbs share the engine
+clock, so the crossfade never resets the animation.
 
 ```bash
 npm install
