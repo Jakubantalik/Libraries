@@ -41,14 +41,15 @@ private enum D {
     static let grabH: CGFloat = 5
     static let grabTop: CGFloat = 12
 
-    // Stacking follows ark-ui's Toast: translate, scale and opacity all
-    // transition together over 400ms with --gap 16 between cards, and the
-    // enter curve overshoots slightly where the exit curve settles flat.
-    static let stackOpacity: [Double] = [1, 0.5, 0.2]
-    static let stackGap: CGFloat = 16 // ark --gap
+    // Stacking follows sonner (sonner.emilkowal.ski), from its stylesheet:
+    //   mount:  --y: translateY(100%) -> translateY(0)   (its OWN height)
+    //   stack:  translateY(-gap * n)  scale(1 - 0.05n)   gap 14
+    //   cards keep full opacity; their CONTENT fades out behind the front
+    //   ([data-front='false'] > * { opacity: 0 }), and everything runs
+    //   400ms on plain CSS `ease`.
+    static let stackGap: CGFloat = 14 // sonner --gap
     static let stackShrink: CGFloat = 0.05
     static let stackRendered = 3
-    static let enterRise: CGFloat = 90
 
     static let swipeThreshold: CGFloat = 56
     static let dismissDistance: CGFloat = 90
@@ -71,7 +72,7 @@ private let VERBS: [OrbState: String] = [
 
 // MARK: - Tuning
 
-enum EaseKind: String, CaseIterable { case ark, smooth, bounce, spring }
+enum EaseKind: String, CaseIterable { case sonner, ark, smooth, bounce, spring }
 
 struct Seg {
     var ms: Double
@@ -86,6 +87,9 @@ struct Seg {
     /// The SwiftUI animation this segment describes.
     var animation: Animation {
         switch ease {
+        case .sonner:
+            // CSS `ease`, sonner's transition curve
+            return .timingCurve(0.25, 0.1, 0.25, 1, duration: ms / 1000)
         case .ark:
             // ark-ui Toast's open curve — a slight overshoot at 1.02
             return .timingCurve(0.21, 1.02, 0.73, 1, duration: ms / 1000)
@@ -101,7 +105,7 @@ struct Seg {
 }
 
 struct Tune {
-    var stack = Seg(ms: 400, bounce: 0.3, ease: .ark, stiffness: 220, damping: 20, mass: 1, anticipate: 0, anticipateMs: 90)
+    var stack = Seg(ms: 400, bounce: 0.3, ease: .sonner, stiffness: 220, damping: 20, mass: 1, anticipate: 0, anticipateMs: 90)
     var open = Seg(ms: 350, bounce: 0.25, ease: .bounce, stiffness: 220, damping: 20, mass: 1, anticipate: 0.04, anticipateMs: 90)
     var close = Seg(ms: 250, bounce: 0.15, ease: .smooth, stiffness: 220, damping: 20, mass: 1, anticipate: 0.05, anticipateMs: 110)
     var revealMs: Double = 500
@@ -167,6 +171,7 @@ struct PillsView: View {
     @State private var swipeX: CGFloat = 0
     @State private var dragY: CGFloat = 0
     @State private var enterY: CGFloat = 0
+    @State private var enterFade: Double = 1
 
     @State private var tune = Tune()
 
@@ -189,6 +194,15 @@ struct PillsView: View {
 
                 surface(sheetW: sheetW, screen: geo.size, globalFrame: geo.frame(in: .global))
 
+                // The sheet copy lives OUTSIDE the morphing surface, in a
+                // static layer whose geometry never animates. Inside the
+                // surface, every position/frame value is animatable data and
+                // interpolates on the MORPH transaction's curve — so however
+                // the maths anchored it (top, bottom, final width), a bouncy
+                // open bounced the type. Out here nothing is animatable; the
+                // only motion is the reveal's own rise, on the recipe's ease.
+                sheetCopy(sheetW: sheetW)
+
                 TunePanel(tune: $tune)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                     .padding(.leading, 16)
@@ -200,6 +214,33 @@ struct PillsView: View {
 
     private var behind: [PillEntry] {
         Array(stack.dropLast().suffix(D.stackRendered))
+    }
+
+    // MARK: static sheet copy (texts reveal)
+
+    @ViewBuilder
+    private func sheetCopy(sheetW: CGFloat) -> some View {
+        ZStack {
+            revealText(
+                ShimmerText(text: "\(VERBS[front.state] ?? "")....", fontSize: 16),
+                window: (0, 1 - D.staggerStep)
+            )
+            .position(x: sheetW / 2, y: 244 + 11)
+
+            revealText(
+                Text("Agent is processing your request. Please\nwait, it might take a few seconds.")
+                    .font(.system(size: 14))
+                    .lineSpacing(8)
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(Color(red: 0x89 / 255.0, green: 0x89 / 255.0, blue: 0x89 / 255.0)),
+                window: (D.staggerStep, 1)
+            )
+            .position(x: sheetW / 2, y: 277 + 22)
+        }
+        .frame(width: sheetW, height: D.sheetH)
+        .frame(maxHeight: .infinity, alignment: .bottom)
+        .padding(.bottom, D.sheetBottom)
+        .allowsHitTesting(false)
     }
 
     // MARK: the morphing surface
@@ -255,35 +296,12 @@ struct PillsView: View {
                 .opacity(Double(max(0, (m - 0.55) / 0.45)))
                 .position(x: sheetW / 2, y: D.grabTop + D.grabH / 2)
 
-            // sheet copy — transitions.dev texts reveal, staggered, 4px blur
-            // Positioned by the FINAL sheet width, not the animated `w`:
-            // riding the container's bouncy width made the type overshoot
-            // sideways with it. The reveal itself stays on the recipe's own
-            // ease, so the copy rises smoothly however the surface moves.
-            revealText(
-                ShimmerText(text: "\(VERBS[front.state] ?? "")....", fontSize: 16),
-                window: (0, 1 - D.staggerStep)
-            )
-            // Measured from the container's BOTTOM, which is pinned: the
-            // sheet is bottom-aligned, so the TOP edge is what overshoots on
-            // a bouncy open — copy positioned from the top rode that bounce.
-            // The reveal itself already runs on the recipe's own ease.
-            .position(x: sheetW / 2, y: h - (D.sheetH - 244 - 11))
-
-            revealText(
-                Text("Agent is processing your request. Please\nwait, it might take a few seconds.")
-                    .font(.system(size: 14))
-                    .lineSpacing(8)
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(Color(red: 0x89 / 255.0, green: 0x89 / 255.0, blue: 0x89 / 255.0)),
-                window: (D.staggerStep, 1)
-            )
-            .position(x: sheetW / 2, y: h - (D.sheetH - 277 - 22))
         }
         .frame(width: w, height: h)
         .clipShape(RoundedRectangle(cornerRadius: r, style: .continuous))
         // 0 12px 26px rgba(0,0,0,0.24) — CSS blur 26 is CoreGraphics radius 13
         .shadow(color: .black.opacity(0.24), radius: 13, y: 12)
+        .opacity(enterFade)
         .offset(x: swipeX, y: dragY + enterY - lift)
         .frame(maxHeight: .infinity, alignment: .bottom)
         .padding(.bottom, D.sheetBottom)
@@ -384,10 +402,10 @@ private struct StackCard: View {
 
     private var d: CGFloat { CGFloat(depth) }
 
-    private var opacity: Double {
-        let stops = D.stackOpacity
-        return depth < stops.count ? stops[depth] : 0
-    }
+    /// sonner: cards stay opaque while visible, vanish past the window
+    private var opacity: Double { depth < D.stackRendered ? 1 : 0 }
+    /// sonner: [data-front='false'] > * { opacity: 0 } — content hides behind
+    private var contentOpacity: Double { depth == 0 ? 1 : 0 }
 
     var body: some View {
         ZStack {
@@ -402,13 +420,16 @@ private struct StackCard: View {
                     RoundedRectangle(cornerRadius: D.pillR, style: .continuous).fill(.ultraThinMaterial)
                 )
 
-            ThinkingOrb(state: entry.state, size: .px64, theme: .dark, paused: true, displaySize: D.orbPill)
-                .position(x: D.orbPillCX, y: D.pillH / 2)
+            Group {
+                ThinkingOrb(state: entry.state, size: .px64, theme: .dark, paused: true, displaySize: D.orbPill)
+                    .position(x: D.orbPillCX, y: D.pillH / 2)
 
-            Text("\(VERBS[entry.state] ?? "")....")
-                .font(.system(size: 16))
-                .foregroundStyle(Color(red: 251 / 255.0, green: 251 / 255.0, blue: 251 / 255.0).opacity(0.35))
-                .position(x: 71.3 + 40, y: D.pillH / 2)
+                Text("\(VERBS[entry.state] ?? "")....")
+                    .font(.system(size: 16))
+                    .foregroundStyle(Color(red: 251 / 255.0, green: 251 / 255.0, blue: 251 / 255.0).opacity(0.35))
+                    .position(x: 71.3 + 40, y: D.pillH / 2)
+            }
+            .opacity(contentOpacity)
 
             insetRim(radius: D.pillR)
         }
@@ -443,16 +464,19 @@ extension PillsView {
 
     private func push() {
         let i = STATES.firstIndex(of: front.state) ?? 0
+        // sonner's mount: the new toast starts one full height below its
+        // slot at opacity 0 and rides the same transition as the stack lift
+        enterY = D.pillH
+        enterFade = 0
         withAnimation(tune.stack.animation) {
             stack.append(PillEntry(id: nextId, state: STATES[(i + 1) % STATES.count]))
             if stack.count > D.stackRendered + 2 {
                 stack.removeFirst(stack.count - (D.stackRendered + 2))
             }
+            enterY = 0
+            enterFade = 1
         }
         nextId += 1
-        // the incoming pill rises into place
-        enterY = D.enterRise * (1 + tune.stack.anticipate)
-        withAnimation(tune.stack.animation) { enterY = 0 }
     }
 
     private func open() {
