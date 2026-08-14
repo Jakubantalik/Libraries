@@ -171,6 +171,14 @@ struct PillsView: View {
     @State private var swipeX: CGFloat = 0
     @State private var dragY: CGFloat = 0
     @State private var enterY: CGFloat = 0
+    /// Animated stack shift — equals the front entry's id when settled.
+    /// Every card's visual depth derives CONTINUOUSLY from this one value
+    /// (d = shift - entry.id), the same single-scalar pattern the morph
+    /// uses, which is the only animation mechanism in this app that has
+    /// never failed. A freshly demoted card's d rides 0 -> 1 without any
+    /// per-card state, insertion transition, or onAppear kick — and rapid
+    /// pushes stay continuous because ids are birth-ordered.
+    @State private var stackShift: CGFloat = 0
 
     @State private var tune = Tune()
 
@@ -186,9 +194,9 @@ struct PillsView: View {
                     .contentShape(Rectangle())
                     .onTapGesture(coordinateSpace: .global) { route($0, frame: geo.frame(in: .global)) }
 
-                // receding stack
-                ForEach(Array(behind.enumerated()), id: \.element.id) { i, entry in
-                    stackPill(entry: entry, depth: behind.count - i)
+                // receding stack — front included at depth 0, under the surface
+                ForEach(rendered, id: \.id) { entry in
+                    StackCard(entry: entry, d: max(0, stackShift - CGFloat(entry.id)))
                 }
 
                 surface(sheetW: sheetW, screen: geo.size, globalFrame: geo.frame(in: .global))
@@ -211,8 +219,15 @@ struct PillsView: View {
         .statusBarHidden(false)
     }
 
-    private var behind: [PillEntry] {
-        Array(stack.dropLast().suffix(D.stackRendered))
+    /// Every rendered entry, INCLUDING the front at depth 0. The front's
+    /// card sits invisibly under the opaque surface; on push its depth
+    /// merely CHANGES 0 -> 1, and depth changes provably interpolate under
+    /// the parent's withAnimation. Nothing visible is ever inserted, so
+    /// there is no mount jump to fight — the failure mode of both previous
+    /// mechanisms (onAppear kicks land inside the insertion transaction and
+    /// never animate, measured twice).
+    private var rendered: [PillEntry] {
+        Array(stack.suffix(D.stackRendered + 1))
     }
 
     // MARK: static sheet copy (texts reveal)
@@ -379,10 +394,6 @@ struct PillsView: View {
 
     // MARK: stacked cards
 
-    @ViewBuilder
-    private func stackPill(entry: PillEntry, depth: Int) -> some View {
-        StackCard(entry: entry, depth: depth, animation: tune.stack.animation)
-    }
 }
 
 /// A card behind the front pill.
@@ -395,14 +406,16 @@ struct PillsView: View {
 /// broken. Offset, scale and opacity move together, as ark-ui's Toast does.
 private struct StackCard: View {
     let entry: PillEntry
-    let depth: Int
-    let animation: Animation
+    /// continuous visual depth, driven by the parent's animated stackShift
+    let d: CGFloat
 
-    private var d: CGFloat { CGFloat(depth) }
-
-    /// RN example semantics: whole-card fade by depth, 0 past the window
+    /// RN: interpolate(d, [0,1,2,3] -> [1, 0.5, 0.2, 0]), clamped
     private var opacity: Double {
-        depth < D.stackOpacity.count ? D.stackOpacity[depth] : 0
+        let stops: [Double] = [1, 0.5, 0.2, 0]
+        let c = max(0, min(CGFloat(stops.count - 1), d))
+        let lo = Int(c)
+        let hi = min(stops.count - 1, lo + 1)
+        return stops[lo] + (stops[hi] - stops[lo]) * Double(c - CGFloat(lo))
     }
 
     var body: some View {
@@ -437,37 +450,6 @@ private struct StackCard: View {
         .allowsHitTesting(false)
         .frame(maxHeight: .infinity, alignment: .bottom)
         .padding(.bottom, D.pillBottom)
-        // No per-card animation state — geometry derives from `depth` and
-        // the PUSH runs inside withAnimation, so depth CHANGES interpolate.
-        // (Driving from onAppear does not work: that state change is batched
-        // into the insertion transaction and lands instantly.)
-        //
-        // The insertion itself needs the RN StackPill trick: a freshly
-        // demoted card must START at the slot it is leaving — the front —
-        // and ride into depth 1 with the same transaction, glass, orb and
-        // label together. RN does it with useSharedValue(depth - 1); here
-        // it is an insertion transition that cancels out depth 1's offset
-        // and scale, so the card's start pose equals the front pill's.
-        .transition(
-            .asymmetric(
-                insertion: .modifier(
-                    active: FromFront(active: true),
-                    identity: FromFront(active: false)
-                ),
-                removal: .opacity
-            )
-        )
-    }
-}
-
-/// Insertion pose for a freshly demoted stack card: offset and scale that
-/// exactly cancel depth 1's, so the card starts where the front pill sits.
-private struct FromFront: ViewModifier {
-    let active: Bool
-    func body(content: Content) -> some View {
-        content
-            .offset(y: active ? D.stackGap : 0)
-            .scaleEffect(active ? 1 / (1 - D.stackShrink) : 1)
     }
 }
 
@@ -482,17 +464,17 @@ extension PillsView {
 
     private func push() {
         let i = STATES.firstIndex(of: front.state) ?? 0
-        // RN example's mount: the pill rises 90pt into place, anticipation
-        // included, riding the same transition as the stack lift
+        let id = nextId
+        nextId += 1
+        stack.append(PillEntry(id: id, state: STATES[(i + 1) % STATES.count]))
+        if stack.count > D.stackRendered + 2 {
+            stack.removeFirst(stack.count - (D.stackRendered + 2))
+        }
         enterY = D.enterRise * (1 + tune.stack.anticipate)
         withAnimation(tune.stack.animation) {
-            stack.append(PillEntry(id: nextId, state: STATES[(i + 1) % STATES.count]))
-            if stack.count > D.stackRendered + 2 {
-                stack.removeFirst(stack.count - (D.stackRendered + 2))
-            }
+            stackShift = CGFloat(id)
             enterY = 0
         }
-        nextId += 1
     }
 
     private func open() {
