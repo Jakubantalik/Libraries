@@ -145,32 +145,31 @@ struct PillsApp: App {
 func insetRim(radius: CGFloat) -> some View {
     let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
     ZStack {
-        // crisp specular along the top edge — the "native glass" catchlight.
-        // The stroke is full-perimeter; the mask fades it out by mid-height
-        // so only the upper arc reads.
-        shape.stroke(Color.white.opacity(0.5), lineWidth: 1.3)
-            .offset(y: 1).blur(radius: 0.4)
+        // The reference render is lit from BELOW: the readable rim light
+        // hugs the bottom arc, and the top carries only a whisper of sheen.
+        shape.stroke(Color.white.opacity(0.22), lineWidth: 1.2)
+            .offset(y: -1).blur(radius: 0.8)
             .mask(
                 LinearGradient(
-                    stops: [.init(color: .white, location: 0), .init(color: .clear, location: 0.55)],
+                    stops: [.init(color: .clear, location: 0.5), .init(color: .white, location: 1)],
                     startPoint: .top, endPoint: .bottom
                 )
             )
-        // wider soft sheen under the catchlight, the glass thickness
-        shape.stroke(Color.white.opacity(0.16), lineWidth: 2.5)
-            .offset(y: 2).blur(radius: 3)
+        // soft spread above the bottom rim, the glass thickness
+        shape.stroke(Color.white.opacity(0.08), lineWidth: 2.5)
+            .offset(y: -2).blur(radius: 3)
             .mask(
                 LinearGradient(
-                    stops: [.init(color: .white, location: 0), .init(color: .clear, location: 0.5)],
+                    stops: [.init(color: .clear, location: 0.55), .init(color: .white, location: 1)],
                     startPoint: .top, endPoint: .bottom
                 )
             )
-        // faint lift along the bottom edge
+        // faint top sheen
         shape.stroke(Color.white.opacity(0.10), lineWidth: 1)
-            .offset(y: -1).blur(radius: 1.2)
+            .offset(y: 1).blur(radius: 1.5)
             .mask(
                 LinearGradient(
-                    stops: [.init(color: .clear, location: 0.6), .init(color: .white, location: 1)],
+                    stops: [.init(color: .white, location: 0), .init(color: .clear, location: 0.4)],
                     startPoint: .top, endPoint: .bottom
                 )
             )
