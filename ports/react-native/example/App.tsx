@@ -32,6 +32,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withDelay,
+  withSequence,
   withSpring,
   withTiming,
   type EasingFunction,
@@ -39,7 +40,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { ThinkingOrb } from 'thinking-orbs-native';
 import type { OrbState } from 'thinking-orbs-native';
-import { ShimmerText } from './ShimmerText';
+import { RevealLines, ShimmerText } from './ShimmerText';
 
 const STATES: OrbState[] = [
   'breathing',
@@ -100,6 +101,9 @@ const SPRING = { damping: 26, stiffness: 260, mass: 1 };
 const STAGGER_DISTANCE = 12;
 const STAGGER_STEP = 40;
 const STAGGER_EXIT = 200;
+/** cross-blur, CSS px, for the text reveal and the new-pill entrance */
+const REVEAL_BLUR = 4;
+const ENTER_BLUR = 4;
 
 // Stacking, following logram-ai/Logram#335: front solid, next 80%, third
 // 50%, and past that the card fades OUT — with the same lift/shrink motion,
@@ -135,35 +139,54 @@ const PILL_GRADIENT = ['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.16)'] as const;
 
 type EaseKind = 'smooth' | 'bounce' | 'spring';
 
-interface Tune {
-  /** pill <-> sheet morph, ms (transitions.dev card-resize default: 300) */
-  morphMs: number;
-  /** stack reposition + pill entrance, ms (sonner: 400) */
-  stackMs: number;
-  /** texts-reveal duration, ms (recipe: 500) */
-  revealMs: number;
-  /** back-overshoot amount for the bounce easing, 0..1 */
+/** One transition's motion: duration, back-overshoot amount, easing family. */
+interface Seg {
+  ms: number;
   bounce: number;
   ease: EaseKind;
 }
 
-const DEFAULT_TUNE: Tune = { morphMs: 300, stackMs: 400, revealMs: 500, bounce: 0.3, ease: 'bounce' };
+interface Tune {
+  /** new-pill push: stack reposition + entrance (sonner: 400) */
+  stack: Seg;
+  /** pill -> sheet morph (transitions.dev card-resize default: 300) */
+  open: Seg;
+  /** sheet -> pill morph; dropdown-style close runs quicker than open */
+  close: Seg;
+  /** texts-reveal duration, ms (recipe: 500) */
+  revealMs: number;
+}
+
+const DEFAULT_TUNE: Tune = {
+  stack: { ms: 400, bounce: 0.3, ease: 'bounce' },
+  open: { ms: 300, bounce: 0.3, ease: 'bounce' },
+  // transitions.dev menu-dropdown closes at 150ms vs a 250ms open — the
+  // return trip is quicker and calmer than the arrival
+  close: { ms: 200, bounce: 0.15, ease: 'bounce' },
+  revealMs: 500,
+};
 
 const SMOOTH = Easing.bezier(0.22, 1, 0.36, 1);
 
-/** The movement easing the current tune calls for. */
-function easeFor(t: Tune): EasingFunction | EasingFunctionFactory {
-  if (t.ease === 'bounce') return Easing.out(Easing.back(t.bounce * 4));
+/** The movement easing a segment calls for. */
+function easeFor(seg: Seg): EasingFunction | EasingFunctionFactory {
+  if (seg.ease === 'bounce') return Easing.out(Easing.back(seg.bounce * 4));
   return SMOOTH;
 }
 
-/** Animate a movement shared value per the tune (spring ignores duration). */
-function animateTo(t: Tune, to: number, ms: number) {
-  if (t.ease === 'spring') {
-    return withSpring(to, { damping: 14 + (1 - t.bounce) * 16, stiffness: 220, mass: 1 });
+/** Animate a movement shared value per the segment (spring ignores ms). */
+function animateTo(seg: Seg, to: number) {
+  if (seg.ease === 'spring') {
+    return withSpring(to, { damping: 14 + (1 - seg.bounce) * 16, stiffness: 220, mass: 1 });
   }
-  return withTiming(to, { duration: ms, easing: easeFor(t) });
+  return withTiming(to, { duration: seg.ms, easing: easeFor(seg) });
 }
+
+// Anticipation on close, from the dropdown-morph model: before the sheet
+// collapses it first swells a touch — the wind-up that makes the collapse
+// read as a deliberate release rather than a cut.
+const ANTICIPATE_SCALE = 1.045;
+const ANTICIPATE_MS = 90;
 
 // ---- app ------------------------------------------------------------------
 
@@ -188,6 +211,11 @@ export default function App() {
   const dragY = useSharedValue(0); // sheet drag-to-dismiss offset
   const reveal = useSharedValue(0); // texts-reveal progress
   const enterY = useSharedValue(0); // new-pill entrance offset
+  // 0..1 arrival progress for the front pill's label: Skia blurs the glyphs
+  // themselves. A View `filter` cannot be used — on a transparent view RN
+  // rasterises it against an opaque backdrop, which showed up as white boxes
+  // behind text and, on the sheet, a bright white rim and washed fill.
+  const enterProg = useSharedValue(1);
 
   const state = stack[stack.length - 1].state;
 
@@ -207,11 +235,14 @@ export default function App() {
       // keep a bounded tail: rendered depths plus one already-invisible card
       return [...s, { id, state: STATES[(i + 1) % STATES.length] }].slice(-(STACK_RENDERED + 2));
     });
-    // the incoming pill rises into place, as sonner slides a new toast up
+    // the incoming pill rises into place, as sonner slides a new toast up,
+    // crossing through a 4px blur as it arrives
     const t = tuneRef.current;
     enterY.value = ENTER_RISE;
-    enterY.value = animateTo(t, 0, t.stackMs);
-  }, [enterY]);
+    enterY.value = animateTo(t.stack, 0);
+    enterProg.value = 0;
+    enterProg.value = withTiming(1, { duration: t.stack.ms, easing: SMOOTH });
+  }, [enterY, enterProg]);
 
   const expandedRef = useRef(expanded);
   expandedRef.current = expanded;
@@ -221,8 +252,10 @@ export default function App() {
   const open = useCallback(() => {
     const t = tuneRef.current;
     setExpanded(true);
-    morph.value = animateTo(t, 1, t.morphMs);
-    // the copy reveals once the surface has mostly arrived
+    morph.value = animateTo(t.open, 1);
+    // The copy reveals once the surface has mostly arrived. Deliberately
+    // NEVER bounced: texts-reveal rises on the recipe's own ease regardless
+    // of the movement easing, so type never wobbles.
     reveal.value = withDelay(120, withTiming(1, { duration: t.revealMs, easing: SMOOTH }));
   }, [morph, reveal]);
   const openRef = useRef(open);
@@ -233,7 +266,11 @@ export default function App() {
     setExpanded(false);
     reveal.value = withTiming(0, { duration: STAGGER_EXIT, easing: Easing.linear });
     dragY.value = withTiming(0, { duration: 200 });
-    morph.value = animateTo(t, 0, t.morphMs);
+    // anticipation first (swell), then the collapse proper
+    morph.value = withSequence(
+      withTiming(ANTICIPATE_SCALE, { duration: ANTICIPATE_MS, easing: Easing.out(Easing.cubic) }),
+      animateTo(t.close, 0)
+    );
   }, [morph, dragY, reveal]);
   const closeRef = useRef(close);
   closeRef.current = close;
@@ -357,22 +394,23 @@ export default function App() {
 
   // Texts reveal. `reveal` runs 0..1 once for the whole block; each line
   // reads a WINDOW of it, which is how the recipe's per-line
-  // transition-delay is expressed with a single driver.
+  // transition-delay is expressed with a single driver. The rise, opacity
+  // and 4px cross-blur are applied INSIDE the Skia canvases (see
+  // ShimmerText.tsx) — an RN filter blur on transparent text views renders
+  // white boxes.
   const stepFrac = STAGGER_STEP / tune.revealMs;
-  const titleStyle = useAnimatedStyle(() => {
-    const p = interpolate(reveal.value, [0, 1 - stepFrac], [0, 1], Extrapolation.CLAMP);
-    return {
-      opacity: p,
-      transform: [{ translateY: (1 - p) * STAGGER_DISTANCE }],
-    };
-  });
-  const subtitleStyle = useAnimatedStyle(() => {
-    const p = interpolate(reveal.value, [stepFrac, 1], [0, 1], Extrapolation.CLAMP);
-    return {
-      opacity: p,
-      transform: [{ translateY: (1 - p) * STAGGER_DISTANCE }],
-    };
-  });
+  const titleReveal = {
+    progress: reveal,
+    window: [0, 1 - stepFrac] as [number, number],
+    rise: STAGGER_DISTANCE,
+    blurPx: REVEAL_BLUR,
+  };
+  const subtitleReveal = {
+    progress: reveal,
+    window: [stepFrac, 1] as [number, number],
+    rise: STAGGER_DISTANCE,
+    blurPx: REVEAL_BLUR,
+  };
 
   // the cards behind the front one, furthest first
   const behind = stack.slice(0, -1).slice(-STACK_RENDERED);
@@ -407,21 +445,30 @@ export default function App() {
 
             <Animated.View style={[styles.pillContent, pillContentStyle]}>
               <View style={styles.pillLabel}>
-                <ShimmerText text={`${VERBS[state]}....`} fontSize={16} />
+                <ShimmerText
+                  text={`${VERBS[state]}....`}
+                  fontSize={16}
+                  reveal={{ progress: enterProg, window: [0, 1], rise: 0, blurPx: ENTER_BLUR }}
+                />
               </View>
             </Animated.View>
 
             {/* drag-to-dismiss affordance, replacing the close button */}
             <Animated.View style={[styles.grabber, grabberStyle]} />
 
-            <Animated.View style={[styles.sheetTitle, titleStyle]}>
-              <ShimmerText text={`${VERBS[state]}....`} fontSize={16} />
-            </Animated.View>
-            <Animated.View style={[styles.sheetSubtitleWrap, subtitleStyle]}>
-              <Text style={styles.sheetSubtitle}>
-                Agent is processing your request. Please wait, it might take a few seconds.
-              </Text>
-            </Animated.View>
+            <View style={styles.sheetTitle}>
+              <ShimmerText text={`${VERBS[state]}....`} fontSize={16} reveal={titleReveal} />
+            </View>
+            <View style={styles.sheetSubtitleWrap}>
+              <RevealLines
+                lines={['Agent is processing your request. Please', 'wait, it might take a few seconds.']}
+                fontSize={14}
+                lineHeight={22}
+                color="#898989"
+                width={290}
+                reveal={subtitleReveal}
+              />
+            </View>
           </Animated.View>
         </View>
       </View>
@@ -451,7 +498,7 @@ function StackPill({ depth, state, tune }: { depth: number; state: OrbState; tun
   const d = useSharedValue(depth - 1);
 
   useEffect(() => {
-    d.value = animateTo(tune, depth, tune.stackMs);
+    d.value = animateTo(tune.stack, depth);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [depth]);
 
@@ -484,14 +531,20 @@ function StackPill({ depth, state, tune }: { depth: number; state: OrbState; tun
 
 const EASES: EaseKind[] = ['smooth', 'bounce', 'spring'];
 
+type SegKey = 'stack' | 'open' | 'close';
+const SEG_KEYS: SegKey[] = ['stack', 'open', 'close'];
+const SEG_LABEL: Record<SegKey, string> = {
+  stack: 'new pill',
+  open: 'to modal',
+  close: 'to pill',
+};
+
 function TuneRow({
   label,
-  value,
   display,
   onStep,
 }: {
   label: string;
-  value: number;
   display: string;
   onStep: (dir: number) => void;
 }) {
@@ -511,9 +564,10 @@ function TuneRow({
 
 function TunePanel({ tune, onChange }: { tune: Tune; onChange: (t: Tune) => void }) {
   const [openPanel, setOpenPanel] = useState(false);
+  const [seg, setSeg] = useState<SegKey>('stack');
 
-  const step = (key: 'morphMs' | 'stackMs' | 'revealMs', by: number) => (dir: number) =>
-    onChange({ ...tune, [key]: Math.max(100, Math.min(2000, tune[key] + dir * by)) });
+  const cur = tune[seg];
+  const setSegVal = (patch: Partial<Seg>) => onChange({ ...tune, [seg]: { ...cur, ...patch } });
 
   return (
     // The wrapper auto-sizes to its content, so plain `auto` pointer events
@@ -525,29 +579,46 @@ function TunePanel({ tune, onChange }: { tune: Tune; onChange: (t: Tune) => void
 
       {openPanel && (
         <View style={styles.tuneBody}>
-          <TuneRow label="MORPH" value={tune.morphMs} display={`${tune.morphMs}ms`} onStep={step('morphMs', 50)} />
-          <TuneRow label="STACK" value={tune.stackMs} display={`${tune.stackMs}ms`} onStep={step('stackMs', 50)} />
-          <TuneRow label="REVEAL" value={tune.revealMs} display={`${tune.revealMs}ms`} onStep={step('revealMs', 50)} />
+          {/* which transition the rows below edit */}
+          <View style={styles.tuneTabs}>
+            {SEG_KEYS.map((k) => (
+              <Pressable key={k} onPress={() => setSeg(k)} hitSlop={6} style={[styles.tuneTab, seg === k && styles.tuneTabOn]}>
+                <Text style={[styles.tuneTabText, seg === k && styles.tuneTabTextOn]}>{SEG_LABEL[k]}</Text>
+              </Pressable>
+            ))}
+          </View>
+
+          <TuneRow
+            label="DUR"
+            display={`${cur.ms}ms`}
+            onStep={(dir) => setSegVal({ ms: Math.max(50, Math.min(2000, cur.ms + dir * 50)) })}
+          />
           <TuneRow
             label="BOUNCE"
-            value={tune.bounce}
-            display={tune.bounce.toFixed(2)}
-            onStep={(dir) =>
-              onChange({ ...tune, bounce: Math.max(0, Math.min(1, +(tune.bounce + dir * 0.05).toFixed(2))) })
-            }
+            display={cur.bounce.toFixed(2)}
+            onStep={(dir) => setSegVal({ bounce: Math.max(0, Math.min(1, +(cur.bounce + dir * 0.05).toFixed(2))) })}
           />
           <View style={styles.tuneRow}>
             <Text style={styles.tuneLabel}>EASE</Text>
             <Pressable
-              onPress={() => onChange({ ...tune, ease: EASES[(EASES.indexOf(tune.ease) + 1) % EASES.length] })}
+              onPress={() => setSegVal({ ease: EASES[(EASES.indexOf(cur.ease) + 1) % EASES.length] })}
               hitSlop={8}
               style={styles.tuneEase}
             >
-              <Text style={styles.tuneBtnText}>{tune.ease}</Text>
+              <Text style={styles.tuneBtnText}>{cur.ease}</Text>
             </Pressable>
           </View>
+
+          <TuneRow
+            label="REVEAL"
+            display={`${tune.revealMs}ms`}
+            onStep={(dir) =>
+              onChange({ ...tune, revealMs: Math.max(100, Math.min(2000, tune.revealMs + dir * 50)) })
+            }
+          />
+
           <Pressable onPress={() => onChange(DEFAULT_TUNE)} hitSlop={8}>
-            <Text style={styles.tuneReset}>reset</Text>
+            <Text style={styles.tuneReset}>reset all</Text>
           </Pressable>
         </View>
       )}
@@ -667,6 +738,28 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: 'rgba(0,0,0,0.55)',
     gap: 6,
+  },
+  tuneTabs: {
+    flexDirection: 'row',
+    gap: 4,
+    marginBottom: 2,
+  },
+  tuneTab: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 9,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  tuneTabOn: {
+    backgroundColor: 'rgba(255,255,255,0.24)',
+  },
+  tuneTabText: {
+    fontSize: 10,
+    fontFamily: 'Courier',
+    color: 'rgba(255,255,255,0.5)',
+  },
+  tuneTabTextOn: {
+    color: '#fff',
   },
   tuneRow: {
     flexDirection: 'row',
