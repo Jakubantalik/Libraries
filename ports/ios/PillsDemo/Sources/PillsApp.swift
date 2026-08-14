@@ -170,7 +170,6 @@ struct PillsView: View {
     @State private var reveal: CGFloat = 0
     @State private var swipeX: CGFloat = 0
     @State private var dragY: CGFloat = 0
-    @State private var enterY: CGFloat = 0
     /// Animated stack shift — equals the front entry's id when settled.
     /// Every card's visual depth derives CONTINUOUSLY from this one value
     /// (d = shift - entry.id), the same single-scalar pattern the morph
@@ -194,9 +193,9 @@ struct PillsView: View {
                     .contentShape(Rectangle())
                     .onTapGesture(coordinateSpace: .global) { route($0, frame: geo.frame(in: .global)) }
 
-                // receding stack — front included at depth 0, under the surface
+                // receding stack — front included (hidden) so demotion animates
                 ForEach(rendered, id: \.id) { entry in
-                    StackCard(entry: entry, d: max(0, stackShift - CGFloat(entry.id)))
+                    StackCard(entry: entry, shift: stackShift, frontId: front.id)
                 }
 
                 surface(sheetW: sheetW, screen: geo.size, globalFrame: geo.frame(in: .global))
@@ -272,7 +271,7 @@ struct PillsView: View {
             RoundedRectangle(cornerRadius: r, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [Color.black.opacity(0.8), Color.black.opacity(0.16)],
+                        colors: [Color.black.opacity(0.8), Color.black.opacity(0.32)], // Figma 2584:83680
                         startPoint: .top, endPoint: .bottom
                     )
                 )
@@ -315,7 +314,12 @@ struct PillsView: View {
         .clipShape(RoundedRectangle(cornerRadius: r, style: .continuous))
         // 0 12px 26px rgba(0,0,0,0.24) — CSS blur 26 is CoreGraphics radius 13
         .shadow(color: .black.opacity(0.24), radius: 13, y: 12)
-        .offset(x: swipeX, y: dragY + enterY - lift)
+        .offset(x: swipeX, y: dragY - lift)
+        .modifier(EnterRise(
+            shift: stackShift,
+            frontId: CGFloat(front.id),
+            rise: D.enterRise * (1 + tune.stack.anticipate)
+        ))
         .frame(maxHeight: .infinity, alignment: .bottom)
         .padding(.bottom, D.sheetBottom)
         // contentShape: the hit region must be the full animated frame — by
@@ -396,6 +400,30 @@ struct PillsView: View {
 
 }
 
+/// The new pill's entrance, driven by the SAME animated scalar that recedes
+/// the stack. A GeometryEffect re-evaluates per FRAME with the interpolated
+/// stackShift; a plain .offset cannot express this rise at all — its rendered
+/// endpoints are both 0 (settled before == settled after), so SwiftUI has
+/// nothing to interpolate and the pill sits still while its content swaps.
+/// frontId is not animatable on purpose: it steps at the commit, which is
+/// what drops p to 0 and starts the rise from the bottom.
+private struct EnterRise: GeometryEffect {
+    var shift: CGFloat
+    var frontId: CGFloat
+    var rise: CGFloat
+
+    var animatableData: CGFloat {
+        get { shift }
+        set { shift = newValue }
+    }
+
+    func effectValue(size: CGSize) -> ProjectionTransform {
+        let p = shift - (frontId - 1) // 0 at push commit, 1 settled
+        let y = rise * (1 - max(0, p)) // p > 1 = bounce overshoot above slot
+        return ProjectionTransform(CGAffineTransform(translationX: 0, y: y))
+    }
+}
+
 /// A card behind the front pill.
 ///
 /// It animates TOWARD its depth rather than being placed at it: a freshly
@@ -406,24 +434,17 @@ struct PillsView: View {
 /// broken. Offset, scale and opacity move together, as ark-ui's Toast does.
 private struct StackCard: View {
     let entry: PillEntry
-    /// continuous visual depth, driven by the parent's animated stackShift
-    let d: CGFloat
-
-    /// RN: interpolate(d, [0,1,2,3] -> [1, 0.5, 0.2, 0]), clamped
-    private var opacity: Double {
-        let stops: [Double] = [1, 0.5, 0.2, 0]
-        let c = max(0, min(CGFloat(stops.count - 1), d))
-        let lo = Int(c)
-        let hi = min(stops.count - 1, lo + 1)
-        return stops[lo] + (stops[hi] - stops[lo]) * Double(c - CGFloat(lo))
-    }
+    /// the parent's animated stack scalar — depth derives per frame inside
+    /// StackDepth, never from rendered endpoints
+    let shift: CGFloat
+    let frontId: Int
 
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: D.pillR, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [Color.black.opacity(0.8), Color.black.opacity(0.16)],
+                        colors: [Color.black.opacity(0.8), Color.black.opacity(0.32)], // Figma 2584:83680
                         startPoint: .top, endPoint: .bottom
                     )
                 )
@@ -443,13 +464,58 @@ private struct StackCard: View {
         }
         .frame(width: D.pillW, height: D.pillH)
         .clipShape(RoundedRectangle(cornerRadius: D.pillR, style: .continuous))
-        .shadow(color: .black.opacity(0.24), radius: 13, y: 12)
-        .scaleEffect(1 - d * D.stackShrink)
-        .offset(y: -d * D.stackGap)
-        .opacity(opacity)
+        .modifier(StackDepth(shift: shift, entryId: CGFloat(entry.id), frontId: CGFloat(frontId)))
         .allowsHitTesting(false)
         .frame(maxHeight: .infinity, alignment: .bottom)
         .padding(.bottom, D.pillBottom)
+    }
+}
+
+/// Depth styling for one stacked card, ALL of it derived per frame from the
+/// interpolated stackShift (this modifier is Animatable, so its body re-runs
+/// every frame of the transaction).
+///
+/// Why not plain .opacity/.offset endpoints: the FRONT entry's card must be
+/// invisible — it sits exactly under the surface, and at full opacity it is
+/// what the user saw as "the top pill stays and only its content changes"
+/// (measured on video: the slot pill already showed the NEW label while the
+/// surface was still rising). But the moment a card is demoted it must be
+/// FULLY visible at the slot. Those two states are the same rendered
+/// endpoint (d = 0), so endpoint interpolation cannot express the flip —
+/// only a per-frame function of the scalar plus the stepped frontId can:
+/// frontId jumps at the commit, so the demoted card is visible from the
+/// very first frame while the new front's card goes dark instantly.
+private struct StackDepth: ViewModifier, Animatable {
+    var shift: CGFloat
+    var entryId: CGFloat
+    var frontId: CGFloat
+
+    var animatableData: CGFloat {
+        get { shift }
+        set { shift = newValue }
+    }
+
+    private var d: CGFloat { max(0, shift - entryId) }
+
+    /// RN: interpolate(d, [0,1,2,3] -> [1, 0.5, 0.2, 0]), clamped
+    private var opacity: Double {
+        if entryId == frontId { return 0 }
+        let stops: [Double] = [1, 0.5, 0.2, 0]
+        let c = max(0, min(CGFloat(stops.count - 1), d))
+        let lo = Int(c)
+        let hi = min(stops.count - 1, lo + 1)
+        return stops[lo] + (stops[hi] - stops[lo]) * Double(c - CGFloat(lo))
+    }
+
+    func body(content: Content) -> some View {
+        content
+            // Fades in with depth: at d = 0 the card sits exactly under the
+            // surface, and a second 0.24 drop shadow there doubled the
+            // darkness against the Figma render (one shadow, 2584:83680).
+            .shadow(color: .black.opacity(0.24 * Double(min(1, d))), radius: 13, y: 12)
+            .scaleEffect(1 - d * D.stackShrink)
+            .offset(y: -d * D.stackGap)
+            .opacity(opacity)
     }
 }
 
@@ -467,13 +533,14 @@ extension PillsView {
         let id = nextId
         nextId += 1
 
-        // Phase 1, explicitly WITHOUT animation: swap the front and drop the
-        // surface 90pt below its slot, in one committed render. Setting
-        // enterY and then animating it back in the same update cycle does
-        // nothing — SwiftUI coalesces the writes and the 90 is never
-        // rendered, which is why the front pill sat still and only its
-        // content changed. (RN never hit this: shared values apply
-        // imperatively, so set-then-animate just works there.)
+        // The append commits un-animated; the ONLY animated write is
+        // stackShift. Both the demoted card's recede and the new pill's rise
+        // derive from that one scalar — the rise through EnterRise, whose
+        // animatableData re-evaluates every frame. The previous two-phase
+        // enterY (set 90, async animate to 0) kept collapsing: whenever the
+        // async block beat the render commit, both writes landed in one
+        // update and .offset saw endpoints 0 -> 0 — no motion, content swap
+        // only, which is exactly how the bug read on screen.
         var tx = Transaction()
         tx.disablesAnimations = true
         withTransaction(tx) {
@@ -481,16 +548,9 @@ extension PillsView {
             if stack.count > D.stackRendered + 2 {
                 stack.removeFirst(stack.count - (D.stackRendered + 2))
             }
-            enterY = D.enterRise * (1 + tune.stack.anticipate)
         }
-
-        // Phase 2, next tick: the new front rises into the slot while the
-        // demoted card recedes — one transaction drives both, as in RN.
-        DispatchQueue.main.async {
-            withAnimation(tune.stack.animation) {
-                stackShift = CGFloat(id)
-                enterY = 0
-            }
+        withAnimation(tune.stack.animation) {
+            stackShift = CGFloat(id)
         }
     }
 

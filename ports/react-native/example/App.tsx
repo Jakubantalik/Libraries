@@ -154,7 +154,8 @@ const SHEET_SHADOW = [
   { offsetX: 0, offsetY: -2, blurRadius: 1, spreadDistance: -2, color: 'rgba(255,255,255,0.24)', inset: true },
 ] as const;
 
-const PILL_GRADIENT = ['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.16)'] as const;
+// Figma 2584:83680 — bottom stop is 0.32, not 0.16 (the pill read too hollow)
+const PILL_GRADIENT = ['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.32)'] as const;
 
 // ---- live tuning ----------------------------------------------------------
 
