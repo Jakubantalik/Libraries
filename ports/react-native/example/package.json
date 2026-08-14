@@ -12,6 +12,7 @@
     "@shopify/react-native-skia": "v2.0.0-next.4",
     "expo": "~53.0.27",
     "expo-asset": "~11.1.7",
+    "expo-blur": "~14.1.5",
     "expo-linear-gradient": "~14.1.5",
     "expo-status-bar": "~2.2.3",
     "react": "19.0.0",

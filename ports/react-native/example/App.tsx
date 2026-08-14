@@ -16,10 +16,11 @@
 //   sheet: (W-48)x366  r42.54  bottom 24  orb 133 @ y72  title y244
 //          subtitle y277 w271 #898989
 
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import Animated, {
   Easing,
   Extrapolation,
@@ -110,6 +111,14 @@ const STACK_OPACITY = [1, 0.8, 0.5];
 const STACK_VISIBLE = STACK_OPACITY.length;
 const STACK_LIFT = 12;
 const STACK_SHRINK = 0.06;
+// Sonner transitions a toast's transform/opacity over 400ms when the stack
+// repositions, and slides a new one up from below; both are reproduced here.
+const STACK_DUR = 400;
+const STACK_EASE = Easing.bezier(0.22, 1, 0.36, 1);
+const ENTER_RISE = 90;
+
+/** Backdrop blur behind the front pill's glass. */
+const PILL_BLUR = 15;
 
 // the grabber that replaces the close button
 const GRAB_W = 36;
@@ -132,30 +141,41 @@ export default function App() {
   const { width: screenW, height: screenH } = useWindowDimensions();
   const sheetW = screenW - SHEET_MARGIN * 2;
 
-  // front of the stack is the LAST entry, so a new pill pushes on top
-  const [stack, setStack] = useState<OrbState[]>(['breathing']);
+  // front of the stack is the LAST entry, so a new pill pushes on top.
+  // Each entry carries an id so a card keeps its own animation state as the
+  // stack shifts underneath it.
+  const [stack, setStack] = useState<Array<{ id: number; state: OrbState }>>([
+    { id: 0, state: 'breathing' },
+  ]);
+  const nextId = useRef(1);
   const [expanded, setExpanded] = useState(false);
 
   const morph = useSharedValue(0); // 0 = pill, 1 = sheet
   const swipeX = useSharedValue(0); // horizontal paging offset
   const dragY = useSharedValue(0); // sheet drag-to-dismiss offset
   const reveal = useSharedValue(0); // texts-reveal progress
+  const enterY = useSharedValue(0); // new-pill entrance offset
 
-  const state = stack[stack.length - 1];
+  const state = stack[stack.length - 1].state;
 
   const advance = useCallback((dir: number) => {
     setStack((s) => {
-      const i = STATES.indexOf(s[s.length - 1]);
+      const front = s[s.length - 1];
+      const i = STATES.indexOf(front.state);
       const next = STATES[(i + dir + STATES.length) % STATES.length];
-      return [...s.slice(0, -1), next];
+      return [...s.slice(0, -1), { ...front, state: next }];
     });
   }, []);
 
   const push = useCallback(() => {
     setStack((s) => {
-      const i = STATES.indexOf(s[s.length - 1]);
-      return [...s, STATES[(i + 1) % STATES.length]];
+      const i = STATES.indexOf(s[s.length - 1].state);
+      const id = nextId.current++;
+      return [...s, { id, state: STATES[(i + 1) % STATES.length] }];
     });
+    // the incoming pill rises into place, as sonner slides a new toast up
+    enterY.value = ENTER_RISE;
+    enterY.value = withTiming(0, { duration: STACK_DUR, easing: STACK_EASE });
   }, []);
 
   const expandedRef = useRef(expanded);
@@ -263,7 +283,10 @@ export default function App() {
     height: interpolate(morph.value, [0, 1], [PILL_H, SHEET_H]),
     borderRadius: interpolate(morph.value, [0, 1], [PILL_R, SHEET_R]),
     bottom: interpolate(morph.value, [0, 1], [PILL_BOTTOM - SHEET_BOTTOM, 0]),
-    transform: [{ translateX: swipeX.value }, { translateY: dragY.value }],
+    transform: [
+      { translateX: swipeX.value },
+      { translateY: dragY.value + enterY.value },
+    ],
   }));
 
   const pillGlassStyle = useAnimatedStyle(() => ({
@@ -313,34 +336,21 @@ export default function App() {
 
   // the cards behind the front one, furthest first
   const behind = stack.slice(Math.max(0, stack.length - STACK_VISIBLE), -1);
+  const frontId = stack[stack.length - 1].id;
 
   return (
     <View style={styles.root} {...pan.panHandlers}>
       <StatusBar style="light" />
 
-      {behind.map((s, i) => {
-        const depth = behind.length - i; // 1 = directly behind the front
-        return (
-          <View
-            key={`${s}-${stack.length - depth}`}
-            pointerEvents="none"
-            style={[
-              styles.stackPill,
-              {
-                bottom: PILL_BOTTOM + depth * STACK_LIFT,
-                opacity: STACK_OPACITY[depth] ?? 0,
-                transform: [{ scale: 1 - depth * STACK_SHRINK }],
-              },
-            ]}
-          >
-            <LinearGradient colors={PILL_GRADIENT} style={StyleSheet.absoluteFill} />
-          </View>
-        );
-      })}
+      {behind.map((entry, i) => (
+        <StackPill key={entry.id} depth={behind.length - i} />
+      ))}
 
       <View style={[styles.hitArea, { width: sheetW }]} pointerEvents="none">
         <Animated.View style={[styles.container, containerStyle]}>
           <Animated.View style={[StyleSheet.absoluteFill, pillGlassStyle]}>
+            {/* backdrop blur under the glass — the design's frosted pill */}
+            <BlurView intensity={PILL_BLUR} tint="dark" style={StyleSheet.absoluteFill} />
             <LinearGradient colors={PILL_GRADIENT} style={StyleSheet.absoluteFill} />
           </Animated.View>
           <Animated.View style={[StyleSheet.absoluteFill, styles.sheetGlass, sheetGlassStyle]} />
@@ -372,6 +382,45 @@ export default function App() {
   );
 }
 
+/**
+ * A card behind the front pill. It animates TOWARD its depth rather than
+ * being placed at it, so when a new pill is pushed the whole stack visibly
+ * recedes — sonner transitions transform and opacity over 400ms on
+ * reposition, and a card mounts here at the depth it is leaving (one nearer
+ * the front), which is exactly the position it just occupied.
+ */
+function StackPill({ depth }: { depth: number }) {
+  const d = useSharedValue(depth - 1);
+
+  useEffect(() => {
+    d.value = withTiming(depth, { duration: STACK_DUR, easing: STACK_EASE });
+  }, [depth, d]);
+
+  // Lift via TRANSFORM, not `bottom`. Reanimated drives transform and
+  // opacity straight on the view; layout props take a different path and,
+  // measured here, did not animate at all — an 8s reposition showed zero
+  // pixel change over 3s. sonner animates transform for the same reason.
+  const style = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      d.value,
+      [0, 1, 2, 3],
+      [STACK_OPACITY[0], STACK_OPACITY[1], STACK_OPACITY[2], 0],
+      Extrapolation.CLAMP
+    ),
+    transform: [
+      { translateY: -d.value * STACK_LIFT },
+      { scale: 1 - d.value * STACK_SHRINK },
+    ],
+  }));
+
+  return (
+    <Animated.View pointerEvents="none" style={[styles.stackPill, style]}>
+      <BlurView intensity={PILL_BLUR} tint="dark" style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={PILL_GRADIENT} style={StyleSheet.absoluteFill} />
+    </Animated.View>
+  );
+}
+
 const styles = StyleSheet.create({
   root: {
     flex: 1,
@@ -388,6 +437,7 @@ const styles = StyleSheet.create({
   },
   stackPill: {
     position: 'absolute',
+    bottom: PILL_BOTTOM,
     width: PILL_W,
     height: PILL_H,
     borderRadius: PILL_R,
