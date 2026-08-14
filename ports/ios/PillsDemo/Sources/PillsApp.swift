@@ -612,7 +612,8 @@ struct TunePanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Button(openPanel ? "× TUNE" : "≡ TUNE") { openPanel.toggle() }
+            // labelled so the two demos are distinguishable on one simulator
+            Button(openPanel ? "× TUNE · SwiftUI" : "≡ TUNE · SwiftUI") { openPanel.toggle() }
                 .font(.system(size: 11, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.75))
                 .padding(.horizontal, 10).padding(.vertical, 5)

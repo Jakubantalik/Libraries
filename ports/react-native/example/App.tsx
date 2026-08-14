@@ -655,7 +655,8 @@ function TunePanel({ tune, onChange }: { tune: Tune; onChange: (t: Tune) => void
     // only claim the panel's own bounds — no need for box-none.
     <View style={styles.tunePanel}>
       <Pressable onPress={() => setOpenPanel((o) => !o)} style={styles.tuneToggle} hitSlop={8}>
-        <Text style={styles.tuneToggleText}>{openPanel ? '× TUNE' : '≡ TUNE'}</Text>
+        {/* labelled so the two demos are distinguishable on one simulator */}
+        <Text style={styles.tuneToggleText}>{openPanel ? '× TUNE · RN' : '≡ TUNE · RN'}</Text>
       </Pressable>
 
       {openPanel && (
