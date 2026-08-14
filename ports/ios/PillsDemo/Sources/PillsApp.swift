@@ -192,17 +192,7 @@ struct PillsView: View {
                 .fill(Color.black)
                 .opacity(Double(min(1, m * 2)))
 
-            // rim highlight: directional, brightest top-left — the SwiftUI
-            // stand-in for the design's three white inset shadows (SwiftUI has
-            // no inset shadow primitive)
-            RoundedRectangle(cornerRadius: r, style: .continuous)
-                .strokeBorder(
-                    LinearGradient(
-                        colors: [Color.white.opacity(0.28), Color.white.opacity(0.06), Color.white.opacity(0.14)],
-                        startPoint: .topLeading, endPoint: .bottom
-                    ),
-                    lineWidth: 1
-                )
+            insetRim(radius: r)
 
             // one orb across both states — travels and scales continuously,
             // drawn at sheet resolution and scaled down for the pill
@@ -223,14 +213,18 @@ struct PillsView: View {
                 .fill(Color.white.opacity(0.22))
                 .frame(width: D.grabW, height: D.grabH)
                 .opacity(Double(max(0, (m - 0.55) / 0.45)))
-                .position(x: w / 2, y: D.grabTop + D.grabH / 2)
+                .position(x: sheetW / 2, y: D.grabTop + D.grabH / 2)
 
             // sheet copy — transitions.dev texts reveal, staggered, 4px blur
+            // Positioned by the FINAL sheet width, not the animated `w`:
+            // riding the container's bouncy width made the type overshoot
+            // sideways with it. The reveal itself stays on the recipe's own
+            // ease, so the copy rises smoothly however the surface moves.
             revealText(
                 ShimmerText(text: "\(VERBS[front.state] ?? "")....", fontSize: 16),
                 window: (0, 1 - D.staggerStep)
             )
-            .position(x: w / 2, y: 244 + 11)
+            .position(x: sheetW / 2, y: 244 + 11)
 
             revealText(
                 Text("Agent is processing your request. Please\nwait, it might take a few seconds.")
@@ -240,17 +234,12 @@ struct PillsView: View {
                     .foregroundStyle(Color(red: 0x89 / 255.0, green: 0x89 / 255.0, blue: 0x89 / 255.0)),
                 window: (D.staggerStep, 1)
             )
-            .position(x: w / 2, y: 277 + 22)
+            .position(x: sheetW / 2, y: 277 + 22)
         }
         .frame(width: w, height: h)
         .clipShape(RoundedRectangle(cornerRadius: r, style: .continuous))
-        // outer drop (CSS blur 26 = radius 13) + the sheet's 0.5 dark ring
+        // 0 12px 26px rgba(0,0,0,0.24) — CSS blur 26 is CoreGraphics radius 13
         .shadow(color: .black.opacity(0.24), radius: 13, y: 12)
-        .overlay(
-            RoundedRectangle(cornerRadius: r, style: .continuous)
-                .strokeBorder(Color.black.opacity(0.12), lineWidth: 0.5)
-                .opacity(Double(m))
-        )
         .offset(x: swipeX, y: dragY + enterY - lift)
         .frame(maxHeight: .infinity, alignment: .bottom)
         .padding(.bottom, D.sheetBottom)
@@ -353,6 +342,8 @@ struct PillsView: View {
                 .font(.system(size: 16))
                 .foregroundStyle(Color(red: 251 / 255.0, green: 251 / 255.0, blue: 251 / 255.0).opacity(0.35))
                 .position(x: 71.3 + 40, y: D.pillH / 2)
+
+            insetRim(radius: D.pillR)
         }
         .frame(width: D.pillW, height: D.pillH)
         .clipShape(RoundedRectangle(cornerRadius: D.pillR, style: .continuous))
@@ -364,6 +355,34 @@ struct PillsView: View {
         .frame(maxHeight: .infinity, alignment: .bottom)
         .padding(.bottom, D.pillBottom)
         .animation(tune.stack.animation, value: depth)
+    }
+
+    /// The design's three white inset highlights, one spec for pill and sheet:
+    ///
+    ///   inset  1px  2px 3px -2px white/0.24   → bright band along the TOP
+    ///   inset -1px -2px 1px -2px white/0.24   → faint band along the BOTTOM
+    ///   inset  0   -2px 1px -2px white/0.24   → faint band along the BOTTOM
+    ///
+    /// SwiftUI has no inset-shadow primitive, so each layer is the rounded
+    /// rect stroked and OFFSET, then clipped back to the shape: an inset
+    /// shadow is exactly a shifted copy of the border showing through on the
+    /// side opposite the offset. Two layers land on the bottom, so it reads
+    /// brighter there than the top — which is what the CSS compounds to.
+    /// The p3 variant of the same stack has no SwiftUI equivalent; these are
+    /// the sRGB values the first CSS declaration falls back to.
+    @ViewBuilder
+    private func insetRim(radius: CGFloat) -> some View {
+        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
+        ZStack {
+            shape.stroke(Color.white.opacity(0.24), lineWidth: 1)
+                .offset(x: 1, y: 2).blur(radius: 1.5)
+            shape.stroke(Color.white.opacity(0.24), lineWidth: 1)
+                .offset(x: -1, y: -2).blur(radius: 0.5)
+            shape.stroke(Color.white.opacity(0.24), lineWidth: 1)
+                .offset(x: 0, y: -2).blur(radius: 0.5)
+        }
+        .clipShape(shape)
+        .allowsHitTesting(false)
     }
 
     // MARK: actions
@@ -428,9 +447,22 @@ struct ShimmerText: View {
     let text: String
     let fontSize: CGFloat
 
-    @State private var phase: CGFloat = 0
-
     var body: some View {
+        // Driven by TimelineView, NOT by a @State + repeatForever animation.
+        // An outer `withAnimation` transaction overrides a child's implicit
+        // animation for that update, which silently killed the sweep on the
+        // sheet title the moment the reveal ran.
+        TimelineView(.animation) { timeline in
+            let phase = CGFloat(
+                timeline.date.timeIntervalSinceReferenceDate
+                    .truncatingRemainder(dividingBy: 2) / 2
+            )
+            band(phase: phase)
+        }
+    }
+
+    @ViewBuilder
+    private func band(phase: CGFloat) -> some View {
         let base = Text(text)
             .font(.system(size: fontSize))
             .foregroundStyle(Color(red: 251 / 255.0, green: 251 / 255.0, blue: 251 / 255.0).opacity(0.5))
@@ -461,9 +493,6 @@ struct ShimmerText: View {
                         .offset(x: -3 * w * (1 - phase))
                     }
             }
-        }
-        .onAppear {
-            withAnimation(.linear(duration: 2).repeatForever(autoreverses: false)) { phase = 1 }
         }
     }
 }
