@@ -782,7 +782,9 @@ extension PillsView {
         // shrink the pill's width, since w interpolates on raw morph.
         if t.anticipate > 0 {
             let dip = max(4, t.anticipate * 100) // 0.05 -> 5pt
-            let flight = (t.ease == .spring ? 0.4 : t.ms / 1000) * 0.85
+            // 200ms earlier than the sheet's arrival: waiting for the landing
+            // read as a late afterthought rather than anticipation.
+            let flight = max(0, (t.ease == .spring ? 0.4 : t.ms / 1000) * 0.85 - 0.2)
             DispatchQueue.main.asyncAfter(deadline: .now() + flight) {
                 withAnimation(.easeOut(duration: t.anticipateMs / 1000)) { closeDip = dip }
                 DispatchQueue.main.asyncAfter(deadline: .now() + t.anticipateMs / 1000) {
