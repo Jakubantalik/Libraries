@@ -437,14 +437,37 @@ private struct StackCard: View {
         .allowsHitTesting(false)
         .frame(maxHeight: .infinity, alignment: .bottom)
         .padding(.bottom, D.pillBottom)
-        // No per-card animation state. Geometry derives from `depth`, and the
-        // PUSH is what runs inside withAnimation — SwiftUI then interpolates
-        // every card's offset, scale and opacity together, which is how
-        // ark-ui's Toast moves a stack. Driving it from onAppear instead does
-        // NOT work: that state change is batched into the view's insertion
-        // transaction and lands instantly (measured — cards were
-        // pixel-identical 1.2s into a 3s animation, deferred or not).
-        .transition(.opacity)
+        // No per-card animation state — geometry derives from `depth` and
+        // the PUSH runs inside withAnimation, so depth CHANGES interpolate.
+        // (Driving from onAppear does not work: that state change is batched
+        // into the insertion transaction and lands instantly.)
+        //
+        // The insertion itself needs the RN StackPill trick: a freshly
+        // demoted card must START at the slot it is leaving — the front —
+        // and ride into depth 1 with the same transaction, glass, orb and
+        // label together. RN does it with useSharedValue(depth - 1); here
+        // it is an insertion transition that cancels out depth 1's offset
+        // and scale, so the card's start pose equals the front pill's.
+        .transition(
+            .asymmetric(
+                insertion: .modifier(
+                    active: FromFront(active: true),
+                    identity: FromFront(active: false)
+                ),
+                removal: .opacity
+            )
+        )
+    }
+}
+
+/// Insertion pose for a freshly demoted stack card: offset and scale that
+/// exactly cancel depth 1's, so the card starts where the front pill sits.
+private struct FromFront: ViewModifier {
+    let active: Bool
+    func body(content: Content) -> some View {
+        content
+            .offset(y: active ? D.stackGap : 0)
+            .scaleEffect(active ? 1 / (1 - D.stackShrink) : 1)
     }
 }
 
