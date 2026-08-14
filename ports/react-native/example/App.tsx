@@ -108,7 +108,7 @@ const ENTER_BLUR = 4;
 // Stacking, following logram-ai/Logram#335: front solid, next 80%, third
 // 50%, and past that the card fades OUT — with the same lift/shrink motion,
 // not a hard unmount. Cards keep orb + label; the orb is paused.
-const STACK_OPACITY = [1, 0.8, 0.5];
+const STACK_OPACITY = [1, 0.5, 0.2];
 const STACK_LIFT = 12;
 const STACK_SHRINK = 0.06;
 // depths rendered: 1..3; depth 3 is the exit animation target (opacity 0)
@@ -126,9 +126,30 @@ const GRAB_TOP = 12;
 const DISMISS_DISTANCE = 90;
 const DISMISS_VELOCITY = 0.8;
 
-const GLASS_SHADOW = [
+// The PILL's stack (Figma 2584:83680): one drop plus three directional
+// white insets — top-left bright, bottom and bottom-right faint.
+const PILL_SHADOW = [
   { offsetX: 0, offsetY: 12, blurRadius: 26, spreadDistance: 0, color: 'rgba(0,0,0,0.24)' },
   { offsetX: 1, offsetY: 2, blurRadius: 3, spreadDistance: -2, color: 'rgba(255,255,255,0.24)', inset: true },
+  { offsetX: -1, offsetY: -2, blurRadius: 1, spreadDistance: -2, color: 'rgba(255,255,255,0.24)', inset: true },
+  { offsetX: 0, offsetY: -2, blurRadius: 1, spreadDistance: -2, color: 'rgba(255,255,255,0.24)', inset: true },
+] as const;
+
+// The SHEET's stack (Figma 2584:83687) is NOT the pill's — this is what made
+// the modal look off. It adds two soft contact layers, a 0.5px dark ring
+// (the pill has none), and SEVEN insets rather than three. Four of those
+// repeat earlier entries verbatim; the repeats are kept because CSS
+// compounds them, which is what brightens the top and bottom edges.
+const SHEET_SHADOW = [
+  { offsetX: 0, offsetY: 12, blurRadius: 26, spreadDistance: 0, color: 'rgba(0,0,0,0.24)' },
+  { offsetX: 0, offsetY: 2, blurRadius: 2, spreadDistance: -2, color: 'rgba(0,0,0,0.04)' },
+  { offsetX: 0, offsetY: 2, blurRadius: 6, spreadDistance: -1, color: 'rgba(0,0,0,0.04)' },
+  { offsetX: 0, offsetY: 0, blurRadius: 0, spreadDistance: 0.5, color: 'rgba(0,0,0,0.12)' },
+  { offsetX: 1, offsetY: 2, blurRadius: 3, spreadDistance: -2, color: 'rgba(255,255,255,0.24)', inset: true },
+  { offsetX: -1, offsetY: -2, blurRadius: 1, spreadDistance: -2, color: 'rgba(255,255,255,0.24)', inset: true },
+  { offsetX: 0, offsetY: -2, blurRadius: 1, spreadDistance: -2, color: 'rgba(255,255,255,0.24)', inset: true },
+  { offsetX: 0, offsetY: 2, blurRadius: 1, spreadDistance: -2, color: 'rgba(255,255,255,0.24)', inset: true },
+  { offsetX: 1, offsetY: 2, blurRadius: 1, spreadDistance: -2, color: 'rgba(255,255,255,0.24)', inset: true },
   { offsetX: -1, offsetY: -2, blurRadius: 1, spreadDistance: -2, color: 'rgba(255,255,255,0.24)', inset: true },
   { offsetX: 0, offsetY: -2, blurRadius: 1, spreadDistance: -2, color: 'rgba(255,255,255,0.24)', inset: true },
 ] as const;
@@ -142,8 +163,19 @@ type EaseKind = 'smooth' | 'bounce' | 'spring';
 /** One transition's motion: duration, back-overshoot amount, easing family. */
 interface Seg {
   ms: number;
+  /** back-overshoot amount for the `bounce` easing, 0..1 */
   bounce: number;
   ease: EaseKind;
+  /** spring: how hard it pulls */
+  stiffness: number;
+  /** spring: how quickly it settles (lower = more oscillation) */
+  damping: number;
+  /** spring: heavier = slower, longer follow-through */
+  mass: number;
+  /** wind-up before the move, in progress units (0 = none) */
+  anticipate: number;
+  /** wind-up duration, ms */
+  anticipateMs: number;
 }
 
 interface Tune {
@@ -157,36 +189,57 @@ interface Tune {
   revealMs: number;
 }
 
+const SPRING_BASE = { stiffness: 220, damping: 20, mass: 1 };
+
 const DEFAULT_TUNE: Tune = {
-  stack: { ms: 400, bounce: 0.3, ease: 'bounce' },
-  open: { ms: 300, bounce: 0.3, ease: 'bounce' },
-  // transitions.dev menu-dropdown closes at 150ms vs a 250ms open — the
-  // return trip is quicker and calmer than the arrival
-  close: { ms: 200, bounce: 0.15, ease: 'bounce' },
+  stack: { ms: 400, bounce: 0.3, ease: 'bounce', ...SPRING_BASE, anticipate: 0, anticipateMs: 90 },
+  open: { ms: 350, bounce: 0.25, ease: 'bounce', ...SPRING_BASE, anticipate: 0.04, anticipateMs: 90 },
+  // the plus-menu recipe closes shorter and calmer than it opens
+  close: { ms: 250, bounce: 0.15, ease: 'smooth', ...SPRING_BASE, anticipate: 0.05, anticipateMs: 110 },
   revealMs: 500,
 };
 
 const SMOOTH = Easing.bezier(0.22, 1, 0.36, 1);
 
 /** The movement easing a segment calls for. */
-function easeFor(seg: Seg): EasingFunction | EasingFunctionFactory {
+function easeFor(seg: Seg, closing = false): EasingFunction | EasingFunctionFactory {
   if (seg.ease === 'bounce') return Easing.out(Easing.back(seg.bounce * 4));
-  return SMOOTH;
+  return closing ? MORPH_CLOSE_EASE : SMOOTH;
 }
 
 /** Animate a movement shared value per the segment (spring ignores ms). */
-function animateTo(seg: Seg, to: number) {
+function animateTo(seg: Seg, to: number, closing = false) {
   if (seg.ease === 'spring') {
-    return withSpring(to, { damping: 14 + (1 - seg.bounce) * 16, stiffness: 220, mass: 1 });
+    return withSpring(to, { stiffness: seg.stiffness, damping: seg.damping, mass: seg.mass });
   }
-  return withTiming(to, { duration: seg.ms, easing: easeFor(seg) });
+  return withTiming(to, { duration: seg.ms, easing: easeFor(seg, closing) });
 }
 
-// Anticipation on close, from the dropdown-morph model: before the sheet
-// collapses it first swells a touch — the wind-up that makes the collapse
-// read as a deliberate release rather than a cut.
-const ANTICIPATE_SCALE = 1.045;
-const ANTICIPATE_MS = 90;
+/**
+ * The move, preceded by its wind-up. `from` is the value it pulls away to
+ * first — past the start, opposite the travel — which is the anticipation
+ * the plus-menu recipe folds into its overshooting curve.
+ */
+function animateWithAnticipation(seg: Seg, from: number, to: number, closing = false) {
+  if (seg.anticipate <= 0) return animateTo(seg, to, closing);
+  return withSequence(
+    withTiming(from, { duration: seg.anticipateMs, easing: Easing.out(Easing.cubic) }),
+    animateTo(seg, to, closing)
+  );
+}
+
+// Anticipation, from transitions.dev "Plus to menu morph" (20): the open
+// runs on an OVERSHOOTING ease, cubic-bezier(0.34, 1.25, 0.64, 1), while the
+// close runs on the calm cubic-bezier(0.22, 1, 0.36, 1) — the surface
+// arrives with life and leaves without fuss. The recipe's close is also
+// shorter than its open (250ms vs 350ms).
+//
+// The wind-up before each move is what the recipe's overshoot expresses as a
+// single curve; a duration-based tween cannot overshoot BACKWARDS at the
+// start, so it is a separate leading step: the sheet swells slightly before
+// collapsing, and dips slightly before expanding.
+const MORPH_OPEN_EASE = Easing.bezier(0.34, 1.25, 0.64, 1);
+const MORPH_CLOSE_EASE = Easing.bezier(0.22, 1, 0.36, 1);
 
 // ---- app ------------------------------------------------------------------
 
@@ -239,7 +292,7 @@ export default function App() {
     // crossing through a 4px blur as it arrives
     const t = tuneRef.current;
     enterY.value = ENTER_RISE;
-    enterY.value = animateTo(t.stack, 0);
+    enterY.value = animateWithAnticipation(t.stack, ENTER_RISE * (1 + t.stack.anticipate), 0);
     enterProg.value = 0;
     enterProg.value = withTiming(1, { duration: t.stack.ms, easing: SMOOTH });
   }, [enterY, enterProg]);
@@ -252,7 +305,8 @@ export default function App() {
   const open = useCallback(() => {
     const t = tuneRef.current;
     setExpanded(true);
-    morph.value = animateTo(t.open, 1);
+    // wind-up: settle a touch SMALLER than the pill, then expand
+    morph.value = animateWithAnticipation(t.open, -t.open.anticipate, 1);
     // The copy reveals once the surface has mostly arrived. Deliberately
     // NEVER bounced: texts-reveal rises on the recipe's own ease regardless
     // of the movement easing, so type never wobbles.
@@ -266,11 +320,8 @@ export default function App() {
     setExpanded(false);
     reveal.value = withTiming(0, { duration: STAGGER_EXIT, easing: Easing.linear });
     dragY.value = withTiming(0, { duration: 200 });
-    // anticipation first (swell), then the collapse proper
-    morph.value = withSequence(
-      withTiming(ANTICIPATE_SCALE, { duration: ANTICIPATE_MS, easing: Easing.out(Easing.cubic) }),
-      animateTo(t.close, 0)
-    );
+    // wind-up: swell past the sheet, then collapse on the calm close ease
+    morph.value = animateWithAnticipation(t.close, 1 + t.close.anticipate, 0, true);
   }, [morph, dragY, reveal]);
   const closeRef = useRef(close);
   closeRef.current = close;
@@ -432,7 +483,16 @@ export default function App() {
         ))}
 
         <View style={[styles.hitArea, { width: sheetW }]} pointerEvents="none">
-          <Animated.View style={[styles.container, containerStyle]}>
+          <Animated.View
+            style={[
+              styles.container,
+              // boxShadow cannot be interpolated, so the stack swaps on the
+              // state change at the head of the morph; the difference is two
+              // 0.04 layers and a 0.5px ring, far too subtle to read as a pop
+              expanded ? styles.sheetShadow : styles.pillShadow,
+              containerStyle,
+            ]}
+          >
             <Animated.View style={[StyleSheet.absoluteFill, pillGlassStyle]}>
               <BlurView intensity={PILL_BLUR} tint="dark" style={StyleSheet.absoluteFill} />
               <LinearGradient colors={PILL_GRADIENT} style={StyleSheet.absoluteFill} />
@@ -588,16 +648,6 @@ function TunePanel({ tune, onChange }: { tune: Tune; onChange: (t: Tune) => void
             ))}
           </View>
 
-          <TuneRow
-            label="DUR"
-            display={`${cur.ms}ms`}
-            onStep={(dir) => setSegVal({ ms: Math.max(50, Math.min(2000, cur.ms + dir * 50)) })}
-          />
-          <TuneRow
-            label="BOUNCE"
-            display={cur.bounce.toFixed(2)}
-            onStep={(dir) => setSegVal({ bounce: Math.max(0, Math.min(1, +(cur.bounce + dir * 0.05).toFixed(2))) })}
-          />
           <View style={styles.tuneRow}>
             <Text style={styles.tuneLabel}>EASE</Text>
             <Pressable
@@ -608,6 +658,57 @@ function TunePanel({ tune, onChange }: { tune: Tune; onChange: (t: Tune) => void
               <Text style={styles.tuneBtnText}>{cur.ease}</Text>
             </Pressable>
           </View>
+
+          {/* a spring is defined by its physics, not a duration */}
+          {cur.ease === 'spring' ? (
+            <>
+              <TuneRow
+                label="STIFF"
+                display={String(cur.stiffness)}
+                onStep={(dir) => setSegVal({ stiffness: Math.max(20, Math.min(600, cur.stiffness + dir * 20)) })}
+              />
+              <TuneRow
+                label="DAMP"
+                display={String(cur.damping)}
+                onStep={(dir) => setSegVal({ damping: Math.max(2, Math.min(60, cur.damping + dir * 2)) })}
+              />
+              <TuneRow
+                label="MASS"
+                display={cur.mass.toFixed(1)}
+                onStep={(dir) => setSegVal({ mass: Math.max(0.2, Math.min(5, +(cur.mass + dir * 0.2).toFixed(1))) })}
+              />
+            </>
+          ) : (
+            <>
+              <TuneRow
+                label="DUR"
+                display={`${cur.ms}ms`}
+                onStep={(dir) => setSegVal({ ms: Math.max(50, Math.min(2000, cur.ms + dir * 50)) })}
+              />
+              <TuneRow
+                label="BOUNCE"
+                display={cur.bounce.toFixed(2)}
+                onStep={(dir) =>
+                  setSegVal({ bounce: Math.max(0, Math.min(1, +(cur.bounce + dir * 0.05).toFixed(2))) })
+                }
+              />
+            </>
+          )}
+
+          <TuneRow
+            label="ANTIC"
+            display={cur.anticipate.toFixed(2)}
+            onStep={(dir) =>
+              setSegVal({ anticipate: Math.max(0, Math.min(0.4, +(cur.anticipate + dir * 0.01).toFixed(2))) })
+            }
+          />
+          <TuneRow
+            label="ANT MS"
+            display={`${cur.anticipateMs}ms`}
+            onStep={(dir) =>
+              setSegVal({ anticipateMs: Math.max(0, Math.min(500, cur.anticipateMs + dir * 10)) })
+            }
+          />
 
           <TuneRow
             label="REVEAL"
@@ -650,7 +751,7 @@ const styles = StyleSheet.create({
     height: PILL_H,
     borderRadius: PILL_R,
     overflow: 'hidden',
-    boxShadow: GLASS_SHADOW,
+    boxShadow: PILL_SHADOW,
   },
   stackOrb: {
     position: 'absolute',
@@ -665,18 +766,17 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: 'rgba(251,251,251,0.35)',
   },
+  pillShadow: { boxShadow: PILL_SHADOW },
+  sheetShadow: { boxShadow: SHEET_SHADOW },
   container: {
     position: 'absolute',
     overflow: 'hidden',
-    // The design's shadow stack, verbatim. React Native 0.76+ on the new
-    // architecture implements the real CSS box-shadow model including inset,
-    // so this needs no approximating: one outer drop plus three DIRECTIONAL
-    // white insets (top-left bright, bottom-right and bottom faint) that a
-    // single uniform border could never reproduce.
-    boxShadow: GLASS_SHADOW,
   },
   sheetGlass: {
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    // Opaque, per instruction. Figma specifies rgba(0,0,0,0.8) over a 2px
+    // backdrop blur; a solid fill reads as a surface rather than tinted
+    // glass, which is the deliberate departure here.
+    backgroundColor: '#000',
   },
   orb: {
     position: 'absolute',

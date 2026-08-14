@@ -46,6 +46,21 @@ export interface Reveal {
   blurPx: number;
 }
 
+/**
+ * Padding the reveal needs around the glyphs.
+ *
+ * A Skia canvas CLIPS: sized to the text, a 12px rise starts the glyphs
+ * entirely below the canvas and the blur's spread is cut off at every edge,
+ * so the reveal reads as a hard pop instead of a rise. The canvas is grown
+ * by the rise plus the blur's reach and pulled back with negative margins,
+ * so the resting layout position is unchanged.
+ */
+function revealPad(reveal: Reveal | undefined) {
+  if (!reveal) return { x: 0, top: 0, bottom: 0 };
+  const halo = Math.ceil(reveal.blurPx * 2);
+  return { x: halo, top: halo, bottom: halo + Math.ceil(reveal.rise) };
+}
+
 function useRevealTransforms(reveal: Reveal | undefined, width: number) {
   const p = useDerivedValue(() => {
     if (!reveal) return 1;
@@ -92,6 +107,7 @@ export function ShimmerText({
   const width = useMemo(() => font.measureText(text).width, [font, text]);
   const height = fontSize * 1.4;
   const baseline = fontSize * 1.1;
+  const pad = revealPad(reveal);
 
   const progress = useSharedValue(0);
   useEffect(() => {
@@ -110,13 +126,22 @@ export function ShimmerText({
 
   // background-position 100% -> 0% with background-size 400%: the gradient's
   // origin travels from -(band-1)*width to 0, exactly the demo's keyframes
-  const start = useDerivedValue(() => vec(-(BAND - 1) * width * (1 - progress.value), 0));
+  const padX = revealPad(reveal).x;
+  const start = useDerivedValue(() => vec(padX - (BAND - 1) * width * (1 - progress.value), 0));
   const end = useDerivedValue(() => vec(start.value.x + width * BAND, 0));
 
   const r = useRevealTransforms(reveal, width);
 
   return (
-    <Canvas style={{ width, height }}>
+    <Canvas
+      style={{
+        width: width + pad.x * 2,
+        height: height + pad.top + pad.bottom,
+        marginHorizontal: -pad.x,
+        marginTop: -pad.top,
+        marginBottom: -pad.bottom,
+      }}
+    >
       <Group
         transform={r.transform}
         opacity={r.opacity}
@@ -126,8 +151,8 @@ export function ShimmerText({
           </Paint>
         }
       >
-        <SkText x={0} y={baseline} text={text} font={font} color={color} />
-        <SkText x={0} y={baseline} text={text} font={font}>
+        <SkText x={pad.x} y={baseline + pad.top} text={text} font={font} color={color} />
+        <SkText x={pad.x} y={baseline + pad.top} text={text} font={font}>
           <LinearGradient
             start={start}
             end={end}
@@ -156,9 +181,18 @@ export function RevealLines({ lines, fontSize, lineHeight, color, width, reveal 
   const font = useAppFont(fontSize);
   const r = useRevealTransforms(reveal, width);
   const height = lineHeight * lines.length + fontSize * 0.4;
+  const pad = revealPad(reveal);
 
   return (
-    <Canvas style={{ width, height }}>
+    <Canvas
+      style={{
+        width: width + pad.x * 2,
+        height: height + pad.top + pad.bottom,
+        marginHorizontal: -pad.x,
+        marginTop: -pad.top,
+        marginBottom: -pad.bottom,
+      }}
+    >
       <Group
         transform={r.transform}
         opacity={r.opacity}
@@ -173,8 +207,8 @@ export function RevealLines({ lines, fontSize, lineHeight, color, width, reveal 
           return (
             <SkText
               key={line}
-              x={(width - w) / 2}
-              y={fontSize * 1.05 + i * lineHeight}
+              x={pad.x + (width - w) / 2}
+              y={pad.top + fontSize * 1.05 + i * lineHeight}
               text={line}
               font={font}
               color={color}
