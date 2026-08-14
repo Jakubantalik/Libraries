@@ -62,6 +62,11 @@ private enum D {
     static let swipeThreshold: CGFloat = 56
     static let dismissDistance: CGFloat = 90
 
+    /// Figma type metrics (2584:83691 / 2584:83692), and the SF line
+    /// heights they have to be expressed against.
+    static let titleLeading: CGFloat = 32.028
+    static let subtitleLineHeight: CGFloat = 16.70 // SF 14pt
+
     static let staggerDistance: CGFloat = 12
     static let staggerStep: Double = 0.08 // fraction of the reveal, ~40ms of 500
     static let revealBlur: CGFloat = 4
@@ -347,7 +352,7 @@ struct PillsView: View {
             let sheetW = geo.size.width - D.sheetMargin * 2
 
             ZStack {
-                FrostedWallpaper()
+                Color(red: 0x6b / 255.0, green: 0x6b / 255.0, blue: 0x6b / 255.0)
                     .contentShape(Rectangle())
                     .onTapGesture(coordinateSpace: .global) { route($0, frame: geo.frame(in: .global)) }
 
@@ -413,17 +418,21 @@ struct PillsView: View {
                 ShimmerText(text: "\(VERBS[front.state] ?? "")....", fontSize: 16),
                 window: (0, 1 - D.staggerStep)
             )
-            .position(x: sheetW / 2, y: 244 + 11)
+            .position(x: sheetW / 2, y: 244 + D.titleLeading / 2)
 
             revealText(
                 Text("Agent is processing your request. Please\nwait, it might take a few seconds.")
                     .font(.system(size: 14))
-                    .lineSpacing(8)
+                    // Figma leading is 22 (2584:83692). SwiftUI's lineSpacing
+                    // is EXTRA space on top of the font's own line height, so
+                    // it is the difference, not the leading — passing 8 gave
+                    // 24.7pt lines, measured.
+                    .lineSpacing(22 - D.subtitleLineHeight)
                     .multilineTextAlignment(.center)
                     .foregroundStyle(Color(red: 0x89 / 255.0, green: 0x89 / 255.0, blue: 0x89 / 255.0)),
                 window: (D.staggerStep, 1)
             )
-            .position(x: sheetW / 2, y: 277 + 22)
+            .position(x: sheetW / 2, y: 277 + 22) // two 22pt lines -> centre at +22
         }
         .frame(width: sheetW, height: D.sheetH)
         .frame(maxHeight: .infinity, alignment: .bottom)
@@ -840,7 +849,9 @@ struct ShimmerText: View {
     private func band(phase: CGFloat) -> some View {
         let base = Text(text)
             .font(.system(size: fontSize))
-            .foregroundStyle(Color(red: 251 / 255.0, green: 251 / 255.0, blue: 251 / 255.0).opacity(0.5))
+            // Figma 2584:83691 is a solid #f2f2f2; the shimmer rides above
+            // it, so the base sits just under that rather than at half alpha.
+            .foregroundStyle(Color(red: 0xf2 / 255.0, green: 0xf2 / 255.0, blue: 0xf2 / 255.0).opacity(0.72))
 
         // The highlight is the same text in white, masked by a moving band.
         // The overlay stays TEXT-sized and everything inside aligns leading —
