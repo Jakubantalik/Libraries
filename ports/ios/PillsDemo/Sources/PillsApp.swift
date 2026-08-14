@@ -151,13 +151,17 @@ struct PillsApp: App {
 /// glossy, nothing like the Figma render. Approximating the spread by
 /// dropping the effective alpha and widening the blur reads right: a faint
 /// top-left catchlight, a near-invisible bottom lift.
+/// `bottomLight` scales the lower rim: 1 on the pill and the stacked cards,
+/// 0 on the sheet, which carries no bottom hairline. The surface passes
+/// `1 - morph`, so the light fades out over the morph rather than popping
+/// off the instant the sheet state is entered.
 @ViewBuilder
-func insetRim(radius: CGFloat) -> some View {
+func insetRim(radius: CGFloat, bottomLight: Double = 1) -> some View {
     let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
     ZStack {
         // The reference render is lit from BELOW: the readable rim light
         // hugs the bottom arc, and the top carries only a whisper of sheen.
-        shape.stroke(Color.white.opacity(0.20), lineWidth: 0.8)
+        shape.stroke(Color.white.opacity(0.28 * bottomLight), lineWidth: 0.8)
             .offset(y: -1).blur(radius: 0.3)
             .mask(
                 LinearGradient(
@@ -166,7 +170,7 @@ func insetRim(radius: CGFloat) -> some View {
                 )
             )
         // soft spread above the bottom rim, the glass thickness
-        shape.stroke(Color.white.opacity(0.04), lineWidth: 2)
+        shape.stroke(Color.white.opacity(0.04 * bottomLight), lineWidth: 2)
             .offset(y: -2).blur(radius: 3)
             .mask(
                 LinearGradient(
@@ -472,7 +476,7 @@ struct PillsView: View {
                 .fill(Color.black)
                 .opacity(Double(min(1, m * 2)))
 
-            insetRim(radius: r)
+            insetRim(radius: r, bottomLight: Double(1 - m))
 
             // one orb across both states — travels and scales continuously,
             // drawn at sheet resolution and scaled down for the pill
