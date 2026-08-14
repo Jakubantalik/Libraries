@@ -1064,7 +1064,10 @@ struct TunePanel: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             // labelled so the two demos are distinguishable on one simulator
-            Button(openPanel ? "× TUNE · SwiftUI" : "≡ TUNE · SwiftUI") { openPanel.toggle() }
+            // The stamp answers "is this actually my latest build?" at a
+            // glance — it is baked at COMPILE time, so an older install can
+            // never show a newer date.
+            Button(openPanel ? "× TUNE · \(BuildStamp.short)" : "≡ TUNE · \(BuildStamp.short)") { openPanel.toggle() }
                 .font(.system(size: 11, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.75))
                 .padding(.horizontal, 10).padding(.vertical, 5)

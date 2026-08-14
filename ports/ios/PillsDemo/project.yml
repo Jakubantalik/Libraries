@@ -28,3 +28,6 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.jakubantalik.PillsDemo
         SWIFT_VERSION: "5.0"
         TARGETED_DEVICE_FAMILY: "1"
+        # so `run-device.sh` can sign without opening Xcode
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: Z96BV57RB6

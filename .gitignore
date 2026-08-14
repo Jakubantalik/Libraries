@@ -10,3 +10,6 @@ demo/ios-snapshots
 
 # transitions.dev recipe docs (npx transitions-pro add) — reference only
 transitions/
+
+# iOS device build output
+ports/ios/*/build-device/
