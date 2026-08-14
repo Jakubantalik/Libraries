@@ -466,14 +466,31 @@ extension PillsView {
         let i = STATES.firstIndex(of: front.state) ?? 0
         let id = nextId
         nextId += 1
-        stack.append(PillEntry(id: id, state: STATES[(i + 1) % STATES.count]))
-        if stack.count > D.stackRendered + 2 {
-            stack.removeFirst(stack.count - (D.stackRendered + 2))
+
+        // Phase 1, explicitly WITHOUT animation: swap the front and drop the
+        // surface 90pt below its slot, in one committed render. Setting
+        // enterY and then animating it back in the same update cycle does
+        // nothing — SwiftUI coalesces the writes and the 90 is never
+        // rendered, which is why the front pill sat still and only its
+        // content changed. (RN never hit this: shared values apply
+        // imperatively, so set-then-animate just works there.)
+        var tx = Transaction()
+        tx.disablesAnimations = true
+        withTransaction(tx) {
+            stack.append(PillEntry(id: id, state: STATES[(i + 1) % STATES.count]))
+            if stack.count > D.stackRendered + 2 {
+                stack.removeFirst(stack.count - (D.stackRendered + 2))
+            }
+            enterY = D.enterRise * (1 + tune.stack.anticipate)
         }
-        enterY = D.enterRise * (1 + tune.stack.anticipate)
-        withAnimation(tune.stack.animation) {
-            stackShift = CGFloat(id)
-            enterY = 0
+
+        // Phase 2, next tick: the new front rises into the slot while the
+        // demoted card recedes — one transaction drives both, as in RN.
+        DispatchQueue.main.async {
+            withAnimation(tune.stack.animation) {
+                stackShift = CGFloat(id)
+                enterY = 0
+            }
         }
     }
 
