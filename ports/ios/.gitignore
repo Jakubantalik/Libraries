@@ -5,3 +5,4 @@ DerivedData/
 *.xcodeproj
 .swiftpm/
 ThinkingOrbsKit/snapshots/
+PillsDemo/build/

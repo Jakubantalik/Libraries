@@ -19,6 +19,7 @@ public struct ThinkingOrb: View {
     private let theme: OrbTheme
     private let speed: Double
     private let paused: Bool
+    private let displaySize: Double?
 
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -26,18 +27,24 @@ public struct ThinkingOrb: View {
     // fixed instant here to capture a deterministic frame.
     @Environment(\.orbFrozenTime) private var frozenTime
 
+    /// `displaySize` renders the orb at an arbitrary point size while keeping
+    /// the tuned `size` preset's geometry — the drawing is scaled inside the
+    /// Canvas, so it stays vector-crisp at any factor (a `scaleEffect` would
+    /// rasterise the layer first). Mirrors the React Native port's prop.
     public init(
         state: OrbState = .working,
         size: OrbSize = .px64,
         theme: OrbTheme = .auto,
         speed: Double = 1,
-        paused: Bool = false
+        paused: Bool = false,
+        displaySize: Double? = nil
     ) {
         self.state = state
         self.size = size
         self.theme = theme
         self.speed = speed
         self.paused = paused
+        self.displaySize = displaySize
     }
 
     private var isDark: Bool {
@@ -51,7 +58,7 @@ public struct ThinkingOrb: View {
     public var body: some View {
         let preset = resolvePreset(state, size)
         let effSpeed = preset.speed * speed
-        let side = size.value
+        let side = displaySize ?? size.value
 
         Group {
             if let frozenTime {
@@ -81,6 +88,9 @@ public struct ThinkingOrb: View {
     @ViewBuilder
     private func canvas(preset: ResolvedPreset, t: Double) -> some View {
         Canvas(rendersAsynchronously: false) { context, _ in
+            var context = context
+            let zoom = (displaySize ?? size.value) / size.value
+            if zoom != 1 { context.scaleBy(x: zoom, y: zoom) }
             let frame = orbFrame(preset, size: size.value, t: t)
             // lines first, so nodes sit on top of their edges
             for l in frame.lines {
