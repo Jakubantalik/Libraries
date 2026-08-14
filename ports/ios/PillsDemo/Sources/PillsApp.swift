@@ -60,6 +60,8 @@ private enum D {
     static let enterRise: CGFloat = 90
     /// cross-blur on the entering pill, clearing as it lands
     static let enterBlur: CGFloat = 6
+    /// the arriving pill's opacity at the start of its rise
+    static let enterOpacity: Double = 0.5
 
     static let swipeThreshold: CGFloat = 56
     static let dismissDistance: CGFloat = 90
@@ -120,7 +122,7 @@ struct Seg {
 }
 
 struct Tune {
-    var stack = Seg(ms: 500, bounce: 0.25, ease: .bounce, stiffness: 220, damping: 20, mass: 1, anticipate: 0, anticipateMs: 130)
+    var stack = Seg(ms: 500, bounce: 0.25, ease: .spring, stiffness: 340, damping: 22, mass: 1, anticipate: 0, anticipateMs: 130)
     var open = Seg(ms: 350, bounce: 0.05, ease: .bounce, stiffness: 220, damping: 20, mass: 1, anticipate: 0.04, anticipateMs: 90)
     var close = Seg(ms: 250, bounce: 0.15, ease: .smooth, stiffness: 220, damping: 20, mass: 1, anticipate: 0.05, anticipateMs: 110)
     var revealMs: Double = 500
@@ -512,7 +514,12 @@ struct PillsView: View {
         .shadow(color: .black.opacity(0.17), radius: 9, y: 7)
         .shadow(color: .black.opacity(0.10), radius: 22, y: 16)
         .offset(x: swipeX, y: dragY - lift + closeDip)
-        .modifier(EnterBlur(shift: stackShift, frontId: CGFloat(front.id), maxBlur: D.enterBlur))
+        .modifier(EnterBlur(
+            shift: stackShift,
+            frontId: CGFloat(front.id),
+            maxBlur: D.enterBlur,
+            startOpacity: D.enterOpacity
+        ))
         .modifier(EnterRise(
             shift: stackShift,
             frontId: CGFloat(front.id),
@@ -622,14 +629,16 @@ private struct EnterRise: GeometryEffect {
     }
 }
 
-/// The entering pill's cross-blur, on the same scalar as its rise: sharp by
-/// the time it lands. Animatable for the same reason EnterRise is a
-/// GeometryEffect — a plain .blur would interpolate between two settled
-/// endpoints of 0 and never render.
+/// The entering pill's cross-blur and fade, on the same scalar as its rise:
+/// it starts soft and half-transparent and is sharp and solid by the time it
+/// lands. Animatable for the same reason EnterRise is a GeometryEffect — a
+/// plain .blur/.opacity would interpolate between two settled endpoints and
+/// never render a frame of the transition.
 private struct EnterBlur: ViewModifier, Animatable {
     var shift: CGFloat
     var frontId: CGFloat
     var maxBlur: CGFloat
+    var startOpacity: Double
 
     var animatableData: CGFloat {
         get { shift }
@@ -638,7 +647,9 @@ private struct EnterBlur: ViewModifier, Animatable {
 
     func body(content: Content) -> some View {
         let p = max(0, min(1, shift - (frontId - 1)))
-        return content.blur(radius: maxBlur * (1 - p))
+        return content
+            .blur(radius: maxBlur * (1 - p))
+            .opacity(startOpacity + (1 - startOpacity) * Double(p))
     }
 }
 
@@ -950,7 +961,7 @@ private struct CurvePreview: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
-                Text("PREVIEW").font(.system(size: 9, design: .monospaced))
+                Text("PREVIEW · tap").font(.system(size: 9, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.4))
                 Spacer()
                 Text(durationLabel).font(.system(size: 9, design: .monospaced))
@@ -975,31 +986,18 @@ private struct CurvePreview: View {
             .frame(height: 14)
         }
         .padding(.top, 2)
-        .onAppear { cycle() }
-        // any tuning change restarts the loop with the new curve
-        .onChange(of: seg.ease) { _ in restart() }
-        .onChange(of: seg.ms) { _ in restart() }
-        .onChange(of: seg.bounce) { _ in restart() }
-        .onChange(of: seg.stiffness) { _ in restart() }
-        .onChange(of: seg.damping) { _ in restart() }
-        .onChange(of: seg.mass) { _ in restart() }
+        .contentShape(Rectangle())
+        .onTapGesture { play() }
     }
 
-    private func restart() {
-        travelled = false
-        cycle()
-    }
-
-    /// Out, hold, snap back, repeat — the pause makes the settle readable.
-    private func cycle() {
-        let flight = seg.ease == .spring ? 1.6 : seg.ms / 1000 + 0.35
-        travelled = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + flight) {
-            var tx = Transaction()
-            tx.disablesAnimations = true
-            withTransaction(tx) { travelled = false }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { cycle() }
-        }
+    /// One run per tap. Looping made the panel restless while reading the
+    /// other values, and a curve is easier to judge when you choose when it
+    /// fires. Tapping mid-flight snaps home and re-runs.
+    private func play() {
+        var tx = Transaction()
+        tx.disablesAnimations = true
+        withTransaction(tx) { travelled = false }
+        DispatchQueue.main.async { travelled = true }
     }
 }
 
