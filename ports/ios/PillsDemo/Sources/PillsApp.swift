@@ -147,8 +147,8 @@ func insetRim(radius: CGFloat) -> some View {
     ZStack {
         // The reference render is lit from BELOW: the readable rim light
         // hugs the bottom arc, and the top carries only a whisper of sheen.
-        shape.stroke(Color.white.opacity(0.22), lineWidth: 1.2)
-            .offset(y: -1).blur(radius: 0.8)
+        shape.stroke(Color.white.opacity(0.20), lineWidth: 0.8)
+            .offset(y: -1).blur(radius: 0.3)
             .mask(
                 LinearGradient(
                     stops: [.init(color: .clear, location: 0.5), .init(color: .white, location: 1)],
@@ -156,7 +156,7 @@ func insetRim(radius: CGFloat) -> some View {
                 )
             )
         // soft spread above the bottom rim, the glass thickness
-        shape.stroke(Color.white.opacity(0.08), lineWidth: 2.5)
+        shape.stroke(Color.white.opacity(0.04), lineWidth: 2)
             .offset(y: -2).blur(radius: 3)
             .mask(
                 LinearGradient(
@@ -365,8 +365,8 @@ struct PillsView: View {
         .clipShape(RoundedRectangle(cornerRadius: r, style: .continuous))
         // two layers, like the reference render: a tighter contact shadow
         // seating the pill plus a wide soft ambient falloff beneath it
-        .shadow(color: .black.opacity(0.28), radius: 9, y: 7)
-        .shadow(color: .black.opacity(0.16), radius: 22, y: 18)
+        .shadow(color: .black.opacity(0.17), radius: 9, y: 7)
+        .shadow(color: .black.opacity(0.10), radius: 22, y: 16)
         .offset(x: swipeX, y: dragY - lift)
         .modifier(EnterRise(
             shift: stackShift,
@@ -566,8 +566,8 @@ private struct StackDepth: ViewModifier, Animatable {
             // Fades in with depth: at d = 0 the card sits exactly under the
             // surface, and a duplicate drop shadow there doubled the
             // darkness against the Figma render (one shadow, 2584:83680).
-            .shadow(color: .black.opacity(0.28 * Double(min(1, d))), radius: 9, y: 7)
-            .shadow(color: .black.opacity(0.16 * Double(min(1, d))), radius: 22, y: 18)
+            .shadow(color: .black.opacity(0.17 * Double(min(1, d))), radius: 9, y: 7)
+            .shadow(color: .black.opacity(0.10 * Double(min(1, d))), radius: 22, y: 16)
             .scaleEffect(1 - d * D.stackShrink)
             .offset(y: -d * D.stackGap)
             .opacity(opacity)
