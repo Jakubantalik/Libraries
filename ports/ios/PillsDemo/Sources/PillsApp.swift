@@ -773,24 +773,40 @@ extension PillsView {
         let t = tune.close
         withAnimation(.linear(duration: 0.2)) { reveal = 0 }
         withAnimation(.linear(duration: 0.2)) { dragY = 0 }
-        withAnimation(t.animation) { morph = 0 }
 
-        // Landing anticipation, transitions.dev plus-menu morph: as the
-        // sheet arrives back at the pill, the pill dips a few px past its
-        // slot and springs back — an arrival squash, not a wind-up swell.
-        // The dip is its own offset: driving it through morph would also
-        // shrink the pill's width, since w interpolates on raw morph.
-        if t.anticipate > 0 {
-            let dip = max(4, t.anticipate * 100) // 0.05 -> 5pt
-            // 200ms earlier than the sheet's arrival: waiting for the landing
-            // read as a late afterthought rather than anticipation.
-            let flight = max(0, (t.ease == .spring ? 0.4 : t.ms / 1000) * 0.85 - 0.2)
-            DispatchQueue.main.asyncAfter(deadline: .now() + flight) {
-                withAnimation(.easeOut(duration: t.anticipateMs / 1000)) { closeDip = dip }
-                DispatchQueue.main.asyncAfter(deadline: .now() + t.anticipateMs / 1000) {
-                    withAnimation(.timingCurve(0.34, 1.4, 0.64, 1, duration: 0.28)) { closeDip = 0 }
-                }
+        // transitions.dev plus-menu morph: the pill dips a few px past its
+        // slot and springs back. The dip is its own offset — driving it
+        // through morph would also shrink the pill's width, since w
+        // interpolates on raw morph.
+        guard t.anticipate > 0 else {
+            withAnimation(t.animation) { morph = 0 }
+            return
+        }
+
+        let dip = max(4, t.anticipate * 100) // 0.05 -> 5pt
+        // 300ms ahead of the sheet's arrival. Once the lead exceeds the
+        // collapse itself the dip cannot start any earlier WITHIN it, so the
+        // remainder becomes a genuine wind-up: the pill dips first and the
+        // collapse follows, which is what the recipe actually does.
+        let lead = 0.3
+        let flight = (t.ease == .spring ? 0.4 : t.ms / 1000) * 0.85 - lead
+        let preRoll = max(0, -flight)
+
+        let runDip = {
+            withAnimation(.easeOut(duration: t.anticipateMs / 1000)) { closeDip = dip }
+            DispatchQueue.main.asyncAfter(deadline: .now() + t.anticipateMs / 1000) {
+                withAnimation(.timingCurve(0.34, 1.4, 0.64, 1, duration: 0.28)) { closeDip = 0 }
             }
+        }
+
+        if preRoll > 0 {
+            runDip()
+            DispatchQueue.main.asyncAfter(deadline: .now() + preRoll) {
+                withAnimation(t.animation) { morph = 0 }
+            }
+        } else {
+            withAnimation(t.animation) { morph = 0 }
+            DispatchQueue.main.asyncAfter(deadline: .now() + flight, execute: runDip)
         }
     }
 }
