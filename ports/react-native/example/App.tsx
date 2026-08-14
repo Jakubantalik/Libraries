@@ -405,19 +405,34 @@ export default function App() {
 
   // ---- animated styles ----------------------------------------------------
 
+  // Morph perf: width/height are the only LAYOUT props animated — they are
+  // the geometry morph itself and cannot be transforms (non-uniform scale
+  // 1.66x vs 5.72x would distort every child). Everything else rides on
+  // paint (borderRadius) or transforms: `bottom` used to be a fourth layout
+  // prop, now folded into translateY. The BlurView lives OUTSIDE this view
+  // (see pillBlur below) — resizing a native UIVisualEffectView every frame
+  // was the main source of the morph's jank.
   const containerStyle = useAnimatedStyle(() => ({
     width: interpolate(morph.value, [0, 1], [PILL_W, sheetW]),
     height: interpolate(morph.value, [0, 1], [PILL_H, SHEET_H]),
     borderRadius: interpolate(morph.value, [0, 1], [PILL_R, SHEET_R]),
-    bottom: interpolate(morph.value, [0, 1], [PILL_BOTTOM - SHEET_BOTTOM, 0]),
     transform: [
       { translateX: swipeX.value },
-      { translateY: dragY.value + enterY.value },
+      {
+        translateY:
+          dragY.value +
+          enterY.value -
+          (PILL_BOTTOM - SHEET_BOTTOM) * (1 - Math.min(1, Math.max(0, morph.value))),
+      },
     ],
   }));
 
   const pillGlassStyle = useAnimatedStyle(() => ({
     opacity: interpolate(morph.value, [0, 0.5], [1, 0], Extrapolation.CLAMP),
+  }));
+  const pillBlurStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(morph.value, [0, 0.5], [1, 0], Extrapolation.CLAMP),
+    transform: [{ translateX: swipeX.value }, { translateY: enterY.value }],
   }));
   const sheetGlassStyle = useAnimatedStyle(() => ({
     opacity: interpolate(morph.value, [0, 0.5], [0, 1], Extrapolation.CLAMP),
@@ -483,6 +498,13 @@ export default function App() {
         ))}
 
         <View style={[styles.hitArea, { width: sheetW }]} pointerEvents="none">
+          {/* static-size backdrop blur under the pill: fades with the pill
+              glass and follows it with TRANSFORMS only, so the native blur
+              view is never resized */}
+          <Animated.View style={[styles.pillBlur, pillBlurStyle]} pointerEvents="none">
+            <BlurView intensity={PILL_BLUR} tint="dark" style={StyleSheet.absoluteFill} />
+          </Animated.View>
+
           <Animated.View
             style={[
               styles.container,
@@ -494,7 +516,6 @@ export default function App() {
             ]}
           >
             <Animated.View style={[StyleSheet.absoluteFill, pillGlassStyle]}>
-              <BlurView intensity={PILL_BLUR} tint="dark" style={StyleSheet.absoluteFill} />
               <LinearGradient colors={PILL_GRADIENT} style={StyleSheet.absoluteFill} />
             </Animated.View>
             <Animated.View style={[StyleSheet.absoluteFill, styles.sheetGlass, sheetGlassStyle]} />
@@ -768,8 +789,17 @@ const styles = StyleSheet.create({
   },
   pillShadow: { boxShadow: PILL_SHADOW },
   sheetShadow: { boxShadow: SHEET_SHADOW },
+  pillBlur: {
+    position: 'absolute',
+    bottom: PILL_BOTTOM - SHEET_BOTTOM,
+    width: PILL_W,
+    height: PILL_H,
+    borderRadius: PILL_R,
+    overflow: 'hidden',
+  },
   container: {
     position: 'absolute',
+    bottom: 0,
     overflow: 'hidden',
   },
   sheetGlass: {
