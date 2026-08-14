@@ -54,6 +54,9 @@ private enum D {
     static let stackGap: CGFloat = 12
     static let stackShrink: CGFloat = 0.06
     static let stackRendered = 3
+    /// How much a stacked card's overshoot is scaled up, so the bounce is as
+    /// readable on a 12pt step as it is on the new pill's 90pt rise.
+    static let stackBounceAmp: CGFloat = 4
     static let enterRise: CGFloat = 90
 
     static let swipeThreshold: CGFloat = 56
@@ -287,38 +290,8 @@ private struct FrostedWallpaper: View {
             // one offscreen composite: the blobs never repaint, and the huge
             // blurs rasterise once instead of per frame
             .drawingGroup()
-            // fine photographic grain so the long soft ramps never band
-            .overlay(GrainOverlay().opacity(0.05).blendMode(.overlay))
         }
         .ignoresSafeArea()
-    }
-}
-
-/// A 128px tile of deterministic monochrome noise, tiled across the screen.
-/// Rebuilt identically every launch (seeded LCG), so screenshots stay
-/// byte-comparable between runs.
-private struct GrainOverlay: View {
-    static let tile: Image = {
-        let side = 128
-        var seed: UInt64 = 0x9E3779B97F4A7C15
-        var bytes = [UInt8](repeating: 0, count: side * side)
-        for i in bytes.indices {
-            seed = seed &* 6364136223846793005 &+ 1442695040888963407
-            bytes[i] = UInt8(truncatingIfNeeded: seed >> 33)
-        }
-        let ctx = CGContext(
-            data: &bytes, width: side, height: side,
-            bitsPerComponent: 8, bytesPerRow: side,
-            space: CGColorSpaceCreateDeviceGray(),
-            bitmapInfo: CGImageAlphaInfo.none.rawValue
-        )!
-        return Image(decorative: ctx.makeImage()!, scale: 1)
-    }()
-
-    var body: some View {
-        GrainOverlay.tile
-            .resizable(resizingMode: .tile)
-            .allowsHitTesting(false)
     }
 }
 
@@ -338,6 +311,8 @@ struct PillsView: View {
     @State private var reveal: CGFloat = 0
     @State private var swipeX: CGFloat = 0
     @State private var dragY: CGFloat = 0
+    /// arrival squash after the sheet lands back on the pill
+    @State private var closeDip: CGFloat = 0
     /// Animated stack shift — equals the front entry's id when settled.
     /// Every card's visual depth derives CONTINUOUSLY from this one value
     /// (d = shift - entry.id), the same single-scalar pattern the morph
@@ -519,7 +494,7 @@ struct PillsView: View {
         // seating the pill plus a wide soft ambient falloff beneath it
         .shadow(color: .black.opacity(0.17), radius: 9, y: 7)
         .shadow(color: .black.opacity(0.10), radius: 22, y: 16)
-        .offset(x: swipeX, y: dragY - lift)
+        .offset(x: swipeX, y: dragY - lift + closeDip)
         .modifier(EnterRise(
             shift: stackShift,
             frontId: CGFloat(front.id),
@@ -713,15 +688,30 @@ private struct StackDepth: ViewModifier, Animatable {
         return stops[lo] + (stops[hi] - stops[lo]) * Double(c - CGFloat(lo))
     }
 
+    /// Depth with the curve's overshoot amplified.
+    ///
+    /// The bounce DOES reach these cards — d rides the same overshooting
+    /// curve — but a card only travels stackGap (12pt) per push, so a 25%
+    /// overshoot is 3pt and reads as nothing, while the new pill's 90pt rise
+    /// overshoots by ~22pt and reads clearly. Scaling up only the part of d
+    /// that passes its resting depth gives the stack a visible kick without
+    /// touching the approach, which still lands exactly on the target.
+    private var bouncy: CGFloat {
+        let settled = max(0, frontId - entryId)
+        return d + max(0, d - settled) * (D.stackBounceAmp - 1)
+    }
+
     func body(content: Content) -> some View {
         content
             // Fades in with depth: at d = 0 the card sits exactly under the
             // surface, and a duplicate drop shadow there doubled the
             // darkness against the Figma render (one shadow, 2584:83680).
+            // Opacity reads plain d, not the amplified value — a fade that
+            // kicks looks like a flicker.
             .shadow(color: .black.opacity(0.17 * Double(min(1, d))), radius: 9, y: 7)
             .shadow(color: .black.opacity(0.10 * Double(min(1, d))), radius: 22, y: 16)
-            .scaleEffect(1 - d * D.stackShrink)
-            .offset(y: -d * D.stackGap)
+            .scaleEffect(1 - bouncy * D.stackShrink)
+            .offset(y: -bouncy * D.stackGap)
             .opacity(opacity)
     }
 }
@@ -783,14 +773,22 @@ extension PillsView {
         let t = tune.close
         withAnimation(.linear(duration: 0.2)) { reveal = 0 }
         withAnimation(.linear(duration: 0.2)) { dragY = 0 }
-        // wind-up: swell past the sheet, then collapse
+        withAnimation(t.animation) { morph = 0 }
+
+        // Landing anticipation, transitions.dev plus-menu morph: as the
+        // sheet arrives back at the pill, the pill dips a few px past its
+        // slot and springs back — an arrival squash, not a wind-up swell.
+        // The dip is its own offset: driving it through morph would also
+        // shrink the pill's width, since w interpolates on raw morph.
         if t.anticipate > 0 {
-            withAnimation(.easeOut(duration: t.anticipateMs / 1000)) { morph = 1 + t.anticipate }
-            DispatchQueue.main.asyncAfter(deadline: .now() + t.anticipateMs / 1000) {
-                withAnimation(t.animation) { morph = 0 }
+            let dip = max(4, t.anticipate * 100) // 0.05 -> 5pt
+            let flight = (t.ease == .spring ? 0.4 : t.ms / 1000) * 0.85
+            DispatchQueue.main.asyncAfter(deadline: .now() + flight) {
+                withAnimation(.easeOut(duration: t.anticipateMs / 1000)) { closeDip = dip }
+                DispatchQueue.main.asyncAfter(deadline: .now() + t.anticipateMs / 1000) {
+                    withAnimation(.timingCurve(0.34, 1.4, 0.64, 1, duration: 0.28)) { closeDip = 0 }
+                }
             }
-        } else {
-            withAnimation(t.animation) { morph = 0 }
         }
     }
 }
@@ -864,9 +862,97 @@ private enum SegKey: String, CaseIterable {
     case close = "to pill"
 }
 
+/// A dot that replays the segment's own curve on a loop, over a track marked
+/// with the resting target. Overshoot pushes it PAST the target mark, so a
+/// spring's bounce and settle time are visible without pushing a real pill —
+/// which matters most for `spring`, whose stiffness/damping/mass say nothing
+/// about how long it actually takes.
+private struct CurvePreview: View {
+    let seg: Seg
+
+    @State private var travelled = false
+    @State private var elapsed: Double = 0
+    @State private var started = Date()
+
+    /// Fraction of the track the dot's resting target sits at, leaving room
+    /// on the right for an overshoot to be visible.
+    private let target: CGFloat = 0.72
+
+    /// A spring has no declared duration; estimate its settle time from the
+    /// damped natural frequency so the readout means something.
+    private var durationLabel: String {
+        switch seg.ease {
+        case .spring:
+            let wn = (seg.stiffness / seg.mass).squareRoot()
+            let zeta = seg.damping / (2 * (seg.stiffness * seg.mass).squareRoot())
+            // 2% settling time of a second-order system
+            let t = zeta > 0 && zeta < 1 ? 4 / (zeta * wn) : 4 / wn
+            return "~\(Int(t * 1000))ms"
+        default:
+            return "\(Int(seg.ms))ms"
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text("PREVIEW").font(.system(size: 9, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.4))
+                Spacer()
+                Text(durationLabel).font(.system(size: 9, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.55))
+            }
+
+            GeometryReader { geo in
+                let w = geo.size.width
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Color.white.opacity(0.10)).frame(height: 3)
+                    // resting target
+                    Rectangle().fill(Color.white.opacity(0.35))
+                        .frame(width: 1, height: 12)
+                        .offset(x: w * target)
+                    Circle().fill(Color.white)
+                        .frame(width: 9, height: 9)
+                        .offset(x: (travelled ? w * target : 0) - 4.5)
+                        .animation(seg.animation, value: travelled)
+                }
+                .frame(height: 14)
+            }
+            .frame(height: 14)
+        }
+        .padding(.top, 2)
+        .onAppear { cycle() }
+        // any tuning change restarts the loop with the new curve
+        .onChange(of: seg.ease) { _ in restart() }
+        .onChange(of: seg.ms) { _ in restart() }
+        .onChange(of: seg.bounce) { _ in restart() }
+        .onChange(of: seg.stiffness) { _ in restart() }
+        .onChange(of: seg.damping) { _ in restart() }
+        .onChange(of: seg.mass) { _ in restart() }
+    }
+
+    private func restart() {
+        travelled = false
+        cycle()
+    }
+
+    /// Out, hold, snap back, repeat — the pause makes the settle readable.
+    private func cycle() {
+        let flight = seg.ease == .spring ? 1.6 : seg.ms / 1000 + 0.35
+        travelled = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + flight) {
+            var tx = Transaction()
+            tx.disablesAnimations = true
+            withTransaction(tx) { travelled = false }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { cycle() }
+        }
+    }
+}
+
 struct TunePanel: View {
     @Binding var tune: Tune
-    @State private var openPanel = false
+    // OPEN_TUNE=1 boots with the panel open (screenshot verification)
+    @State private var openPanel = ProcessInfo.processInfo.environment["OPEN_TUNE"] != nil
     @State private var seg: SegKey = .stack
 
     private var cur: Binding<Seg> {
@@ -922,6 +1008,8 @@ struct TunePanel: View {
                     stepper("ANT MS", value: cur.anticipateMs, step: 10, range: 0...500, fmt: { "\(Int($0))ms" })
                     stepper("REVEAL", value: $tune.revealMs, step: 50, range: 100...2000, fmt: { "\(Int($0))ms" })
 
+                    CurvePreview(seg: cur.wrappedValue)
+
                     Button("reset all") { tune = Tune() }
                         .font(.system(size: 11, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.45))
@@ -944,30 +1032,22 @@ struct TunePanel: View {
         }
     }
 
+    /// Sliders rather than − / + steppers: on the desktop simulator a drag
+    /// is one gesture, a stepper is a click per increment.
     @ViewBuilder
     private func stepper(
         _ label: String, value: Binding<Double>, step: Double,
         range: ClosedRange<Double>, fmt: @escaping (Double) -> String
     ) -> some View {
         row(label) {
-            Button("−") { value.wrappedValue = max(range.lowerBound, value.wrappedValue - step) }
-                .buttonStyle(TuneBtn())
+            Slider(value: value, in: range, step: step)
+                .tint(.white.opacity(0.7))
+                .controlSize(.mini)
+                .frame(width: 130)
             Text(fmt(value.wrappedValue))
                 .font(.system(size: 11, design: .monospaced))
                 .foregroundStyle(.white)
-                .frame(width: 52)
-            Button("+") { value.wrappedValue = min(range.upperBound, value.wrappedValue + step) }
-                .buttonStyle(TuneBtn())
+                .frame(width: 56, alignment: .trailing)
         }
-    }
-}
-
-private struct TuneBtn: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.system(size: 12, design: .monospaced))
-            .foregroundStyle(.white)
-            .frame(width: 22, height: 22)
-            .background(Circle().fill(Color.white.opacity(configuration.isPressed ? 0.25 : 0.12)))
     }
 }
