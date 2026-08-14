@@ -58,6 +58,8 @@ private enum D {
     /// readable on a 12pt step as it is on the new pill's 90pt rise.
     static let stackBounceAmp: CGFloat = 4
     static let enterRise: CGFloat = 90
+    /// cross-blur on the entering pill, clearing as it lands
+    static let enterBlur: CGFloat = 6
 
     static let swipeThreshold: CGFloat = 56
     static let dismissDistance: CGFloat = 90
@@ -510,6 +512,7 @@ struct PillsView: View {
         .shadow(color: .black.opacity(0.17), radius: 9, y: 7)
         .shadow(color: .black.opacity(0.10), radius: 22, y: 16)
         .offset(x: swipeX, y: dragY - lift + closeDip)
+        .modifier(EnterBlur(shift: stackShift, frontId: CGFloat(front.id), maxBlur: D.enterBlur))
         .modifier(EnterRise(
             shift: stackShift,
             frontId: CGFloat(front.id),
@@ -616,6 +619,26 @@ private struct EnterRise: GeometryEffect {
         let p = shift - (frontId - 1) // 0 at push commit, 1 settled
         let y = rise * (1 - max(0, p)) // p > 1 = bounce overshoot above slot
         return ProjectionTransform(CGAffineTransform(translationX: 0, y: y))
+    }
+}
+
+/// The entering pill's cross-blur, on the same scalar as its rise: sharp by
+/// the time it lands. Animatable for the same reason EnterRise is a
+/// GeometryEffect — a plain .blur would interpolate between two settled
+/// endpoints of 0 and never render.
+private struct EnterBlur: ViewModifier, Animatable {
+    var shift: CGFloat
+    var frontId: CGFloat
+    var maxBlur: CGFloat
+
+    var animatableData: CGFloat {
+        get { shift }
+        set { shift = newValue }
+    }
+
+    func body(content: Content) -> some View {
+        let p = max(0, min(1, shift - (frontId - 1)))
+        return content.blur(radius: maxBlur * (1 - p))
     }
 }
 
