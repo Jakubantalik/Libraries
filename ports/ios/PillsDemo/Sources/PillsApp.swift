@@ -62,6 +62,8 @@ private enum D {
     static let enterBlur: CGFloat = 6
     /// the arriving pill's opacity at the start of its rise
     static let enterOpacity: Double = 0.5
+    /// how far the sheet carousel throws the orb off-centre
+    static let orbSlideOut: CGFloat = 120
 
     static let swipeThreshold: CGFloat = 56
     static let dismissDistance: CGFloat = 90
@@ -328,6 +330,10 @@ struct PillsView: View {
     @State private var dragY: CGFloat = 0
     /// arrival squash after the sheet lands back on the pill
     @State private var closeDip: CGFloat = 0
+    /// sheet carousel: horizontal slide of the orb while swiping states
+    @State private var orbSlide: CGFloat = 0
+    /// axis lock for the sheet drag — nil until the first significant move
+    @State private var sheetAxisH: Bool? = nil
     /// Animated stack shift — equals the front entry's id when settled.
     /// Every card's visual depth derives CONTINUOUSLY from this one value
     /// (d = shift - entry.id), the same single-scalar pattern the morph
@@ -428,6 +434,9 @@ struct PillsView: View {
                 ShimmerText(text: "\(VERBS[front.state] ?? "")....", fontSize: 16),
                 window: (0, 1 - D.staggerStep)
             )
+            // carousel: the title dims with the orb's slide, so its content
+            // swap happens while it is nearly invisible
+            .opacity(1 - 0.9 * Double(min(1, abs(orbSlide) / D.orbSlideOut)))
             .position(x: sheetW / 2, y: 244 + D.titleLeading / 2)
 
             revealText(
@@ -483,11 +492,15 @@ struct PillsView: View {
             insetRim(radius: r, bottomLight: Double(1 - m))
 
             // one orb across both states — travels and scales continuously,
-            // drawn at sheet resolution and scaled down for the pill
+            // drawn at sheet resolution and scaled down for the pill.
+            // orbSlide is the sheet carousel: it fades and blurs with the
+            // slide, and is gated on m so it can never displace the pill orb.
             ThinkingOrb(state: front.state, size: .px64, theme: .dark, displaySize: D.orbSheet)
                 .scaleEffect(D.orbPill / D.orbSheet + (1 - D.orbPill / D.orbSheet) * m)
+                .opacity(1 - 0.9 * Double(min(1, abs(orbSlide) / D.orbSlideOut)) * Double(m))
+                .blur(radius: min(1, abs(orbSlide) / D.orbSlideOut) * 5 * m)
                 .position(
-                    x: D.orbPillCX + (w / 2 - D.orbPillCX) * m,
+                    x: D.orbPillCX + (w / 2 - D.orbPillCX) * m + orbSlide * m,
                     y: h / 2 + (D.orbSheetCY - h / 2) * m
                 )
 
@@ -561,13 +574,43 @@ struct PillsView: View {
         DragGesture(minimumDistance: 8)
             .onChanged { g in
                 if expanded {
-                    dragY = max(0, g.translation.height)
+                    // Lock to the dominant axis at the first significant
+                    // movement, or a diagonal drag flip-flops between the
+                    // carousel and the dismiss mid-gesture.
+                    if sheetAxisH == nil {
+                        sheetAxisH = abs(g.translation.width) > abs(g.translation.height)
+                    }
+                    if sheetAxisH == true {
+                        // finger-following with a little resistance
+                        orbSlide = g.translation.width * 0.6
+                    } else {
+                        dragY = max(0, g.translation.height)
+                    }
                 } else {
                     swipeX = g.translation.width
                 }
             }
             .onEnded { g in
                 if expanded {
+                    let horizontal = sheetAxisH == true
+                    sheetAxisH = nil
+                    if horizontal {
+                        // carousel: slide the orb out, advance, slide the
+                        // next in from the other side — the pill swipe's
+                        // out-advance-in beat at sheet scale
+                        if abs(g.translation.width) > D.swipeThreshold || abs(g.velocity.width) > 500 {
+                            let dir: CGFloat = g.translation.width < 0 ? 1 : -1
+                            withAnimation(.easeIn(duration: 0.12)) { orbSlide = -dir * D.orbSlideOut }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+                                advance(Int(dir))
+                                orbSlide = dir * D.orbSlideOut
+                                withAnimation(.timingCurve(0.22, 1, 0.36, 1, duration: 0.28)) { orbSlide = 0 }
+                            }
+                        } else {
+                            withAnimation(.spring(duration: 0.3)) { orbSlide = 0 }
+                        }
+                        return
+                    }
                     if g.translation.height > D.dismissDistance || g.velocity.height > 800 {
                         close()
                     } else {
