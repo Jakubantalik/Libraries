@@ -481,18 +481,20 @@ struct PillsView: View {
         let lift = (D.pillBottom - D.sheetBottom) * (1 - m)
 
         ZStack {
-            // glass: gradient pill fades into the opaque sheet fill
+            // glass: gradient pill fades into the opaque sheet fill.
+            // Figma 2596:5241: rgba(0,0,0,0.8) -> rgba(0,0,0,0.32) over a
+            // 3px backdrop blur — light, so the wallpaper's swirl stays
+            // legible through the glass (ultraThinMaterial frosted it out).
             RoundedRectangle(cornerRadius: r, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [Color.black, Color.black.opacity(0.4)], // Figma 2596:5241
+                        colors: [Color.black.opacity(0.8), Color.black.opacity(0.32)],
                         startPoint: .top, endPoint: .bottom
                     )
                 )
                 .background(
-                    // backdrop blur, the design's frosted pill
-                    RoundedRectangle(cornerRadius: r, style: .continuous)
-                        .fill(.ultraThinMaterial)
+                    BackdropBlur(radius: 3)
+                        .clipShape(RoundedRectangle(cornerRadius: r, style: .continuous))
                 )
                 .opacity(Double(1 - min(1, m * 2)))
 
@@ -727,12 +729,13 @@ private struct StackCard: View {
             RoundedRectangle(cornerRadius: D.pillR, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [Color.black, Color.black.opacity(0.4)], // Figma 2596:5241
+                        colors: [Color.black.opacity(0.8), Color.black.opacity(0.32)], // Figma 2596:5241
                         startPoint: .top, endPoint: .bottom
                     )
                 )
                 .background(
-                    RoundedRectangle(cornerRadius: D.pillR, style: .continuous).fill(.ultraThinMaterial)
+                    BackdropBlur(radius: 3)
+                        .clipShape(RoundedRectangle(cornerRadius: D.pillR, style: .continuous))
                 )
 
             ThinkingOrb(state: entry.state, size: .px64, theme: .dark, paused: true, displaySize: D.orbPill)
