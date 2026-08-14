@@ -228,7 +228,17 @@ struct PillsView: View {
             let sheetW = geo.size.width - D.sheetMargin * 2
 
             ZStack {
-                Color(red: 0x3b / 255.0, green: 0x3b / 255.0, blue: 0x3b / 255.0)
+                // soft lavender wash, like the iOS call screen's frosted
+                // wallpaper: lighter grey-violet up top, deepening toward
+                // the bottom
+                LinearGradient(
+                    stops: [
+                        .init(color: Color(red: 0.58, green: 0.57, blue: 0.64), location: 0),
+                        .init(color: Color(red: 0.48, green: 0.45, blue: 0.58), location: 0.5),
+                        .init(color: Color(red: 0.36, green: 0.33, blue: 0.47), location: 1),
+                    ],
+                    startPoint: .top, endPoint: .bottom
+                )
                     .contentShape(Rectangle())
                     .onTapGesture(coordinateSpace: .global) { route($0, frame: geo.frame(in: .global)) }
 
