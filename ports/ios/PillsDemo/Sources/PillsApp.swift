@@ -167,7 +167,7 @@ func insetRim(radius: CGFloat, bottomLight: Double = 1) -> some View {
     ZStack {
         // The reference render is lit from BELOW: the readable rim light
         // hugs the bottom arc, and the top carries only a whisper of sheen.
-        shape.stroke(Color.white.opacity(0.39 * bottomLight), lineWidth: 0.8)
+        shape.stroke(Color.white.opacity(0.27 * bottomLight), lineWidth: 0.8)
             .offset(y: -1).blur(radius: 0.3)
             .mask(
                 LinearGradient(
