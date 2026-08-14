@@ -122,7 +122,7 @@ struct Seg {
 }
 
 struct Tune {
-    var stack = Seg(ms: 500, bounce: 0.25, ease: .spring, stiffness: 340, damping: 22, mass: 1, anticipate: 0, anticipateMs: 130)
+    var stack = Seg(ms: 500, bounce: 0.25, ease: .spring, stiffness: 240, damping: 20, mass: 1, anticipate: 0, anticipateMs: 130)
     var open = Seg(ms: 350, bounce: 0.05, ease: .bounce, stiffness: 220, damping: 20, mass: 1, anticipate: 0.04, anticipateMs: 90)
     var close = Seg(ms: 250, bounce: 0.15, ease: .smooth, stiffness: 220, damping: 20, mass: 1, anticipate: 0.05, anticipateMs: 110)
     var revealMs: Double = 500
