@@ -145,15 +145,35 @@ struct PillsApp: App {
 func insetRim(radius: CGFloat) -> some View {
     let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
     ZStack {
-        // inset 1px 2px 3px -2px white/0.24
-        shape.stroke(Color.white.opacity(0.12), lineWidth: 1)
-            .offset(x: 1, y: 2).blur(radius: 2.5)
-        // inset -1px -2px 1px -2px white/0.24
-        shape.stroke(Color.white.opacity(0.07), lineWidth: 1)
-            .offset(x: -1, y: -2).blur(radius: 1.5)
-        // inset 0 -2px 1px -2px white/0.24
-        shape.stroke(Color.white.opacity(0.07), lineWidth: 1)
-            .offset(x: 0, y: -2).blur(radius: 1.5)
+        // crisp specular along the top edge — the "native glass" catchlight.
+        // The stroke is full-perimeter; the mask fades it out by mid-height
+        // so only the upper arc reads.
+        shape.stroke(Color.white.opacity(0.5), lineWidth: 1.3)
+            .offset(y: 1).blur(radius: 0.4)
+            .mask(
+                LinearGradient(
+                    stops: [.init(color: .white, location: 0), .init(color: .clear, location: 0.55)],
+                    startPoint: .top, endPoint: .bottom
+                )
+            )
+        // wider soft sheen under the catchlight, the glass thickness
+        shape.stroke(Color.white.opacity(0.16), lineWidth: 2.5)
+            .offset(y: 2).blur(radius: 3)
+            .mask(
+                LinearGradient(
+                    stops: [.init(color: .white, location: 0), .init(color: .clear, location: 0.5)],
+                    startPoint: .top, endPoint: .bottom
+                )
+            )
+        // faint lift along the bottom edge
+        shape.stroke(Color.white.opacity(0.10), lineWidth: 1)
+            .offset(y: -1).blur(radius: 1.2)
+            .mask(
+                LinearGradient(
+                    stops: [.init(color: .clear, location: 0.6), .init(color: .white, location: 1)],
+                    startPoint: .top, endPoint: .bottom
+                )
+            )
     }
     .clipShape(shape)
     .allowsHitTesting(false)
@@ -344,8 +364,10 @@ struct PillsView: View {
         }
         .frame(width: w, height: h)
         .clipShape(RoundedRectangle(cornerRadius: r, style: .continuous))
-        // 0 12px 26px rgba(0,0,0,0.24) — CSS blur 26 is CoreGraphics radius 13
-        .shadow(color: .black.opacity(0.24), radius: 13, y: 12)
+        // two layers, like the reference render: a tighter contact shadow
+        // seating the pill plus a wide soft ambient falloff beneath it
+        .shadow(color: .black.opacity(0.28), radius: 9, y: 7)
+        .shadow(color: .black.opacity(0.16), radius: 22, y: 18)
         .offset(x: swipeX, y: dragY - lift)
         .modifier(EnterRise(
             shift: stackShift,
@@ -543,9 +565,10 @@ private struct StackDepth: ViewModifier, Animatable {
     func body(content: Content) -> some View {
         content
             // Fades in with depth: at d = 0 the card sits exactly under the
-            // surface, and a second 0.24 drop shadow there doubled the
+            // surface, and a duplicate drop shadow there doubled the
             // darkness against the Figma render (one shadow, 2584:83680).
-            .shadow(color: .black.opacity(0.24 * Double(min(1, d))), radius: 13, y: 12)
+            .shadow(color: .black.opacity(0.28 * Double(min(1, d))), radius: 9, y: 7)
+            .shadow(color: .black.opacity(0.16 * Double(min(1, d))), radius: 22, y: 18)
             .scaleEffect(1 - d * D.stackShrink)
             .offset(y: -d * D.stackGap)
             .opacity(opacity)
