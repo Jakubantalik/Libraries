@@ -34,7 +34,12 @@ private enum D {
 
     static let orbPill: CGFloat = 48
     static let orbSheet: CGFloat = 133
-    static let orbPillCX: CGFloat = 13 + orbPill / 2
+    /// The orb is inset by the SAME gap it has above and below it, so the
+    /// pill's padding reads as uniform: (pillH - orbPill) / 2 = 8.
+    static let orbPillInset: CGFloat = (pillH - orbPill) / 2
+    static let orbPillCX: CGFloat = orbPillInset + orbPill / 2
+    /// Figma puts the label 10.3 after the orb; that gap is preserved.
+    static let pillLabelX: CGFloat = orbPillInset + orbPill + 10.3
     static let orbSheetCY: CGFloat = 72 + orbSheet / 2
 
     static let grabW: CGFloat = 36
@@ -183,13 +188,28 @@ struct PillsView: View {
 
     private var front: PillEntry { stack[stack.length1] }
 
+    /// Boots straight into the sheet so its geometry can be captured with
+    /// `simctl io screenshot` alone — no tap needed:
+    ///
+    ///   SIMCTL_CHILD_START_EXPANDED=1 xcrun simctl launch <device> <bundle>
+    ///
+    /// (simctl swallows a leading-dash launch argument before the app sees
+    /// it, so the env-var form is the one that actually arrives.)
+    init() {
+        let env = ProcessInfo.processInfo.environment["START_EXPANDED"] != nil
+        if env || ProcessInfo.processInfo.arguments.contains("-startExpanded") {
+            _expanded = State(initialValue: true)
+            _morph = State(initialValue: 1)
+            _reveal = State(initialValue: 1)
+        }
+    }
+
     var body: some View {
         GeometryReader { geo in
             let sheetW = geo.size.width - D.sheetMargin * 2
 
             ZStack {
                 Color(red: 0x3b / 255.0, green: 0x3b / 255.0, blue: 0x3b / 255.0)
-                    .ignoresSafeArea()
                     .contentShape(Rectangle())
                     .onTapGesture(coordinateSpace: .global) { route($0, frame: geo.frame(in: .global)) }
 
@@ -209,10 +229,19 @@ struct PillsView: View {
                 // only motion is the reveal's own rise, on the recipe's ease.
                 sheetCopy(sheetW: sheetW)
 
-                TunePanel(tune: $tune)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                    .padding(.leading, 16)
             }
+        }
+        // Full-screen geometry, so sheetBottom / pillBottom are measured from
+        // the SCREEN edge rather than from the home-indicator inset. Without
+        // this the sheet's visual bottom gap was 24 + ~34 = 58 while its side
+        // margins were 24, and the whole design sat too high. route() reads
+        // the same frame, so hit-testing follows the shift automatically.
+        .ignoresSafeArea()
+        // The panel stays OUTSIDE that ignore, so it still clears the status
+        // bar; inside it, geo.safeAreaInsets reads 0 and the chip collided
+        // with the clock.
+        .overlay(alignment: .topLeading) {
+            TunePanel(tune: $tune).padding(.leading, 16)
         }
         .preferredColorScheme(.dark)
         .statusBarHidden(false)
@@ -297,10 +326,13 @@ struct PillsView: View {
                     y: h / 2 + (D.orbSheetCY - h / 2) * m
                 )
 
-            // pill label
+            // pill label — anchored by its LEADING edge. The old
+            // .position(x: 71.3 + 40) centred it on a guessed half-width, so
+            // the gap after the orb drifted with the verb's length.
             ShimmerText(text: "\(VERBS[front.state] ?? "")....", fontSize: 16)
                 .opacity(Double(1 - min(1, m * 3)))
-                .position(x: 71.3 + 40, y: D.pillH / 2)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                .padding(.leading, D.pillLabelX)
 
             // grabber
             Capsule()
@@ -458,7 +490,8 @@ private struct StackCard: View {
             Text("\(VERBS[entry.state] ?? "")....")
                 .font(.system(size: 16))
                 .foregroundStyle(Color(red: 251 / 255.0, green: 251 / 255.0, blue: 251 / 255.0).opacity(0.35))
-                .position(x: 71.3 + 40, y: D.pillH / 2)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                .padding(.leading, D.pillLabelX)
 
             insetRim(radius: D.pillR)
         }
