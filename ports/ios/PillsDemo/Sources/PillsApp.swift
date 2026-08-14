@@ -41,9 +41,12 @@ private enum D {
     static let grabH: CGFloat = 5
     static let grabTop: CGFloat = 12
 
+    // Stacking follows ark-ui's Toast: translate, scale and opacity all
+    // transition together over 400ms with --gap 16 between cards, and the
+    // enter curve overshoots slightly where the exit curve settles flat.
     static let stackOpacity: [Double] = [1, 0.5, 0.2]
-    static let stackLift: CGFloat = 12
-    static let stackShrink: CGFloat = 0.06
+    static let stackGap: CGFloat = 16 // ark --gap
+    static let stackShrink: CGFloat = 0.05
     static let stackRendered = 3
     static let enterRise: CGFloat = 90
 
@@ -68,7 +71,7 @@ private let VERBS: [OrbState: String] = [
 
 // MARK: - Tuning
 
-enum EaseKind: String, CaseIterable { case smooth, bounce, spring }
+enum EaseKind: String, CaseIterable { case ark, smooth, bounce, spring }
 
 struct Seg {
     var ms: Double
@@ -83,6 +86,9 @@ struct Seg {
     /// The SwiftUI animation this segment describes.
     var animation: Animation {
         switch ease {
+        case .ark:
+            // ark-ui Toast's open curve — a slight overshoot at 1.02
+            return .timingCurve(0.21, 1.02, 0.73, 1, duration: ms / 1000)
         case .smooth:
             return .timingCurve(0.22, 1, 0.36, 1, duration: ms / 1000)
         case .bounce:
@@ -95,7 +101,7 @@ struct Seg {
 }
 
 struct Tune {
-    var stack = Seg(ms: 400, bounce: 0.3, ease: .bounce, stiffness: 220, damping: 20, mass: 1, anticipate: 0, anticipateMs: 90)
+    var stack = Seg(ms: 400, bounce: 0.3, ease: .ark, stiffness: 220, damping: 20, mass: 1, anticipate: 0, anticipateMs: 90)
     var open = Seg(ms: 350, bounce: 0.25, ease: .bounce, stiffness: 220, damping: 20, mass: 1, anticipate: 0.04, anticipateMs: 90)
     var close = Seg(ms: 250, bounce: 0.15, ease: .smooth, stiffness: 220, damping: 20, mass: 1, anticipate: 0.05, anticipateMs: 110)
     var revealMs: Double = 500
@@ -108,6 +114,40 @@ struct PillsApp: App {
     var body: some Scene {
         WindowGroup { PillsView() }
     }
+}
+
+    /// The design's three white inset highlights, one spec for pill and sheet:
+///
+///   inset  1px  2px 3px -2px white/0.24   → bright band along the TOP
+///   inset -1px -2px 1px -2px white/0.24   → faint band along the BOTTOM
+///   inset  0   -2px 1px -2px white/0.24   → faint band along the BOTTOM
+///
+/// SwiftUI has no inset-shadow primitive, so each layer is the rounded rect
+/// stroked, OFFSET, blurred, and clipped back to the shape.
+///
+/// The `-2px` SPREAD in the spec is the part that matters: it shrinks each
+/// inset before blurring, so what survives is a soft sliver of light near
+/// the offset edge — NOT a ring. The first attempt stroked the full
+/// perimeter at the raw 0.24 alpha and the pill came out hard-rimmed and
+/// glossy, nothing like the Figma render. Approximating the spread by
+/// dropping the effective alpha and widening the blur reads right: a faint
+/// top-left catchlight, a near-invisible bottom lift.
+@ViewBuilder
+func insetRim(radius: CGFloat) -> some View {
+    let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
+    ZStack {
+        // inset 1px 2px 3px -2px white/0.24
+        shape.stroke(Color.white.opacity(0.12), lineWidth: 1)
+            .offset(x: 1, y: 2).blur(radius: 2.5)
+        // inset -1px -2px 1px -2px white/0.24
+        shape.stroke(Color.white.opacity(0.07), lineWidth: 1)
+            .offset(x: -1, y: -2).blur(radius: 1.5)
+        // inset 0 -2px 1px -2px white/0.24
+        shape.stroke(Color.white.opacity(0.07), lineWidth: 1)
+            .offset(x: 0, y: -2).blur(radius: 1.5)
+    }
+    .clipShape(shape)
+    .allowsHitTesting(false)
 }
 
 struct PillEntry: Identifiable, Equatable {
@@ -224,7 +264,11 @@ struct PillsView: View {
                 ShimmerText(text: "\(VERBS[front.state] ?? "")....", fontSize: 16),
                 window: (0, 1 - D.staggerStep)
             )
-            .position(x: sheetW / 2, y: 244 + 11)
+            // Measured from the container's BOTTOM, which is pinned: the
+            // sheet is bottom-aligned, so the TOP edge is what overshoots on
+            // a bouncy open — copy positioned from the top rode that bounce.
+            // The reveal itself already runs on the recipe's own ease.
+            .position(x: sheetW / 2, y: h - (D.sheetH - 244 - 11))
 
             revealText(
                 Text("Agent is processing your request. Please\nwait, it might take a few seconds.")
@@ -234,7 +278,7 @@ struct PillsView: View {
                     .foregroundStyle(Color(red: 0x89 / 255.0, green: 0x89 / 255.0, blue: 0x89 / 255.0)),
                 window: (D.staggerStep, 1)
             )
-            .position(x: sheetW / 2, y: 277 + 22)
+            .position(x: sheetW / 2, y: h - (D.sheetH - 277 - 22))
         }
         .frame(width: w, height: h)
         .clipShape(RoundedRectangle(cornerRadius: r, style: .continuous))
@@ -321,8 +365,31 @@ struct PillsView: View {
 
     @ViewBuilder
     private func stackPill(entry: PillEntry, depth: Int) -> some View {
-        let opacity = depth < D.stackOpacity.count ? D.stackOpacity[depth] : 0
+        StackCard(entry: entry, depth: depth, animation: tune.stack.animation)
+    }
+}
 
+/// A card behind the front pill.
+///
+/// It animates TOWARD its depth rather than being placed at it: a freshly
+/// mounted card starts one step nearer the front — exactly where it sat a
+/// moment ago as the live pill — so pushing makes the whole stack visibly
+/// recede. Without that, SwiftUI mounts the card already at its final depth
+/// and the recede never plays, which is what made the stacking read as
+/// broken. Offset, scale and opacity move together, as ark-ui's Toast does.
+private struct StackCard: View {
+    let entry: PillEntry
+    let depth: Int
+    let animation: Animation
+
+    private var d: CGFloat { CGFloat(depth) }
+
+    private var opacity: Double {
+        let stops = D.stackOpacity
+        return depth < stops.count ? stops[depth] : 0
+    }
+
+    var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: D.pillR, style: .continuous)
                 .fill(
@@ -348,42 +415,24 @@ struct PillsView: View {
         .frame(width: D.pillW, height: D.pillH)
         .clipShape(RoundedRectangle(cornerRadius: D.pillR, style: .continuous))
         .shadow(color: .black.opacity(0.24), radius: 13, y: 12)
-        .scaleEffect(1 - CGFloat(depth) * D.stackShrink)
-        .offset(y: -CGFloat(depth) * D.stackLift)
+        .scaleEffect(1 - d * D.stackShrink)
+        .offset(y: -d * D.stackGap)
         .opacity(opacity)
         .allowsHitTesting(false)
         .frame(maxHeight: .infinity, alignment: .bottom)
         .padding(.bottom, D.pillBottom)
-        .animation(tune.stack.animation, value: depth)
+        // No per-card animation state. Geometry derives from `depth`, and the
+        // PUSH is what runs inside withAnimation — SwiftUI then interpolates
+        // every card's offset, scale and opacity together, which is how
+        // ark-ui's Toast moves a stack. Driving it from onAppear instead does
+        // NOT work: that state change is batched into the view's insertion
+        // transaction and lands instantly (measured — cards were
+        // pixel-identical 1.2s into a 3s animation, deferred or not).
+        .transition(.opacity)
     }
+}
 
-    /// The design's three white inset highlights, one spec for pill and sheet:
-    ///
-    ///   inset  1px  2px 3px -2px white/0.24   → bright band along the TOP
-    ///   inset -1px -2px 1px -2px white/0.24   → faint band along the BOTTOM
-    ///   inset  0   -2px 1px -2px white/0.24   → faint band along the BOTTOM
-    ///
-    /// SwiftUI has no inset-shadow primitive, so each layer is the rounded
-    /// rect stroked and OFFSET, then clipped back to the shape: an inset
-    /// shadow is exactly a shifted copy of the border showing through on the
-    /// side opposite the offset. Two layers land on the bottom, so it reads
-    /// brighter there than the top — which is what the CSS compounds to.
-    /// The p3 variant of the same stack has no SwiftUI equivalent; these are
-    /// the sRGB values the first CSS declaration falls back to.
-    @ViewBuilder
-    private func insetRim(radius: CGFloat) -> some View {
-        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
-        ZStack {
-            shape.stroke(Color.white.opacity(0.24), lineWidth: 1)
-                .offset(x: 1, y: 2).blur(radius: 1.5)
-            shape.stroke(Color.white.opacity(0.24), lineWidth: 1)
-                .offset(x: -1, y: -2).blur(radius: 0.5)
-            shape.stroke(Color.white.opacity(0.24), lineWidth: 1)
-                .offset(x: 0, y: -2).blur(radius: 0.5)
-        }
-        .clipShape(shape)
-        .allowsHitTesting(false)
-    }
+extension PillsView {
 
     // MARK: actions
 
@@ -394,9 +443,13 @@ struct PillsView: View {
 
     private func push() {
         let i = STATES.firstIndex(of: front.state) ?? 0
-        stack.append(PillEntry(id: nextId, state: STATES[(i + 1) % STATES.count]))
+        withAnimation(tune.stack.animation) {
+            stack.append(PillEntry(id: nextId, state: STATES[(i + 1) % STATES.count]))
+            if stack.count > D.stackRendered + 2 {
+                stack.removeFirst(stack.count - (D.stackRendered + 2))
+            }
+        }
         nextId += 1
-        if stack.count > D.stackRendered + 2 { stack.removeFirst(stack.count - (D.stackRendered + 2)) }
         // the incoming pill rises into place
         enterY = D.enterRise * (1 + tune.stack.anticipate)
         withAnimation(tune.stack.animation) { enterY = 0 }
