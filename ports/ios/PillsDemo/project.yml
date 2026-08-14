@@ -28,6 +28,9 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.jakubantalik.PillsDemo
         SWIFT_VERSION: "5.0"
         TARGETED_DEVICE_FAMILY: "1"
-        # so `run-device.sh` can sign without opening Xcode
+        # so `run-device.sh` can sign without opening Xcode.
+        # This is the TEAM id, from the provisioning profile — not the value
+        # in parentheses in `security find-identity`, which is the
+        # certificate's id and produces "No Account for Team ...".
         CODE_SIGN_STYLE: Automatic
-        DEVELOPMENT_TEAM: Z96BV57RB6
+        DEVELOPMENT_TEAM: 4FPVJW54M3
