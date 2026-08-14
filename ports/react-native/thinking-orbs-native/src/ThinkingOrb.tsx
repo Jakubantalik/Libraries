@@ -17,10 +17,11 @@
 // bundler silently stripping the directives. Rasterisation — the part that
 // actually must not jank — is on the UI thread either way.
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { View } from 'react-native';
 import { Canvas, PaintStyle, Picture, Skia, createPicture } from '@shopify/react-native-skia';
 import type { SkPicture } from '@shopify/react-native-skia';
+import { useSharedValue } from 'react-native-reanimated';
 import { MODE_FRAMES, resolvePreset } from 'thinking-orbs/engine';
 import { nowSeconds, useAppActive, useReducedMotion, useResolvedDark } from './theme';
 import type { ThinkingOrbProps } from './types';
@@ -54,7 +55,14 @@ export function ThinkingOrb({
   const reduced = useReducedMotion();
   const appActive = useAppActive();
 
-  const [picture, setPicture] = useState<SkPicture | null>(null);
+  // The per-frame picture is a Reanimated SHARED VALUE, not React state.
+  // Skia components accept shared values as props and redraw on write, so a
+  // frame costs one picture record and one Skia draw. The first version used
+  // useState here — a full React render + Fabric commit per orb per frame,
+  // which throttled the whole app into single-digit fps the moment anything
+  // else (like the sheet morph's layout work) shared the frame budget.
+  const empty = useMemo(() => createPicture(() => {}), []);
+  const picture = useSharedValue<SkPicture>(empty);
 
   // One paint per pass, mutated in place: a fresh SkPaint per dot would
   // allocate ~600 native objects a frame, which is what actually hurts on
@@ -104,7 +112,7 @@ export function ThinkingOrb({
           canvas.drawCircle(d.x, d.y, d.r, fill);
         }
       }, Skia.XYWHRect(0, 0, box, box));
-      setPicture(pic);
+      picture.value = pic;
     };
 
     if (reduced) {
@@ -127,7 +135,7 @@ export function ThinkingOrb({
       running = false;
       cancelAnimationFrame(raf);
     };
-  }, [mode, opts, size, box, zoom, dark, effSpeed, paused, reduced, appActive, paints, rgba]);
+  }, [mode, opts, size, box, zoom, dark, effSpeed, paused, reduced, appActive, paints, rgba, picture]);
 
   return (
     <View
@@ -137,7 +145,7 @@ export function ThinkingOrb({
       style={[{ width: box, height: box }, style]}
     >
       <Canvas style={{ width: box, height: box }}>
-        {picture ? <Picture picture={picture} /> : null}
+        <Picture picture={picture} />
       </Canvas>
     </View>
   );
