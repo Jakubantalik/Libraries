@@ -371,6 +371,12 @@ struct PillsView: View {
                 // Figma 2596:5237's wallpaper. Under a flat fill the pill's
                 // frosted material had nothing to sample; the swirl gives the
                 // glass something to refract.
+                // Figma 2596:5237. The PNG is the artwork WITH that frame's
+                // treatment already baked in (#646464 base, art at 70%, then
+                // white at 20%) — the raw render is far lighter, and over it
+                // the pill's transparent-black fill washes out into a pale
+                // lozenge instead of reading as dark glass. Measured: raw
+                // mean grey 78, composited 117.
                 Wallpaper.image
                     .resizable()
                     .scaledToFill()
