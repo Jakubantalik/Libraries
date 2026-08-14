@@ -178,6 +178,69 @@ func insetRim(radius: CGFloat) -> some View {
     .allowsHitTesting(false)
 }
 
+/// The call-screen wallpaper look: a frosted photograph, not a clean ramp.
+/// A grey-violet base carries several huge blurred bokeh blobs — a silvery
+/// haze up top, a warm mauve drift mid-left, a cool violet pool right —
+/// then a darker vignette settles the bottom, where the content sits.
+private struct FrostedWallpaper: View {
+    var body: some View {
+        GeometryReader { geo in
+            let w = geo.size.width
+            let h = geo.size.height
+            ZStack {
+                LinearGradient(
+                    stops: [
+                        .init(color: Color(red: 0.60, green: 0.59, blue: 0.66), location: 0),
+                        .init(color: Color(red: 0.49, green: 0.46, blue: 0.59), location: 0.55),
+                        .init(color: Color(red: 0.34, green: 0.31, blue: 0.45), location: 1),
+                    ],
+                    startPoint: .top, endPoint: .bottom
+                )
+
+                // silvery haze across the upper third
+                Ellipse()
+                    .fill(Color(red: 0.78, green: 0.78, blue: 0.82).opacity(0.45))
+                    .frame(width: w * 1.5, height: h * 0.45)
+                    .position(x: w * 0.45, y: h * 0.12)
+                    .blur(radius: 70)
+
+                // warm mauve drift, mid-left
+                Ellipse()
+                    .fill(Color(red: 0.62, green: 0.52, blue: 0.60).opacity(0.55))
+                    .frame(width: w * 1.1, height: h * 0.5)
+                    .position(x: w * 0.18, y: h * 0.42)
+                    .blur(radius: 80)
+
+                // cool violet pool, right of centre
+                Ellipse()
+                    .fill(Color(red: 0.42, green: 0.38, blue: 0.60).opacity(0.5))
+                    .frame(width: w * 1.2, height: h * 0.55)
+                    .position(x: w * 0.85, y: h * 0.55)
+                    .blur(radius: 90)
+
+                // deep violet vignette pooling at the bottom corners
+                Ellipse()
+                    .fill(Color(red: 0.22, green: 0.19, blue: 0.33).opacity(0.55))
+                    .frame(width: w * 1.8, height: h * 0.55)
+                    .position(x: w * 0.5, y: h * 1.08)
+                    .blur(radius: 90)
+
+                // faint cool glow behind the lower content area, like the
+                // reference's light falling through the frosted pane
+                Ellipse()
+                    .fill(Color(red: 0.72, green: 0.70, blue: 0.80).opacity(0.22))
+                    .frame(width: w * 0.9, height: h * 0.3)
+                    .position(x: w * 0.5, y: h * 0.68)
+                    .blur(radius: 70)
+            }
+            // one offscreen composite: the blobs never repaint, and the huge
+            // blurs rasterise once instead of per frame
+            .drawingGroup()
+        }
+        .ignoresSafeArea()
+    }
+}
+
 struct PillEntry: Identifiable, Equatable {
     let id: Int
     var state: OrbState
@@ -228,17 +291,7 @@ struct PillsView: View {
             let sheetW = geo.size.width - D.sheetMargin * 2
 
             ZStack {
-                // soft lavender wash, like the iOS call screen's frosted
-                // wallpaper: lighter grey-violet up top, deepening toward
-                // the bottom
-                LinearGradient(
-                    stops: [
-                        .init(color: Color(red: 0.58, green: 0.57, blue: 0.64), location: 0),
-                        .init(color: Color(red: 0.48, green: 0.45, blue: 0.58), location: 0.5),
-                        .init(color: Color(red: 0.36, green: 0.33, blue: 0.47), location: 1),
-                    ],
-                    startPoint: .top, endPoint: .bottom
-                )
+                FrostedWallpaper()
                     .contentShape(Rectangle())
                     .onTapGesture(coordinateSpace: .global) { route($0, frame: geo.frame(in: .global)) }
 
