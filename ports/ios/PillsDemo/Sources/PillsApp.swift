@@ -122,6 +122,8 @@ struct Tune {
     var open = Seg(ms: 350, bounce: 0.25, ease: .bounce, stiffness: 220, damping: 20, mass: 1, anticipate: 0.04, anticipateMs: 90)
     var close = Seg(ms: 250, bounce: 0.15, ease: .smooth, stiffness: 220, damping: 20, mass: 1, anticipate: 0.05, anticipateMs: 110)
     var revealMs: Double = 500
+    /// Landing dip of the pill on close, in points (plus-menu morph).
+    var closeDipPx: Double = 6
 }
 
 // MARK: - App
@@ -783,39 +785,35 @@ extension PillsView {
         withAnimation(.linear(duration: 0.2)) { reveal = 0 }
         withAnimation(.linear(duration: 0.2)) { dragY = 0 }
 
-        // transitions.dev plus-menu morph: the pill dips a few px past its
-        // slot and springs back. The dip is its own offset — driving it
-        // through morph would also shrink the pill's width, since w
-        // interpolates on raw morph.
-        guard t.anticipate > 0 else {
-            withAnimation(t.animation) { morph = 0 }
-            return
-        }
-
-        let dip = max(4, t.anticipate * 100) // 0.05 -> 5pt
-        // 300ms ahead of the sheet's arrival. Once the lead exceeds the
-        // collapse itself the dip cannot start any earlier WITHIN it, so the
-        // remainder becomes a genuine wind-up: the pill dips first and the
-        // collapse follows, which is what the recipe actually does.
-        let lead = 0.3
-        let flight = (t.ease == .spring ? 0.4 : t.ms / 1000) * 0.85 - lead
-        let preRoll = max(0, -flight)
-
-        let runDip = {
-            withAnimation(.easeOut(duration: t.anticipateMs / 1000)) { closeDip = dip }
+        // Wind-up, as originally: swell a touch PAST the sheet, then collapse.
+        // The previous version delayed the collapse behind a pre-roll, which
+        // is what made the close read as broken — the sheet just sat there
+        // for 300ms before anything happened.
+        if t.anticipate > 0 {
+            withAnimation(.easeOut(duration: t.anticipateMs / 1000)) { morph = 1 + t.anticipate }
             DispatchQueue.main.asyncAfter(deadline: .now() + t.anticipateMs / 1000) {
-                withAnimation(.timingCurve(0.34, 1.4, 0.64, 1, duration: 0.28)) { closeDip = 0 }
-            }
-        }
-
-        if preRoll > 0 {
-            runDip()
-            DispatchQueue.main.asyncAfter(deadline: .now() + preRoll) {
                 withAnimation(t.animation) { morph = 0 }
+                runCloseDip(t)
             }
         } else {
             withAnimation(t.animation) { morph = 0 }
-            DispatchQueue.main.asyncAfter(deadline: .now() + flight, execute: runDip)
+            runCloseDip(t)
+        }
+    }
+
+    /// The pill's landing dip, plus-menu morph: as the collapse arrives the
+    /// pill overshoots a few px below its slot and springs back. Separate
+    /// from the wind-up above, and tuned in POINTS by ANT PX — driving it
+    /// through morph would also shrink the pill's width, since w
+    /// interpolates on raw morph.
+    private func runCloseDip(_ t: Seg) {
+        guard tune.closeDipPx > 0 else { return }
+        let flight = (t.ease == .spring ? 0.4 : t.ms / 1000) * 0.6
+        DispatchQueue.main.asyncAfter(deadline: .now() + flight) {
+            withAnimation(.easeOut(duration: 0.12)) { closeDip = CGFloat(tune.closeDipPx) }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+                withAnimation(.timingCurve(0.34, 1.4, 0.64, 1, duration: 0.3)) { closeDip = 0 }
+            }
         }
     }
 }
@@ -982,7 +980,10 @@ struct TunePanel: View {
     @Binding var tune: Tune
     // OPEN_TUNE=1 boots with the panel open (screenshot verification)
     @State private var openPanel = ProcessInfo.processInfo.environment["OPEN_TUNE"] != nil
-    @State private var seg: SegKey = .stack
+    // TUNE_SEG=close preselects a tab (screenshot verification)
+    @State private var seg: SegKey = SegKey(
+        rawValue: ProcessInfo.processInfo.environment["TUNE_SEG"] ?? ""
+    ) ?? .stack
 
     private var cur: Binding<Seg> {
         switch seg {
@@ -1036,6 +1037,9 @@ struct TunePanel: View {
                     stepper("ANTIC", value: cur.anticipate, step: 0.01, range: 0...0.4, fmt: { String(format: "%.2f", $0) })
                     stepper("ANT MS", value: cur.anticipateMs, step: 10, range: 0...500, fmt: { "\(Int($0))ms" })
                     stepper("REVEAL", value: $tune.revealMs, step: 50, range: 100...2000, fmt: { "\(Int($0))ms" })
+                    if seg == .close {
+                        stepper("ANT PX", value: $tune.closeDipPx, step: 1, range: 0...30, fmt: { "\(Int($0))pt" })
+                    }
 
                     CurvePreview(seg: cur.wrappedValue)
 
