@@ -3,13 +3,16 @@
 //
 // Behaviours:
 //   - a stack of glass pills bottom-centre; the front one is live, the ones
-//     behind recede (see STACK_* below)
+//     behind recede but KEEP their content — orb frozen, label muted
 //   - swipe the front pill horizontally to page through the nine orb states
 //   - tap the front pill: it MORPHS into the modal sheet — the orb scales up
 //     into place and the copy reveals with a stagger
 //   - drag the sheet down (or flick) to dismiss it back to the pill
 //   - tap anywhere outside the pill: a new pill with the next orb state is
-//     pushed onto the stack
+//     pushed onto the stack; the stack recedes with a subtle bounce and the
+//     card leaving the visible window fades out with the SAME motion
+//   - TUNE panel top-left: durations, bounce amount and easing family for
+//     every animation above, editable live
 //
 // Figma geometry (402-wide frame), used verbatim below:
 //   pill:  213x64  r52.535  bottom 46  orb 48 @ x13  label x71.3
@@ -17,7 +20,7 @@
 //          subtitle y277 w271 #898989
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { PanResponder, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { PanResponder, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
@@ -31,6 +34,8 @@ import Animated, {
   withDelay,
   withSpring,
   withTiming,
+  type EasingFunction,
+  type EasingFunctionFactory,
 } from 'react-native-reanimated';
 import { ThinkingOrb } from 'thinking-orbs-native';
 import type { OrbState } from 'thinking-orbs-native';
@@ -81,10 +86,6 @@ const ORB_SHEET_CY = 72 + ORB_SHEET / 2;
 const SWIPE_THRESHOLD = 56;
 const SPRING = { damping: 26, stiffness: 260, mass: 1 };
 
-// transitions.dev "Card resize" (01-card-resize.md): --resize-dur 300ms,
-// --resize-ease cubic-bezier(0.22, 1, 0.36, 1).
-const RESIZE = { duration: 300, easing: Easing.bezier(0.22, 1, 0.36, 1) };
-
 // transitions.dev "Texts reveal" (18-texts-reveal.md): lines rise from
 // --stagger-distance over --stagger-dur, with each later line held back by
 // --stagger-stagger. The exit is deliberately decoupled — a flat 200ms fade
@@ -96,28 +97,21 @@ const RESIZE = { duration: 300, easing: Easing.bezier(0.22, 1, 0.36, 1) };
 // transparent View rasterises it against an opaque backdrop: on device the
 // two lines rendered inside solid white boxes. Verified by A/B — removing
 // the filter alone fixed it. Opacity plus the Y rise carries the reveal.
-const STAGGER_DUR = 500;
 const STAGGER_DISTANCE = 12;
 const STAGGER_STEP = 40;
-const STAGGER_EASE = Easing.bezier(0.22, 1, 0.36, 1);
 const STAGGER_EXIT = 200;
 
-// Stacking, following logram-ai/Logram#335: the front card stays solid, the
-// one behind drops to 80% and the third to 50%, "so the stack reads as depth
-// rather than three equally-loud messages"; anything past the visible window
-// is dropped. That PR is web, where the cards differ in size and content —
-// here every pill is identical, so depth also needs the lift and shrink.
+// Stacking, following logram-ai/Logram#335: front solid, next 80%, third
+// 50%, and past that the card fades OUT — with the same lift/shrink motion,
+// not a hard unmount. Cards keep orb + label; the orb is paused.
 const STACK_OPACITY = [1, 0.8, 0.5];
-const STACK_VISIBLE = STACK_OPACITY.length;
 const STACK_LIFT = 12;
 const STACK_SHRINK = 0.06;
-// Sonner transitions a toast's transform/opacity over 400ms when the stack
-// repositions, and slides a new one up from below; both are reproduced here.
-const STACK_DUR = 400;
-const STACK_EASE = Easing.bezier(0.22, 1, 0.36, 1);
+// depths rendered: 1..3; depth 3 is the exit animation target (opacity 0)
+const STACK_RENDERED = 3;
 const ENTER_RISE = 90;
 
-/** Backdrop blur behind the front pill's glass. */
+/** Backdrop blur behind the pills' glass. */
 const PILL_BLUR = 15;
 
 // the grabber that replaces the close button
@@ -137,6 +131,42 @@ const GLASS_SHADOW = [
 
 const PILL_GRADIENT = ['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.16)'] as const;
 
+// ---- live tuning ----------------------------------------------------------
+
+type EaseKind = 'smooth' | 'bounce' | 'spring';
+
+interface Tune {
+  /** pill <-> sheet morph, ms (transitions.dev card-resize default: 300) */
+  morphMs: number;
+  /** stack reposition + pill entrance, ms (sonner: 400) */
+  stackMs: number;
+  /** texts-reveal duration, ms (recipe: 500) */
+  revealMs: number;
+  /** back-overshoot amount for the bounce easing, 0..1 */
+  bounce: number;
+  ease: EaseKind;
+}
+
+const DEFAULT_TUNE: Tune = { morphMs: 300, stackMs: 400, revealMs: 500, bounce: 0.3, ease: 'bounce' };
+
+const SMOOTH = Easing.bezier(0.22, 1, 0.36, 1);
+
+/** The movement easing the current tune calls for. */
+function easeFor(t: Tune): EasingFunction | EasingFunctionFactory {
+  if (t.ease === 'bounce') return Easing.out(Easing.back(t.bounce * 4));
+  return SMOOTH;
+}
+
+/** Animate a movement shared value per the tune (spring ignores duration). */
+function animateTo(t: Tune, to: number, ms: number) {
+  if (t.ease === 'spring') {
+    return withSpring(to, { damping: 14 + (1 - t.bounce) * 16, stiffness: 220, mass: 1 });
+  }
+  return withTiming(to, { duration: ms, easing: easeFor(t) });
+}
+
+// ---- app ------------------------------------------------------------------
+
 export default function App() {
   const { width: screenW, height: screenH } = useWindowDimensions();
   const sheetW = screenW - SHEET_MARGIN * 2;
@@ -149,6 +179,9 @@ export default function App() {
   ]);
   const nextId = useRef(1);
   const [expanded, setExpanded] = useState(false);
+  const [tune, setTune] = useState<Tune>(DEFAULT_TUNE);
+  const tuneRef = useRef(tune);
+  tuneRef.current = tune;
 
   const morph = useSharedValue(0); // 0 = pill, 1 = sheet
   const swipeX = useSharedValue(0); // horizontal paging offset
@@ -171,12 +204,14 @@ export default function App() {
     setStack((s) => {
       const i = STATES.indexOf(s[s.length - 1].state);
       const id = nextId.current++;
-      return [...s, { id, state: STATES[(i + 1) % STATES.length] }];
+      // keep a bounded tail: rendered depths plus one already-invisible card
+      return [...s, { id, state: STATES[(i + 1) % STATES.length] }].slice(-(STACK_RENDERED + 2));
     });
     // the incoming pill rises into place, as sonner slides a new toast up
+    const t = tuneRef.current;
     enterY.value = ENTER_RISE;
-    enterY.value = withTiming(0, { duration: STACK_DUR, easing: STACK_EASE });
-  }, []);
+    enterY.value = animateTo(t, 0, t.stackMs);
+  }, [enterY]);
 
   const expandedRef = useRef(expanded);
   expandedRef.current = expanded;
@@ -184,19 +219,21 @@ export default function App() {
   geomRef.current = { screenW, screenH };
 
   const open = useCallback(() => {
+    const t = tuneRef.current;
     setExpanded(true);
-    morph.value = withTiming(1, RESIZE);
+    morph.value = animateTo(t, 1, t.morphMs);
     // the copy reveals once the surface has mostly arrived
-    reveal.value = withDelay(120, withTiming(1, { duration: STAGGER_DUR, easing: STAGGER_EASE }));
+    reveal.value = withDelay(120, withTiming(1, { duration: t.revealMs, easing: SMOOTH }));
   }, [morph, reveal]);
   const openRef = useRef(open);
   openRef.current = open;
 
   const close = useCallback(() => {
+    const t = tuneRef.current;
     setExpanded(false);
     reveal.value = withTiming(0, { duration: STAGGER_EXIT, easing: Easing.linear });
     dragY.value = withTiming(0, { duration: 200 });
-    morph.value = withTiming(0, RESIZE);
+    morph.value = animateTo(t, 0, t.morphMs);
   }, [morph, dragY, reveal]);
   const closeRef = useRef(close);
   closeRef.current = close;
@@ -205,11 +242,13 @@ export default function App() {
   const advanceRef = useRef(advance);
   advanceRef.current = advance;
 
-  // One responder on the STATIC root view. It cannot live on the animated
+  // One responder on the STATIC gesture layer. It cannot live on the animated
   // surface: Reanimated layout-prop animation on Fabric repaints the view but
   // leaves the shadow tree's hit-test frame at the previous geometry, so the
   // sheet would only be tappable inside the old pill rect. Everything is
-  // routed here by page-coordinate rects instead.
+  // routed here by page-coordinate rects instead. The TUNE panel is a SIBLING
+  // of this layer — a Pressable child under a responder-carrying ancestor
+  // never fires on Fabric.
   const pan = useMemo(
     () =>
       PanResponder.create({
@@ -319,15 +358,16 @@ export default function App() {
   // Texts reveal. `reveal` runs 0..1 once for the whole block; each line
   // reads a WINDOW of it, which is how the recipe's per-line
   // transition-delay is expressed with a single driver.
+  const stepFrac = STAGGER_STEP / tune.revealMs;
   const titleStyle = useAnimatedStyle(() => {
-    const p = interpolate(reveal.value, [0, 1 - STAGGER_STEP / STAGGER_DUR], [0, 1], Extrapolation.CLAMP);
+    const p = interpolate(reveal.value, [0, 1 - stepFrac], [0, 1], Extrapolation.CLAMP);
     return {
       opacity: p,
       transform: [{ translateY: (1 - p) * STAGGER_DISTANCE }],
     };
   });
   const subtitleStyle = useAnimatedStyle(() => {
-    const p = interpolate(reveal.value, [STAGGER_STEP / STAGGER_DUR, 1], [0, 1], Extrapolation.CLAMP);
+    const p = interpolate(reveal.value, [stepFrac, 1], [0, 1], Extrapolation.CLAMP);
     return {
       opacity: p,
       transform: [{ translateY: (1 - p) * STAGGER_DISTANCE }],
@@ -335,71 +375,86 @@ export default function App() {
   });
 
   // the cards behind the front one, furthest first
-  const behind = stack.slice(Math.max(0, stack.length - STACK_VISIBLE), -1);
-  const frontId = stack[stack.length - 1].id;
+  const behind = stack.slice(0, -1).slice(-STACK_RENDERED);
 
   return (
-    <View style={styles.root} {...pan.panHandlers}>
+    <View style={styles.root}>
       <StatusBar style="light" />
 
-      {behind.map((entry, i) => (
-        <StackPill key={entry.id} depth={behind.length - i} />
-      ))}
+      {/* gesture layer — carries the responder AND the background, so it is
+          opaque (a transparent view loses Fabric hit-testing; measured) */}
+      <View style={styles.gestureLayer} {...pan.panHandlers}>
+        {behind.map((entry, i) => (
+          <StackPill
+            key={entry.id}
+            depth={behind.length - i}
+            state={entry.state}
+            tune={tune}
+          />
+        ))}
 
-      <View style={[styles.hitArea, { width: sheetW }]} pointerEvents="none">
-        <Animated.View style={[styles.container, containerStyle]}>
-          <Animated.View style={[StyleSheet.absoluteFill, pillGlassStyle]}>
-            {/* backdrop blur under the glass — the design's frosted pill */}
-            <BlurView intensity={PILL_BLUR} tint="dark" style={StyleSheet.absoluteFill} />
-            <LinearGradient colors={PILL_GRADIENT} style={StyleSheet.absoluteFill} />
-          </Animated.View>
-          <Animated.View style={[StyleSheet.absoluteFill, styles.sheetGlass, sheetGlassStyle]} />
+        <View style={[styles.hitArea, { width: sheetW }]} pointerEvents="none">
+          <Animated.View style={[styles.container, containerStyle]}>
+            <Animated.View style={[StyleSheet.absoluteFill, pillGlassStyle]}>
+              <BlurView intensity={PILL_BLUR} tint="dark" style={StyleSheet.absoluteFill} />
+              <LinearGradient colors={PILL_GRADIENT} style={StyleSheet.absoluteFill} />
+            </Animated.View>
+            <Animated.View style={[StyleSheet.absoluteFill, styles.sheetGlass, sheetGlassStyle]} />
 
-          <Animated.View style={[styles.orb, orbStyle]}>
-            <ThinkingOrb state={state} size={64} displaySize={ORB_SHEET} theme="dark" />
-          </Animated.View>
+            <Animated.View style={[styles.orb, orbStyle]}>
+              <ThinkingOrb state={state} size={64} displaySize={ORB_SHEET} theme="dark" />
+            </Animated.View>
 
-          <Animated.View style={[styles.pillContent, pillContentStyle]}>
-            <View style={styles.pillLabel}>
+            <Animated.View style={[styles.pillContent, pillContentStyle]}>
+              <View style={styles.pillLabel}>
+                <ShimmerText text={`${VERBS[state]}....`} fontSize={16} />
+              </View>
+            </Animated.View>
+
+            {/* drag-to-dismiss affordance, replacing the close button */}
+            <Animated.View style={[styles.grabber, grabberStyle]} />
+
+            <Animated.View style={[styles.sheetTitle, titleStyle]}>
               <ShimmerText text={`${VERBS[state]}....`} fontSize={16} />
-            </View>
+            </Animated.View>
+            <Animated.View style={[styles.sheetSubtitleWrap, subtitleStyle]}>
+              <Text style={styles.sheetSubtitle}>
+                Agent is processing your request. Please wait, it might take a few seconds.
+              </Text>
+            </Animated.View>
           </Animated.View>
-
-          {/* drag-to-dismiss affordance, replacing the close button */}
-          <Animated.View style={[styles.grabber, grabberStyle]} />
-
-          <Animated.View style={[styles.sheetTitle, titleStyle]}>
-            <ShimmerText text={`${VERBS[state]}....`} fontSize={16} />
-          </Animated.View>
-          <Animated.View style={[styles.sheetSubtitleWrap, subtitleStyle]}>
-            <Text style={styles.sheetSubtitle}>
-              Agent is processing your request. Please wait, it might take a few seconds.
-            </Text>
-          </Animated.View>
-        </Animated.View>
+        </View>
       </View>
+
+      {/* sibling of the gesture layer, so its Pressables actually fire */}
+      <TunePanel tune={tune} onChange={setTune} />
     </View>
   );
 }
 
+// ---- stacked cards --------------------------------------------------------
+
 /**
- * A card behind the front pill. It animates TOWARD its depth rather than
- * being placed at it, so when a new pill is pushed the whole stack visibly
- * recedes — sonner transitions transform and opacity over 400ms on
- * reposition, and a card mounts here at the depth it is leaving (one nearer
- * the front), which is exactly the position it just occupied.
+ * A card behind the front pill, KEEPING its content: the orb frozen on its
+ * current frame (`paused`) and the label muted. It animates TOWARD its depth
+ * rather than being placed at it — it mounts at the depth it is leaving (one
+ * nearer the front), which is exactly the position it just occupied — so a
+ * push makes the whole stack visibly recede. A card pushed past the visible
+ * window animates to depth 3 = opacity 0 with the SAME motion, instead of
+ * unmounting in place.
+ *
+ * Lift rides on TRANSFORM, not `bottom`: Reanimated drives transform and
+ * opacity straight on the view; layout props did not animate at all here
+ * (measured — an 8s reposition showed zero pixel change over 3s).
  */
-function StackPill({ depth }: { depth: number }) {
+function StackPill({ depth, state, tune }: { depth: number; state: OrbState; tune: Tune }) {
   const d = useSharedValue(depth - 1);
 
   useEffect(() => {
-    d.value = withTiming(depth, { duration: STACK_DUR, easing: STACK_EASE });
-  }, [depth, d]);
+    d.value = animateTo(tune, depth, tune.stackMs);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [depth]);
 
-  // Lift via TRANSFORM, not `bottom`. Reanimated drives transform and
-  // opacity straight on the view; layout props take a different path and,
-  // measured here, did not animate at all — an 8s reposition showed zero
-  // pixel change over 3s. sonner animates transform for the same reason.
   const style = useAnimatedStyle(() => ({
     opacity: interpolate(
       d.value,
@@ -417,18 +472,100 @@ function StackPill({ depth }: { depth: number }) {
     <Animated.View pointerEvents="none" style={[styles.stackPill, style]}>
       <BlurView intensity={PILL_BLUR} tint="dark" style={StyleSheet.absoluteFill} />
       <LinearGradient colors={PILL_GRADIENT} style={StyleSheet.absoluteFill} />
+      <View style={styles.stackOrb}>
+        <ThinkingOrb state={state} size={64} displaySize={ORB_PILL} theme="dark" paused />
+      </View>
+      <Text style={styles.stackLabel}>{VERBS[state]}....</Text>
     </Animated.View>
   );
 }
 
+// ---- tune panel -----------------------------------------------------------
+
+const EASES: EaseKind[] = ['smooth', 'bounce', 'spring'];
+
+function TuneRow({
+  label,
+  value,
+  display,
+  onStep,
+}: {
+  label: string;
+  value: number;
+  display: string;
+  onStep: (dir: number) => void;
+}) {
+  return (
+    <View style={styles.tuneRow}>
+      <Text style={styles.tuneLabel}>{label}</Text>
+      <Pressable onPress={() => onStep(-1)} hitSlop={8} style={styles.tuneBtn}>
+        <Text style={styles.tuneBtnText}>−</Text>
+      </Pressable>
+      <Text style={styles.tuneValue}>{display}</Text>
+      <Pressable onPress={() => onStep(1)} hitSlop={8} style={styles.tuneBtn}>
+        <Text style={styles.tuneBtnText}>+</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function TunePanel({ tune, onChange }: { tune: Tune; onChange: (t: Tune) => void }) {
+  const [openPanel, setOpenPanel] = useState(false);
+
+  const step = (key: 'morphMs' | 'stackMs' | 'revealMs', by: number) => (dir: number) =>
+    onChange({ ...tune, [key]: Math.max(100, Math.min(2000, tune[key] + dir * by)) });
+
+  return (
+    // The wrapper auto-sizes to its content, so plain `auto` pointer events
+    // only claim the panel's own bounds — no need for box-none.
+    <View style={styles.tunePanel}>
+      <Pressable onPress={() => setOpenPanel((o) => !o)} style={styles.tuneToggle} hitSlop={8}>
+        <Text style={styles.tuneToggleText}>{openPanel ? '× TUNE' : '≡ TUNE'}</Text>
+      </Pressable>
+
+      {openPanel && (
+        <View style={styles.tuneBody}>
+          <TuneRow label="MORPH" value={tune.morphMs} display={`${tune.morphMs}ms`} onStep={step('morphMs', 50)} />
+          <TuneRow label="STACK" value={tune.stackMs} display={`${tune.stackMs}ms`} onStep={step('stackMs', 50)} />
+          <TuneRow label="REVEAL" value={tune.revealMs} display={`${tune.revealMs}ms`} onStep={step('revealMs', 50)} />
+          <TuneRow
+            label="BOUNCE"
+            value={tune.bounce}
+            display={tune.bounce.toFixed(2)}
+            onStep={(dir) =>
+              onChange({ ...tune, bounce: Math.max(0, Math.min(1, +(tune.bounce + dir * 0.05).toFixed(2))) })
+            }
+          />
+          <View style={styles.tuneRow}>
+            <Text style={styles.tuneLabel}>EASE</Text>
+            <Pressable
+              onPress={() => onChange({ ...tune, ease: EASES[(EASES.indexOf(tune.ease) + 1) % EASES.length] })}
+              hitSlop={8}
+              style={styles.tuneEase}
+            >
+              <Text style={styles.tuneBtnText}>{tune.ease}</Text>
+            </Pressable>
+          </View>
+          <Pressable onPress={() => onChange(DEFAULT_TUNE)} hitSlop={8}>
+            <Text style={styles.tuneReset}>reset</Text>
+          </Pressable>
+        </View>
+      )}
+    </View>
+  );
+}
+
+// ---- styles ---------------------------------------------------------------
+
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+  },
+  gestureLayer: {
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: '#3b3b3b',
     alignItems: 'center',
   },
-  // static touch target at the SHEET's frame — never animated, so its
-  // hit-test rect is always where the eye thinks the surface is
   hitArea: {
     position: 'absolute',
     bottom: SHEET_BOTTOM,
@@ -444,6 +581,19 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     boxShadow: GLASS_SHADOW,
   },
+  stackOrb: {
+    position: 'absolute',
+    left: 13,
+    top: (PILL_H - ORB_PILL) / 2,
+  },
+  stackLabel: {
+    position: 'absolute',
+    left: 71.3,
+    top: (PILL_H - 22) / 2,
+    fontSize: 16,
+    lineHeight: 22,
+    color: 'rgba(251,251,251,0.35)',
+  },
   container: {
     position: 'absolute',
     overflow: 'hidden',
@@ -452,10 +602,6 @@ const styles = StyleSheet.create({
     // so this needs no approximating: one outer drop plus three DIRECTIONAL
     // white insets (top-left bright, bottom-right and bottom faint) that a
     // single uniform border could never reproduce.
-    //
-    // The design also ships a display-p3 variant of the same stack; RN has no
-    // wide-gamut colour syntax, so these are the sRGB values, which is what
-    // the first CSS declaration falls back to anyway.
     boxShadow: GLASS_SHADOW,
   },
   sheetGlass: {
@@ -497,5 +643,72 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     textAlign: 'center',
     color: '#898989',
+  },
+  tunePanel: {
+    position: 'absolute',
+    top: 64,
+    left: 16,
+  },
+  tuneToggle: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 14,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+  },
+  tuneToggleText: {
+    fontSize: 11,
+    fontFamily: 'Courier',
+    color: 'rgba(255,255,255,0.75)',
+  },
+  tuneBody: {
+    marginTop: 8,
+    padding: 10,
+    borderRadius: 14,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    gap: 6,
+  },
+  tuneRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  tuneLabel: {
+    width: 52,
+    fontSize: 11,
+    fontFamily: 'Courier',
+    color: 'rgba(255,255,255,0.55)',
+  },
+  tuneValue: {
+    width: 52,
+    textAlign: 'center',
+    fontSize: 11,
+    fontFamily: 'Courier',
+    color: '#fff',
+  },
+  tuneBtn: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tuneBtnText: {
+    fontSize: 12,
+    fontFamily: 'Courier',
+    color: '#fff',
+  },
+  tuneEase: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+  },
+  tuneReset: {
+    fontSize: 11,
+    fontFamily: 'Courier',
+    color: 'rgba(255,255,255,0.45)',
+    marginTop: 2,
   },
 });
