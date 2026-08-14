@@ -110,7 +110,7 @@ struct Seg {
 }
 
 struct Tune {
-    var stack = Seg(ms: 400, bounce: 0.3, ease: .sonner, stiffness: 220, damping: 20, mass: 1, anticipate: 0, anticipateMs: 90)
+    var stack = Seg(ms: 500, bounce: 0.25, ease: .bounce, stiffness: 220, damping: 20, mass: 1, anticipate: 0, anticipateMs: 130)
     var open = Seg(ms: 350, bounce: 0.25, ease: .bounce, stiffness: 220, damping: 20, mass: 1, anticipate: 0.04, anticipateMs: 90)
     var close = Seg(ms: 250, bounce: 0.15, ease: .smooth, stiffness: 220, damping: 20, mass: 1, anticipate: 0.05, anticipateMs: 110)
     var revealMs: Double = 500
@@ -232,12 +232,93 @@ private struct FrostedWallpaper: View {
                     .frame(width: w * 0.9, height: h * 0.3)
                     .position(x: w * 0.5, y: h * 0.68)
                     .blur(radius: 70)
+
+                // dusty rose breath, top-right — the photo's skin-warmth
+                // leaking through the glass
+                Ellipse()
+                    .fill(Color(red: 0.72, green: 0.58, blue: 0.58).opacity(0.28))
+                    .frame(width: w * 0.9, height: h * 0.35)
+                    .position(x: w * 0.92, y: h * 0.18)
+                    .blur(radius: 75)
+
+                // steel-blue shaft falling diagonally through the mid-field
+                Capsule()
+                    .fill(Color(red: 0.52, green: 0.56, blue: 0.72).opacity(0.30))
+                    .frame(width: w * 1.6, height: h * 0.16)
+                    .rotationEffect(.degrees(-18))
+                    .position(x: w * 0.55, y: h * 0.5)
+                    .blur(radius: 60)
+
+                // periwinkle glint, small and closer to the surface
+                Ellipse()
+                    .fill(Color(red: 0.70, green: 0.72, blue: 0.88).opacity(0.25))
+                    .frame(width: w * 0.5, height: h * 0.14)
+                    .rotationEffect(.degrees(-12))
+                    .position(x: w * 0.3, y: h * 0.30)
+                    .blur(radius: 45)
+
+                // deep plum shoulder, lower-left — asymmetry so the vignette
+                // doesn't read as a mirror-symmetric ramp
+                Ellipse()
+                    .fill(Color(red: 0.24, green: 0.19, blue: 0.32).opacity(0.5))
+                    .frame(width: w * 1.0, height: h * 0.45)
+                    .rotationEffect(.degrees(14))
+                    .position(x: w * 0.08, y: h * 0.92)
+                    .blur(radius: 85)
+
+                // cool midnight edge, lower-right, a step bluer than the plum
+                Ellipse()
+                    .fill(Color(red: 0.18, green: 0.18, blue: 0.34).opacity(0.42))
+                    .frame(width: w * 0.9, height: h * 0.4)
+                    .rotationEffect(.degrees(-10))
+                    .position(x: w * 0.95, y: h * 0.98)
+                    .blur(radius: 85)
+
+                // hairline brightening at the very top edge, the pane
+                // catching the light
+                LinearGradient(
+                    stops: [
+                        .init(color: Color.white.opacity(0.18), location: 0),
+                        .init(color: .clear, location: 0.06),
+                    ],
+                    startPoint: .top, endPoint: .bottom
+                )
             }
             // one offscreen composite: the blobs never repaint, and the huge
             // blurs rasterise once instead of per frame
             .drawingGroup()
+            // fine photographic grain so the long soft ramps never band
+            .overlay(GrainOverlay().opacity(0.05).blendMode(.overlay))
         }
         .ignoresSafeArea()
+    }
+}
+
+/// A 128px tile of deterministic monochrome noise, tiled across the screen.
+/// Rebuilt identically every launch (seeded LCG), so screenshots stay
+/// byte-comparable between runs.
+private struct GrainOverlay: View {
+    static let tile: Image = {
+        let side = 128
+        var seed: UInt64 = 0x9E3779B97F4A7C15
+        var bytes = [UInt8](repeating: 0, count: side * side)
+        for i in bytes.indices {
+            seed = seed &* 6364136223846793005 &+ 1442695040888963407
+            bytes[i] = UInt8(truncatingIfNeeded: seed >> 33)
+        }
+        let ctx = CGContext(
+            data: &bytes, width: side, height: side,
+            bitsPerComponent: 8, bytesPerRow: side,
+            space: CGColorSpaceCreateDeviceGray(),
+            bitmapInfo: CGImageAlphaInfo.none.rawValue
+        )!
+        return Image(decorative: ctx.makeImage()!, scale: 1)
+    }()
+
+    var body: some View {
+        GrainOverlay.tile
+            .resizable(resizingMode: .tile)
+            .allowsHitTesting(false)
     }
 }
 
@@ -327,6 +408,14 @@ struct PillsView: View {
         }
         .preferredColorScheme(.dark)
         .statusBarHidden(false)
+        // AUTOPUSH=1 fires a few pushes after launch, so the stacking
+        // animation can be captured on video without driving the UI.
+        .onAppear {
+            guard ProcessInfo.processInfo.environment["AUTOPUSH"] != nil else { return }
+            for i in 0..<3 {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5 + Double(i) * 1.6) { push() }
+            }
+        }
     }
 
     /// Every rendered entry, INCLUDING the front at depth 0. The front's
