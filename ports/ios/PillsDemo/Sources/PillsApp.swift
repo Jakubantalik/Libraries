@@ -167,7 +167,7 @@ func insetRim(radius: CGFloat, bottomLight: Double = 1) -> some View {
     ZStack {
         // The reference render is lit from BELOW: the readable rim light
         // hugs the bottom arc, and the top carries only a whisper of sheen.
-        shape.stroke(Color.white.opacity(0.28 * bottomLight), lineWidth: 0.8)
+        shape.stroke(Color.white.opacity(0.39 * bottomLight), lineWidth: 0.8)
             .offset(y: -1).blur(radius: 0.3)
             .mask(
                 LinearGradient(
@@ -368,7 +368,18 @@ struct PillsView: View {
             let sheetW = geo.size.width - D.sheetMargin * 2
 
             ZStack {
-                Color(red: 0x6b / 255.0, green: 0x6b / 255.0, blue: 0x6b / 255.0)
+                // Figma 2596:5237's wallpaper. Under a flat fill the pill's
+                // frosted material had nothing to sample; the swirl gives the
+                // glass something to refract.
+                Wallpaper.image
+                    .resizable()
+                    .scaledToFill()
+                    // Pinned to the screen and clipped: a bare scaledToFill
+                    // image sizes the ZStack to its own aspect-filled bounds,
+                    // which pushed the pill off the right edge.
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .clipped()
+                    .ignoresSafeArea()
                     .contentShape(Rectangle())
                     .onTapGesture(coordinateSpace: .global) { route($0, frame: geo.frame(in: .global)) }
 
@@ -474,7 +485,7 @@ struct PillsView: View {
             RoundedRectangle(cornerRadius: r, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [Color.black.opacity(0.8), Color.black.opacity(0.32)], // Figma 2584:83680
+                        colors: [Color.black, Color.black.opacity(0.4)], // Figma 2596:5241
                         startPoint: .top, endPoint: .bottom
                     )
                 )
@@ -522,10 +533,10 @@ struct PillsView: View {
         }
         .frame(width: w, height: h)
         .clipShape(RoundedRectangle(cornerRadius: r, style: .continuous))
-        // two layers, like the reference render: a tighter contact shadow
-        // seating the pill plus a wide soft ambient falloff beneath it
-        .shadow(color: .black.opacity(0.17), radius: 9, y: 7)
-        .shadow(color: .black.opacity(0.10), radius: 22, y: 16)
+        // ONE shadow, per Figma 2596:5241: 0 12px 26px rgba(0,0,0,0.24).
+        // The tight contact layer this replaces drew a dark line right under
+        // the white hairline — the "black hairline" in the design review.
+        .shadow(color: .black.opacity(0.24), radius: 13, y: 12)
         .offset(x: swipeX, y: dragY - lift + closeDip)
         .modifier(EnterBlur(
             shift: stackShift,
@@ -716,7 +727,7 @@ private struct StackCard: View {
             RoundedRectangle(cornerRadius: D.pillR, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [Color.black.opacity(0.8), Color.black.opacity(0.32)], // Figma 2584:83680
+                        colors: [Color.black, Color.black.opacity(0.4)], // Figma 2596:5241
                         startPoint: .top, endPoint: .bottom
                     )
                 )
@@ -800,8 +811,7 @@ private struct StackDepth: ViewModifier, Animatable {
             // darkness against the Figma render (one shadow, 2584:83680).
             // Opacity reads plain d, not the amplified value — a fade that
             // kicks looks like a flicker.
-            .shadow(color: .black.opacity(0.17 * Double(min(1, d))), radius: 9, y: 7)
-            .shadow(color: .black.opacity(0.10 * Double(min(1, d))), radius: 22, y: 16)
+            .shadow(color: .black.opacity(0.24 * Double(min(1, d))), radius: 13, y: 12)
             .scaleEffect(1 - bouncy * D.stackShrink)
             .offset(y: -bouncy * D.stackGap)
             .opacity(opacity)
