@@ -1,30 +1,25 @@
-// Logram-style agent status pill, implemented from the Figma reference
+// Logram-style agent status pills, implemented from the Figma reference
 // (Logram-.App, node 2584:83673).
 //
-// One component, three behaviours:
-//   - resting: a glass pill bottom-centre — orb + "Thinking...." label
-//   - swipe horizontally: pages through the nine orb states, each with its
-//     own verb, in a new copy of the same pill
-//   - tap: the pill MORPHS into the modal sheet (same glass, 354x366,
-//     r42.5) — big orb, title, subtitle, close button. Tapping X morphs
-//     back down to the pill.
-//
-// The morph is one animated container whose width/height/radius/offset
-// interpolate between the two Figma geometries; pill content fades out on
-// the way up, sheet content fades in near the top. Both orbs share the
-// engine clock, so the crossfade never visibly resets the animation.
+// Behaviours:
+//   - a stack of glass pills bottom-centre; the front one is live, the ones
+//     behind recede (see STACK_* below)
+//   - swipe the front pill horizontally to page through the nine orb states
+//   - tap the front pill: it MORPHS into the modal sheet — the orb scales up
+//     into place and the copy reveals with a stagger
+//   - drag the sheet down (or flick) to dismiss it back to the pill
+//   - tap anywhere outside the pill: a new pill with the next orb state is
+//     pushed onto the stack
 //
 // Figma geometry (402-wide frame), used verbatim below:
-//   pill:  213x64  r52.535  bottom 46  orb 48 @ x13  label x71.3  #a8a8a8
-//   sheet: (W-48)x366  r42.54  bottom 24  orb ~133 @ y72  title y244
-//          subtitle y277 w271 #898989  close 36x36 r100 @ 24/24, bg white/9%
+//   pill:  213x64  r52.535  bottom 46  orb 48 @ x13  label x71.3
+//   sheet: (W-48)x366  r42.54  bottom 24  orb 133 @ y72  title y244
+//          subtitle y277 w271 #898989
 
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { PanResponder, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ImageSVG, useSVG } from '@shopify/react-native-skia';
-import { Canvas as SkiaCanvas } from '@shopify/react-native-skia';
 import Animated, {
   Easing,
   Extrapolation,
@@ -32,6 +27,7 @@ import Animated, {
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
+  withDelay,
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
@@ -39,7 +35,6 @@ import { ThinkingOrb } from 'thinking-orbs-native';
 import type { OrbState } from 'thinking-orbs-native';
 import { ShimmerText } from './ShimmerText';
 
-// swipe order; starts on `breathing`, whose label the design shows
 const STATES: OrbState[] = [
   'breathing',
   'working',
@@ -74,113 +69,180 @@ const SHEET_R = 42.54;
 const SHEET_BOTTOM = 24;
 const SHEET_MARGIN = 24;
 
-// Orb geometry at both ends of the morph, from Figma. The orb is rendered
-// ONCE at ORB_SHEET dp and scaled DOWN for the pill, so the large end (where
-// detail matters) is native resolution and the small end is a downscale.
+// The orb is rendered ONCE at ORB_SHEET dp and scaled DOWN for the pill, so
+// the large end is native resolution and the small end is a downscale.
 const ORB_PILL = 48;
 const ORB_SHEET = 133;
-const ORB_PILL_CX = 13 + ORB_PILL / 2; // 13 from the pill's left edge
+const ORB_PILL_CX = 13 + ORB_PILL / 2;
 const ORB_PILL_CY = PILL_H / 2;
-const ORB_SHEET_CY = 72 + ORB_SHEET / 2; // 72 from the sheet's top edge
+const ORB_SHEET_CY = 72 + ORB_SHEET / 2;
 
 const SWIPE_THRESHOLD = 56;
-
 const SPRING = { damping: 26, stiffness: 260, mass: 1 };
 
-// transitions.dev "Card resize" (01-card-resize.md): the morph between the
-// pill and sheet geometries tweens with the recipe's exact timing —
-// --resize-dur 300ms, --resize-ease cubic-bezier(0.22, 1, 0.36, 1).
+// transitions.dev "Card resize" (01-card-resize.md): --resize-dur 300ms,
+// --resize-ease cubic-bezier(0.22, 1, 0.36, 1).
 const RESIZE = { duration: 300, easing: Easing.bezier(0.22, 1, 0.36, 1) };
+
+// transitions.dev "Texts reveal" (18-texts-reveal.md): lines rise from
+// --stagger-distance over --stagger-dur, with each later line held back by
+// --stagger-stagger. The exit is deliberately decoupled — a flat 200ms fade
+// with no Y return — so dismissing reads as one quiet fade instead of the
+// reveal played backwards.
+//
+// The recipe's --stagger-blur (3px) is NOT ported. React Native does support
+// `filter: [{blur}]` on the new architecture, but applying it to a
+// transparent View rasterises it against an opaque backdrop: on device the
+// two lines rendered inside solid white boxes. Verified by A/B — removing
+// the filter alone fixed it. Opacity plus the Y rise carries the reveal.
+const STAGGER_DUR = 500;
+const STAGGER_DISTANCE = 12;
+const STAGGER_STEP = 40;
+const STAGGER_EASE = Easing.bezier(0.22, 1, 0.36, 1);
+const STAGGER_EXIT = 200;
+
+// Stacking, following logram-ai/Logram#335: the front card stays solid, the
+// one behind drops to 80% and the third to 50%, "so the stack reads as depth
+// rather than three equally-loud messages"; anything past the visible window
+// is dropped. That PR is web, where the cards differ in size and content —
+// here every pill is identical, so depth also needs the lift and shrink.
+const STACK_OPACITY = [1, 0.8, 0.5];
+const STACK_VISIBLE = STACK_OPACITY.length;
+const STACK_LIFT = 12;
+const STACK_SHRINK = 0.06;
+
+// the grabber that replaces the close button
+const GRAB_W = 36;
+const GRAB_H = 5;
+const GRAB_TOP = 12;
+/** Drag past this many dp, or flick faster than this, and the sheet closes. */
+const DISMISS_DISTANCE = 90;
+const DISMISS_VELOCITY = 0.8;
+
+const GLASS_SHADOW = [
+  { offsetX: 0, offsetY: 12, blurRadius: 26, spreadDistance: 0, color: 'rgba(0,0,0,0.24)' },
+  { offsetX: 1, offsetY: 2, blurRadius: 3, spreadDistance: -2, color: 'rgba(255,255,255,0.24)', inset: true },
+  { offsetX: -1, offsetY: -2, blurRadius: 1, spreadDistance: -2, color: 'rgba(255,255,255,0.24)', inset: true },
+  { offsetX: 0, offsetY: -2, blurRadius: 1, spreadDistance: -2, color: 'rgba(255,255,255,0.24)', inset: true },
+] as const;
+
+const PILL_GRADIENT = ['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.16)'] as const;
 
 export default function App() {
   const { width: screenW, height: screenH } = useWindowDimensions();
   const sheetW = screenW - SHEET_MARGIN * 2;
 
-  const [index, setIndex] = useState(0);
+  // front of the stack is the LAST entry, so a new pill pushes on top
+  const [stack, setStack] = useState<OrbState[]>(['breathing']);
   const [expanded, setExpanded] = useState(false);
 
-  // 0 = pill, 1 = sheet
-  const morph = useSharedValue(0);
-  // horizontal swipe offset of the pill content while paging
-  const swipeX = useSharedValue(0);
+  const morph = useSharedValue(0); // 0 = pill, 1 = sheet
+  const swipeX = useSharedValue(0); // horizontal paging offset
+  const dragY = useSharedValue(0); // sheet drag-to-dismiss offset
+  const reveal = useSharedValue(0); // texts-reveal progress
 
-  const state = STATES[index];
-  const closeSvg = useSVG(require('./assets/close.svg'));
+  const state = stack[stack.length - 1];
 
   const advance = useCallback((dir: number) => {
-    setIndex((i) => (i + dir + STATES.length) % STATES.length);
+    setStack((s) => {
+      const i = STATES.indexOf(s[s.length - 1]);
+      const next = STATES[(i + dir + STATES.length) % STATES.length];
+      return [...s.slice(0, -1), next];
+    });
   }, []);
 
-  // Swipe = pan on the pill; page on release past threshold. The content
-  // slides out the way the finger went, swaps state off-screen, slides back
-  // in from the other side.
+  const push = useCallback(() => {
+    setStack((s) => {
+      const i = STATES.indexOf(s[s.length - 1]);
+      return [...s, STATES[(i + 1) % STATES.length]];
+    });
+  }, []);
+
   const expandedRef = useRef(expanded);
   expandedRef.current = expanded;
+  const geomRef = useRef({ screenW, screenH });
+  geomRef.current = { screenW, screenH };
 
-  // One responder owns the pill: it claims every touch while collapsed, so
-  // drag = swipe and a release that never moved = tap. A Pressable child
-  // under a PanResponder parent silently loses presses on the new
-  // architecture (Fabric) — verified on-device: swipes fired, presses never
-  // did — so the tap must live here, not in a Pressable.
+  const open = useCallback(() => {
+    setExpanded(true);
+    morph.value = withTiming(1, RESIZE);
+    // the copy reveals once the surface has mostly arrived
+    reveal.value = withDelay(120, withTiming(1, { duration: STAGGER_DUR, easing: STAGGER_EASE }));
+  }, [morph, reveal]);
+  const openRef = useRef(open);
+  openRef.current = open;
+
+  const close = useCallback(() => {
+    setExpanded(false);
+    reveal.value = withTiming(0, { duration: STAGGER_EXIT, easing: Easing.linear });
+    dragY.value = withTiming(0, { duration: 200 });
+    morph.value = withTiming(0, RESIZE);
+  }, [morph, dragY, reveal]);
+  const closeRef = useRef(close);
+  closeRef.current = close;
+  const pushRef = useRef(push);
+  pushRef.current = push;
+  const advanceRef = useRef(advance);
+  advanceRef.current = advance;
+
+  // One responder on the STATIC root view. It cannot live on the animated
+  // surface: Reanimated layout-prop animation on Fabric repaints the view but
+  // leaves the shadow tree's hit-test frame at the previous geometry, so the
+  // sheet would only be tappable inside the old pill rect. Everything is
+  // routed here by page-coordinate rects instead.
   const pan = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: (e) => {
-          // Hit-testing must be done here, in page coordinates, because the
-          // ANIMATED view cannot be the touch target at all: Reanimated
-          // layout-prop animation on Fabric repaints the view but leaves the
-          // shadow tree's hit-test frame at the previous geometry — verified
-          // on-device (sheet taps landed nowhere after the morph). So a
-          // static wrapper spanning the SHEET frame owns every touch, and
-          // this filter decides what a touch means by where it starts.
-          const g2 = geomRef.current;
-          if (expandedRef.current) return true;
-          const { pageX, pageY } = e.nativeEvent;
-          const pillLeft = (g2.screenW - PILL_W) / 2;
-          const pillTop = g2.screenH - PILL_BOTTOM - PILL_H;
-          return (
-            pageX > pillLeft - 8 &&
-            pageX < pillLeft + PILL_W + 8 &&
-            pageY > pillTop - 8 &&
-            pageY < pillTop + PILL_H + 8
-          );
-        },
+        onStartShouldSetPanResponder: () => true,
         onPanResponderMove: (_e, g) => {
-          if (!expandedRef.current) swipeX.value = g.dx;
+          if (expandedRef.current) {
+            // downward only — dragging up must not lift the sheet off its rest
+            dragY.value = Math.max(0, g.dy);
+          } else {
+            swipeX.value = g.dx;
+          }
         },
         onPanResponderRelease: (e, g) => {
           const isTap = Math.abs(g.dx) < 8 && Math.abs(g.dy) < 8;
+          const { pageX, pageY } = e.nativeEvent;
+          const g2 = geomRef.current;
+
           if (expandedRef.current) {
-            // Sheet: the X closes; so does a tap anywhere outside the sheet.
-            // Page coordinates against the sheet's absolute frame — location
-            // coords are relative to whichever child got hit, so they are
-            // useless for this.
-            const { pageX, pageY } = e.nativeEvent;
-            const g2 = geomRef.current;
             const sheetTop = g2.screenH - SHEET_BOTTOM - SHEET_H;
-            const right = g2.screenW - SHEET_MARGIN;
-            const onClose =
-              pageX > right - 24 - 36 - 10 &&
-              pageX < right - 24 + 10 &&
-              pageY > sheetTop + 24 - 10 &&
-              pageY < sheetTop + 24 + 36 + 10;
-            const outsideSheet =
-              pageX < SHEET_MARGIN || pageX > right || pageY < sheetTop;
-            if (isTap && (onClose || outsideSheet)) closeRef.current();
+            const outside =
+              pageX < SHEET_MARGIN || pageX > g2.screenW - SHEET_MARGIN || pageY < sheetTop;
+            if (g.dy > DISMISS_DISTANCE || g.vy > DISMISS_VELOCITY || (isTap && outside)) {
+              closeRef.current();
+            } else {
+              dragY.value = withSpring(0, SPRING);
+            }
             return;
           }
+
+          const pillLeft = (g2.screenW - PILL_W) / 2;
+          const pillTop = g2.screenH - PILL_BOTTOM - PILL_H;
+          const onPill =
+            pageX > pillLeft - 8 &&
+            pageX < pillLeft + PILL_W + 8 &&
+            pageY > pillTop - 8 &&
+            pageY < pillTop + PILL_H + 8;
+
           if (isTap) {
             swipeX.value = withSpring(0, SPRING);
-            openRef.current();
-          } else if (Math.abs(g.dx) > SWIPE_THRESHOLD) {
-            const dir = g.dx < 0 ? 1 : -1; // swipe left → next
-            // the WHOLE pill exits the way the finger went, the state swaps
-            // off-screen, and a fresh pill slides in from the other side
-            const off = screenW / 2 + PILL_W / 2 + 30;
+            if (onPill) openRef.current();
+            else pushRef.current(); // tap outside stacks a new pill
+            return;
+          }
+          if (Math.abs(g.dx) > SWIPE_THRESHOLD) {
+            const dir = g.dx < 0 ? 1 : -1;
+            const off = g2.screenW / 2 + PILL_W / 2 + 30;
             swipeX.value = withTiming(-dir * off, { duration: 140 }, () => {
-              runOnJS(advance)(dir);
+              runOnJS(advanceRef.current)(dir);
               swipeX.value = dir * off;
-              swipeX.value = withTiming(0, { duration: 180, easing: Easing.bezier(0.22, 1, 0.36, 1) });
+              swipeX.value = withTiming(0, {
+                duration: 180,
+                easing: Easing.bezier(0.22, 1, 0.36, 1),
+              });
             });
           } else {
             swipeX.value = withSpring(0, SPRING);
@@ -188,59 +250,38 @@ export default function App() {
         },
         onPanResponderTerminate: () => {
           swipeX.value = withSpring(0, SPRING);
+          dragY.value = withSpring(0, SPRING);
         },
       }),
-    [advance, swipeX, screenW]
+    [swipeX, dragY]
   );
-
-  const open = useCallback(() => {
-    setExpanded(true);
-    morph.value = withTiming(1, RESIZE);
-  }, [morph]);
-  const openRef = useRef(open);
-  openRef.current = open;
-
-  const close = useCallback(() => {
-    setExpanded(false);
-    morph.value = withTiming(0, RESIZE);
-  }, [morph]);
-  const closeRef = useRef(close);
-  closeRef.current = close;
-  const geomRef = useRef({ screenW, screenH });
-  geomRef.current = { screenW, screenH };
 
   // ---- animated styles ----------------------------------------------------
 
-  // swipe rides on the container, so the whole pill — glass, rim, shadow —
-  // moves together rather than the label sliding inside a static shell
   const containerStyle = useAnimatedStyle(() => ({
     width: interpolate(morph.value, [0, 1], [PILL_W, sheetW]),
     height: interpolate(morph.value, [0, 1], [PILL_H, SHEET_H]),
     borderRadius: interpolate(morph.value, [0, 1], [PILL_R, SHEET_R]),
     bottom: interpolate(morph.value, [0, 1], [PILL_BOTTOM - SHEET_BOTTOM, 0]),
-    transform: [{ translateX: swipeX.value }],
+    transform: [{ translateX: swipeX.value }, { translateY: dragY.value }],
   }));
 
-  // pill's gradient glass fades into the sheet's solid glass
   const pillGlassStyle = useAnimatedStyle(() => ({
     opacity: interpolate(morph.value, [0, 0.5], [1, 0], Extrapolation.CLAMP),
   }));
   const sheetGlassStyle = useAnimatedStyle(() => ({
     opacity: interpolate(morph.value, [0, 0.5], [0, 1], Extrapolation.CLAMP),
   }));
-
   const pillContentStyle = useAnimatedStyle(() => ({
     opacity: interpolate(morph.value, [0, 0.35], [1, 0], Extrapolation.CLAMP),
   }));
-
-  const sheetContentStyle = useAnimatedStyle(() => ({
+  const grabberStyle = useAnimatedStyle(() => ({
     opacity: interpolate(morph.value, [0.55, 1], [0, 1], Extrapolation.CLAMP),
   }));
 
-  // ONE orb for both states: it travels from the pill's left inset to the
-  // sheet's centre and scales 48 -> 133 continuously, instead of two
-  // instances crossfading. Positioned by its centre so the scale, which RN
-  // applies about the view's middle, does not drag the orb off its mark.
+  // one orb across both states: travels from the pill's left inset to the
+  // sheet's centre and scales 48 -> 133 continuously. Positioned by its
+  // centre, since RN scales about a view's middle.
   const orbStyle = useAnimatedStyle(() => {
     const cx = interpolate(morph.value, [0, 1], [ORB_PILL_CX, sheetW / 2]);
     const cy = interpolate(morph.value, [0, 1], [ORB_PILL_CY, ORB_SHEET_CY]);
@@ -252,60 +293,80 @@ export default function App() {
     };
   });
 
+  // Texts reveal. `reveal` runs 0..1 once for the whole block; each line
+  // reads a WINDOW of it, which is how the recipe's per-line
+  // transition-delay is expressed with a single driver.
+  const titleStyle = useAnimatedStyle(() => {
+    const p = interpolate(reveal.value, [0, 1 - STAGGER_STEP / STAGGER_DUR], [0, 1], Extrapolation.CLAMP);
+    return {
+      opacity: p,
+      transform: [{ translateY: (1 - p) * STAGGER_DISTANCE }],
+    };
+  });
+  const subtitleStyle = useAnimatedStyle(() => {
+    const p = interpolate(reveal.value, [STAGGER_STEP / STAGGER_DUR, 1], [0, 1], Extrapolation.CLAMP);
+    return {
+      opacity: p,
+      transform: [{ translateY: (1 - p) * STAGGER_DISTANCE }],
+    };
+  });
+
+  // the cards behind the front one, furthest first
+  const behind = stack.slice(Math.max(0, stack.length - STACK_VISIBLE), -1);
+
   return (
     <View style={styles.root} {...pan.panHandlers}>
       <StatusBar style="light" />
 
-      <View style={[styles.hitArea, { width: sheetW }]}>
-      <Animated.View style={[styles.container, containerStyle]}>
-        {/* glass backgrounds */}
-        <Animated.View style={[StyleSheet.absoluteFill, pillGlassStyle]} pointerEvents="none">
-          <LinearGradient
-            colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.16)']}
-            style={StyleSheet.absoluteFill}
-          />
-        </Animated.View>
-        <Animated.View
-          style={[StyleSheet.absoluteFill, styles.sheetGlass, sheetGlassStyle]}
-          pointerEvents="none"
-        />
+      {behind.map((s, i) => {
+        const depth = behind.length - i; // 1 = directly behind the front
+        return (
+          <View
+            key={`${s}-${stack.length - depth}`}
+            pointerEvents="none"
+            style={[
+              styles.stackPill,
+              {
+                bottom: PILL_BOTTOM + depth * STACK_LIFT,
+                opacity: STACK_OPACITY[depth] ?? 0,
+                transform: [{ scale: 1 - depth * STACK_SHRINK }],
+              },
+            ]}
+          >
+            <LinearGradient colors={PILL_GRADIENT} style={StyleSheet.absoluteFill} />
+          </View>
+        );
+      })}
 
-        {/* pill content */}
-        {/* the orb spans both states — see orbStyle */}
-        <Animated.View style={[styles.orb, orbStyle]} pointerEvents="none">
-          <ThinkingOrb state={state} size={64} displaySize={ORB_SHEET} theme="dark" />
-        </Animated.View>
+      <View style={[styles.hitArea, { width: sheetW }]} pointerEvents="none">
+        <Animated.View style={[styles.container, containerStyle]}>
+          <Animated.View style={[StyleSheet.absoluteFill, pillGlassStyle]}>
+            <LinearGradient colors={PILL_GRADIENT} style={StyleSheet.absoluteFill} />
+          </Animated.View>
+          <Animated.View style={[StyleSheet.absoluteFill, styles.sheetGlass, sheetGlassStyle]} />
 
-        {/* tap is handled by the pan responder above, not a Pressable */}
-        <Animated.View style={[styles.pillContent, pillContentStyle]} pointerEvents="none">
-          <View style={styles.pillLabel}>
+          <Animated.View style={[styles.orb, orbStyle]}>
+            <ThinkingOrb state={state} size={64} displaySize={ORB_SHEET} theme="dark" />
+          </Animated.View>
+
+          <Animated.View style={[styles.pillContent, pillContentStyle]}>
+            <View style={styles.pillLabel}>
+              <ShimmerText text={`${VERBS[state]}....`} fontSize={16} />
+            </View>
+          </Animated.View>
+
+          {/* drag-to-dismiss affordance, replacing the close button */}
+          <Animated.View style={[styles.grabber, grabberStyle]} />
+
+          <Animated.View style={[styles.sheetTitle, titleStyle]}>
             <ShimmerText text={`${VERBS[state]}....`} fontSize={16} />
-          </View>
+          </Animated.View>
+          <Animated.View style={[styles.sheetSubtitleWrap, subtitleStyle]}>
+            <Text style={styles.sheetSubtitle}>
+              Agent is processing your request. Please wait, it might take a few seconds.
+            </Text>
+          </Animated.View>
         </Animated.View>
-
-        {/* sheet content */}
-        {/* pointerEvents none ALWAYS: the root pan responder owns every
-            touch, and Skia canvases (orb, X icon) would otherwise absorb
-            taps natively without bubbling to the responder system —
-            verified on-device: the close button was dead precisely because
-            the X is a Skia canvas. */}
-        <Animated.View style={[StyleSheet.absoluteFill, sheetContentStyle]} pointerEvents="none">
-          <View style={styles.sheetTitle}>
-            <ShimmerText text={`${VERBS[state]}....`} fontSize={16} />
-          </View>
-          <Text style={styles.sheetSubtitle}>
-            Agent is processing your request. Please wait, it might take a few seconds.
-          </Text>
-          {/* visual only — the tap is resolved by the pan responder's hit rect */}
-          <View style={styles.close}>
-            {closeSvg && (
-              <SkiaCanvas style={styles.closeIcon}>
-                <ImageSVG svg={closeSvg} x={0} y={0} width={11.17} height={11.17} />
-              </SkiaCanvas>
-            )}
-          </View>
-        </Animated.View>
-      </Animated.View>
       </View>
     </View>
   );
@@ -325,6 +386,14 @@ const styles = StyleSheet.create({
     height: SHEET_H,
     alignItems: 'center',
   },
+  stackPill: {
+    position: 'absolute',
+    width: PILL_W,
+    height: PILL_H,
+    borderRadius: PILL_R,
+    overflow: 'hidden',
+    boxShadow: GLASS_SHADOW,
+  },
   container: {
     position: 'absolute',
     overflow: 'hidden',
@@ -337,57 +406,46 @@ const styles = StyleSheet.create({
     // The design also ships a display-p3 variant of the same stack; RN has no
     // wide-gamut colour syntax, so these are the sRGB values, which is what
     // the first CSS declaration falls back to anyway.
-    boxShadow: [
-      { offsetX: 0, offsetY: 12, blurRadius: 26, spreadDistance: 0, color: 'rgba(0,0,0,0.24)' },
-      { offsetX: 1, offsetY: 2, blurRadius: 3, spreadDistance: -2, color: 'rgba(255,255,255,0.24)', inset: true },
-      { offsetX: -1, offsetY: -2, blurRadius: 1, spreadDistance: -2, color: 'rgba(255,255,255,0.24)', inset: true },
-      { offsetX: 0, offsetY: -2, blurRadius: 1, spreadDistance: -2, color: 'rgba(255,255,255,0.24)', inset: true },
-    ],
+    boxShadow: GLASS_SHADOW,
   },
   sheetGlass: {
     backgroundColor: 'rgba(0,0,0,0.8)',
   },
-  pillContent: {
-    ...StyleSheet.absoluteFillObject,
-  },
   orb: {
     position: 'absolute',
+  },
+  pillContent: {
+    ...StyleSheet.absoluteFillObject,
   },
   pillLabel: {
     position: 'absolute',
     left: 71.3,
     top: (PILL_H - 22) / 2,
   },
+  grabber: {
+    position: 'absolute',
+    top: GRAB_TOP,
+    alignSelf: 'center',
+    width: GRAB_W,
+    height: GRAB_H,
+    borderRadius: GRAB_H / 2,
+    backgroundColor: 'rgba(255,255,255,0.22)',
+  },
   sheetTitle: {
     position: 'absolute',
     top: 244,
     alignSelf: 'center',
-    fontSize: 16,
-    color: '#f2f2f2',
   },
-  sheetSubtitle: {
+  sheetSubtitleWrap: {
     position: 'absolute',
     top: 277,
     alignSelf: 'center',
     width: 271,
+  },
+  sheetSubtitle: {
     fontSize: 14,
     lineHeight: 22,
     textAlign: 'center',
     color: '#898989',
-  },
-  close: {
-    position: 'absolute',
-    top: 24,
-    right: 24,
-    width: 36,
-    height: 36,
-    borderRadius: 100,
-    backgroundColor: 'rgba(255,255,255,0.09)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  closeIcon: {
-    width: 11.17,
-    height: 11.17,
   },
 });

@@ -1,13 +1,18 @@
 # thinking-orbs-native example
 
 Expo app exercising the React Native port, built to the Logram Figma
-reference (Logram-.App, node 2584:83673): a glass status pill bottom-centre
-with the orb and its verb. Swipe horizontally to page through the nine orb
-states; tap to morph the pill into the modal sheet (big orb, title,
-subtitle); tap X to morph back. The morph is one animated container
-interpolating between the two Figma geometries, with the pill's gradient
-glass crossfading into the sheet's solid glass. Both orbs share the engine
-clock, so the crossfade never resets the animation.
+reference (Logram-.App, node 2584:83673).
+
+- A stack of glass pills bottom-centre. **Swipe** the front one horizontally
+  to page through the nine orb states. **Tap** it and it morphs into the
+  modal sheet — one animated container interpolating between the two Figma
+  geometries, a single orb scaling 48 → 133dp into place, and the copy
+  arriving with a staggered rise. **Drag down** (or flick) to dismiss.
+- **Tap outside the pill** to push a new pill onto the stack. Stacking
+  follows logram-ai/Logram#335: the front card stays solid, the one behind
+  drops to 80%, the third to 50%, and the rest are dropped. That PR is web,
+  where the cards differ in size and content; here every pill is identical,
+  so depth also needs a lift and a shrink.
 
 ```bash
 npm install
