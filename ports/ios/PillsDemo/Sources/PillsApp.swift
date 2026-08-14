@@ -41,15 +41,15 @@ private enum D {
     static let grabH: CGFloat = 5
     static let grabTop: CGFloat = 12
 
-    // Stacking follows sonner (sonner.emilkowal.ski), from its stylesheet:
-    //   mount:  --y: translateY(100%) -> translateY(0)   (its OWN height)
-    //   stack:  translateY(-gap * n)  scale(1 - 0.05n)   gap 14
-    //   cards keep full opacity; their CONTENT fades out behind the front
-    //   ([data-front='false'] > * { opacity: 0 }), and everything runs
-    //   400ms on plain CSS `ease`.
-    static let stackGap: CGFloat = 14 // sonner --gap
-    static let stackShrink: CGFloat = 0.05
+    // Stacking mirrors the RN example (the source of truth): cards KEEP
+    // their content — orb frozen, label muted — and the whole card fades by
+    // depth, 1 / 0.5 / 0.2, then to 0 past the window with the same motion.
+    // Lift 12, shrink 6% per level; sonner's curve stays as the default ease.
+    static let stackOpacity: [Double] = [1, 0.5, 0.2]
+    static let stackGap: CGFloat = 12
+    static let stackShrink: CGFloat = 0.06
     static let stackRendered = 3
+    static let enterRise: CGFloat = 90
 
     static let swipeThreshold: CGFloat = 56
     static let dismissDistance: CGFloat = 90
@@ -171,7 +171,6 @@ struct PillsView: View {
     @State private var swipeX: CGFloat = 0
     @State private var dragY: CGFloat = 0
     @State private var enterY: CGFloat = 0
-    @State private var enterFade: Double = 1
 
     @State private var tune = Tune()
 
@@ -301,7 +300,6 @@ struct PillsView: View {
         .clipShape(RoundedRectangle(cornerRadius: r, style: .continuous))
         // 0 12px 26px rgba(0,0,0,0.24) — CSS blur 26 is CoreGraphics radius 13
         .shadow(color: .black.opacity(0.24), radius: 13, y: 12)
-        .opacity(enterFade)
         .offset(x: swipeX, y: dragY + enterY - lift)
         .frame(maxHeight: .infinity, alignment: .bottom)
         .padding(.bottom, D.sheetBottom)
@@ -402,10 +400,10 @@ private struct StackCard: View {
 
     private var d: CGFloat { CGFloat(depth) }
 
-    /// sonner: cards stay opaque while visible, vanish past the window
-    private var opacity: Double { depth < D.stackRendered ? 1 : 0 }
-    /// sonner: [data-front='false'] > * { opacity: 0 } — content hides behind
-    private var contentOpacity: Double { depth == 0 ? 1 : 0 }
+    /// RN example semantics: whole-card fade by depth, 0 past the window
+    private var opacity: Double {
+        depth < D.stackOpacity.count ? D.stackOpacity[depth] : 0
+    }
 
     var body: some View {
         ZStack {
@@ -420,16 +418,13 @@ private struct StackCard: View {
                     RoundedRectangle(cornerRadius: D.pillR, style: .continuous).fill(.ultraThinMaterial)
                 )
 
-            Group {
-                ThinkingOrb(state: entry.state, size: .px64, theme: .dark, paused: true, displaySize: D.orbPill)
-                    .position(x: D.orbPillCX, y: D.pillH / 2)
+            ThinkingOrb(state: entry.state, size: .px64, theme: .dark, paused: true, displaySize: D.orbPill)
+                .position(x: D.orbPillCX, y: D.pillH / 2)
 
-                Text("\(VERBS[entry.state] ?? "")....")
-                    .font(.system(size: 16))
-                    .foregroundStyle(Color(red: 251 / 255.0, green: 251 / 255.0, blue: 251 / 255.0).opacity(0.35))
-                    .position(x: 71.3 + 40, y: D.pillH / 2)
-            }
-            .opacity(contentOpacity)
+            Text("\(VERBS[entry.state] ?? "")....")
+                .font(.system(size: 16))
+                .foregroundStyle(Color(red: 251 / 255.0, green: 251 / 255.0, blue: 251 / 255.0).opacity(0.35))
+                .position(x: 71.3 + 40, y: D.pillH / 2)
 
             insetRim(radius: D.pillR)
         }
@@ -464,17 +459,15 @@ extension PillsView {
 
     private func push() {
         let i = STATES.firstIndex(of: front.state) ?? 0
-        // sonner's mount: the new toast starts one full height below its
-        // slot at opacity 0 and rides the same transition as the stack lift
-        enterY = D.pillH
-        enterFade = 0
+        // RN example's mount: the pill rises 90pt into place, anticipation
+        // included, riding the same transition as the stack lift
+        enterY = D.enterRise * (1 + tune.stack.anticipate)
         withAnimation(tune.stack.animation) {
             stack.append(PillEntry(id: nextId, state: STATES[(i + 1) % STATES.count]))
             if stack.count > D.stackRendered + 2 {
                 stack.removeFirst(stack.count - (D.stackRendered + 2))
             }
             enterY = 0
-            enterFade = 1
         }
         nextId += 1
     }
