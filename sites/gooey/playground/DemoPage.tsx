@@ -480,7 +480,7 @@ export function SliderThumb({ x }: { x: number }) {
             </button>
             <a
               className="icon-btn"
-              href="https://github.com/Jakubantalik/Libraries"
+              href="https://github.com/Jakubantalik/Libraries/tree/main/packages/liquid-gooey"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="GitHub repository"
