@@ -42,6 +42,14 @@ export function ChevronDownIcon() {
   );
 }
 
+export function ChevronLeftIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M9 11L6 8L9 5" />
+    </svg>
+  );
+}
+
 export function SearchIcon18() {
   return (
     <svg viewBox="0 0 18 18" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
