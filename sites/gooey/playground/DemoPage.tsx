@@ -47,6 +47,26 @@ function CheckIcon(): JSX.Element {
   )
 }
 
+/* Stroked, not filled — `.icon-btn svg` sets `fill: currentColor`, which
+   would flood a chevron drawn as a path into a solid wedge. */
+function ChevronLeftIcon(): JSX.Element {
+  return (
+    <svg
+      aria-hidden="true"
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M9 11L6 8L9 5" />
+    </svg>
+  )
+}
+
 function GitHubIcon(): JSX.Element {
   return (
     <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16">
@@ -429,6 +449,19 @@ export function SliderThumb({ x }: { x: number }) {
 
       <main id="main-content" className="app">
         <header className="dm-header">
+          <a
+            className="top-bar-back"
+            href="https://www.jakubantalik.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {/* One span so chevron and label share a single opacity fade —
+                muted at rest, full on hover, like the icon buttons opposite. */}
+            <span className="top-bar-back-inner">
+              <ChevronLeftIcon />
+              jakubantalik.com
+            </span>
+          </a>
           <nav aria-label="External links" className="top-bar-links">
             <button
               type="button"

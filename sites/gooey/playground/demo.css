@@ -215,6 +215,69 @@ html[data-theme='light'] .icon-btn:hover svg {
   color: #0d0d0d;
 }
 
+/* Back link to the personal site — the text twin of .icon-btn, mirroring it
+   across the header (same 36px height, same chip fill, same hover). Wider
+   than tall, so the radius is a fixed pill rather than 50%, and the padding
+   is tighter on the chevron side to keep the glyph optically centred against
+   the flat left edge of the text. */
+.top-bar-back {
+  position: absolute;
+  top: 16px;
+  left: 0;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 12px 0 10px;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #ededed;
+  font-size: 13px;
+  line-height: 14px;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.top-bar-back:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.top-bar-back:active {
+  background: rgba(255, 255, 255, 0.08);
+}
+.top-bar-back:focus-visible {
+  outline: 2px solid #ededed;
+  outline-offset: 2px;
+}
+/* Chevron and label fade together as one unit. */
+.top-bar-back-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.6;
+  transition: opacity 0.15s ease;
+}
+.top-bar-back:hover .top-bar-back-inner {
+  opacity: 1;
+}
+.top-bar-back svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+html[data-theme='light'] .top-bar-back {
+  background: #f4f4f4;
+  color: #0d0d0d;
+}
+html[data-theme='light'] .top-bar-back:hover {
+  background: #f1f1f1;
+}
+html[data-theme='light'] .top-bar-back:active {
+  background: #eae9e9;
+}
+html[data-theme='light'] .top-bar-back:focus-visible {
+  outline-color: #0d0d0d;
+}
+
 /* Header */
 .dm-header {
   position: relative;
