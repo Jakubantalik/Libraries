@@ -187,7 +187,7 @@ func insetRim(radius: CGFloat, bottomLight: Double = 1) -> some View {
         // rgba(0,0,0,0.36) and over the light wallpaper it read as a black
         // hairline hugging the edge — measured at luminance 109 against a
         // 149 background. Terminating the pill in light removes it.
-        shape.stroke(Color.white.opacity(0.27 * bottomLight), lineWidth: 1.2)
+        shape.stroke(Color.white.opacity(0.41 * bottomLight), lineWidth: 1.2)
             .blur(radius: 0.4)
             .mask(
                 LinearGradient(
