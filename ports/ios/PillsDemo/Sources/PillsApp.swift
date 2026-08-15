@@ -102,6 +102,9 @@ struct Seg {
     var mass: Double
     var anticipate: Double
     var anticipateMs: Double
+    /// curve for the anticipation beat itself — the wind-up before a morph
+    /// and the pill's landing dip. Was hardcoded easeOut.
+    var antEase: EaseKind = .smooth
 
     /// The SwiftUI animation this segment describes.
     var animation: Animation {
@@ -119,6 +122,18 @@ struct Seg {
             return .timingCurve(0.34, 1.25 + bounce, 0.64, 1, duration: ms / 1000)
         case .spring:
             return .interpolatingSpring(mass: mass, stiffness: stiffness, damping: damping)
+        }
+    }
+
+    /// The anticipation beat: the segment's `antEase`, run over `anticipateMs`
+    /// rather than the segment's own duration.
+    var antAnimation: Animation {
+        switch antEase {
+        case .sonner: return .timingCurve(0.25, 0.1, 0.25, 1, duration: anticipateMs / 1000)
+        case .ark: return .timingCurve(0.21, 1.02, 0.73, 1, duration: anticipateMs / 1000)
+        case .smooth: return .easeOut(duration: anticipateMs / 1000)
+        case .bounce: return .timingCurve(0.34, 1.25 + bounce, 0.64, 1, duration: anticipateMs / 1000)
+        case .spring: return .interpolatingSpring(mass: mass, stiffness: stiffness, damping: damping)
         }
     }
 }
@@ -488,13 +503,18 @@ struct PillsView: View {
 
         ZStack {
             // glass: gradient pill fades into the opaque sheet fill.
-            // Figma 2596:5241: rgba(0,0,0,0.8) -> rgba(0,0,0,0.32) over a
-            // 3px backdrop blur — light, so the wallpaper's swirl stays
-            // legible through the glass (ultraThinMaterial frosted it out).
+            // Figma 2596:5241: solid rgba(0,0,0,0.9) down to 40%, then a
+            // ramp to rgba(0,0,0,0.36) — the flat top keeps the label
+            // readable while the base stays transparent enough to show the
+            // wallpaper. Over a 3px backdrop blur, light enough that the
+            // artwork behind stays legible (ultraThinMaterial frosted it out).
             RoundedRectangle(cornerRadius: r, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [Color.black.opacity(0.8), Color.black.opacity(0.32)],
+                        stops: [
+                            .init(color: .black.opacity(0.9), location: 0.4),
+                            .init(color: .black.opacity(0.36), location: 1),
+                        ],
                         startPoint: .top, endPoint: .bottom
                     )
                 )
@@ -735,7 +755,10 @@ private struct StackCard: View {
             RoundedRectangle(cornerRadius: D.pillR, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [Color.black.opacity(0.8), Color.black.opacity(0.32)], // Figma 2596:5241
+                        stops: [ // Figma 2596:5241
+                            .init(color: .black.opacity(0.9), location: 0.4),
+                            .init(color: .black.opacity(0.36), location: 1),
+                        ],
                         startPoint: .top, endPoint: .bottom
                     )
                 )
@@ -867,7 +890,7 @@ extension PillsView {
         let t = tune.open
         // wind-up: dip slightly below the pill, then expand on the main curve
         if t.anticipate > 0 {
-            withAnimation(.easeOut(duration: t.anticipateMs / 1000)) { morph = -t.anticipate }
+            withAnimation(t.antAnimation) { morph = -t.anticipate }
             DispatchQueue.main.asyncAfter(deadline: .now() + t.anticipateMs / 1000) {
                 withAnimation(t.animation) { morph = 1 }
             }
@@ -890,7 +913,7 @@ extension PillsView {
         // is what made the close read as broken — the sheet just sat there
         // for 300ms before anything happened.
         if t.anticipate > 0 {
-            withAnimation(.easeOut(duration: t.anticipateMs / 1000)) { morph = 1 + t.anticipate }
+            withAnimation(t.antAnimation) { morph = 1 + t.anticipate }
             DispatchQueue.main.asyncAfter(deadline: .now() + t.anticipateMs / 1000) {
                 withAnimation(t.animation) { morph = 0 }
                 runCloseDip(t)
@@ -910,9 +933,9 @@ extension PillsView {
         guard tune.closeDipPx > 0 else { return }
         let flight = (t.ease == .spring ? 0.4 : t.ms / 1000) * 0.6
         DispatchQueue.main.asyncAfter(deadline: .now() + flight) {
-            withAnimation(.easeOut(duration: 0.12)) { closeDip = CGFloat(tune.closeDipPx) }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
-                withAnimation(.timingCurve(0.34, 1.4, 0.64, 1, duration: 0.3)) { closeDip = 0 }
+            withAnimation(t.antAnimation) { closeDip = CGFloat(tune.closeDipPx) }
+            DispatchQueue.main.asyncAfter(deadline: .now() + t.anticipateMs / 1000) {
+                withAnimation(t.animation) { closeDip = 0 }
             }
         }
     }
@@ -1123,6 +1146,17 @@ struct TunePanel: View {
                     } else {
                         stepper("DUR", value: cur.ms, step: 50, range: 50...2000, fmt: { "\(Int($0))ms" })
                         stepper("BOUNCE", value: cur.bounce, step: 0.05, range: 0...1, fmt: { String(format: "%.2f", $0) })
+                    }
+                    row("ANT EASE") {
+                        Button(cur.wrappedValue.antEase.rawValue) {
+                            let all = EaseKind.allCases
+                            let i = all.firstIndex(of: cur.wrappedValue.antEase) ?? 0
+                            cur.wrappedValue.antEase = all[(i + 1) % all.count]
+                        }
+                        .font(.system(size: 12, design: .monospaced))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 10).padding(.vertical, 3)
+                        .background(Capsule().fill(Color.white.opacity(0.12)))
                     }
                     stepper("ANTIC", value: cur.anticipate, step: 0.01, range: 0...0.4, fmt: { String(format: "%.2f", $0) })
                     stepper("ANT MS", value: cur.anticipateMs, step: 10, range: 0...500, fmt: { "\(Int($0))ms" })
