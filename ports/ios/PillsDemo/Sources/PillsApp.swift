@@ -184,11 +184,16 @@ func insetRim(radius: CGFloat, bottomLight: Double = 1) -> some View {
         // hugs the bottom arc, and the top carries only a whisper of sheen.
         // Sits ON the bottom edge, not 1pt above it. Figma's inset offset of
         // -1/-2 leaves a sliver of the fill below the light; that fill is
-        // rgba(0,0,0,0.36) and over the light wallpaper it read as a black
-        // hairline hugging the edge — measured at luminance 109 against a
-        // 149 background. Terminating the pill in light removes it.
-        shape.stroke(Color.white.opacity(0.41 * bottomLight), lineWidth: 1.2)
-            .blur(radius: 0.4)
+        // rgba(0,0,0,0.36) and over a light wallpaper it read as a black
+        // hairline hugging the edge. Terminating the pill in light removes it.
+        //
+        // Near-white on purpose. The wallpaper under the pill's lower edge
+        // measures luminance 195, so a rim light at the design's nominal
+        // alpha peaked at 164 — DARKER than its own background, which is why
+        // it read as missing rather than faint. It has to clear 195 to be a
+        // highlight at all.
+        shape.stroke(Color.white.opacity(0.8 * bottomLight), lineWidth: 2)
+            .blur(radius: 0.25)
             .mask(
                 LinearGradient(
                     stops: [.init(color: .clear, location: 0.5), .init(color: .white, location: 1)],
