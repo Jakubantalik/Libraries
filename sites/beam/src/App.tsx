@@ -58,6 +58,24 @@ function XIcon() {
   );
 }
 
+function ChevronLeftIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M9 11L6 8L9 5" />
+    </svg>
+  );
+}
+
 function MoonIcon({ className }: { className?: string }) {
   return (
     <svg className={className} aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -493,6 +511,17 @@ export default function App() {
 
       <main id="main-content" className="app">
         <header className="header">
+          <a
+            className="top-bar-back"
+            href="https://www.jakubantalik.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span className="top-bar-back-inner">
+              <ChevronLeftIcon />
+              jakubantalik.com
+            </span>
+          </a>
           <nav aria-label="External links" className="top-bar-links">
             {LIGHT_MODE_ENABLED && (
               <button

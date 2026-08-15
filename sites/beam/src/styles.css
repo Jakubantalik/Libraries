@@ -221,6 +221,77 @@ body {
   z-index: 10;
 }
 
+/* ─── Back link (absolutely positioned in header) ────────── */
+
+/* Mirrors .icon-btn's pill surface, but sized for a label. The chevron is
+   stroked rather than filled, so it deliberately does not reuse the
+   `.icon-btn svg { fill: currentColor }` rule. */
+.top-bar-back {
+  position: absolute;
+  top: 16px;
+  left: 0;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 12px 0 10px;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #ededed;
+  font-size: 13px;
+  line-height: 14px;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.top-bar-back:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.top-bar-back:active {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.top-bar-back:focus-visible {
+  outline: 2px solid #ededed;
+  outline-offset: 2px;
+}
+
+.top-bar-back-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.6;
+  transition: opacity 0.15s ease;
+}
+
+.top-bar-back:hover .top-bar-back-inner {
+  opacity: 1;
+}
+
+.top-bar-back svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+html[data-theme='light'] .top-bar-back {
+  background: #f4f4f4;
+  color: #0d0d0d;
+}
+
+html[data-theme='light'] .top-bar-back:hover {
+  background: #f1f1f1;
+}
+
+html[data-theme='light'] .top-bar-back:active {
+  background: #eae9e9;
+}
+
+html[data-theme='light'] .top-bar-back:focus-visible {
+  outline-color: #0d0d0d;
+}
+
 /* Theme toggle icon stack — both icons live in the DOM permanently,
    stacked in a 16x16 wrapper, crossfading via opacity/scale/blur driven
    by `data-active`. */
@@ -1662,6 +1733,10 @@ html[data-theme='light'] .playground-toggle:focus-visible {
   }
 
   .top-bar-links {
+    top: 12px;
+  }
+
+  .top-bar-back {
     top: 12px;
   }
 
