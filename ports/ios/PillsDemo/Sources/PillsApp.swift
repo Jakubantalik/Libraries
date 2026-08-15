@@ -192,7 +192,7 @@ func insetRim(radius: CGFloat, bottomLight: Double = 1) -> some View {
         // alpha peaked at 164 — DARKER than its own background, which is why
         // it read as missing rather than faint. It has to clear 195 to be a
         // highlight at all.
-        shape.stroke(Color.white.opacity(0.8 * bottomLight), lineWidth: 2)
+        shape.stroke(Color.white.opacity(0.56 * bottomLight), lineWidth: 2)
             .blur(radius: 0.25)
             .mask(
                 LinearGradient(
