@@ -144,7 +144,7 @@ struct Tune {
     var close = Seg(ms: 250, bounce: 0.15, ease: .smooth, stiffness: 220, damping: 20, mass: 1, anticipate: 0.05, anticipateMs: 110)
     var revealMs: Double = 500
     /// Landing dip of the pill on close, in points (plus-menu morph).
-    var closeDipPx: Double = 4
+    var closeDipPx: Double = 2
 }
 
 // MARK: - App
