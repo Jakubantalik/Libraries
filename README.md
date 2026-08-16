@@ -60,6 +60,16 @@ domain per repo:
 - **orbs.jakubantalik.com** — Cloudflare Pages, built with
   `npm run build:site-orbs`, output `sites/orbs/dist`.
 
+`thinking-orbs` arrived by `git subtree`, so its full history is in this
+repo — but those commits touched `src/…`, not `packages/thinking-orbs/src/…`.
+`git log -- packages/thinking-orbs` therefore stops at the merge. To read the
+real history, log from the commit the merge names:
+
+```bash
+git log --oneline 9c6d5c3 -- ports/ios/PillsDemo/Sources/PillsApp.swift
+git log --follow packages/thinking-orbs/src/index.ts
+```
+
 `thinking-orbs` also carries native ports under
 [`packages/thinking-orbs/ports`](packages/thinking-orbs/ports) — a React
 Native package and a SwiftUI package, kept in step with the web renderer by
