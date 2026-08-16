@@ -1,7 +1,7 @@
 {
   "name": "@jakubantalik/libraries",
   "private": true,
-  "description": "Home of Jakub Antalik's React libraries: border-beam and liquid-gooey.",
+  "description": "Home of Jakub Antalik's libraries: border-beam, liquid-gooey and thinking-orbs.",
   "license": "MIT",
   "workspaces": [
     "packages/*",
@@ -10,8 +10,10 @@
   "scripts": {
     "build:beam": "npm run build -w border-beam",
     "build:gooey": "npm run build -w liquid-gooey",
+    "build:orbs": "npm run build -w thinking-orbs",
     "build:site-beam": "npm run build:beam && npm run build -w @sites/beam",
     "build:site-gooey": "npm run build:gooey && npm run build -w @sites/gooey",
+    "build:site-orbs": "npm run build:orbs && npm run build -w @sites/orbs",
     "typecheck": "npm run typecheck --workspaces --if-present"
   }
 }

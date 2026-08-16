@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import type { OrbSize, OrbState } from '../../src';
-import { ThinkingOrb } from '../../src';
+import type { OrbSize, OrbState } from 'thinking-orbs';
+import { ThinkingOrb } from 'thinking-orbs';
 import { cn } from '../lib/utils';
 import { CopyButton } from './CopyButton';
 import { PlayPauseToggle } from './PlayPauseToggle';

@@ -1,6 +1,6 @@
 import React from 'react';
-import type { OrbState } from '../../src';
-import { ThinkingOrb } from '../../src';
+import type { OrbState } from 'thinking-orbs';
+import { ThinkingOrb } from 'thinking-orbs';
 
 const listeningPillClass =
   'inline-flex items-center gap-3 w-[270px] h-[74px] pl-[9px] pr-8 rounded-full bg-(--pill-fill) shadow-(--pill-stroke) text-(--pill-fg) text-lg leading-6 font-inherit cursor-default';

@@ -13,9 +13,9 @@
 // hide real differences (its `line` type rendered near-nothing outside a
 // 32.5–67.5% window), so every capture samples four instants.
 
-import { MODE_DRAWS } from '../src/engine/registry';
-import { resolvePreset } from '../src/presets';
-import type { OrbSize, OrbState } from '../src/types';
+import { MODE_DRAWS } from 'thinking-orbs/engine';
+import { resolvePreset } from 'thinking-orbs/engine';
+import type { OrbSize, OrbState } from 'thinking-orbs';
 
 const STATES: OrbState[] = [
   'working',
