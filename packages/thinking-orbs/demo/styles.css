@@ -1,0 +1,128 @@
+/* Icon-swap transitions (copy button + play/pause toggle) */
+.t-icon {
+  grid-area: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    opacity   var(--icon-swap-dur) var(--icon-swap-ease),
+    filter    var(--icon-swap-dur) var(--icon-swap-ease),
+    transform var(--icon-swap-dur) var(--icon-swap-ease);
+  will-change: opacity, filter, transform;
+}
+[data-state="a"] .t-icon[data-icon="a"],
+[data-state="b"] .t-icon[data-icon="b"] {
+  opacity: 1;
+  filter: blur(0);
+  transform: scale(1);
+}
+[data-state="a"] .t-icon[data-icon="b"],
+[data-state="b"] .t-icon[data-icon="a"] {
+  opacity: 0;
+  filter: blur(var(--icon-swap-blur));
+  transform: scale(var(--icon-swap-start-scale));
+}
+.copy-btn .t-icon[data-icon="a"] svg { opacity: 0.5; }
+.copy-btn .t-icon[data-icon="b"] svg { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .t-icon { transition: none !important; }
+}
+
+/* Webkit search input hacks */
+.hero-toolbar-search-input::-webkit-search-cancel-button,
+.hero-toolbar-search-input::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Hero box fill — the --surface token at 30% lower opacity, scoped to the
+   hero demo boxes so the playground surface keeps the original value. */
+:root {
+  --hero-surface: rgba(217, 217, 217, 0.035);
+}
+html[data-theme="light"] {
+  --hero-surface: rgba(0, 0, 0, 0.028);
+}
+
+/* Pill fill + stroke — the --mock-chat-bg background and its inset ring at
+   40% lower opacity. Applied to the pill element only, so the orb + label
+   stay fully opaque. */
+:root {
+  --pill-fill: rgba(29, 29, 29, 0.42);
+  --pill-stroke: inset 0 0 0 1px rgba(44, 47, 54, 0.31), inset 0 0 50px 0 rgba(255, 255, 255, 0.012);
+}
+html[data-theme="light"] {
+  --pill-fill: rgba(255, 255, 255, 0.6);
+  --pill-stroke: 0 1px 2px rgba(0, 0, 0, 0.024), 0 0 0 1px rgba(0, 0, 0, 0.036);
+}
+
+/* Shimmer text (transitions.dev) — orb labels feel alive */
+:root {
+  --shimmer-dur: 2000ms;
+  --shimmer-band: 400%;
+  --shimmer-ease: linear;
+  --shimmer-base: rgba(251, 251, 251, 0.5);
+  --shimmer-highlight: #ffffff;
+}
+html[data-theme="light"] {
+  --shimmer-base: rgba(7, 7, 7, 0.45);
+  --shimmer-highlight: #0d0d0d;
+}
+
+.t-shimmer {
+  position: relative;
+  display: inline-block;
+  color: var(--shimmer-base);
+}
+.t-shimmer::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(
+    90deg,
+    transparent          0%,
+    transparent         40%,
+    var(--shimmer-highlight) 50%,
+    transparent         60%,
+    transparent        100%
+  );
+  background-size: var(--shimmer-band) 100%;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: t-shimmer var(--shimmer-dur) var(--shimmer-ease) infinite;
+}
+@keyframes t-shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: 0% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .t-shimmer::before { animation: none !important; }
+}
+
+/* Range input thumb hacks — a real-size TRANSPARENT thumb so the slider is
+   grabbable on touch (a 0-size thumb has no hit target on mobile), while the
+   custom fill/label below still render the value. */
+.strength-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: 0;
+}
+.strength-input::-moz-range-thumb {
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: 0;
+}
+/* pan-y lets vertical page scroll pass through while the slider owns
+   horizontal drags — reliable range dragging on touch screens. */
+.strength-input {
+  touch-action: pan-y;
+}

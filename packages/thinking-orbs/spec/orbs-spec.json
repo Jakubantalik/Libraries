@@ -1,0 +1,368 @@
+{
+  "specVersion": "1.0.0",
+  "sourceLibrary": {
+    "name": "thinking-orbs",
+    "version": "0.3.1"
+  },
+  "reference": "Web demo at https://orbs.jakubantalik.com is the visual ground truth.",
+  "enums": {
+    "states": [
+      "working",
+      "searching",
+      "solving",
+      "listening",
+      "connecting",
+      "weaving",
+      "composing",
+      "breathing",
+      "shaping"
+    ],
+    "sizes": [
+      64,
+      20
+    ],
+    "themes": [
+      "dark",
+      "light"
+    ],
+    "modes": [
+      "orbits",
+      "globe",
+      "rubik",
+      "wave",
+      "web",
+      "braid",
+      "ribbon",
+      "ring",
+      "morph"
+    ]
+  },
+  "defaults": {
+    "state": "working",
+    "size": 64,
+    "theme": "auto",
+    "speed": 1,
+    "paused": false
+  },
+  "stateToMode": {
+    "working": "orbits",
+    "searching": "globe",
+    "solving": "rubik",
+    "listening": "wave",
+    "connecting": "web",
+    "weaving": "braid",
+    "composing": "ribbon",
+    "breathing": "ring",
+    "shaping": "morph"
+  },
+  "labels": {
+    "working": "Working…",
+    "searching": "Searching…",
+    "solving": "Solving…",
+    "listening": "Listening…",
+    "connecting": "Connecting…",
+    "weaving": "Weaving…",
+    "composing": "Composing…",
+    "breathing": "Thinking…",
+    "shaping": "Shaping…"
+  },
+  "baseProfiles": {
+    "globe": {
+      "latRings": 17,
+      "lonDensity": 44,
+      "rBase": 0.6,
+      "rDepth": 1.7,
+      "rBoost": 1,
+      "inkFar": 0.62,
+      "inkSpan": 0.54,
+      "rsPow": 0.6,
+      "rMin": 0.3
+    },
+    "orbits": {
+      "orbitN": 12,
+      "ghostN": 40,
+      "ghostR": 0.9,
+      "ghostA": 0.5,
+      "particles": 3,
+      "partR": 1.2,
+      "partRDepth": 1.6,
+      "rsPow": 0.6,
+      "rMin": 0.3
+    },
+    "rubik": {
+      "latRings": 15,
+      "lonDensity": 40,
+      "moveCount": 14,
+      "rBase": 0.6,
+      "rDepth": 1.7,
+      "rActive": 0.3,
+      "inkFar": 0.62,
+      "inkSpan": 0.54,
+      "rsPow": 0.6,
+      "rMin": 0.3
+    },
+    "wave": {
+      "rings": 15,
+      "lonDensity": 40,
+      "rBase": 0.6,
+      "rDepth": 1.7,
+      "rsPow": 0.6,
+      "rMin": 0.3
+    },
+    "web": {
+      "nodeN": 30,
+      "thr": 0.72,
+      "signals": 5,
+      "nodeR": 1.4,
+      "nodeRDepth": 1.8,
+      "lineW": 0.8,
+      "rsPow": 0.6,
+      "rMin": 0.3
+    },
+    "braid": {
+      "strandN": 52,
+      "turns": 3,
+      "ghostN": 150,
+      "rBase": 1.2,
+      "rDepth": 1.8,
+      "rsPow": 0.6,
+      "rMin": 0.3
+    },
+    "ribbon": {
+      "lanes": 5,
+      "segs": 88,
+      "ghostN": 150,
+      "rBase": 1.1,
+      "rDepth": 1.7,
+      "rsPow": 0.6,
+      "rMin": 0.3
+    },
+    "ring": {
+      "lanes": 5,
+      "segs": 88,
+      "ghostN": 0,
+      "faceOn": 1,
+      "rBase": 1.1,
+      "rDepth": 1.7,
+      "rsPow": 0.6,
+      "rMin": 0.3
+    },
+    "morph": {
+      "rDot": 0.021,
+      "iconD": 1,
+      "rMin": 0.25
+    }
+  },
+  "presets": {
+    "orbits": {
+      "20": {
+        "speed": 3.9,
+        "count": 0.238,
+        "size": 2.4
+      },
+      "64": {
+        "speed": 1.885,
+        "count": 1,
+        "size": 1
+      }
+    },
+    "globe": {
+      "20": {
+        "speed": 2.665,
+        "count": 0.105,
+        "size": 1.75,
+        "extra": {
+          "scanMul": 4.335,
+          "dimBase": 0.45
+        }
+      },
+      "64": {
+        "speed": 2.015,
+        "count": 0.42,
+        "size": 1.15,
+        "extra": {
+          "scanMul": 4.08,
+          "dimBase": 0.45
+        }
+      }
+    },
+    "rubik": {
+      "20": {
+        "speed": 1.95,
+        "count": 0.088,
+        "size": 1.9
+      },
+      "64": {
+        "speed": 1.82,
+        "count": 0.35,
+        "size": 1.05
+      }
+    },
+    "wave": {
+      "20": {
+        "speed": 3.998,
+        "count": 0.105,
+        "size": 1.6
+      },
+      "64": {
+        "speed": 4.388,
+        "count": 0.341,
+        "size": 1
+      }
+    },
+    "web": {
+      "20": {
+        "speed": 6.63,
+        "count": 0.25,
+        "size": 1.52
+      },
+      "64": {
+        "speed": 3.315,
+        "count": 1.35,
+        "size": 0.95
+      }
+    },
+    "braid": {
+      "20": {
+        "speed": 2.75,
+        "count": 0.1125,
+        "size": 1.36
+      },
+      "64": {
+        "speed": 1.625,
+        "count": 0.5,
+        "size": 1
+      }
+    },
+    "ribbon": {
+      "20": {
+        "speed": 3.12,
+        "count": 0.051,
+        "size": 1.073,
+        "extra": {
+          "spin": 0,
+          "bandMul": 4.94,
+          "wobMul": 1
+        }
+      },
+      "64": {
+        "speed": 2.34,
+        "count": 0.25,
+        "size": 0.85,
+        "extra": {
+          "spin": 0,
+          "bandMul": 3.9,
+          "wobMul": 1
+        }
+      }
+    },
+    "ring": {
+      "20": {
+        "speed": 3.78,
+        "count": 0.028,
+        "size": 1.622,
+        "extra": {
+          "spin": 0,
+          "bandMul": 3.968,
+          "wobMul": 0.565
+        }
+      },
+      "64": {
+        "speed": 3.24,
+        "count": 0.25,
+        "size": 0.956,
+        "extra": {
+          "spin": 0,
+          "bandMul": 3.627,
+          "wobMul": 0.368
+        }
+      }
+    },
+    "morph": {
+      "20": {
+        "speed": 2.08,
+        "count": 0.53,
+        "size": 1.011,
+        "extra": {
+          "spread": 1.45
+        }
+      },
+      "64": {
+        "speed": 2.405,
+        "count": 0.702,
+        "size": 0.395,
+        "extra": {
+          "spread": 1.45
+        }
+      }
+    }
+  },
+  "scaling": {
+    "countPairs": [
+      [
+        "latRings",
+        "lonDensity"
+      ],
+      [
+        "rings",
+        "lonDensity"
+      ],
+      [
+        "lanes",
+        "segs"
+      ]
+    ],
+    "countKeys": [
+      "orbitN",
+      "ghostN",
+      "nodeN",
+      "strandN",
+      "signals"
+    ],
+    "iconDensityKeys": [
+      "iconD"
+    ],
+    "radiusKeys": [
+      "rBase",
+      "rDepth",
+      "rActive",
+      "rDot",
+      "ghostR",
+      "partR",
+      "partRDepth",
+      "nodeR",
+      "nodeRDepth"
+    ],
+    "rules": {
+      "countPair": "value = max(2, round(value * sqrt(count))); a key participates in at most one pair",
+      "countKey": "value = max(1, round(value * count)), EXCEPT an explicit 0, which stays 0 (the mode opted out of that layer)",
+      "iconDensity": "value = max(0.02, value * count)",
+      "radius": "value = value * size; also records rSizeMul = product of size multipliers"
+    }
+  },
+  "paint": {
+    "clock": "t = elapsedSeconds * presetSpeed * userSpeed; all instances share one clock so they stay in phase",
+    "reducedMotion": "render a single static frame at t = 0.6",
+    "devicePixelRatioCap": 2,
+    "cullAlphaBelow": 0.02,
+    "radiusFloor": "per-mode rMin, applied before sorting",
+    "sort": "ascending by z (far to near); lines are drawn before dots",
+    "ink": "grey = round((dark ? 1 - white : white) * 255), white clamped to [0,1]; alpha is the dot/line alpha",
+    "composite": "plain source-over fills, no blur/threshold/blend modes"
+  },
+  "timing": {
+    "morph": {
+      "hold": 1.4,
+      "morph": 0.9,
+      "shapes": [
+        "circle",
+        "triangle",
+        "square"
+      ]
+    },
+    "rubik": {
+      "slotDuration": 0.42,
+      "rest": 1.2
+    }
+  }
+}

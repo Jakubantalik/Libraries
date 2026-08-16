@@ -1,0 +1,38 @@
+name: PillsDemo
+options:
+  bundleIdPrefix: com.jakubantalik
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+
+packages:
+  ThinkingOrbsKit:
+    path: ../ThinkingOrbsKit
+
+targets:
+  PillsDemo:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+      - path: Resources
+        buildPhase: resources
+    dependencies:
+      - package: ThinkingOrbsKit
+        product: ThinkingOrbsKit
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Pills
+        INFOPLIST_KEY_UIUserInterfaceStyle: Dark
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        PRODUCT_BUNDLE_IDENTIFIER: com.jakubantalik.PillsDemo
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1"
+        # so `run-device.sh` can sign without opening Xcode.
+        # This is the TEAM id, from the provisioning profile — not the value
+        # in parentheses in `security find-identity`, which is the
+        # certificate's id and produces "No Account for Team ...".
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: 4FPVJW54M3

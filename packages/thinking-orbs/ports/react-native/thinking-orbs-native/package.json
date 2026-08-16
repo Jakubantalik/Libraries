@@ -1,0 +1,57 @@
+{
+  "name": "thinking-orbs-native",
+  "version": "0.1.0",
+  "description": "Dotted thought-orb loading indicators for React Native (Skia) \u2014 port of thinking-orbs",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib",
+    "src"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "verify:golden": "node scripts/verify-golden.mjs",
+    "render:canvaskit": "node scripts/render-canvaskit.mjs",
+    "diff": "node scripts/diff-png.mjs canvaskit-out web-out"
+  },
+  "peerDependencies": {
+    "@shopify/react-native-skia": ">=1.0.0",
+    "react": ">=18.0.0",
+    "react-native": ">=0.72.0",
+    "react-native-reanimated": ">=3.0.0"
+  },
+  "dependencies": {
+    "thinking-orbs": "^0.3.1"
+  },
+  "devDependencies": {
+    "@shopify/react-native-skia": "^1.5.0",
+    "@types/react": "^18.2.0",
+    "canvaskit-wasm": "^0.41.1",
+    "pngjs": "^7.0.0",
+    "react": "^18.2.0",
+    "react-native": "^0.75.0",
+    "react-native-reanimated": "^3.16.0",
+    "typescript": "^5.3.0"
+  },
+  "keywords": [
+    "react-native",
+    "skia",
+    "loading",
+    "loader",
+    "spinner",
+    "ai",
+    "agent",
+    "animation",
+    "dark-mode"
+  ],
+  "author": "Jakub Antalik",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jakubantalik/thinking-orbs.git",
+    "directory": "ports/react-native/thinking-orbs-native"
+  },
+  "homepage": "https://orbs.jakubantalik.com"
+}
