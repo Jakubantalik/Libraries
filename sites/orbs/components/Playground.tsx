@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { OrbSize, OrbState } from 'thinking-orbs';
 import { ThinkingOrb } from 'thinking-orbs';
 import { cn } from '../lib/utils';
+import { TabBtn } from './TabBtn';
 import { CopyButton } from './CopyButton';
 import { PlayPauseToggle } from './PlayPauseToggle';
 
@@ -25,23 +26,6 @@ function buildSnippet(state: OrbState, size: OrbSize, speed: number) {
   const props = [`state="${state}"`, `size={${size}}`];
   if (speed !== 100) props.push(`speed={${(speed / 100).toFixed(2)}}`);
   return `import { ThinkingOrb } from 'thinking-orbs';\n\n<ThinkingOrb ${props.join(' ')} />`;
-}
-
-const tabBtnBase = 'flex items-center justify-center h-9 px-3 border-none rounded-lg font-[Inter,sans-serif] text-[13px] font-normal leading-[14px] cursor-pointer transition-[background-color,color] duration-150 whitespace-nowrap [-webkit-tap-highlight-color:transparent] hover:bg-(--tab-hover-bg) hover:text-(--tab-hover-color) focus-visible:outline-2 focus-visible:outline-[rgba(255,255,255,0.5)] focus-visible:outline-offset-2';
-
-function TabBtn({ active, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { active: boolean }) {
-  return (
-    <button
-      {...props}
-      className={cn(
-        tabBtnBase,
-        active
-          ? 'bg-(--tab-active-bg) text-(--tab-active-color) shadow-(--tab-active-shadow)'
-          : 'bg-(--tab-bg) text-(--tab-color)',
-      )}
-      type="button"
-    />
-  );
 }
 
 export function Playground({
