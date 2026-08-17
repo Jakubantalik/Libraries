@@ -69,7 +69,22 @@ export function App() {
           <CopyButton getText={() => installCmd} />
         </div>
         {installNote && (
-          <p className="mt-2 text-[13px] leading-[20px] text-(--section-title-muted)">{installNote}</p>
+          <p className="mt-2 text-[13px] leading-[20px] text-(--section-title-muted)">
+            {installNote.text}
+            {installNote.href && (
+              <>
+                {' '}
+                <a
+                  className="underline underline-offset-2 hover:text-(--section-title-color)"
+                  href={installNote.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {installNote.hrefLabel ?? 'View on GitHub'}
+                </a>
+              </>
+            )}
+          </p>
         )}
       </section>
 

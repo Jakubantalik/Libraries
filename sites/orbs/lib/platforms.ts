@@ -39,11 +39,30 @@ ThinkingOrb(state: .working, size: .px64, displaySize: 133)`,
 <ThinkingOrb state="listening" size={64} />`,
 };
 
-/** Shown under the install block for ports that aren't on a registry yet. */
-export const INSTALL_NOTE_BY_PLATFORM: Record<Platform, string | null> = {
+const REPO_TREE = 'https://github.com/Jakubantalik/Libraries/tree/main';
+
+export interface InstallNote {
+  text: string;
+  /** Deep link to the port's folder, so "copy it from the repo" is one click. */
+  href?: string;
+  hrefLabel?: string;
+}
+
+/**
+ * Shown under the install block. Only the web package is on npm — verified
+ * against the registry — so the native ports say where to get them instead of
+ * implying an install that would 404.
+ */
+export const INSTALL_NOTE_BY_PLATFORM: Record<Platform, InstallNote | null> = {
   react: null,
-  swiftui:
-    'Swift Package Manager · requires iOS 15+ · Add via File › Add Package Dependencies in Xcode.',
-  native:
-    'In beta — not yet published. Copy packages/thinking-orbs/ports/react-native/thinking-orbs-native from the repo, then install the peer dependencies above.',
+  swiftui: {
+    text: 'Swift Package Manager · requires iOS 15+ · Add via File › Add Package Dependencies in Xcode.',
+    href: `${REPO_TREE}/packages/thinking-orbs/ports/ios/ThinkingOrbsKit`,
+    hrefLabel: 'Browse ThinkingOrbsKit',
+  },
+  native: {
+    text: 'In beta — not yet on npm. Copy the package into your project, then install the peer dependencies above.',
+    href: `${REPO_TREE}/packages/thinking-orbs/ports/react-native/thinking-orbs-native`,
+    hrefLabel: 'thinking-orbs-native on GitHub',
+  },
 };
