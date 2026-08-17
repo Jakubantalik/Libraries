@@ -60,6 +60,13 @@ domain per repo:
 - **orbs.jakubantalik.com** — Cloudflare Pages, built with
   `npm run build:site-orbs`, output `sites/orbs/dist`.
 
+`.node-version` pins Node 20 for the Cloudflare builds, matching the version
+the GitHub workflows use; Cloudflare's default is older.
+
+Cloudflare's **Retry deployment** replays the same commit rather than fetching
+the branch tip, so a build that failed on an outdated commit keeps failing.
+Push a new commit to get a fresh one.
+
 Only the beam site carries a `public/CNAME`; that file is a GitHub Pages
 mechanism. The Cloudflare-hosted sites bind their domain in the Pages project
 instead, and the DNS record itself lives at the registrar (inetadmin), not
