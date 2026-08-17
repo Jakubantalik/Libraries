@@ -60,6 +60,11 @@ domain per repo:
 - **orbs.jakubantalik.com** — Cloudflare Pages, built with
   `npm run build:site-orbs`, output `sites/orbs/dist`.
 
+Only the beam site carries a `public/CNAME`; that file is a GitHub Pages
+mechanism. The Cloudflare-hosted sites bind their domain in the Pages project
+instead, and the DNS record itself lives at the registrar (inetadmin), not
+Cloudflare — `jakubantalik.com` is not on Cloudflare's nameservers.
+
 `thinking-orbs` arrived by `git subtree`, so its full history is in this
 repo — but those commits touched `src/…`, not `packages/thinking-orbs/src/…`.
 `git log -- packages/thinking-orbs` therefore stops at the merge. To read the
