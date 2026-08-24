@@ -646,12 +646,16 @@ export class ObserveEngine {
     const defs = svg('defs', {})
     const gradient = svg('radialGradient', { id: `${uid}-g` })
     gradient.append(
-      // Long, smooth falloff: the melt reads as a gradient from intact rim
-      // to fully mixed core, not as a disc with a soft edge.
+      // Core-to-mid FULLY opaque, rim tight. Two failure modes shaped this:
+      // a translucent middle let the white silhouette neck glow through the
+      // copy right at the seam (a bright ring/dot wherever the goo bridges
+      // dark imagery — the neck sits between the photos' rounded corners, so
+      // nothing else can cover it), and a half-opaque rim let the copy's
+      // blurred imagery drift far past the neck, reading as fog over a
+      // contrasting neighbour. Opaque to 55%, then a fast falloff.
       svg('stop', { offset: '0%', 'stop-color': '#fff' }),
-      svg('stop', { offset: '35%', 'stop-color': '#fff', 'stop-opacity': '0.95' }),
-      svg('stop', { offset: '60%', 'stop-color': '#fff', 'stop-opacity': '0.6' }),
-      svg('stop', { offset: '82%', 'stop-color': '#fff', 'stop-opacity': '0.25' }),
+      svg('stop', { offset: '55%', 'stop-color': '#fff' }),
+      svg('stop', { offset: '78%', 'stop-color': '#fff', 'stop-opacity': '0.55' }),
       svg('stop', { offset: '100%', 'stop-color': '#fff', 'stop-opacity': '0' }),
     )
     defs.append(gradient)
@@ -1466,7 +1470,11 @@ export class ObserveEngine {
         String(q(guy * oa + gux * ob, 0.5)),
         String(q(bx, 0.5)),
         String(q(by, 0.5)),
-        String(q(d * (1.15 - 0.75 * t), 0.5)),
+        // Outermost disc at 0.95d, not 1.15d: past d the copy has left the
+        // neck entirely, and its blurred rim smearing onto the neighbour's
+        // body was half of the white-fog-ring report (the other half was the
+        // gradient rim above).
+        String(q(d * (0.95 - 0.55 * t), 0.5)),
         String(q(Math.min(1, eStruct * (0.75 + 0.25 * t)), 0.02)),
       ]
     })
@@ -1531,7 +1539,7 @@ export class ObserveEngine {
       const blurPx = blend.blur * (0.06 + 0.94 * Math.pow(t, 1.7))
       const warpPx = blend.warp * (0.2 + 0.8 * t)
       const rr = q(
-        d * (1.15 - 0.75 * t) + blurPx * 3 + warpPx * 0.5 + kFlow * d + 10,
+        d * (0.95 - 0.55 * t) + blurPx * 3 + warpPx * 0.5 + kFlow * d + 10,
         8,
       )
       const regionX = String(q(bx - rr, 8))
@@ -1709,7 +1717,13 @@ export class ObserveEngine {
             Math.hypot(hx - ow, hy - oh),
           ),
         ) + 2
-      const hole = `radial-gradient(circle at ${hx}px ${hy}px, rgba(255,255,255,${holeAlpha}) ${round(hd * 0.32)}px, rgba(255,255,255,${holeMid}) ${round(hd * 0.55)}px, #fff ${round(hd * 0.8)}px, #fff ${far}px)`
+      // Erasure must stay INSIDE the warped copy's coverage. The copy's mask
+      // falls off toward its rim, so a hole restoring at 0.8·hd left an
+      // annulus where the photo was already erased but the copy could no
+      // longer cover it — the white silhouette showed through as a pale ring
+      // hugging the melt. Tighter stops keep the fully-erased core well
+      // under the copy's opaque middle.
+      const hole = `radial-gradient(circle at ${hx}px ${hy}px, rgba(255,255,255,${holeAlpha}) ${round(hd * 0.22)}px, rgba(255,255,255,${holeMid}) ${round(hd * 0.4)}px, #fff ${round(hd * 0.58)}px, #fff ${far}px)`
       if (hole !== entry.lastHole) {
         entry.lastHole = hole
         entry.el.style.setProperty('mask-image', hole)
