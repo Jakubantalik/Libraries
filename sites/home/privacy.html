@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+
+  <title>Privacy Policy - Libraries.dev</title>
+  <meta
+    name="description"
+    content="How Libraries.dev handles your data: what we collect for accounts and Pro, who processes it (Stripe, Resend, Cloudflare), and your rights under GDPR."
+  />
+  <meta name="author" content="Libraries.dev" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#121212" />
+
+  <link rel="canonical" href="https://libraries.dev/privacy.html" />
+
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/assets/favicon.svg" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Libraries.dev" />
+  <meta property="og:url" content="https://libraries.dev/privacy.html" />
+  <meta property="og:title" content="Privacy Policy - Libraries.dev" />
+  <meta property="og:description" content="How Libraries.dev handles your data: what we collect for accounts and Pro, who processes it (Stripe, Resend, Cloudflare), and your rights under GDPR." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #fdfdfd;
+      --text: #0d0d0d;
+      --text-muted: #6c6c6c;
+      --text-subtle: #767676;
+      --text-faint: #8f8f8f;
+      --text-footer-name: #4a4a4a;
+      --rule: rgba(0, 0, 0, 0.08);
+      --code-bg: rgba(0, 0, 0, 0.04);
+      --code-text: #3a3a3a;
+      --link: #0d0d0d;
+      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco,
+        Consolas, monospace;
+    }
+
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #121212;
+      --text: #ffffff;
+      --text-muted: rgba(202, 202, 202, 0.7);
+      --text-subtle: #767676;
+      --text-faint: #8f8f8f;
+      --text-footer-name: #e9e9e9;
+      --rule: rgba(255, 255, 255, 0.1);
+      --code-bg: rgba(255, 255, 255, 0.08);
+      --code-text: #d6d6d6;
+      --link: #ffffff;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .skip-link {
+      position: absolute;
+      top: -100%;
+      left: 16px;
+      z-index: 200;
+      padding: 12px 20px;
+      border-radius: 8px;
+      background: var(--text);
+      color: var(--bg);
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+    }
+    .skip-link:focus { top: 16px; }
+
+    .wrap {
+      max-width: 680px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 0 24px;
+    }
+
+    .doc-head { padding: 80px 0 0; }
+    .eyebrow {
+      margin: 0 0 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      color: var(--text-muted);
+    }
+    .eyebrow a { color: inherit; text-decoration: none; }
+    .eyebrow a:hover { color: var(--text); }
+    h1 {
+      margin: 0;
+      font-size: 34px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      text-wrap: balance;
+    }
+    .updated { margin: 12px 0 0; font-size: 13px; color: var(--text-faint); }
+    .lede {
+      margin: 28px 0 0;
+      font-size: 16px;
+      line-height: 1.65;
+      color: var(--text-muted);
+      text-wrap: pretty;
+    }
+
+    section { padding: 36px 0 0; }
+    section + section { margin-top: 36px; border-top: 1px solid var(--rule); }
+    h2 {
+      margin: 0 0 12px;
+      font-size: 19px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    p {
+      margin: 0 0 14px;
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--text-muted);
+      text-wrap: pretty;
+    }
+    p:last-child { margin-bottom: 0; }
+    strong { color: var(--text); font-weight: 600; }
+    a { color: var(--link); }
+
+    ul { margin: 0 0 14px; padding-left: 20px; }
+    li {
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    li strong { color: var(--text); }
+
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.86em;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: var(--code-bg);
+      color: var(--code-text);
+    }
+
+    /* Processor table */
+    .proc {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 4px 0 14px;
+      font-size: 14px;
+    }
+    .proc th, .proc td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--rule);
+      vertical-align: top;
+      line-height: 1.5;
+    }
+    .proc th {
+      font-weight: 600;
+      color: var(--text);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .proc td { color: var(--text-muted); }
+    .proc td:first-child { color: var(--text); font-weight: 500; white-space: nowrap; }
+    .proc-scroll { overflow-x: auto; }
+
+    /* ─── Footer ─── */
+    .footer {
+      width: 100%;
+      max-width: 1008px;
+      margin: 96px auto 0;
+      padding: 0 0 40px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      line-height: 18.2px;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+    }
+    .footer-top { display: flex; justify-content: space-between; gap: 48px; flex-wrap: wrap; }
+    .footer-brand { display: flex; flex-direction: column; gap: 10px; max-width: 260px; }
+    .footer-brand-logo {
+      display: inline-flex; align-items: center; gap: 4px; opacity: 0.7;
+      text-decoration: none; color: var(--text);
+      transition: transform 400ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease;
+      transform-origin: center;
+    }
+    .footer-brand-logo:hover { opacity: 1; transform: scale(1.02); }
+    .footer-brand-logo:hover .brand-mark { transform: rotate(60deg); }
+    @media (prefers-reduced-motion: reduce) {
+      .footer-brand-logo { transition: opacity 150ms ease; }
+      .footer-brand-logo:hover { transform: none; }
+      .footer-brand-logo:hover .brand-mark { transform: none; }
+    }
+    .brand-mark {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 24px; height: 24px; color: var(--icon-color, var(--text));
+      transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .brand-mark svg { width: 22px; height: 15px; display: block; }
+    .brand-word { font-size: 15px; font-weight: 500; line-height: 1; letter-spacing: -0.01em; white-space: nowrap; }
+    .brand-word-dim { color: var(--text-muted); }
+    .footer-tagline { margin: 0; color: var(--text-muted); }
+    .footer-cols { display: flex; gap: 56px; }
+    .footer-col { display: flex; flex-direction: column; gap: 8px; }
+    .footer-col-title { margin: 0 0 2px; font-weight: 500; color: var(--text-muted); }
+    .footer-col a { color: var(--text-muted); text-decoration: none; transition: color 150ms ease; }
+    .footer-col a:hover { color: var(--text); }
+    .footer-credit { margin: 0; }
+    .footer-muted { color: var(--text-faint); }
+    .footer-name { color: var(--text-footer-name); text-decoration: none; margin-left: 4px; }
+    .footer-name:hover { color: #0d0d0d; text-decoration: none; }
+    html[data-theme="dark"] .footer-name:hover { color: #ffffff; text-decoration: none; }
+    @media (max-width: 720px) {
+      .footer-top { flex-direction: column; gap: 32px; }
+      .footer-cols { gap: 40px; flex-wrap: wrap; row-gap: 32px; }
+    }
+    @media (max-width: 600px) {
+      .doc-head { padding-top: 56px; }
+      h1 { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <main id="main">
+    <div class="wrap">
+      <header class="doc-head">
+        <p class="eyebrow"><a href="/">Libraries.dev</a></p>
+        <h1>Privacy Policy</h1>
+        <p class="updated">Last updated August 2026</p>
+        <p class="lede">
+          This policy explains what data Libraries.dev collects when you use the site,
+          create an account, or subscribe to Pro — why we collect it, who processes it on
+          our behalf, and the rights you have over it. We collect as little as the product
+          needs to work, and we never sell your data.
+        </p>
+      </header>
+
+      <section>
+        <h2>Who we are</h2>
+        <p>
+          Libraries.dev is operated by <strong>Jakub Antalik</strong> ("we", "us"). For
+          anything in this policy — including data requests — contact
+          <a href="mailto:jakubja@gmail.com">jakubja@gmail.com</a>. For visitors in the EU/EEA
+          and UK, we act as the <strong>data controller</strong> for the personal data
+          described below.
+        </p>
+      </section>
+
+      <section>
+        <h2>What we collect</h2>
+        <p>Most of the site — browsing the libraries, trying the playgrounds, installing the free packages from npm — needs no account and collects no personal data. The data below applies once you sign in or subscribe.</p>
+        <ul>
+          <li><strong>Your email address</strong> — the anchor for your account and passwordless sign-in. You give it to us when you subscribe or sign in.</li>
+          <li><strong>Billing details</strong> — handled by Stripe. We store your Stripe customer and subscription identifiers and your plan status; <strong>we never see or store your card number</strong> — it is entered directly on Stripe's hosted checkout.</li>
+          <li><strong>Team membership</strong> — if you own or join a team, we store the team name, its members, roles, and pending invitations (invited email addresses).</li>
+          <li><strong>Sign-in &amp; access records</strong> — short-lived login tokens, active sessions, and an audit log of protected downloads and auth events. IP addresses in that log are stored only as a <strong>salted hash</strong>, never in the clear.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>How we use it, and our legal basis</h2>
+        <p>Under the GDPR, we rely on the following bases:</p>
+        <ul>
+          <li><strong>To provide the service you asked for</strong> (contract) — authenticate you, unlock and deliver the Studio and Pro content, manage your team, and process your subscription.</li>
+          <li><strong>To send transactional email</strong> (contract) — magic sign-in links, team invitations, and payment receipts. These are not marketing; we don't send marketing email without your consent.</li>
+          <li><strong>To keep the service secure</strong> (legitimate interest) — rate-limiting, abuse and fraud prevention, and the access audit log.</li>
+          <li><strong>To meet legal obligations</strong> — e.g. retaining billing records for tax and accounting.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Who processes your data</h2>
+        <p>We use a small set of trusted providers ("processors") to run the service. They only process your data on our instructions, for the purposes below.</p>
+        <div class="proc-scroll">
+          <table class="proc">
+            <thead><tr><th>Provider</th><th>Purpose</th><th>Data</th></tr></thead>
+            <tbody>
+              <tr><td>Stripe</td><td>Payments &amp; subscriptions</td><td>Email, card details (entered directly with Stripe), billing &amp; plan status</td></tr>
+              <tr><td>Resend</td><td>Transactional email</td><td>Email address, message content (sign-in / invite links)</td></tr>
+              <tr><td>Cloudflare</td><td>Hosting, database &amp; file storage</td><td>Account &amp; team data, sessions, hashed access logs, Pro content delivery, standard web-server request logs</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Each provider maintains its own privacy and security terms (<a href="https://stripe.com/privacy" target="_blank" rel="noopener">Stripe</a>, <a href="https://resend.com/legal/privacy-policy" target="_blank" rel="noopener">Resend</a>, <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">Cloudflare</a>). We do <strong>not</strong> sell or rent your personal data, and we don't share it with advertisers.</p>
+      </section>
+
+      <section>
+        <h2>Cookies</h2>
+        <p>
+          We use a single <strong>essential cookie</strong> — the session cookie — to keep you
+          signed in. It is <code>HttpOnly</code>, <code>Secure</code>, and set only after you sign in;
+          it carries no tracking data and expires when your session ends. We use no advertising,
+          analytics, or third-party tracking cookies — so there is no cookie consent banner to
+          click through.
+        </p>
+      </section>
+
+      <section>
+        <h2>How long we keep it</h2>
+        <ul>
+          <li><strong>Account &amp; team data</strong> — for as long as your account exists.</li>
+          <li><strong>Sessions &amp; login tokens</strong> — short-lived; login links expire in minutes, sessions in weeks.</li>
+          <li><strong>Access &amp; audit logs</strong> — kept only as long as needed for security, then pruned.</li>
+          <li><strong>Billing records</strong> — retained as required by tax and accounting law, even after you cancel.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>International transfers</h2>
+        <p>
+          We host in Cloudflare's EU region where possible, and our email region is the EU (Ireland).
+          Some processors (e.g. Stripe) may process data outside the EEA; where they do, they rely on
+          appropriate safeguards such as the EU Standard Contractual Clauses.
+        </p>
+      </section>
+
+      <section>
+        <h2>Your rights</h2>
+        <p>If you're in the EU/EEA or UK, you can ask us to:</p>
+        <ul>
+          <li><strong>Access</strong> the personal data we hold about you, or receive a copy (portability).</li>
+          <li><strong>Correct</strong> data that's wrong or out of date.</li>
+          <li><strong>Delete</strong> your account and personal data (subject to billing records we must keep by law).</li>
+          <li><strong>Object to or restrict</strong> certain processing.</li>
+        </ul>
+        <p>
+          Email <a href="mailto:jakubja@gmail.com">jakubja@gmail.com</a> and we'll action it. You can
+          delete most account data yourself from your <a href="/account.html">account</a>. You also have
+          the right to complain to your local data protection authority.
+        </p>
+      </section>
+
+      <section>
+        <h2>Children</h2>
+        <p>Libraries.dev is a developer tool and isn't directed at children. We don't knowingly collect data from anyone under 16.</p>
+      </section>
+
+      <section>
+        <h2>Changes to this policy</h2>
+        <p>If we make material changes, we'll update the date above and, where appropriate, notify you by email. Continued use after a change means you accept the updated policy.</p>
+      </section>
+
+      <footer class="footer">
+        <div class="footer-top">
+          <div class="footer-brand">
+            <a class="footer-brand-logo" href="/" aria-label="Libraries.dev home">
+              <span class="brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 22.6705 14.6705" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M21.3352 10.3354L6.89079 13.3354L18.0019 7.33536L1.33524 9.33536L19.3352 1.33536L1.33524 4.33536L9.33524 1.33536" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <span class="brand-word"><span class="brand-word-strong">Libraries</span><span class="brand-word-dim">.dev</span></span>
+            </a>
+            <p class="footer-tagline">Production-ready UI effect libraries for React</p>
+          </div>
+          <nav class="footer-cols" aria-label="Footer">
+            <div class="footer-col">
+              <p class="footer-col-title">Libraries</p>
+              <a href="/beam.html">Beam</a>
+              <a href="/orbs.html">Orb</a>
+              <a href="/gooey.html">Gooey</a>
+              <a href="/metal.html">Metal</a>
+              <a href="/image.html">Image</a>
+            </div>
+            <div class="footer-col">
+              <p class="footer-col-title">Product</p>
+              <a href="/">Home</a>
+              <a href="/studio.html">Studio</a>
+              <a href="/pro.html">Get Pro</a>
+            </div>
+            <div class="footer-col">
+              <p class="footer-col-title">Legal &amp; Account</p>
+              <a href="/pro.html" id="footer-signin">Sign in</a>
+              <a href="/terms.html">Terms</a>
+              <a href="/privacy.html">Privacy</a>
+              <a href="mailto:jakubja@gmail.com">Contact</a>
+            </div>
+          </nav>
+        </div>
+        <p class="footer-credit"><span class="footer-muted">Created by</span><a class="footer-name" href="https://x.com/jakubantalik" target="_blank" rel="noopener noreferrer">Jakub Antalik</a></p>
+      </footer>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+
+  <title>Metal — metal-fx playground | Libraries.dev</title>
+  <meta
+    name="description"
+    content="A real-time WebGL liquid-metal ring that wraps any button or icon in animated chrome. Try it live and install metal-fx from npm."
+  />
+  <meta
+    name="keywords"
+    content="react, effects, webgl, border beam, thinking orb, gooey, liquid metal, image loader, UI libraries"
+  />
+  <meta name="author" content="Libraries.dev" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <meta name="googlebot" content="index, follow" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="theme-color" content="#121212" />
+  <meta name="apple-mobile-web-app-title" content="Libraries.dev" />
+  <meta name="application-name" content="Libraries.dev" />
+
+  <link rel="canonical" href="https://libraries.dev/metal.html" />
+  <link rel="alternate" hreflang="en" href="https://libraries.dev/metal.html" />
+  <link rel="alternate" hreflang="x-default" href="https://libraries.dev/metal.html" />
+
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/assets/favicon.svg" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Libraries.dev" />
+  <meta property="og:url" content="https://libraries.dev/metal.html" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:title" content="Metal — metal-fx playground | Libraries.dev" />
+  <meta property="og:description" content="A real-time WebGL liquid-metal ring that wraps any button or icon in animated chrome. Try it live and install metal-fx from npm." />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Metal — metal-fx playground | Libraries.dev" />
+  <meta name="twitter:description" content="A real-time WebGL liquid-metal ring that wraps any button or icon in animated chrome. Try it live and install metal-fx from npm." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    rel="preload"
+    as="style"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
+  />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+  <link
+    rel="preload"
+    as="font"
+    type="font/woff2"
+    href="/assets/fonts/Saans-Medium.woff2"
+    crossorigin
+  />
+  <link rel="stylesheet" href="/assets/site.css" />
+  <link rel="stylesheet" href="/assets/playground.css" />
+  <style>
+    /* Detail page: copy-button icon swap + full-width live snippet */
+    .code-copy .icon-check { display: none; }
+    .code-copy[data-copied="true"] .icon-copy { display: none; }
+    .code-copy[data-copied="true"] .icon-check { display: block; }
+    .pg-snippet { grid-column: 1 / -1; margin-top: 0; }
+    #playground { margin-top: 0; scroll-margin-top: 24px; }
+    .pg { row-gap: 16px; }
+    /* Metal-only: preview pills (search field reflection target + demo button) */
+    .metal-stage-row { display: flex; align-items: center; gap: 12px; }
+    .metal-search {
+      display: flex; align-items: center; gap: 6px;
+      width: 180px; height: 40px; border-radius: 999px;
+      padding: 10px 8px 10px 12px;
+      background: #1d1d1d; border: 1px solid rgba(44, 47, 54, 0.52);
+      box-shadow: inset 0 0 50px 0 rgba(255, 255, 255, 0.02);
+      color: #f8f8f8; font-size: 14px; font-weight: 500; cursor: text;
+    }
+    .metal-search svg { width: 18px; height: 18px; flex-shrink: 0; stroke: #8b8b8b; fill: none; }
+    .metal-search input {
+      flex: 1; min-width: 0; border: 0; background: transparent;
+      font: inherit; color: inherit; outline: none;
+    }
+    .metal-search input::placeholder { color: currentColor; opacity: 0.3; }
+    .metal-pill {
+      display: flex; align-items: center; justify-content: center;
+      width: 140px; height: 40px; padding: 0; border-radius: 999px;
+      background: #1d1d1d; border: 1px solid rgba(44, 47, 54, 0.52);
+      box-shadow: inset 0 0 50px 0 rgba(255, 255, 255, 0.02);
+      color: #f8f8f8; font-family: inherit; font-size: 14px; font-weight: 500;
+      white-space: nowrap; cursor: pointer;
+    }
+    .metal-pill--circle { width: 40px; }
+    .metal-pill svg { width: 16px; height: 16px; display: block; }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#playground">Skip to content</a>
+  <main id="main" class="app">
+    <header class="site-nav">
+      <div class="site-nav-inner">
+        <div class="site-nav-left">
+          <a class="brand" href="/" aria-label="Libraries.dev home">
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 22.6705 14.6705" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21.3352 10.3354L6.89079 13.3354L18.0019 7.33536L1.33524 9.33536L19.3352 1.33536L1.33524 4.33536L9.33524 1.33536" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span class="brand-word"><span class="brand-word-strong">Libraries</span><span class="brand-word-dim">.dev</span></span>
+          </a>
+          <nav class="site-nav-menu" aria-label="Primary">
+            <a class="nav-pill nav-pill--active" href="/#components">Libraries</a>
+            <a class="nav-pill" href="/studio.html">Studio</a>
+          </nav>
+        </div>
+        <div class="site-nav-right">
+          <button type="button" class="nav-search" id="nav-search-btn" aria-label="Search (⌘K)">
+            <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="7" cy="7" r="5" />
+              <path d="M14 14l-3.5-3.5" />
+            </svg>
+            <span class="nav-search-label">Search</span>
+            <span class="nav-search-kbd" id="nav-search-kbd">⌘K</span>
+          </button>
+          <a class="nav-get-pro" href="/pro.html"><span class="nav-get-pro-label"><span class="nav-get-pro-word">Get </span>Pro</span></a>
+          <a
+            class="icon-btn-pill"
+            id="gh-stars-btn"
+            href="https://github.com/Jakubantalik/Libraries"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub repository — star count"
+            data-loading="true"
+          >
+            <svg aria-hidden="true" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+            </svg>
+            <span class="pill-label" id="gh-stars-count">—</span>
+          </a>
+          <a
+            class="icon-btn"
+            href="https://x.com/jakubantalik"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="X (Twitter)"
+          >
+            <svg class="icon-x" aria-hidden="true" viewBox="0 0 16 17" xmlns="http://www.w3.org/2000/svg">
+              <path
+                fill="currentColor"
+                d="M12.4041 1.39726H14.6953L9.69087 7.2591L15.5781 15.2368H10.9696L7.35741 10.3996L3.22921 15.2368H0.934687L6.28641 8.96575L0.642598 1.39726H5.36795L8.62962 5.81859L12.4041 1.39726ZM11.5992 13.8329H12.8682L4.67667 2.72798H3.31359L11.5992 13.8329Z"
+              />
+            </svg>
+          </a>
+          <div class="pm-anchor" id="more-anchor">
+            <button type="button" class="icon-btn" id="more-btn" aria-label="More" aria-haspopup="menu" aria-expanded="false">
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 8C6.66667 7.26362 7.26362 6.66667 8 6.66667C8.73638 6.66667 9.33333 7.26362 9.33333 8C9.33333 8.73638 8.73638 9.33333 8 9.33333C7.26362 9.33333 6.66667 8.73638 6.66667 8Z" fill="currentColor"/>
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 3.33333C6.66667 2.59695 7.26362 2 8 2C8.73638 2 9.33333 2.59695 9.33333 3.33333C9.33333 4.06971 8.73638 4.66667 8 4.66667C7.26362 4.66667 6.66667 4.06971 6.66667 3.33333Z" fill="currentColor"/>
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 12.6667C6.66667 11.9303 7.26362 11.3333 8 11.3333C8.73638 11.3333 9.33333 11.9303 9.33333 12.6667C9.33333 13.403 8.73638 14 8 14C7.26362 14 6.66667 13.403 6.66667 12.6667Z" fill="currentColor"/>
+              </svg>
+            </button>
+            <div class="tl-menu t-dropdown" id="more-menu" data-origin="top-right" role="menu" aria-label="More options">
+              <div class="tl-menu-item" id="pm-signin" role="menuitem" tabindex="0">
+                <span class="tl-menu-item-label">Sign in</span>
+              </div>
+              <div class="tl-menu-divider"></div>
+              <a class="tl-menu-item" id="pm-support" href="mailto:jakubja@gmail.com" role="menuitem">
+                <span class="tl-menu-item-label">Support</span>
+              </a>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="icon-btn nav-burger"
+            id="nav-burger"
+            aria-label="Open menu"
+            aria-expanded="false"
+            aria-controls="mobile-menu"
+          >
+            <span class="nav-burger-box" aria-hidden="true">
+              <span class="nav-burger-line nav-burger-line--top"></span>
+              <span class="nav-burger-line nav-burger-line--bottom"></span>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <div class="mobile-menu-backdrop" id="mobile-menu-backdrop"></div>
+      <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile">
+        <ul class="mobile-menu-list">
+          <li><a class="mobile-menu-link mobile-menu-link--1" href="/#components">Libraries</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--2" href="/studio.html">Studio</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--3 mobile-menu-link--pro" href="/pro.html">Get Pro</a></li>
+        </ul>
+        <a class="mobile-menu-cta" id="mobile-signin" href="/pro.html">Sign in</a>
+      </nav>
+    </header>
+
+    <div class="detail-main">
+      <header class="detail-head">
+        <h1 class="detail-title">Metal</h1>
+        <p class="detail-subtitle">A real-time WebGL liquid-metal ring around buttons and icons — animated chrome with a wandering halo.</p>
+      </header>
+
+      <section class="detail-section" id="playground" aria-label="Playground">
+        <div class="pg" id="playground-root"></div>
+      </section>
+
+      <section class="detail-section" aria-labelledby="install-title">
+        <h2 class="detail-section-title" id="install-title">Installation</h2>
+        <div class="code-block">
+          <pre id="install-code">npm install metal-fx</pre>
+          <button type="button" class="code-copy" data-copy-target="#install-code" aria-label="Copy install command">
+            <svg class="icon-copy" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            </svg>
+            <svg class="icon-check" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <section class="detail-section" aria-labelledby="usage-title">
+        <h2 class="detail-section-title" id="usage-title">Usage</h2>
+        <div class="code-block">
+          <pre id="usage-code">import { MetalFx } from 'metal-fx';
+
+&lt;MetalFx preset="chromatic" strength={1}&gt;
+  &lt;button&gt;Upgrade to Pro&lt;/button&gt;
+&lt;/MetalFx&gt;</pre>
+          <button type="button" class="code-copy" data-copy-target="#usage-code" aria-label="Copy usage example">
+            <svg class="icon-copy" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            </svg>
+            <svg class="icon-check" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <footer class="footer">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <a class="footer-brand-logo" href="/" aria-label="Libraries.dev home">
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 22.6705 14.6705" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21.3352 10.3354L6.89079 13.3354L18.0019 7.33536L1.33524 9.33536L19.3352 1.33536L1.33524 4.33536L9.33524 1.33536" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span class="brand-word"><span class="brand-word-strong">Libraries</span><span class="brand-word-dim">.dev</span></span>
+          </a>
+          <p class="footer-tagline">Production-ready UI effect libraries for React</p>
+        </div>
+        <nav class="footer-cols" aria-label="Footer">
+          <div class="footer-col">
+            <p class="footer-col-title">Libraries</p>
+            <a href="/beam.html">Beam</a>
+            <a href="/orbs.html">Orb</a>
+            <a href="/gooey.html">Gooey</a>
+            <a href="/metal.html">Metal</a>
+            <a href="/image.html">Image</a>
+          </div>
+          <div class="footer-col">
+            <p class="footer-col-title">Product</p>
+            <a href="/">Home</a>
+            <a href="/studio.html">Studio</a>
+            <a href="/pro.html">Get Pro</a>
+          </div>
+          <div class="footer-col">
+            <p class="footer-col-title">Legal &amp; Account</p>
+            <a href="/pro.html" id="footer-signin">Sign in</a>
+            <a href="/terms.html">Terms</a>
+            <a href="/privacy.html">Privacy</a>
+            <a href="mailto:jakubja@gmail.com">Contact</a>
+          </div>
+        </nav>
+      </div>
+      <p class="footer-credit"><span class="footer-muted">Created by</span><a class="footer-name" href="https://x.com/jakubantalik" target="_blank" rel="noopener noreferrer">Jakub Antalik</a></p>
+    </footer>
+  </main>
+
+  <script>
+    (function () {
+      document.querySelectorAll(".code-copy[data-copy-target]").forEach(function (btn) {
+        var timer = null;
+        btn.addEventListener("click", function () {
+          var src = document.querySelector(btn.getAttribute("data-copy-target"));
+          if (!src) return;
+          if (navigator.clipboard) navigator.clipboard.writeText(src.textContent || "").catch(function () {});
+          btn.setAttribute("data-copied", "true");
+          clearTimeout(timer);
+          timer = setTimeout(function () { btn.removeAttribute("data-copied"); }, 1600);
+        });
+      });
+    })();
+  </script>
+  <script src="/assets/site.js" defer></script>
+  <script src="/assets/pro-client.js" defer></script>
+  <script type="module" src="/src/metal.tsx"></script>
+</body>
+</html>

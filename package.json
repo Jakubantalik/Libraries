@@ -1,7 +1,7 @@
 {
   "name": "@jakubantalik/libraries",
   "private": true,
-  "description": "Home of Jakub Antalik's libraries: border-beam, liquid-gooey and thinking-orbs.",
+  "description": "Home of Jakub Antalik's libraries: border-beam, liquid-gooey, thinking-orbs, metal-fx and img-fx.",
   "license": "MIT",
   "workspaces": [
     "packages/*",
@@ -14,6 +14,9 @@
     "build:site-beam": "npm run build:beam && npm run build -w @sites/beam",
     "build:site-gooey": "npm run build:gooey && npm run build -w @sites/gooey",
     "build:site-orbs": "npm run build:orbs && npm run build -w @sites/orbs",
-    "typecheck": "npm run typecheck --workspaces --if-present"
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "build:metal": "npm run build -w metal-fx",
+    "build:image": "npm run build -w img-fx",
+    "build:site-home": "npm run build -w @sites/home"
   }
 }
