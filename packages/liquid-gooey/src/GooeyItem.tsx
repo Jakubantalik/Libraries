@@ -69,15 +69,6 @@ export interface DissolveOptions {
    *  back to crisp. Default 0.8; raise toward (or past) 1 to keep melting
    *  while deeply overlapped. */
   sink?: number
-  /** What the liquid is made of. 'liquid' (default): the group fill — white
-   *  surface goo with imagery melted over it. 'image': the liquid body IS the
-   *  image, so the neck between two items blends both images' colours. */
-  surface?: 'liquid' | 'image'
-  /** Blur (px) of the seam-blend layer — the imagery painted once more
-   *  through a plain heavy blur at the contact, half opacity per side, so
-   *  the seam shows the two pictures' colours literally averaged. Defaults
-   *  to 1.6x `blur`; 0 disables. */
-  seamBlur?: number
 }
 
 export interface GooeyItemProps {
@@ -351,8 +342,6 @@ function ObservedItem({
     fadeMs?: number
     strength?: number
     sink?: number
-    surface?: 'liquid' | 'image'
-    seamBlur?: number
   } | null>(null)
 
   const opts = typeof contactBlur === 'object' ? contactBlur : {}
@@ -374,8 +363,6 @@ function ObservedItem({
   const blendStrength = opts.strength ?? 1
   // Left undefined when unset so the engine owns the default in one place.
   const blendSink = opts.sink
-  const blendSurface = opts.surface
-  const blendSeamBlur = opts.seamBlur
 
   const effects = toEffects(effect)
   const dynamics = {
@@ -390,7 +377,7 @@ function ObservedItem({
   // `active` is intentionally NOT in the key: it changes every drag and must
   // not tear down the melt structure — the engine reads it live.
   const blendKey = contactBlur
-    ? `${blendBlur}/${blendWarp}/${blendPull}/${blendRange ?? 'auto'}/${blendZone ?? 'auto'}/${blendMix}/${blendGravity}/${blendTaper}/${blendWarpFreq}/${blendFlowSpeed}/${blendWarpStyle}/${blendDetail}/${blendSurface ?? 'liquid'}/${(blendSeamBlur ?? 1) > 0 ? 'seam' : 'noseam'}`
+    ? `${blendBlur}/${blendWarp}/${blendPull}/${blendRange ?? 'auto'}/${blendZone ?? 'auto'}/${blendMix}/${blendGravity}/${blendTaper}/${blendWarpFreq}/${blendFlowSpeed}/${blendWarpStyle}/${blendDetail}`
     : ''
   const effectKey =
     effects.join(',') +
@@ -422,8 +409,6 @@ function ObservedItem({
             fadeMs: blendFade,
             strength: blendStrength,
             sink: blendSink,
-            surface: blendSurface,
-            seamBlur: blendSeamBlur,
           }
         : undefined
     blendRef.current = blend ?? null
@@ -449,9 +434,8 @@ function ObservedItem({
     blendRef.current.fadeMs = blendFade
     blendRef.current.strength = blendStrength
     blendRef.current.sink = blendSink
-    blendRef.current.seamBlur = blendSeamBlur
     ctx.engine.wake()
-  }, [ctx, blendActive, blendRelease, blendFade, blendStrength, blendSink, blendSeamBlur])
+  }, [ctx, blendActive, blendRelease, blendFade, blendStrength, blendSink])
 
   return (
     <>

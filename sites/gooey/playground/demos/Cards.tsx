@@ -11,7 +11,6 @@ const CLAMP_Y = 105 - CARD / 2 - 6
 
 interface CardState {
   strength: number
-  seamBlur: number
   warp: number
   mix: number
   gravity: number
@@ -23,7 +22,6 @@ interface CardState {
  *  32px chips, so the mixing band must be wider to read at all. */
 const DEFAULTS: CardState = {
   strength: 1,
-  seamBlur: 20,
   warp: 26,
   mix: 0.7,
   gravity: 60,
@@ -102,20 +100,10 @@ export function Cards({ blur, contrast, shadow, pro, bare }: DemoProps) {
 
   const k = st.strength
   const dissolve = {
-    // The liquid between the cards is made of the images themselves — the
-    // neck renders as a blur-blend of both photos' colours, no white
-    // surface material at the seam.
-    surface: 'image' as const,
-    // Melt lives through the whole overlapping phase — the seam must keep
-    // blending while any shared edge exists; the stretch-ghost problem at
-    // depth is handled by the engine's settle gating, not by killing the
-    // melt early. Cleared only near full engulfment.
-    sink: 0.7,
-    seamBlur: st.seamBlur * k,
     warp: st.warp * k,
-    // Follows the same knob: "more blurred" has to move the turbulence
-    // layers too, not only the seam wash, or the slider only half works.
-    blur: Math.max(4, st.seamBlur * 0.55) * k,
+    // Lower than the avatar tuning: at the seam of two large photos a heavy
+    // blur reads as fog over the neck, not as liquid.
+    blur: 5 * k,
     mix: st.mix * k,
     gravity: st.gravity * k,
     taper: 0.95,
@@ -137,11 +125,7 @@ export function Cards({ blur, contrast, shadow, pro, bare }: DemoProps) {
               // other, so the seam mixes two liquids — always armed, the
               // engine's proximity ramp does the gating.
               dissolve={dissolve}
-              // Inset up, bridgeGrow down: with surface:'image' the blob IS
-              // the picture, so any blob inflation on approach reads as the
-              // photo growing. A deeper inset hides the blob under the crisp
-              // edge, and the gentler grow still necks without the swell.
-              morph={{ advanced: { blobInset: 3, bridgeGrow: 5 } }}
+              morph={{ advanced: { blobInset: 2, bridgeGrow: 10 } }}
             >
               <div
                 className="dc-card"
@@ -178,13 +162,12 @@ export function Cards({ blur, contrast, shadow, pro, bare }: DemoProps) {
             )}
           </div>
           <SliderRow label="Dissolve" value={st.strength} min={0} max={1} step={0.05} onChange={set('strength')} />
-          <SliderRow label="Seam blur" value={st.seamBlur} min={0} max={70} step={1} onChange={set('seamBlur')} />
           {pro && (
             <>
               <SliderRow label="Warp" value={st.warp} min={0} max={90} step={1} onChange={set('warp')} />
               <SliderRow label="Mix (two-liquid)" value={st.mix} min={0} max={1} step={0.05} onChange={set('mix')} />
-              <SliderRow label="Gravity (px)" value={st.gravity} min={0} max={200} step={2} onChange={set('gravity')} />
-              <SliderRow label="Zone (px)" value={st.zone} min={8} max={100} step={1} onChange={set('zone')} />
+              <SliderRow label="Gravity (px)" value={st.gravity} min={0} max={90} step={1} onChange={set('gravity')} />
+              <SliderRow label="Zone (px)" value={st.zone} min={8} max={60} step={1} onChange={set('zone')} />
               <SliderRow label="Range (px)" value={st.range} min={8} max={90} step={1} onChange={set('range')} />
             </>
           )}
