@@ -321,7 +321,7 @@ interface Item extends ObservedTarget {
   radiusPx: number
   last: Frame | null
   frame: Frame | null
-  lastBlend: { cx: number; cy: number; s: number; d: number } | null
+  lastBlend: { cx: number; cy: number; s: number; d: number; pk: string } | null
   melt: MeltRefs | null
   sim: Sim | null
   /** Peak-hold envelope of morph motion: rises instantly, decays smoothly —
@@ -1415,7 +1415,7 @@ export class ObserveEngine {
     if (s <= 0.001) {
       if (item.lastBlend && item.lastBlend.s !== 0) {
         this.clearBlend(item)
-        item.lastBlend = { cx: 0, cy: 0, s: 0, d: 0 }
+        item.lastBlend = { cx: 0, cy: 0, s: 0, d: 0, pk: '' }
         return true
       }
       return false
@@ -1482,9 +1482,14 @@ export class ObserveEngine {
     const phaseAdv = Math.min(dt, 1 / 24) * flowSpeed * 0.12 * Math.min(1, moveSpeed / 40)
     item.meltPhase += phaseAdv
     const lb = item.lastBlend
+    // Live-tunable params join the still-frame check: without them a slider
+    // change on a static pose (the tuning workflow) never re-ran the writes
+    // and the knob looked dead until the next drag.
+    const paramKey = `${blend.seamBlur ?? ''}/${blend.strength ?? ''}/${blend.warp}/${blend.blur}/${blend.mix ?? ''}/${blend.gravity ?? ''}`
     if (
       phaseAdv < 1e-4 &&
       lb &&
+      lb.pk === paramKey &&
       Math.abs(lb.cx - cx) < 0.05 &&
       Math.abs(lb.cy - cy) < 0.05 &&
       Math.abs(lb.s - s) < 0.005 &&
@@ -1915,14 +1920,47 @@ export class ObserveEngine {
       // longer cover it — the white silhouette showed through as a pale ring
       // hugging the melt. Tighter stops keep the fully-erased core well
       // under the copy's opaque middle.
-      const hole = `radial-gradient(circle at ${hx}px ${hy}px, rgba(255,255,255,${holeAlpha}) ${round(hd * 0.2)}px, rgba(255,255,255,${holeMid}) ${round(hd * 0.45)}px, #fff ${round(hd * 0.78)}px, #fff ${far}px)`
+      let hole: string
+      if (bestGap === 0 && contactSpan > 4) {
+        // OVERLAPPED: the crossing edge is contactSpan long, and any disc —
+        // however sized — softens one point of it and leaves the rest razor
+        // sharp. So while the boxes overlap, the erasure is a LINEAR feather
+        // instead: the image's whole leading edge (everything facing the
+        // neighbour, full width) fades out across a band, and with both
+        // sides feathering toward each other the seam is a true cross-fade —
+        // each pixel a weighted average of the two pictures. The band width
+        // rides seamBlur, so the public knob directly widens the melt.
+        const ux = gux
+        const uy = guy
+        const p00 = 0
+        const p10 = ow * ux
+        const p01 = oh * uy
+        const p11 = ow * ux + oh * uy
+        const pMax = Math.max(p00, p10, p01, p11)
+        const pMin = Math.min(p00, p10, p01, p11)
+        // Band: seamBlur-driven, at least the melt zone, never past the rim
+        // (the far side of the photo always survives).
+        const band = Math.round(
+          Math.min(
+            rim * 1.4,
+            Math.max(hd, (blend.seamBlur ?? blend.blur * 1.6) * 2.2),
+          ),
+        )
+        // CSS angle: 0deg points up; the gradient must run along +u.
+        const ang = Math.round((Math.atan2(ux, -uy) * 180) / Math.PI)
+        const fadeEnd = Math.round(pMax - pMin) + 2
+        const fadeStart = Math.max(0, fadeEnd - band)
+        hole = `linear-gradient(${ang}deg, #fff ${fadeStart}px, rgba(255,255,255,${holeAlpha}) ${fadeEnd}px)`
+      } else {
+        hole = `radial-gradient(circle at ${hx}px ${hy}px, rgba(255,255,255,${holeAlpha}) ${round(hd * 0.2)}px, rgba(255,255,255,${holeMid}) ${round(hd * 0.45)}px, #fff ${round(hd * 0.78)}px, #fff ${far}px)`
+      }
       if (hole !== entry.lastHole) {
         entry.lastHole = hole
         entry.el.style.setProperty('mask-image', hole)
         entry.el.style.setProperty('-webkit-mask-image', hole)
       }
     }
-    item.lastBlend = { cx, cy, s, d }
+    item.lastBlend = { cx, cy, s, d, pk: paramKey }
     return true
   }
 
