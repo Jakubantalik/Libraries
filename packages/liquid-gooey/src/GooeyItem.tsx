@@ -69,6 +69,10 @@ export interface DissolveOptions {
    *  back to crisp. Default 0.8; raise toward (or past) 1 to keep melting
    *  while deeply overlapped. */
   sink?: number
+  /** What the liquid is made of. 'liquid' (default): the group fill — white
+   *  surface goo with imagery melted over it. 'image': the liquid body IS the
+   *  image, so the neck between two items blends both images' colours. */
+  surface?: 'liquid' | 'image'
 }
 
 export interface GooeyItemProps {
@@ -342,6 +346,7 @@ function ObservedItem({
     fadeMs?: number
     strength?: number
     sink?: number
+    surface?: 'liquid' | 'image'
   } | null>(null)
 
   const opts = typeof contactBlur === 'object' ? contactBlur : {}
@@ -363,6 +368,7 @@ function ObservedItem({
   const blendStrength = opts.strength ?? 1
   // Left undefined when unset so the engine owns the default in one place.
   const blendSink = opts.sink
+  const blendSurface = opts.surface
 
   const effects = toEffects(effect)
   const dynamics = {
@@ -377,7 +383,7 @@ function ObservedItem({
   // `active` is intentionally NOT in the key: it changes every drag and must
   // not tear down the melt structure — the engine reads it live.
   const blendKey = contactBlur
-    ? `${blendBlur}/${blendWarp}/${blendPull}/${blendRange ?? 'auto'}/${blendZone ?? 'auto'}/${blendMix}/${blendGravity}/${blendTaper}/${blendWarpFreq}/${blendFlowSpeed}/${blendWarpStyle}/${blendDetail}`
+    ? `${blendBlur}/${blendWarp}/${blendPull}/${blendRange ?? 'auto'}/${blendZone ?? 'auto'}/${blendMix}/${blendGravity}/${blendTaper}/${blendWarpFreq}/${blendFlowSpeed}/${blendWarpStyle}/${blendDetail}/${blendSurface ?? 'liquid'}`
     : ''
   const effectKey =
     effects.join(',') +
@@ -409,6 +415,7 @@ function ObservedItem({
             fadeMs: blendFade,
             strength: blendStrength,
             sink: blendSink,
+            surface: blendSurface,
           }
         : undefined
     blendRef.current = blend ?? null

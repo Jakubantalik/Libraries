@@ -67,6 +67,12 @@ export interface BlendConfig {
    *  which reads as a smear that should have resolved. Default 0.8; raise
    *  toward (or past) 1 to keep melting while deeply overlapped. */
   sink?: number
+  /** What the liquid is MADE OF. 'liquid' (default): the group's fill — the
+   *  classic white/surface goo, imagery painted over it. 'image': the item's
+   *  blob is pattern-filled with its own imagery, so the goo neck between
+   *  two such items renders as a blur-blend of both images' local colours —
+   *  no surface material visible at the seam at all. */
+  surface?: 'liquid' | 'image'
 }
 
 export interface EvolveOptions {
@@ -776,6 +782,35 @@ export class ObserveEngine {
 
     host.setAttribute('opacity', '0')
     item.melt = { layers, entries }
+
+    // surface: 'image' — the LIQUID ITSELF is made of the image, not of the
+    // group fill. The blob is pattern-filled with the item's own imagery
+    // (objectBoundingBox, so the pattern rides the blob with zero per-frame
+    // bookkeeping), and the goo filter's blur then mixes both bodies' colours
+    // wherever their blobs merge: the neck becomes a gradient of the two
+    // images' local tones — colour averaging by the same blur that builds
+    // the neck — instead of a strip of bare surface material.
+    if (blend.surface === 'image' && imgs[0]) {
+      const bp = svg('pattern', {
+        id: `${uid}-bp`,
+        patternUnits: 'objectBoundingBox',
+        patternContentUnits: 'objectBoundingBox',
+        width: '1',
+        height: '1',
+      })
+      const bpImage = svg('image', {
+        width: '1',
+        height: '1',
+        preserveAspectRatio: 'xMidYMid slice',
+      })
+      bpImage.setAttribute('href', imgs[0].currentSrc || imgs[0].src)
+      bp.append(bpImage)
+      defs.append(bp)
+      item.blob.setAttribute('fill', `url(#${uid}-bp)`)
+    } else {
+      // Back to inheriting the group fill if a rebuild dropped the mode.
+      item.blob.removeAttribute('fill')
+    }
   }
 
   /** Remove all melt traces: hide the warped overlay, restore image masks. */

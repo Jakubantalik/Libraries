@@ -100,6 +100,10 @@ export function Cards({ blur, contrast, shadow, pro, bare }: DemoProps) {
 
   const k = st.strength
   const dissolve = {
+    // The liquid between the cards is made of the images themselves — the
+    // neck renders as a blur-blend of both photos' colours, no white
+    // surface material at the seam.
+    surface: 'image' as const,
     warp: st.warp * k,
     // Lower than the avatar tuning: at the seam of two large photos a heavy
     // blur reads as fog over the neck, not as liquid.
