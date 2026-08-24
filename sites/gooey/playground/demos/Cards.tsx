@@ -23,7 +23,7 @@ interface CardState {
  *  32px chips, so the mixing band must be wider to read at all. */
 const DEFAULTS: CardState = {
   strength: 1,
-  seamBlur: 14,
+  seamBlur: 20,
   warp: 26,
   mix: 0.7,
   gravity: 60,
@@ -113,9 +113,9 @@ export function Cards({ blur, contrast, shadow, pro, bare }: DemoProps) {
     sink: 0.7,
     seamBlur: st.seamBlur * k,
     warp: st.warp * k,
-    // Lower than the avatar tuning: at the seam of two large photos a heavy
-    // blur reads as fog over the neck, not as liquid.
-    blur: 5 * k,
+    // Follows the same knob: "more blurred" has to move the turbulence
+    // layers too, not only the seam wash, or the slider only half works.
+    blur: Math.max(4, st.seamBlur * 0.55) * k,
     mix: st.mix * k,
     gravity: st.gravity * k,
     taper: 0.95,
@@ -178,13 +178,13 @@ export function Cards({ blur, contrast, shadow, pro, bare }: DemoProps) {
             )}
           </div>
           <SliderRow label="Dissolve" value={st.strength} min={0} max={1} step={0.05} onChange={set('strength')} />
-          <SliderRow label="Seam blur" value={st.seamBlur} min={0} max={30} step={1} onChange={set('seamBlur')} />
+          <SliderRow label="Seam blur" value={st.seamBlur} min={0} max={70} step={1} onChange={set('seamBlur')} />
           {pro && (
             <>
               <SliderRow label="Warp" value={st.warp} min={0} max={90} step={1} onChange={set('warp')} />
               <SliderRow label="Mix (two-liquid)" value={st.mix} min={0} max={1} step={0.05} onChange={set('mix')} />
-              <SliderRow label="Gravity (px)" value={st.gravity} min={0} max={90} step={1} onChange={set('gravity')} />
-              <SliderRow label="Zone (px)" value={st.zone} min={8} max={60} step={1} onChange={set('zone')} />
+              <SliderRow label="Gravity (px)" value={st.gravity} min={0} max={200} step={2} onChange={set('gravity')} />
+              <SliderRow label="Zone (px)" value={st.zone} min={8} max={100} step={1} onChange={set('zone')} />
               <SliderRow label="Range (px)" value={st.range} min={8} max={90} step={1} onChange={set('range')} />
             </>
           )}

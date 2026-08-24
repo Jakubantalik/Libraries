@@ -1625,9 +1625,15 @@ export class ObserveEngine {
     // neck, and once the pieces overlap there is no neck to cross — the same
     // stretch then just paints a scaled ghost of the image over its own crisp
     // photo (misaligned edges, the "grown image" look). Gone by ~45% embed.
-    const settle = 1 - smoothstep(Math.min(1, embed * 2.2))
+    // Floored, not zeroed. Killing the stretch outright on overlap also
+    // disconnected `gravity` in exactly the phase where the melt is supposed
+    // to run deepest — max gravity did nothing once the cards touched. The
+    // ghost-over-own-photo problem it was guarding against is now handled at
+    // the source: the leading edge is feathered away by the cross-fade, so
+    // there is no crisp edge left for a stretched copy to double.
+    const settle = 1 - 0.45 * smoothstep(Math.min(1, embed * 2.2))
     const kFlow =
-      Math.min(1.15, (gAmt + bestGap) / Math.max(8, 2 * d)) * (0.5 + taper) * settle
+      Math.min(2.2, (gAmt + bestGap) / Math.max(8, 2 * d)) * (0.5 + taper) * settle
     const flow = (k: number) => {
       const sx = r3(1 + kFlow * k)
       const sy = r3(1 / (1 + kFlow * 0.35 * k))
@@ -1942,8 +1948,10 @@ export class ObserveEngine {
         // (the far side of the photo always survives).
         const band = Math.round(
           Math.min(
-            rim * 1.4,
-            Math.max(hd, (blend.seamBlur ?? blend.blur * 1.6) * 2.2),
+            // Room to run most of the way across the photo — a 1.4x-rim cap
+            // pinned the deepest settings to about a third of the card.
+            rim * 2.6,
+            Math.max(hd, (blend.seamBlur ?? blend.blur * 1.6) * 3.2),
           ),
         )
         // CSS angle: 0deg points up; the gradient must run along +u.
