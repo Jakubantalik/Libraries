@@ -896,6 +896,8 @@ export class ObserveEngine {
     for (const entry of item.melt?.entries ?? []) {
       entry.el.style.removeProperty('mask-image')
       entry.el.style.removeProperty('-webkit-mask-image')
+      entry.el.style.removeProperty('mask-composite')
+      entry.el.style.removeProperty('-webkit-mask-composite')
       entry.lastHole = null
       entry.lastGeom = null
     }
@@ -1851,6 +1853,8 @@ export class ObserveEngine {
           entry.lastHole = null
           entry.el.style.removeProperty('mask-image')
           entry.el.style.removeProperty('-webkit-mask-image')
+          entry.el.style.removeProperty('mask-composite')
+          entry.el.style.removeProperty('-webkit-mask-composite')
         }
         continue
       }
@@ -1936,16 +1940,16 @@ export class ObserveEngine {
         // sides feathering toward each other the seam is a true cross-fade —
         // each pixel a weighted average of the two pictures. The band width
         // rides seamBlur, so the public knob directly widens the melt.
-        const ux = gux
-        const uy = guy
-        const p00 = 0
-        const p10 = ow * ux
-        const p01 = oh * uy
-        const p11 = ow * ux + oh * uy
-        const pMax = Math.max(p00, p10, p01, p11)
-        const pMin = Math.min(p00, p10, p01, p11)
-        // Band: seamBlur-driven, at least the melt zone, never past the rim
-        // (the far side of the photo always survives).
+        //
+        // PER FACING EDGE, full length — not one diagonal band. A single
+        // gradient along the contact direction feathers only the corner
+        // nearest the contact: on a diagonal approach, a long crossing edge
+        // runs mostly PERPENDICULAR to that band, so its far end fell
+        // outside and stayed razor sharp (the "sharpness from the right
+        // image" report). Instead, each axis whose component faces the
+        // neighbour gets its own axis-aligned gradient over the whole edge,
+        // and the layers combine via mask-composite: intersect — so a
+        // diagonal contact feathers both facing edges end to end.
         const band = Math.round(
           Math.min(
             // Room to run most of the way across the photo — a 1.4x-rim cap
@@ -1954,11 +1958,24 @@ export class ObserveEngine {
             Math.max(hd, (blend.seamBlur ?? blend.blur * 1.6) * 3.2),
           ),
         )
-        // CSS angle: 0deg points up; the gradient must run along +u.
-        const ang = Math.round((Math.atan2(ux, -uy) * 180) / Math.PI)
-        const fadeEnd = Math.round(pMax - pMin) + 2
-        const fadeStart = Math.max(0, fadeEnd - band)
-        hole = `linear-gradient(${ang}deg, #fff ${fadeStart}px, rgba(255,255,255,${holeAlpha}) ${fadeEnd}px)`
+        const opaque = 'linear-gradient(#fff, #fff)'
+        // Axis weight eases in so a barely-diagonal contact doesn't pop a
+        // second edge's feather into existence.
+        const bandX = Math.round(band * Math.min(1, Math.abs(gux) * 1.6))
+        const bandY = Math.round(band * Math.min(1, Math.abs(guy) * 1.6))
+        const gx =
+          bandX < 4
+            ? opaque
+            : gux > 0
+              ? `linear-gradient(90deg, #fff ${Math.max(0, ow - bandX)}px, rgba(255,255,255,${holeAlpha}) ${ow}px)`
+              : `linear-gradient(90deg, rgba(255,255,255,${holeAlpha}) 0px, #fff ${Math.min(ow, bandX)}px)`
+        const gy =
+          bandY < 4
+            ? opaque
+            : guy > 0
+              ? `linear-gradient(180deg, #fff ${Math.max(0, oh - bandY)}px, rgba(255,255,255,${holeAlpha}) ${oh}px)`
+              : `linear-gradient(180deg, rgba(255,255,255,${holeAlpha}) 0px, #fff ${Math.min(oh, bandY)}px)`
+        hole = `${gx}, ${gy}`
       } else {
         hole = `radial-gradient(circle at ${hx}px ${hy}px, rgba(255,255,255,${holeAlpha}) ${round(hd * 0.2)}px, rgba(255,255,255,${holeMid}) ${round(hd * 0.45)}px, #fff ${round(hd * 0.78)}px, #fff ${far}px)`
       }
@@ -1966,6 +1983,11 @@ export class ObserveEngine {
         entry.lastHole = hole
         entry.el.style.setProperty('mask-image', hole)
         entry.el.style.setProperty('-webkit-mask-image', hole)
+        // Intersection semantics for the two axis gradients; a lone image
+        // (the radial branch) intersects with itself, a no-op. Set alongside
+        // the mask so a cleared entry never carries a stale composite.
+        entry.el.style.setProperty('mask-composite', 'intersect')
+        entry.el.style.setProperty('-webkit-mask-composite', 'source-in')
       }
     }
     item.lastBlend = { cx, cy, s, d, pk: paramKey }
