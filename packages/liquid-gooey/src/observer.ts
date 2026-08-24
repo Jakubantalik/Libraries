@@ -1241,10 +1241,14 @@ export class ObserveEngine {
     // the ramp late — barely anything at first neck.
     let sTarget = 0
     if (bestOther && bestGap < range && blend.active !== false) {
-      // Mild bias only: with `range` tuned to the real necking distance, the
-      // dissolve must track the BRIDGE onset — a squared curve left a sharp
-      // avatar edge visible inside an already-formed neck.
-      const sRaw = smoothstep(1 - bestGap / range)
+      // FULL strength while bridged, soft only at the entry: the melt used to
+      // keep ramping across the whole range (0.34 at half range), so a long
+      // goo neck carried only ghost-faint imagery — the taffy strand read as
+      // bare liquid with two weak stubs. A strand exists exactly while the
+      // neck does, and it should be as saturated mid-flight as at contact;
+      // the outer 35% of the range remains the fade-in so approach still
+      // reads as gradual.
+      const sRaw = smoothstep(Math.min(1, (1 - bestGap / range) / 0.65))
       // Strength is a CEILING, not a linear scale: even at full contact the
       // melt cannot exceed it, but it still ramps the same way on approach —
       // scaling sRaw itself would also slow the ramp, reading as "farther
@@ -1458,8 +1462,14 @@ export class ObserveEngine {
     // noise can visually resolve.
     const layerVals: string[][] = melt.layers.map((_, i) => {
       const t = n > 1 ? i / (n - 1) : 1 // 0 = outermost rim, 1 = tip
-      const blurK = 0.06 + 0.94 * Math.pow(t, 1.7)
-      const warpK = 0.2 + 0.8 * t
+      // Outer layer carries REAL warp (0.45, was 0.2): the rim of the melt is
+      // what the eye reads as the image's own edge bending — a calm rim made
+      // the surface look rigid with only the core swirling. Blur floor is up
+      // for the same reason: blur is local colour-averaging, and the taffy
+      // look wants the strand smoothed into blended tones over its whole
+      // length, not just at the tip.
+      const blurK = 0.15 + 0.85 * Math.pow(t, 1.4)
+      const warpK = 0.45 + 0.55 * t
       const pr = 0.7 + 0.45 * t
       const oa = 6 * Math.sin(item.meltPhase * pr)
       const ob = 2 * Math.sin(item.meltPhase * pr * 1.31 + 1.7)
@@ -1489,7 +1499,13 @@ export class ObserveEngine {
     const anchorY = cy - guy * d
     // Taper now shapes the STRETCH (how sharply content is drawn out toward
     // the pill) rather than mask geometry.
-    const kFlow = Math.min(0.6, gAmt / Math.max(8, 2 * d)) * (0.5 + taper)
+    // Gap-aware: while the bodies are APART the copies must travel the whole
+    // neck to meet mid-strand — that meeting is what mixes the two images
+    // into averaged tones along the bridge. The old 0.6 cap stopped the
+    // stretch at the seam, so a long neck stayed bare liquid with two short
+    // stubs of imagery at its ends.
+    const kFlow =
+      Math.min(1.15, (gAmt + bestGap) / Math.max(8, 2 * d)) * (0.5 + taper)
     const flow = (k: number) => {
       const sx = r3(1 + kFlow * k)
       const sy = r3(1 / (1 + kFlow * 0.35 * k))
@@ -1531,22 +1547,36 @@ export class ObserveEngine {
     // not the old gravity/2 overestimate). The tip layer's disc is a third
     // of the rim's radius; sizing it to the rim's reach tripled its pixels
     // for nothing.
+    // The melt zone is a STRAND, not a disc, whenever the bodies are apart:
+    // the mask disc is stretched along the flow axis so the revealed imagery
+    // spans the whole goo neck. A circle sized to the seam left a long neck
+    // as bare liquid with imagery only at its ends; sized to the neck it
+    // swallowed the bodies sideways. Elongation only, width unchanged.
+    const elong = q(1 + Math.min(1.8, bestGap / Math.max(8, 2 * d)), 0.05)
+    const zoneT =
+      elong > 1.001
+        ? `translate(${round(bx)}, ${round(by)}) rotate(${gDeg}) ` +
+          `scale(${r3(elong)}, 1) ` +
+          `rotate(${-gDeg}) translate(${round(-bx)}, ${round(-by)})`
+        : ''
     melt.layers.forEach((layer, i) => {
       const t = n > 1 ? i / (n - 1) : 1
       const v = layerVals[i]
       const shiftT = flow(0.4 + 0.6 * t)
       const erodeV = erodeRow(q(mixAmt * (0.15 + 0.85 * t), 0.01))
-      const blurPx = blend.blur * (0.06 + 0.94 * Math.pow(t, 1.7))
-      const warpPx = blend.warp * (0.2 + 0.8 * t)
+      const blurPx = blend.blur * (0.15 + 0.85 * Math.pow(t, 1.4))
+      const warpPx = blend.warp * (0.45 + 0.55 * t)
+      // Region follows the ELONGATED disc: the strand reach along the flow
+      // axis is the disc radius times elong.
       const rr = q(
-        d * (0.95 - 0.55 * t) + blurPx * 3 + warpPx * 0.5 + kFlow * d + 10,
+        d * (0.95 - 0.55 * t) * elong + blurPx * 3 + warpPx * 0.5 + kFlow * d + 10,
         8,
       )
       const regionX = String(q(bx - rr, 8))
       const regionY = String(q(by - rr, 8))
       const regionW = String(rr * 2)
       const fp =
-        v.join(',') + '|' + bfStr + '|' + shiftT + '|' + erodeV +
+        v.join(',') + '|' + bfStr + '|' + shiftT + '|' + erodeV + '|' + zoneT +
         '|' + regionX + ',' + regionY + ',' + regionW
       if (layer.last === fp) return
       layer.last = fp
@@ -1564,6 +1594,10 @@ export class ObserveEngine {
       layer.circle.setAttribute('cx', v[4])
       layer.circle.setAttribute('cy', v[5])
       layer.circle.setAttribute('r', v[6])
+      // Mask writes don't dirty the turbulence raster — the transform rides
+      // the shared fingerprint anyway so a still frame writes nothing.
+      if (zoneT) layer.circle.setAttribute('transform', zoneT)
+      else layer.circle.removeAttribute('transform')
       layer.gl.setAttribute('opacity', v[7])
       layer.shift.setAttribute('transform', shiftT)
       layer.erode.setAttribute('values', erodeV)
