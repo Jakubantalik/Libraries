@@ -11,6 +11,7 @@ const CLAMP_Y = 105 - CARD / 2 - 6
 
 interface CardState {
   strength: number
+  seamBlur: number
   warp: number
   mix: number
   gravity: number
@@ -22,6 +23,7 @@ interface CardState {
  *  32px chips, so the mixing band must be wider to read at all. */
 const DEFAULTS: CardState = {
   strength: 1,
+  seamBlur: 14,
   warp: 26,
   mix: 0.7,
   gravity: 60,
@@ -109,6 +111,7 @@ export function Cards({ blur, contrast, shadow, pro, bare }: DemoProps) {
     // depth is handled by the engine's settle gating, not by killing the
     // melt early. Cleared only near full engulfment.
     sink: 0.7,
+    seamBlur: st.seamBlur * k,
     warp: st.warp * k,
     // Lower than the avatar tuning: at the seam of two large photos a heavy
     // blur reads as fog over the neck, not as liquid.
@@ -175,6 +178,7 @@ export function Cards({ blur, contrast, shadow, pro, bare }: DemoProps) {
             )}
           </div>
           <SliderRow label="Dissolve" value={st.strength} min={0} max={1} step={0.05} onChange={set('strength')} />
+          <SliderRow label="Seam blur" value={st.seamBlur} min={0} max={30} step={1} onChange={set('seamBlur')} />
           {pro && (
             <>
               <SliderRow label="Warp" value={st.warp} min={0} max={90} step={1} onChange={set('warp')} />

@@ -73,6 +73,13 @@ export interface BlendConfig {
    *  two such items renders as a blur-blend of both images' local colours —
    *  no surface material visible at the seam at all. */
   surface?: 'liquid' | 'image'
+  /** Blur radius (px) of the seam-blend layer: the item's imagery painted
+   *  once more through a PLAIN heavy blur, masked to the contact zone, at
+   *  half opacity. Both sides of a pair paint one, so the seam shows the two
+   *  pictures' local colours literally averaged — a guaranteed-smooth wash
+   *  over any hard crossing edge, independent of warp and erosion. Defaults
+   *  to 1.6x `blur`; 0 disables the layer. */
+  seamBlur?: number
 }
 
 export interface EvolveOptions {
@@ -261,6 +268,18 @@ interface MeltLayer {
 interface MeltRefs {
   layers: MeltLayer[]
   entries: MeltEntry[]
+  /** The seam-blend layer: the item's imagery drawn once more through a
+   *  plain heavy blur, masked to the contact zone, at half opacity. Both
+   *  sides of a pair paint one, so the seam shows the two pictures' local
+   *  colours averaged — the guaranteed-smooth base the turbulence layers
+   *  then texture. Null when the item was built without it. */
+  seam: {
+    gl: SVGGElement
+    filter: SVGElement
+    blurEl: SVGElement
+    circle: SVGCircleElement
+    last?: string
+  } | null
 }
 
 /** How many stacked layers approximate the gradient. */
@@ -758,6 +777,47 @@ export class ObserveEngine {
     const layers = Array.from({ length: MELT_LAYERS }, (_, i) => mkLayer(`l${i}`))
     host.append(defs, ...layers.map(l => l.gl))
 
+    // Seam-blend layer, UNDER the turbulence layers: the imagery through a
+    // plain heavy blur, masked to the contact zone, at half opacity. Blur is
+    // local colour-averaging, and with both sides of a pair painting one,
+    // the seam renders the two pictures' tones literally averaged — the
+    // guaranteed-smooth base the turbulence layers then texture. Plain blur
+    // only: no turbulence to re-rasterize, so it is cheap per frame.
+    let seam: NonNullable<MeltRefs['seam']> | null = null
+    if ((blend.seamBlur ?? 1) > 0) {
+      const filter = svg('filter', {
+        id: `${uid}-fs`,
+        filterUnits: 'userSpaceOnUse',
+        x: '0',
+        y: '0',
+        width: '0',
+        height: '0',
+        'color-interpolation-filters': 'sRGB',
+      })
+      const blurEl = svg('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: '0' })
+      filter.append(blurEl)
+      const mask = svg('mask', {
+        id: `${uid}-ms`,
+        maskUnits: 'userSpaceOnUse',
+        x: '-10000',
+        y: '-10000',
+        width: '20000',
+        height: '20000',
+      })
+      const circle = svg('circle', { cx: '0', cy: '0', r: '0', fill: `url(#${uid}-g)` })
+      mask.append(circle)
+      defs.append(filter, mask)
+      const gl = svg('g', {})
+      gl.setAttribute('mask', `url(#${uid}-ms)`)
+      gl.setAttribute('opacity', '0')
+      const filtered = svg('g', {})
+      filtered.setAttribute('filter', `url(#${uid}-fs)`)
+      gl.append(filtered)
+      // Under the turbulence layers: base wash first, texture on top.
+      host.insertBefore(gl, defs.nextSibling)
+      seam = { gl, filter, blurEl, circle: circle as SVGCircleElement }
+    }
+
     const entries: MeltEntry[] = imgs.map((el, i) => {
       const pattern = svg('pattern', {
         id: `${uid}-p${i}`,
@@ -776,12 +836,19 @@ export class ObserveEngine {
         l.shift.append(rect)
         return rect
       })
+      // The seam rect joins entry.rects, so the per-frame geometry writer
+      // positions it exactly like the turbulence layers' rects.
+      if (seam) {
+        const rect = svg('rect', { x: '0', y: '0', width: '0', height: '0', fill: `url(#${uid}-p${i})` })
+        seam.gl.firstElementChild!.append(rect)
+        rects.push(rect)
+      }
       const radiusPx = measureRadius(el, el.offsetWidth, el.offsetHeight)[0]
       return { el, rects, pattern, image, radiusPx, lowRes: false, measured: null, lastGeom: null, lastHole: null }
     })
 
     host.setAttribute('opacity', '0')
-    item.melt = { layers, entries }
+    item.melt = { layers, entries, seam }
 
     // surface: 'image' — the LIQUID ITSELF is made of the image, not of the
     // group fill. The blob is pattern-filled with the item's own imagery
@@ -822,6 +889,10 @@ export class ObserveEngine {
     item.meltWroteAt = 0
     item.meltAxis = null
     for (const layer of item.melt?.layers ?? []) layer.last = undefined
+    if (item.melt?.seam) {
+      item.melt.seam.last = undefined
+      item.melt.seam.gl.setAttribute('opacity', '0')
+    }
     for (const entry of item.melt?.entries ?? []) {
       entry.el.style.removeProperty('mask-image')
       entry.el.style.removeProperty('-webkit-mask-image')
@@ -1648,6 +1719,36 @@ export class ObserveEngine {
       layer.shift.setAttribute('transform', shiftT)
       layer.erode.setAttribute('values', erodeV)
     })
+    // Seam-blend layer: plain blur, no turbulence — the guaranteed-smooth
+    // colour-averaging wash under the textured layers. Half opacity so a
+    // pair's two washes sum to an average of both pictures at the seam.
+    if (melt.seam) {
+      const seam = melt.seam
+      const sBlur = q((blend.seamBlur ?? blend.blur * 1.6) * eStruct, 0.25)
+      const sOp = q(Math.min(1, eStruct * 1.2) * 0.55, 0.02)
+      const sR = q(d * 1.25, 0.5)
+      const rrS = q(d * 1.25 * elong + sBlur * 3 + 10, 8)
+      const sRegionX = String(q(bx - rrS, 8))
+      const sRegionY = String(q(by - rrS, 8))
+      const sRegionW = String(rrS * 2)
+      const fp =
+        `${sBlur}|${sOp}|${q(bx, 0.5)},${q(by, 0.5)},${sR}|${zoneT}` +
+        `|${sRegionX},${sRegionY},${sRegionW}`
+      if (seam.last !== fp) {
+        seam.last = fp
+        seam.filter.setAttribute('x', sRegionX)
+        seam.filter.setAttribute('y', sRegionY)
+        seam.filter.setAttribute('width', sRegionW)
+        seam.filter.setAttribute('height', sRegionW)
+        seam.blurEl.setAttribute('stdDeviation', String(sBlur))
+        seam.circle.setAttribute('cx', String(q(bx, 0.5)))
+        seam.circle.setAttribute('cy', String(q(by, 0.5)))
+        seam.circle.setAttribute('r', String(sR))
+        if (zoneT) seam.circle.setAttribute('transform', zoneT)
+        else seam.circle.removeAttribute('transform')
+        seam.gl.setAttribute('opacity', String(sOp))
+      }
+    }
     // Gentle magnetic pull of the melted body toward the contact.
     const icx = f.x + f.w / 2
     const icy = f.y + f.h / 2
