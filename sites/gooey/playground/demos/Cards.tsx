@@ -104,6 +104,9 @@ export function Cards({ blur, contrast, shadow, pro, bare }: DemoProps) {
     // neck renders as a blur-blend of both photos' colours, no white
     // surface material at the seam.
     surface: 'image' as const,
+    // Copies clear early once the cards merge — past a shallow overlap the
+    // pair should read as two crisp photos on one surface, not a smear.
+    sink: 0.35,
     warp: st.warp * k,
     // Lower than the avatar tuning: at the seam of two large photos a heavy
     // blur reads as fog over the neck, not as liquid.
@@ -129,7 +132,11 @@ export function Cards({ blur, contrast, shadow, pro, bare }: DemoProps) {
               // other, so the seam mixes two liquids — always armed, the
               // engine's proximity ramp does the gating.
               dissolve={dissolve}
-              morph={{ advanced: { blobInset: 2, bridgeGrow: 10 } }}
+              // Inset up, bridgeGrow down: with surface:'image' the blob IS
+              // the picture, so any blob inflation on approach reads as the
+              // photo growing. A deeper inset hides the blob under the crisp
+              // edge, and the gentler grow still necks without the swell.
+              morph={{ advanced: { blobInset: 3, bridgeGrow: 5 } }}
             >
               <div
                 className="dc-card"

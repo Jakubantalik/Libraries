@@ -1539,8 +1539,13 @@ export class ObserveEngine {
     // into averaged tones along the bridge. The old 0.6 cap stopped the
     // stretch at the seam, so a long neck stayed bare liquid with two short
     // stubs of imagery at its ends.
+    // Stretch dies as the bodies MERGE: it exists to carry imagery across a
+    // neck, and once the pieces overlap there is no neck to cross — the same
+    // stretch then just paints a scaled ghost of the image over its own crisp
+    // photo (misaligned edges, the "grown image" look). Gone by ~45% embed.
+    const settle = 1 - smoothstep(Math.min(1, embed * 2.2))
     const kFlow =
-      Math.min(1.15, (gAmt + bestGap) / Math.max(8, 2 * d)) * (0.5 + taper)
+      Math.min(1.15, (gAmt + bestGap) / Math.max(8, 2 * d)) * (0.5 + taper) * settle
     const flow = (k: number) => {
       const sx = r3(1 + kFlow * k)
       const sy = r3(1 / (1 + kFlow * 0.35 * k))
