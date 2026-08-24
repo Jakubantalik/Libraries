@@ -104,9 +104,11 @@ export function Cards({ blur, contrast, shadow, pro, bare }: DemoProps) {
     // neck renders as a blur-blend of both photos' colours, no white
     // surface material at the seam.
     surface: 'image' as const,
-    // Copies clear early once the cards merge — past a shallow overlap the
-    // pair should read as two crisp photos on one surface, not a smear.
-    sink: 0.35,
+    // Melt lives through the whole overlapping phase — the seam must keep
+    // blending while any shared edge exists; the stretch-ghost problem at
+    // depth is handled by the engine's settle gating, not by killing the
+    // melt early. Cleared only near full engulfment.
+    sink: 0.7,
     warp: st.warp * k,
     // Lower than the avatar tuning: at the seam of two large photos a heavy
     // blur reads as fog over the neck, not as liquid.

@@ -1265,12 +1265,18 @@ export class ObserveEngine {
     // overlap the pair can ever produce, so 1 means fully engulfed and the
     // two items agree on the number from either side.
     let embed = 0
+    /** Longest axis of the overlap rect — how much SEAM the pair currently
+     *  shares. The photo-edge erasure must scale with this: a hole sized to
+     *  the melt zone is a dot on a 40px seam, and everything past it stays a
+     *  razor-sharp photo edge cutting across the neighbour. */
+    let contactSpan = 0
     if (bestOther && bestGap === 0) {
       const o = bestOther
       const ox = Math.min(f.x + f.w, o.x + o.w) - Math.max(f.x, o.x)
       const oy = Math.min(f.y + f.h, o.y + o.h) - Math.max(f.y, o.y)
       const span = Math.max(1, Math.min(f.w, f.h, o.w, o.h))
       embed = Math.max(0, Math.min(ox, oy)) / span
+      contactSpan = Math.max(0, Math.max(ox, oy))
     }
     // Target strength from proximity and activity; squared smoothstep biases
     // the ramp late — barely anything at first neck.
@@ -1770,7 +1776,18 @@ export class ObserveEngine {
       // and write nothing.
       const hx = Math.round(lx)
       const hy = Math.round(ly)
-      const hd = q(Math.min(d * Math.min(kx, ky), rim), 1)
+      // Sized to the SEAM, not just the melt zone: once the boxes overlap,
+      // the shared edge is contactSpan long, and an erasure sized to the
+      // zone alone leaves most of that edge as a razor-sharp photo line
+      // cutting across the neighbour. Growing the hole with the span erases
+      // the whole crossing edge — what shows through is the image-filled
+      // blobs beneath, whose goo blur is already blending both pictures'
+      // local colours, so the seam resolves as the two tones melting
+      // together instead of a hard cut.
+      const hd = q(
+        Math.min(Math.max(d, contactSpan * 0.75) * Math.min(kx, ky), rim),
+        1,
+      )
       // White stops (opaque under both alpha- and luminance-mode masking), and
       // a final keep-stop that reaches the image's farthest corner. The hole's
       // own stops only span the neck, so on any image bigger than the neck
@@ -1797,7 +1814,7 @@ export class ObserveEngine {
       // longer cover it — the white silhouette showed through as a pale ring
       // hugging the melt. Tighter stops keep the fully-erased core well
       // under the copy's opaque middle.
-      const hole = `radial-gradient(circle at ${hx}px ${hy}px, rgba(255,255,255,${holeAlpha}) ${round(hd * 0.22)}px, rgba(255,255,255,${holeMid}) ${round(hd * 0.4)}px, #fff ${round(hd * 0.58)}px, #fff ${far}px)`
+      const hole = `radial-gradient(circle at ${hx}px ${hy}px, rgba(255,255,255,${holeAlpha}) ${round(hd * 0.2)}px, rgba(255,255,255,${holeMid}) ${round(hd * 0.45)}px, #fff ${round(hd * 0.78)}px, #fff ${far}px)`
       if (hole !== entry.lastHole) {
         entry.lastHole = hole
         entry.el.style.setProperty('mask-image', hole)
