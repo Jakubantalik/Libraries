@@ -1,5 +1,17 @@
 import { measureRadius } from './geometry'
 
+// Vite dev only: this module owns live singletons — the measurement loop and
+// the overlay DOM it built. React Refresh hot-swaps our importers while the
+// RUNNING engine keeps executing the old code, so an engine edit could leave
+// a page showing new controls wired to old behavior; that stale-engine state
+// repeatedly presented as "the fix didn't work". Any edit here is a full
+// reload. Dead code in production builds (import.meta.hot is undefined).
+const viteHot = (
+  import.meta as { hot?: { accept(cb: () => void): void; invalidate(): void } }
+).hot
+if (viteHot) viteHot.accept(() => viteHot.invalidate())
+
+
 export interface BlendConfig {
   /** SVG group in the melt-overlay layer; the engine builds the warped-image
    *  structure inside it (pattern-filled rounded rects run through a
@@ -67,6 +79,19 @@ export interface BlendConfig {
    *  which reads as a smear that should have resolved. Default 0.8; raise
    *  toward (or past) 1 to keep melting while deeply overlapped. */
   sink?: number
+  /** What the liquid is MADE OF. 'liquid' (default): the group's fill — the
+   *  classic white/surface goo, imagery painted over it. 'image': the item's
+   *  blob is pattern-filled with its own imagery, so the goo neck between
+   *  two such items renders as a blur-blend of both images' local colours —
+   *  no surface material visible at the seam at all. */
+  surface?: 'liquid' | 'image'
+  /** Blur radius (px) of the seam-blend layer: the item's imagery painted
+   *  once more through a PLAIN heavy blur, masked to the contact zone, at
+   *  half opacity. Both sides of a pair paint one, so the seam shows the two
+   *  pictures' local colours literally averaged — a guaranteed-smooth wash
+   *  over any hard crossing edge, independent of warp and erosion. Defaults
+   *  to 1.6x `blur`; 0 disables the layer. */
+  seamBlur?: number
 }
 
 export interface EvolveOptions {
@@ -164,6 +189,19 @@ export interface MoveOptions {
   /** Trailing droplet size as a fraction of the body. 0 disables the tail.
    *  Default 0.46. */
   tail?: number
+  /** How FAR the tail extends behind the body — the reach of the tongue,
+   *  from hugging the trailing edge (0) to trailing a full extra
+   *  body-length (1). Size is `tail`'s job alone. Default 0.5. */
+  force?: number
+  /** Vertical body bow: vertical velocity arcs the top and bottom edges —
+   *  the middle leads into the motion, the ends lag, like a flexible bar
+   *  pulled through liquid. 0 disables. Default 0.3. */
+  bend?: number
+  /** Horizontal cap deformation: horizontal velocity reshapes the rounded
+   *  left/right sides — the leading cap blunts against the flow, the
+   *  trailing cap stretches out, like a soft body pushed through liquid.
+   *  0 disables. Default 0.3. */
+  bendX?: number
 }
 
 export const MOVE_DEFAULTS: Required<MoveOptions> = {
@@ -171,6 +209,13 @@ export const MOVE_DEFAULTS: Required<MoveOptions> = {
   damping: 18,
   stretch: 0.18,
   tail: 0.46,
+  force: 0.5,
+  // Both bows are OPT-IN. As defaults they deformed every move item: the
+  // sliders' circular thumbs turned egg-shaped mid-drag (cap deformation)
+  // and sagged off the track's centreline (vertical bow) from nothing but
+  // spring wobble in the velocity.
+  bend: 0,
+  bendX: 0,
 }
 
 export interface ItemDynamics {
@@ -213,14 +258,14 @@ interface MeltEntry {
   rects: SVGRectElement[]
   pattern: SVGPatternElement
   image: SVGImageElement
-  /** True once the pattern feeds a pre-downscaled copy (see downscaleHref). */
-  lowRes: boolean
   radiusPx: number
   /** Geometry sampled during the frame's READ pass (group coordinates).
    *  Measuring lazily inside the write pass meant every item's mask write
    *  invalidated layout for the next item's read — one forced synchronous
    *  layout per item per frame. */
   measured: { x: number; y: number; w: number; h: number; ow: number; oh: number } | null
+  /** True once the pattern feeds a pre-downscaled copy (see downscaleHref). */
+  lowRes: boolean
   /** Last geometry + mask written, so unchanged frames stay DOM-silent. */
   lastGeom: string | null
   lastHole: string | null
@@ -255,6 +300,18 @@ interface MeltLayer {
 interface MeltRefs {
   layers: MeltLayer[]
   entries: MeltEntry[]
+  /** The seam-blend layer: the item's imagery drawn once more through a
+   *  plain heavy blur, masked to the contact zone, at half opacity. Both
+   *  sides of a pair paint one, so the seam shows the two pictures' local
+   *  colours literally averaged — the guaranteed-smooth base the turbulence
+   *  layers then texture. Null when the item was built without it. */
+  seam: {
+    gl: SVGGElement
+    filter: SVGElement
+    blurEl: SVGElement
+    circle: SVGCircleElement
+    last?: string
+  } | null
 }
 
 /** How many stacked layers approximate the gradient. */
@@ -296,7 +353,7 @@ interface Item extends ObservedTarget {
   radiusPx: number
   last: Frame | null
   frame: Frame | null
-  lastBlend: { cx: number; cy: number; s: number; d: number } | null
+  lastBlend: { cx: number; cy: number; s: number; d: number; pk: string } | null
   melt: MeltRefs | null
   sim: Sim | null
   /** Peak-hold envelope of morph motion: rises instantly, decays smoothly —
@@ -319,6 +376,23 @@ interface Item extends ObservedTarget {
   /** Trailing droplet for move items: a laggier satellite the goo filter
    *  strings into a teardrop tail while the element is in motion. */
   tailEl: SVGCircleElement | null
+  /** Two intermediate droplets between body and main satellite — the taper
+   *  that keeps the tail reading as one organic tongue, not a lone circle. */
+  tailMidA: SVGCircleElement | null
+  tailMidB: SVGCircleElement | null
+  /** Wobble phase, advanced by distance travelled (not wall time), so the
+   *  mid-droplets weave slightly and the tail never looks die-cut. */
+  tailPhase: number
+  /** Smoothed body-bow displacements (px): Y arcs top/bottom edges,
+   *  X arcs left/right. */
+  bendCur: number
+  bendCurX: number
+  /** Path that replaces the rect while the body is bowed — a rect cannot
+   *  arc, so the bend renders as a real curved silhouette. */
+  bendPathEl: SVGPathElement | null
+  lastBendD: string | null
+  /** Last "--lg-bend-x,--lg-bend-y" write, to skip redundant style sets. */
+  lastBendVars: string | null
   tailX: number
   tailY: number
   tailVx: number
@@ -416,6 +490,32 @@ function q(v: number, step: number): number {
   return Math.round(v / step) * step
 }
 
+const SVG_NS = 'http://www.w3.org/2000/svg'
+let meltCounter = 0
+
+function smoothstep(t: number): number {
+  const c = Math.min(1, Math.max(0, t))
+  return c * c * (3 - 2 * c)
+}
+
+function svg<K extends keyof SVGElementTagNameMap>(
+  tag: K,
+  attrs: Record<string, string>,
+): SVGElementTagNameMap[K] {
+  const el = document.createElementNS(SVG_NS, tag)
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v)
+  return el
+}
+
+/** Shared per-group measurement loop for observe-mode items: mirrors externally
+ *  animated elements onto their blobs each frame, then sleeps entirely once
+ *  nothing has moved for ~half a second. MutationObserver + transition /
+ *  animation events + a slow safety tick wake it, so idle cost is zero.
+ *
+ *  Items opted into contact blur additionally get a liquid melt at the point
+ *  where they touch a neighbour: their images are re-rendered as SVG shapes
+ *  warped by a turbulence displacement field — edges bend and smear like two
+ *  materials merging — while the originals' edges dissolve under them. */
 /** Pre-downscaled copy of an <img> for the melt patterns. The pattern draws
  *  its source at display size on EVERY filter-graph execution — megapixel
  *  photos inside a 40px avatar meant layers x entries full-resolution
@@ -447,32 +547,6 @@ function downscaleHref(el: HTMLImageElement): string | null {
   }
 }
 
-const SVG_NS = 'http://www.w3.org/2000/svg'
-let meltCounter = 0
-
-function smoothstep(t: number): number {
-  const c = Math.min(1, Math.max(0, t))
-  return c * c * (3 - 2 * c)
-}
-
-function svg<K extends keyof SVGElementTagNameMap>(
-  tag: K,
-  attrs: Record<string, string>,
-): SVGElementTagNameMap[K] {
-  const el = document.createElementNS(SVG_NS, tag)
-  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v)
-  return el
-}
-
-/** Shared per-group measurement loop for observe-mode items: mirrors externally
- *  animated elements onto their blobs each frame, then sleeps entirely once
- *  nothing has moved for ~half a second. MutationObserver + transition /
- *  animation events + a slow safety tick wake it, so idle cost is zero.
- *
- *  Items opted into contact blur additionally get a liquid melt at the point
- *  where they touch a neighbour: their images are re-rendered as SVG shapes
- *  warped by a turbulence displacement field — edges bend and smear like two
- *  materials merging — while the originals' edges dissolve under them. */
 export class ObserveEngine {
   /** Goo blur of the owning group; used to derive the default blend range. */
   gooBlur = 6
@@ -510,6 +584,14 @@ export class ObserveEngine {
       morphActive: false,
       round01: 0,
       tailEl: null,
+      tailMidA: null,
+      tailMidB: null,
+      tailPhase: 0,
+      bendCur: 0,
+      bendCurX: 0,
+      bendPathEl: null,
+      lastBendD: null,
+      lastBendVars: null,
       tailX: 0,
       tailY: 0,
       tailVx: 0,
@@ -542,9 +624,20 @@ export class ObserveEngine {
     this.refreshMelt(item)
     if (t.dynamics?.move) {
       // Painted before (below) the main blob; the goo merge does the rest.
+      // Three circles: main satellite plus two tapering mid-droplets, so the
+      // merged silhouette is a tongue that thins organically, not one disc.
       const tail = svg('circle', { cx: '0', cy: '0', r: '0' })
+      const midA = svg('circle', { cx: '0', cy: '0', r: '0' })
+      const midB = svg('circle', { cx: '0', cy: '0', r: '0' })
       t.blob.parentNode?.insertBefore(tail, t.blob)
+      t.blob.parentNode?.insertBefore(midA, t.blob)
+      t.blob.parentNode?.insertBefore(midB, t.blob)
       item.tailEl = tail
+      item.tailMidA = midA
+      item.tailMidB = midB
+      const bendPath = svg('path', { d: '' }) as SVGPathElement
+      t.blob.parentNode?.insertBefore(bendPath, t.blob)
+      item.bendPathEl = bendPath
     }
     this.ensureSources()
     this.measureAll()
@@ -555,6 +648,9 @@ export class ObserveEngine {
       this.clearBlend(item)
       if (item.contentBlurred) item.target.style.removeProperty('filter')
       item.tailEl?.remove()
+      item.tailMidA?.remove()
+      item.tailMidB?.remove()
+      item.bendPathEl?.remove()
     }
   }
 
@@ -648,10 +744,16 @@ export class ObserveEngine {
     gradient.append(
       // Long, smooth falloff: the melt reads as a gradient from intact rim
       // to fully mixed core, not as a disc with a soft edge.
+      // Core-to-mid FULLY opaque, rim tight. Two failure modes shaped this:
+      // a translucent middle let the white silhouette neck glow through the
+      // copy right at the seam (a bright ring/dot wherever the goo bridges
+      // dark imagery — the neck sits between the photos' rounded corners, so
+      // nothing else can cover it), and a half-opaque rim let the copy's
+      // blurred imagery drift far past the neck, reading as fog over a
+      // contrasting neighbour. Opaque to 55%, then a fast falloff.
       svg('stop', { offset: '0%', 'stop-color': '#fff' }),
-      svg('stop', { offset: '35%', 'stop-color': '#fff', 'stop-opacity': '0.95' }),
-      svg('stop', { offset: '60%', 'stop-color': '#fff', 'stop-opacity': '0.6' }),
-      svg('stop', { offset: '82%', 'stop-color': '#fff', 'stop-opacity': '0.25' }),
+      svg('stop', { offset: '55%', 'stop-color': '#fff' }),
+      svg('stop', { offset: '78%', 'stop-color': '#fff', 'stop-opacity': '0.55' }),
       svg('stop', { offset: '100%', 'stop-color': '#fff', 'stop-opacity': '0' }),
     )
     defs.append(gradient)
@@ -748,6 +850,47 @@ export class ObserveEngine {
     const layers = Array.from({ length: MELT_LAYERS }, (_, i) => mkLayer(`l${i}`))
     host.append(defs, ...layers.map(l => l.gl))
 
+    // Seam-blend layer, UNDER the turbulence layers: the imagery through a
+    // plain heavy blur, masked to the contact zone, at half opacity. Blur is
+    // local colour-averaging, and with both sides of a pair painting one,
+    // the seam renders the two pictures' tones literally averaged — the
+    // guaranteed-smooth base the turbulence layers then texture. Plain blur
+    // only: no turbulence to re-rasterize, so it is cheap per frame.
+    let seam: NonNullable<MeltRefs['seam']> | null = null
+    if ((blend.seamBlur ?? 1) > 0) {
+      const filter = svg('filter', {
+        id: `${uid}-fs`,
+        filterUnits: 'userSpaceOnUse',
+        x: '0',
+        y: '0',
+        width: '0',
+        height: '0',
+        'color-interpolation-filters': 'sRGB',
+      })
+      const blurEl = svg('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: '0' })
+      filter.append(blurEl)
+      const mask = svg('mask', {
+        id: `${uid}-ms`,
+        maskUnits: 'userSpaceOnUse',
+        x: '-10000',
+        y: '-10000',
+        width: '20000',
+        height: '20000',
+      })
+      const circle = svg('circle', { cx: '0', cy: '0', r: '0', fill: `url(#${uid}-g)` })
+      mask.append(circle)
+      defs.append(filter, mask)
+      const gl = svg('g', {})
+      gl.setAttribute('mask', `url(#${uid}-ms)`)
+      gl.setAttribute('opacity', '0')
+      const filtered = svg('g', {})
+      filtered.setAttribute('filter', `url(#${uid}-fs)`)
+      gl.append(filtered)
+      // Under the turbulence layers: base wash first, texture on top.
+      host.insertBefore(gl, defs.nextSibling)
+      seam = { gl, filter, blurEl, circle: circle as SVGCircleElement }
+    }
+
     const entries: MeltEntry[] = imgs.map((el, i) => {
       const pattern = svg('pattern', {
         id: `${uid}-p${i}`,
@@ -766,12 +909,58 @@ export class ObserveEngine {
         l.shift.append(rect)
         return rect
       })
+      // The seam rect joins entry.rects, so the per-frame geometry writer
+      // positions it exactly like the turbulence layers' rects.
+      if (seam) {
+        const rect = svg('rect', { x: '0', y: '0', width: '0', height: '0', fill: `url(#${uid}-p${i})` })
+        seam.gl.firstElementChild!.append(rect)
+        rects.push(rect)
+      }
       const radiusPx = measureRadius(el, el.offsetWidth, el.offsetHeight)[0]
-      return { el, rects, pattern, image, radiusPx, lowRes: false, measured: null, lastGeom: null, lastHole: null }
+      return {
+        el,
+        rects,
+        pattern,
+        image,
+        radiusPx,
+        lowRes: false,
+        measured: null,
+        lastGeom: null,
+        lastHole: null,
+      }
     })
 
     host.setAttribute('opacity', '0')
-    item.melt = { layers, entries }
+    item.melt = { layers, entries, seam }
+
+    // surface: 'image' — the LIQUID ITSELF is made of the image, not of the
+    // group fill. The blob is pattern-filled with the item's own imagery
+    // (objectBoundingBox, so the pattern rides the blob with zero per-frame
+    // bookkeeping), and the goo filter's blur then mixes both bodies' colours
+    // wherever their blobs merge: the neck becomes a gradient of the two
+    // images' local tones — colour averaging by the same blur that builds
+    // the neck — instead of a strip of bare surface material.
+    if (blend.surface === 'image' && imgs[0]) {
+      const bp = svg('pattern', {
+        id: `${uid}-bp`,
+        patternUnits: 'objectBoundingBox',
+        patternContentUnits: 'objectBoundingBox',
+        width: '1',
+        height: '1',
+      })
+      const bpImage = svg('image', {
+        width: '1',
+        height: '1',
+        preserveAspectRatio: 'xMidYMid slice',
+      })
+      bpImage.setAttribute('href', imgs[0].currentSrc || imgs[0].src)
+      bp.append(bpImage)
+      defs.append(bp)
+      item.blob.setAttribute('fill', `url(#${uid}-bp)`)
+    } else {
+      // Back to inheriting the group fill if a rebuild dropped the mode.
+      item.blob.removeAttribute('fill')
+    }
   }
 
   /** Remove all melt traces: hide the warped overlay, restore image masks. */
@@ -783,9 +972,15 @@ export class ObserveEngine {
     item.meltWroteAt = 0
     item.meltAxis = null
     for (const layer of item.melt?.layers ?? []) layer.last = undefined
+    if (item.melt?.seam) {
+      item.melt.seam.last = undefined
+      item.melt.seam.gl.setAttribute('opacity', '0')
+    }
     for (const entry of item.melt?.entries ?? []) {
       entry.el.style.removeProperty('mask-image')
       entry.el.style.removeProperty('-webkit-mask-image')
+      entry.el.style.removeProperty('mask-composite')
+      entry.el.style.removeProperty('-webkit-mask-composite')
       entry.lastHole = null
       entry.lastGeom = null
     }
@@ -1055,31 +1250,86 @@ export class ObserveEngine {
       ;[item.tailX, item.tailVx] = springSteps(item.tailX, item.tailVx, s.cx, 170, 22, dt)
       ;[item.tailY, item.tailVy] = springSteps(item.tailY, item.tailVy, s.cy, 170, 22, dt)
       const bi = item.blobInset ?? 0
-      const base = Math.max(4, Math.min(s.w, s.h) - bi * 2)
+      // The droplet belongs to the SIDE it trails from, and it has to clear
+      // that side to be seen at all. Both were wrong for a non-square body:
+      // sizing off min(w,h) made a wide card's tail as small as its short
+      // edge, and capping the lag at that same number kept the droplet
+      // buried inside a 246px-wide card — invisible however large the knob.
+      // Perpendicular extent sets the SIZE (a horizontal drag trails the
+      // card's height, a vertical one its width), and the lag cap clears the
+      // body's own half-extent along the motion.
+      const ux = speed > 0.001 ? s.vcx / speed : 1
+      const uy = speed > 0.001 ? s.vcy / speed : 0
+      const perp = Math.max(4, Math.abs(ux) * s.h + Math.abs(uy) * s.w - bi * 2)
+      const halfAlong = (Math.abs(ux) * s.w + Math.abs(uy) * s.h) / 2
+      const base = perp / 2
       const lagX = item.tailX - s.cx
       const lagY = item.tailY - s.cy
       const lag = Math.hypot(lagX, lagY)
-      const maxLag = base * 0.8
+      // `force` = the tongue's reach: how far past the body's trailing edge
+      // the satellite may lag before being dragged along.
+      const mo = dyn.moveOpts ?? MOVE_DEFAULTS
+      const maxLag = halfAlong + base * (0.2 + mo.force * 1.6)
       if (lag > maxLag) {
         item.tailX = s.cx + (lagX / lag) * maxLag
         item.tailY = s.cy + (lagY / lag) * maxLag
       }
-      const targetR = Math.min(
-        base * (dyn.moveOpts ?? MOVE_DEFAULTS).tail,
-        Math.max(0, (speed - 20) * 0.03),
-      )
+      // Growth is RELATIVE, not a fixed px-per-speed slope. An absolute
+      // slope is a size cap in disguise: a wide card trailing its 246px
+      // side needed ~2000px/s before the droplet finished growing, so it
+      // stayed a pebble at any human drag speed. The droplet now reaches
+      // its full size — `tail` x the trailing side's half-extent, so tail 1
+      // is a drop as big as the side it leaves — at a reachable ~400px/s,
+      // whatever the body's dimensions.
+      const tailK = mo.tail
+      // Size is not speed-scaled: once the drag is genuinely moving, the
+      // tail is at its full `tail`-fraction of the trailing side (tail 1 =
+      // the whole side). The short onset ramp only stops it popping in on
+      // micro-jitters; reach/extension is `force`'s job above.
+      const onset = Math.max(0, Math.min(1, (speed - 20) / 120))
+      const targetR = base * tailK * onset
       item.tailR += (targetR - item.tailR) * Math.min(1, dt * 10)
+
       if (item.tailR < 0.3) {
         if (item.lastTail !== 'hidden') {
           item.tailEl.setAttribute('r', '0')
+          item.tailMidA?.setAttribute('r', '0')
+          item.tailMidB?.setAttribute('r', '0')
           item.lastTail = 'hidden'
         }
       } else {
-        const tail = `${round(item.tailX)},${round(item.tailY)},${round(item.tailR)}`
+        // Wobble phase rides distance travelled, so it freezes when the
+        // drag pauses instead of idling on wall time.
+        item.tailPhase += speed * dt * 0.045
+        // Mid-droplets sit at 45% and 75% of the way out, tapering, each
+        // nudged off-axis in opposite directions — the merged tongue gets a
+        // slight S-curve and stops reading as a plain circle chain.
+        const wob = item.tailR * 0.16
+        const px = -uy
+        const py = ux
+        const w1 = Math.sin(item.tailPhase) * wob
+        const w2 = Math.sin(item.tailPhase + 2.4) * -wob
+        const aX = s.cx + lagX * 0.45 + px * w1
+        const aY = s.cy + lagY * 0.45 + py * w1
+        const bX = s.cx + lagX * 0.75 + px * w2
+        const bY = s.cy + lagY * 0.75 + py * w2
+        const tail =
+          `${round(item.tailX)},${round(item.tailY)},${round(item.tailR)},` +
+          `${round(aX)},${round(aY)},${round(bX)},${round(bY)}`
         if (tail !== item.lastTail) {
           item.tailEl.setAttribute('cx', String(round(item.tailX)))
           item.tailEl.setAttribute('cy', String(round(item.tailY)))
           item.tailEl.setAttribute('r', String(round(item.tailR)))
+          if (item.tailMidA) {
+            item.tailMidA.setAttribute('cx', String(round(aX)))
+            item.tailMidA.setAttribute('cy', String(round(aY)))
+            item.tailMidA.setAttribute('r', String(round(item.tailR * 0.62)))
+          }
+          if (item.tailMidB) {
+            item.tailMidB.setAttribute('cx', String(round(bX)))
+            item.tailMidB.setAttribute('cy', String(round(bY)))
+            item.tailMidB.setAttribute('r', String(round(item.tailR * 0.4)))
+          }
           item.lastTail = tail
         }
       }
@@ -1163,11 +1413,71 @@ export class ObserveEngine {
     const bi = item.blobInset ?? 0
     const bw = Math.max(0, s.w - bi * 2)
     const bh = Math.max(0, s.h - bi * 2)
+    const paintRx = pillRadius(renderR - bi, bw, bh)
+    // Body bow, two independent axes: vertical velocity arcs the top and
+    // bottom edges (middle leads, ends lag), horizontal velocity arcs the
+    // left and right edges — each behind its own knob. A rect cannot arc,
+    // so while bowed the silhouette is drawn as a path with the affected
+    // edges curved, and the rect is parked at zero size.
+    let bendD = ''
+    if (dyn.move && item.bendPathEl) {
+      const mo = dyn.moveOpts ?? MOVE_DEFAULTS
+      const cap = Math.min(bw, bh) * 0.5
+      const bTy = Math.max(-cap, Math.min(cap, s.vcy * 0.05)) * mo.bend
+      // The cap deformation reads at larger amplitudes than the bow, so the
+      // horizontal axis gets a higher ceiling and a hotter velocity slope.
+      const capX = Math.min(bw, bh) * 0.9
+      const bTx = Math.max(-capX, Math.min(capX, s.vcx * 0.09)) * mo.bendX
+      item.bendCur += (bTy - item.bendCur) * Math.min(1, dt * 9)
+      item.bendCurX += (bTx - item.bendCurX) * Math.min(1, dt * 9)
+      // Expose the live bend to the content as CSS vars, so the DOM inside
+      // can lean with the liquid (the silhouette arcs; real elements can
+      // only translate/skew, so the content chooses its own response).
+      const bvx = Math.round(item.bendCurX * 10) / 10
+      const bvy = Math.round(item.bendCur * 10) / 10
+      const bendVars = `${bvx},${bvy}`
+      if (bendVars !== item.lastBendVars) {
+        item.target.style.setProperty('--lg-bend-x', `${bvx}px`)
+        item.target.style.setProperty('--lg-bend-y', `${bvy}px`)
+        // Unitless twins: CSS calc() cannot turn px into deg, so rotation/
+        // skew/scale responses need the raw numbers.
+        item.target.style.setProperty('--lg-bend-xn', String(bvx))
+        item.target.style.setProperty('--lg-bend-yn', String(bvy))
+        item.lastBendVars = bendVars
+      }
+      const bendActive = Math.abs(item.bendCur) > 0.5 || Math.abs(item.bendCurX) > 0.5
+      if (bendActive && bw > 1 && bh > 1) {
+        const r = Math.min(paintRx, bw / 2, bh / 2)
+        // Vertical bow: quadratic sag b at the edge midpoint (control 2b).
+        const cy = Math.round(item.bendCur * 2 * 10) / 10
+        // Horizontal "bend" on a pill can't bow the side edges — they are
+        // zero-length between the corner arcs, so a curve there only shoves
+        // the caps sideways. Real physics deforms the CAPS instead: the
+        // leading cap blunts against the flow (shorter horizontal extent),
+        // the trailing cap stretches out behind, roughly twice as far.
+        const k = item.bendCurX
+        const rxR = Math.max(r * 0.2, Math.min(r * 3, k > 0 ? r - 0.8 * k : r + 1.6 * -k))
+        const rxL = Math.max(r * 0.2, Math.min(r * 3, k > 0 ? r + 1.6 * k : r - 0.8 * -k))
+        // Quarter-circle as cubic: control offset 0.5523 x the radius.
+        const K = 0.5523
+        const f = (v: number) => Math.round(v * 10) / 10
+        bendD =
+          `M ${f(rxL)} 0 Q ${f(bw / 2)} ${cy} ${f(bw - rxR)} 0 ` +
+          `C ${f(bw - rxR + K * rxR)} 0 ${f(bw)} ${f(r - K * r)} ${f(bw)} ${f(r)} ` +
+          `L ${f(bw)} ${f(bh - r)} ` +
+          `C ${f(bw)} ${f(bh - r + K * r)} ${f(bw - rxR + K * rxR)} ${f(bh)} ${f(bw - rxR)} ${f(bh)} ` +
+          `Q ${f(bw / 2)} ${f(bh + item.bendCur * 2)} ${f(rxL)} ${f(bh)} ` +
+          `C ${f(rxL - K * rxL)} ${f(bh)} 0 ${f(bh - r + K * r)} 0 ${f(bh - r)} ` +
+          `L 0 ${f(r)} ` +
+          `C 0 ${f(r - K * r)} ${f(rxL - K * rxL)} 0 ${f(rxL)} 0 Z`
+      }
+    }
+    const bending = bendD !== ''
     const paint = {
       t: `translate(${s.cx - s.w / 2 + bi}px, ${s.cy - s.h / 2 + bi}px)` + extra,
-      w: String(bw),
+      w: bending ? '0' : String(bw),
       h: String(bh),
-      rx: String(pillRadius(renderR - bi, bw, bh)),
+      rx: String(paintRx),
     }
     const lp = item.lastPaint
     if (!lp || lp.t !== paint.t) item.blob.style.transform = paint.t
@@ -1175,6 +1485,13 @@ export class ObserveEngine {
     if (!lp || lp.h !== paint.h) item.blob.setAttribute('height', paint.h)
     if (!lp || lp.rx !== paint.rx) item.blob.setAttribute('rx', paint.rx)
     item.lastPaint = paint
+    if (item.bendPathEl) {
+      if (bendD !== (item.lastBendD ?? '')) {
+        item.bendPathEl.setAttribute('d', bendD)
+        item.lastBendD = bendD
+      }
+      if (bending) item.bendPathEl.style.transform = paint.t
+    }
     item.last = f
     const settled =
       Math.abs(s.cx - tcx) < 0.05 &&
@@ -1226,21 +1543,31 @@ export class ObserveEngine {
     // overlap the pair can ever produce, so 1 means fully engulfed and the
     // two items agree on the number from either side.
     let embed = 0
+    /** Longest axis of the overlap rect — how much SEAM the pair currently
+     *  shares. The photo-edge erasure must scale with this: a hole sized to
+     *  the melt zone is a dot on a 40px seam, and everything past it stays a
+     *  razor-sharp photo edge cutting across the neighbour. */
+    let contactSpan = 0
     if (bestOther && bestGap === 0) {
       const o = bestOther
       const ox = Math.min(f.x + f.w, o.x + o.w) - Math.max(f.x, o.x)
       const oy = Math.min(f.y + f.h, o.y + o.h) - Math.max(f.y, o.y)
       const span = Math.max(1, Math.min(f.w, f.h, o.w, o.h))
       embed = Math.max(0, Math.min(ox, oy)) / span
+      contactSpan = Math.max(0, Math.max(ox, oy))
     }
     // Target strength from proximity and activity; squared smoothstep biases
     // the ramp late — barely anything at first neck.
     let sTarget = 0
     if (bestOther && bestGap < range && blend.active !== false) {
-      // Mild bias only: with `range` tuned to the real necking distance, the
-      // dissolve must track the BRIDGE onset — a squared curve left a sharp
-      // avatar edge visible inside an already-formed neck.
-      const sRaw = smoothstep(1 - bestGap / range)
+      // FULL strength while bridged, soft only at the entry: the melt used to
+      // keep ramping across the whole range (0.34 at half range), so a long
+      // goo neck carried only ghost-faint imagery — the taffy strand read as
+      // bare liquid with two weak stubs. A strand exists exactly while the
+      // neck does, and it should be as saturated mid-flight as at contact;
+      // the outer 35% of the range remains the fade-in so approach still
+      // reads as gradual.
+      const sRaw = smoothstep(Math.min(1, (1 - bestGap / range) / 0.65))
       // Strength is a CEILING, not a linear scale: even at full contact the
       // melt cannot exceed it, but it still ramps the same way on approach —
       // scaling sRaw itself would also slow the ramp, reading as "farther
@@ -1295,7 +1622,7 @@ export class ObserveEngine {
     if (s <= 0.001) {
       if (item.lastBlend && item.lastBlend.s !== 0) {
         this.clearBlend(item)
-        item.lastBlend = { cx: 0, cy: 0, s: 0, d: 0 }
+        item.lastBlend = { cx: 0, cy: 0, s: 0, d: 0, pk: '' }
         return true
       }
       return false
@@ -1362,9 +1689,14 @@ export class ObserveEngine {
     const phaseAdv = Math.min(dt, 1 / 24) * flowSpeed * 0.12 * Math.min(1, moveSpeed / 40)
     item.meltPhase += phaseAdv
     const lb = item.lastBlend
+    // Live-tunable params join the still-frame check: without them a slider
+    // change on a static pose (the tuning workflow) never re-ran the writes
+    // and the knob looked dead until the next drag.
+    const paramKey = `${blend.seamBlur ?? ''}/${blend.strength ?? ''}/${blend.warp}/${blend.blur}/${blend.mix ?? ''}/${blend.gravity ?? ''}`
     if (
       phaseAdv < 1e-4 &&
       lb &&
+      lb.pk === paramKey &&
       Math.abs(lb.cx - cx) < 0.05 &&
       Math.abs(lb.cy - cy) < 0.05 &&
       Math.abs(lb.s - s) < 0.005 &&
@@ -1454,8 +1786,14 @@ export class ObserveEngine {
     // noise can visually resolve.
     const layerVals: string[][] = melt.layers.map((_, i) => {
       const t = n > 1 ? i / (n - 1) : 1 // 0 = outermost rim, 1 = tip
-      const blurK = 0.06 + 0.94 * Math.pow(t, 1.7)
-      const warpK = 0.2 + 0.8 * t
+      // Outer layer carries REAL warp (0.45, was 0.2): the rim of the melt is
+      // what the eye reads as the image's own edge bending — a calm rim made
+      // the surface look rigid with only the core swirling. Blur floor is up
+      // for the same reason: blur is local colour-averaging, and the taffy
+      // look wants the strand smoothed into blended tones over its whole
+      // length, not just at the tip.
+      const blurK = 0.15 + 0.85 * Math.pow(t, 1.4)
+      const warpK = 0.45 + 0.55 * t
       const pr = 0.7 + 0.45 * t
       const oa = 6 * Math.sin(item.meltPhase * pr)
       const ob = 2 * Math.sin(item.meltPhase * pr * 1.31 + 1.7)
@@ -1466,7 +1804,11 @@ export class ObserveEngine {
         String(q(guy * oa + gux * ob, 0.5)),
         String(q(bx, 0.5)),
         String(q(by, 0.5)),
-        String(q(d * (1.15 - 0.75 * t), 0.5)),
+        // Outermost disc at 0.95d, not 1.15d: past d the copy has left the
+        // neck entirely, and its blurred rim smearing onto the neighbour's
+        // body was half of the white-fog-ring report (the other half was the
+        // gradient rim above).
+        String(q(d * (0.95 - 0.55 * t), 0.5)),
         String(q(Math.min(1, eStruct * (0.75 + 0.25 * t)), 0.02)),
       ]
     })
@@ -1481,7 +1823,24 @@ export class ObserveEngine {
     const anchorY = cy - guy * d
     // Taper now shapes the STRETCH (how sharply content is drawn out toward
     // the pill) rather than mask geometry.
-    const kFlow = Math.min(0.6, gAmt / Math.max(8, 2 * d)) * (0.5 + taper)
+    // Gap-aware: while the bodies are APART the copies must travel the whole
+    // neck to meet mid-strand — that meeting is what mixes the two images
+    // into averaged tones along the bridge. The old 0.6 cap stopped the
+    // stretch at the seam, so a long neck stayed bare liquid with two short
+    // stubs of imagery at its ends.
+    // Stretch dies as the bodies MERGE: it exists to carry imagery across a
+    // neck, and once the pieces overlap there is no neck to cross — the same
+    // stretch then just paints a scaled ghost of the image over its own crisp
+    // photo (misaligned edges, the "grown image" look). Gone by ~45% embed.
+    // Floored, not zeroed. Killing the stretch outright on overlap also
+    // disconnected `gravity` in exactly the phase where the melt is supposed
+    // to run deepest — max gravity did nothing once the cards touched. The
+    // ghost-over-own-photo problem it was guarding against is now handled at
+    // the source: the leading edge is feathered away by the cross-fade, so
+    // there is no crisp edge left for a stretched copy to double.
+    const settle = 1 - 0.45 * smoothstep(Math.min(1, embed * 2.2))
+    const kFlow =
+      Math.min(2.2, (gAmt + bestGap) / Math.max(8, 2 * d)) * (0.5 + taper) * settle
     const flow = (k: number) => {
       const sx = r3(1 + kFlow * k)
       const sy = r3(1 / (1 + kFlow * 0.35 * k))
@@ -1510,35 +1869,34 @@ export class ObserveEngine {
     // values must be compared — and skipped — together.
     // Filter region: the mask only reveals a disc around the contact, so the
     // region only has to cover that disc plus however far blur/warp/gravity
-    // can carry pixels into it.
-    //
-    // Each layer's region TRACKS the contact tightly, quantized to 8px, and
-    // is sized PER LAYER: turbulence pixels are the melt's dominant cost on
-    // WebKit (the graph re-executes on every repaint — an anchored
-    // 1.5x-slack shared region measured ~30% slower, scaling with area, so
-    // the only lever is area). A layer can only paint inside its own mask
-    // disc — radius d·(1.15 − 0.75t) — plus what its own blur can bleed
-    // across that edge (3σ), what its displacement can pull in (±scale/2),
-    // and how far the gravity stretch actually carries sources (kFlow·d,
-    // not the old gravity/2 overestimate). The tip layer's disc is a third
-    // of the rim's radius; sizing it to the rim's reach tripled its pixels
-    // for nothing.
+    // can carry pixels into it. Quantized to 8px so small movements don't
+    // re-trigger a raster.
+    // The melt zone is a STRAND, not a disc, whenever the bodies are apart:
+    // the mask disc is stretched along the flow axis so the revealed imagery
+    // spans the whole goo neck. A circle sized to the seam left a long neck
+    // as bare liquid with imagery only at its ends; sized to the neck it
+    // swallowed the bodies sideways. Elongation only, width unchanged.
+    const elong = q(1 + Math.min(1.8, bestGap / Math.max(8, 2 * d)), 0.05)
+    const zoneT =
+      elong > 1.001
+        ? `translate(${round(bx)}, ${round(by)}) rotate(${gDeg}) ` +
+          `scale(${r3(elong)}, 1) ` +
+          `rotate(${-gDeg}) translate(${round(-bx)}, ${round(-by)})`
+        : ''
+    // Region grows with the elongated strand plus the stronger stretch.
+    const spread = blend.blur * 2.5 + blend.warp + gAmt * 0.5 + kFlow * d + 8
+    const rr = q(d * 1.15 * elong + spread, 8)
+    const regionX = String(q(bx - rr, 8))
+    const regionY = String(q(by - rr, 8))
+    const regionW = String(q(rr * 2, 8))
+
     melt.layers.forEach((layer, i) => {
       const t = n > 1 ? i / (n - 1) : 1
       const v = layerVals[i]
       const shiftT = flow(0.4 + 0.6 * t)
       const erodeV = erodeRow(q(mixAmt * (0.15 + 0.85 * t), 0.01))
-      const blurPx = blend.blur * (0.06 + 0.94 * Math.pow(t, 1.7))
-      const warpPx = blend.warp * (0.2 + 0.8 * t)
-      const rr = q(
-        d * (1.15 - 0.75 * t) + blurPx * 3 + warpPx * 0.5 + kFlow * d + 10,
-        8,
-      )
-      const regionX = String(q(bx - rr, 8))
-      const regionY = String(q(by - rr, 8))
-      const regionW = String(rr * 2)
       const fp =
-        v.join(',') + '|' + bfStr + '|' + shiftT + '|' + erodeV +
+        v.join(',') + '|' + bfStr + '|' + shiftT + '|' + erodeV + '|' + zoneT +
         '|' + regionX + ',' + regionY + ',' + regionW
       if (layer.last === fp) return
       layer.last = fp
@@ -1556,10 +1914,40 @@ export class ObserveEngine {
       layer.circle.setAttribute('cx', v[4])
       layer.circle.setAttribute('cy', v[5])
       layer.circle.setAttribute('r', v[6])
+      // Mask writes don't dirty the turbulence raster — the transform rides
+      // the shared fingerprint anyway so a still frame writes nothing.
+      if (zoneT) layer.circle.setAttribute('transform', zoneT)
+      else layer.circle.removeAttribute('transform')
       layer.gl.setAttribute('opacity', v[7])
       layer.shift.setAttribute('transform', shiftT)
       layer.erode.setAttribute('values', erodeV)
     })
+    // Seam-blend layer: plain blur, no turbulence — the guaranteed-smooth
+    // colour-averaging wash under the textured layers. Half opacity so a
+    // pair's two washes sum to an average of both pictures at the seam.
+    if (melt.seam) {
+      const seam = melt.seam
+      const sBlur = q((blend.seamBlur ?? blend.blur * 1.6) * eStruct, 0.25)
+      const sOp = q(Math.min(1, eStruct * 1.2) * 0.55, 0.02)
+      const sR = q(d * 1.25, 0.5)
+      const fp =
+        `${sBlur}|${sOp}|${q(bx, 0.5)},${q(by, 0.5)},${sR}|${zoneT}` +
+        `|${regionX},${regionY},${regionW}`
+      if (seam.last !== fp) {
+        seam.last = fp
+        seam.filter.setAttribute('x', regionX)
+        seam.filter.setAttribute('y', regionY)
+        seam.filter.setAttribute('width', regionW)
+        seam.filter.setAttribute('height', regionW)
+        seam.blurEl.setAttribute('stdDeviation', String(sBlur))
+        seam.circle.setAttribute('cx', String(q(bx, 0.5)))
+        seam.circle.setAttribute('cy', String(q(by, 0.5)))
+        seam.circle.setAttribute('r', String(sR))
+        if (zoneT) seam.circle.setAttribute('transform', zoneT)
+        else seam.circle.removeAttribute('transform')
+        seam.gl.setAttribute('opacity', String(sOp))
+      }
+    }
     // Gentle magnetic pull of the melted body toward the contact.
     const icx = f.x + f.w / 2
     const icy = f.y + f.h / 2
@@ -1651,6 +2039,8 @@ export class ObserveEngine {
           entry.lastHole = null
           entry.el.style.removeProperty('mask-image')
           entry.el.style.removeProperty('-webkit-mask-image')
+          entry.el.style.removeProperty('mask-composite')
+          entry.el.style.removeProperty('-webkit-mask-composite')
         }
         continue
       }
@@ -1688,7 +2078,18 @@ export class ObserveEngine {
       // and write nothing.
       const hx = Math.round(lx)
       const hy = Math.round(ly)
-      const hd = q(Math.min(d * Math.min(kx, ky), rim), 1)
+      // Sized to the SEAM, not just the melt zone: once the boxes overlap,
+      // the shared edge is contactSpan long, and an erasure sized to the
+      // zone alone leaves most of that edge as a razor-sharp photo line
+      // cutting across the neighbour. Growing the hole with the span erases
+      // the whole crossing edge — what shows through is the image-filled
+      // blobs beneath, whose goo blur is already blending both pictures'
+      // local colours, so the seam resolves as the two tones melting
+      // together instead of a hard cut.
+      const hd = q(
+        Math.min(Math.max(d, contactSpan * 0.75) * Math.min(kx, ky), rim),
+        1,
+      )
       // White stops (opaque under both alpha- and luminance-mode masking), and
       // a final keep-stop that reaches the image's farthest corner. The hole's
       // own stops only span the neck, so on any image bigger than the neck
@@ -1709,14 +2110,78 @@ export class ObserveEngine {
             Math.hypot(hx - ow, hy - oh),
           ),
         ) + 2
-      const hole = `radial-gradient(circle at ${hx}px ${hy}px, rgba(255,255,255,${holeAlpha}) ${round(hd * 0.32)}px, rgba(255,255,255,${holeMid}) ${round(hd * 0.55)}px, #fff ${round(hd * 0.8)}px, #fff ${far}px)`
+      // Erasure must stay INSIDE the warped copy's coverage. The copy's mask
+      // falls to ~0.25 opacity by 82% of its disc, so a hole restoring at
+      // 0.8·hd left an annulus where the photo was already erased but the
+      // copy was nearly gone — the white silhouette showed through as a pale
+      // ring hugging the melt. Tighter stops keep the fully-erased core well
+      // under the copy's opaque middle, and the photo is back to intact
+      // before the copy's falloff can no longer cover it.
+      let hole: string
+      if (bestGap === 0 && contactSpan > 4 && bestOther) {
+        const o2 = bestOther
+        // OVERLAPPED: the crossing edge is contactSpan long, and any disc —
+        // however sized — softens one point of it and leaves the rest razor
+        // sharp. So while the boxes overlap, the erasure is a LINEAR feather
+        // instead: the image's whole leading edge (everything facing the
+        // neighbour, full width) fades out across a band, and with both
+        // sides feathering toward each other the seam is a true cross-fade —
+        // each pixel a weighted average of the two pictures. The band width
+        // rides seamBlur, so the public knob directly widens the melt.
+        //
+        // ONE radial mask, centred on the NEIGHBOUR's centre: everything on
+        // my body nearest them fades out, curved around their body — corner
+        // contact, edge contact and deep overlap all feather correctly with
+        // a single gradient. (The previous approach — two axis gradients
+        // combined with mask-composite — depended on compositing support and
+        // on both writes landing; one browser quirk and an edge stayed
+        // razor. A lone gradient cannot half-apply.)
+        const ncx2 = (o2.x + o2.w / 2 - ix) * kx
+        const ncy2 = (o2.y + o2.h / 2 - iy) * ky
+        // Cover the whole crossing region: farthest corner of the OVERLAP
+        // rect from the neighbour centre, in my local px.
+        const ovx0 = (Math.max(f.x, o2.x) - ix) * kx
+        const ovy0 = (Math.max(f.y, o2.y) - iy) * ky
+        const ovx1 = (Math.min(f.x + f.w, o2.x + o2.w) - ix) * kx
+        const ovy1 = (Math.min(f.y + f.h, o2.y + o2.h) - iy) * ky
+        const rEnd = Math.round(
+          Math.max(
+            Math.hypot(ovx0 - ncx2, ovy0 - ncy2),
+            Math.hypot(ovx1 - ncx2, ovy0 - ncy2),
+            Math.hypot(ovx0 - ncx2, ovy1 - ncy2),
+            Math.hypot(ovx1 - ncx2, ovy1 - ncy2),
+          ) + 3,
+        )
+        const band = Math.round(
+          Math.min(
+            rim * 2.6,
+            Math.max(hd, (blend.seamBlur ?? blend.blur * 1.6) * 3.2),
+          ),
+        )
+        const rCore = Math.max(0, rEnd - band)
+        const farR =
+          Math.round(
+            Math.max(
+              Math.hypot(ncx2, ncy2),
+              Math.hypot(ncx2 - ow, ncy2),
+              Math.hypot(ncx2, ncy2 - oh),
+              Math.hypot(ncx2 - ow, ncy2 - oh),
+            ),
+          ) + 2
+        hole = `radial-gradient(circle at ${Math.round(ncx2)}px ${Math.round(ncy2)}px, rgba(255,255,255,${holeAlpha}) ${rCore}px, #fff ${rEnd}px, #fff ${farR}px)`
+      } else {
+        hole = `radial-gradient(circle at ${hx}px ${hy}px, rgba(255,255,255,${holeAlpha}) ${round(hd * 0.2)}px, rgba(255,255,255,${holeMid}) ${round(hd * 0.45)}px, #fff ${round(hd * 0.78)}px, #fff ${far}px)`
+      }
       if (hole !== entry.lastHole) {
         entry.lastHole = hole
         entry.el.style.setProperty('mask-image', hole)
         entry.el.style.setProperty('-webkit-mask-image', hole)
+        // Single-image masks need no compositing; clear any stale one.
+        entry.el.style.removeProperty('mask-composite')
+        entry.el.style.removeProperty('-webkit-mask-composite')
       }
     }
-    item.lastBlend = { cx, cy, s, d }
+    item.lastBlend = { cx, cy, s, d, pk: paramKey }
     return true
   }
 

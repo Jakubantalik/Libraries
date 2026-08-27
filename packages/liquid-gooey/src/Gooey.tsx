@@ -11,6 +11,7 @@ import {
 } from 'react'
 import { GooeyContext, type GooeyContextValue } from './context'
 import { GooFilterPrimitives } from './filter'
+import { ImageMeltLayer, createImageMeltRegistry } from './imageMelt'
 import { useIsoLayoutEffect } from './hooks'
 import { ObserveEngine } from './observer'
 import { parseShadow } from './shadow'
@@ -27,6 +28,12 @@ export interface GooeyProps extends HTMLAttributes<HTMLDivElement> {
   shadow?: string
   /** Extra filter-region slack in px for blobs travelling outside the group box. Default 24. */
   filterPadding?: number
+  /** Max px the liquid boundary undulates — the silhouette (and its shadows)
+   *  run through a gentle noise displacement, so edges read as fluid instead
+   *  of geometric. 0 (default) keeps the calm edge. */
+  waviness?: number
+  /** Noise frequency of the undulation; lower = longer, lazier waves. */
+  wavinessFreq?: number
 }
 
 /** Gooey group: renders the silhouette SVG layer (goo filter + shadow chain)
@@ -42,6 +49,8 @@ export const GooeyRoot = forwardRef<HTMLDivElement, GooeyProps>(function Gooey(
     fill = '#fff',
     shadow,
     filterPadding = 24,
+    waviness = 0,
+    wavinessFreq = 0.018,
     className,
     style,
     children,
@@ -82,14 +91,15 @@ export const GooeyRoot = forwardRef<HTMLDivElement, GooeyProps>(function Gooey(
   }, [])
 
   const engine = useMemo(() => new ObserveEngine(() => groupRef.current), [])
+  const imageMelt = useMemo(() => createImageMeltRegistry(), [])
   useEffect(() => () => engine.dispose(), [engine])
   useEffect(() => {
     engine.gooBlur = blur
   }, [engine, blur])
 
   const ctx = useMemo<GooeyContextValue>(
-    () => ({ portal, meltPortal, fill, getGroup: () => groupRef.current, engine }),
-    [portal, meltPortal, fill, engine],
+    () => ({ portal, meltPortal, fill, getGroup: () => groupRef.current, engine, imageMelt }),
+    [portal, meltPortal, fill, engine, imageMelt],
   )
 
   // The filter raster is the whole performance story on WebKit, which runs
@@ -162,7 +172,13 @@ export const GooeyRoot = forwardRef<HTMLDivElement, GooeyProps>(function Gooey(
             height={size.h + pad * 2}
             colorInterpolationFilters="sRGB"
           >
-            <GooFilterPrimitives blur={blur} contrast={contrast} shadows={svgShadows} />
+            <GooFilterPrimitives
+              blur={blur}
+              contrast={contrast}
+              shadows={svgShadows}
+              waviness={waviness}
+              wavinessFreq={wavinessFreq}
+            />
           </filter>
         </defs>
         <g id={`${filterId}-sil`} ref={setPortal} filter={`url(#${filterId})`} style={{ fill }} />
@@ -209,7 +225,10 @@ export const GooeyRoot = forwardRef<HTMLDivElement, GooeyProps>(function Gooey(
           <g ref={setMeltPortal} />
         </g>
       </svg>
-      <GooeyContext.Provider value={ctx}>{children}</GooeyContext.Provider>
+      <GooeyContext.Provider value={ctx}>
+        {children}
+        <ImageMeltLayer registry={imageMelt} />
+      </GooeyContext.Provider>
     </div>
   )
 })

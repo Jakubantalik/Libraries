@@ -1,6 +1,8 @@
 import type { CSSProperties, ReactNode } from 'react'
 import type { CornerRadii } from './geometry'
 import { GooeyItem, type DissolveOptions } from './GooeyItem'
+import { useGooeyContext } from './context'
+import { IMAGE_MELT_DEFAULTS, ImageMeltItem, type ImageMeltOptions } from './imageMelt'
 import {
   EVOLVE_DEFAULTS,
   MOVE_DEFAULTS,
@@ -15,7 +17,22 @@ import type { Transition } from './spring'
  *    panels.
  *  - 'move': the surface trails a moving element as liquid rubber with a
  *    droplet tail — sliders, tab indicators, dragged things. */
-export type LiquidEffect = 'morph' | 'move'
+export type LiquidEffect = 'morph' | 'move' | 'melt' | 'bend'
+
+/** Tuning for effect="bend": the surface stays glued to the content and the
+ *  BODY deforms with velocity — vertical drag arcs the top/bottom edges
+ *  (middle leads, ends lag), horizontal drag reshapes the rounded caps
+ *  (leading blunts, trailing stretches). The live bend is published on the
+ *  item as --lg-bend-x/-y (px) and --lg-bend-xn/-yn (unitless) CSS vars, so
+ *  content can lean/rotate/shear along with the silhouette. */
+export interface BendTuning {
+  /** Vertical bow strength, 0..1. Default 0.6. */
+  vertical?: number
+  /** Horizontal cap deformation, 0..1. Default 0.35. */
+  horizontal?: number
+  /** Raw MoveOptions escape hatch, merged last. */
+  advanced?: MoveOptions
+}
 
 /** Simple tuning for effect="morph". All knobs are normalized; defaults are
  *  the library's tuned look. Raw physics live under `advanced`. */
@@ -68,6 +85,11 @@ export interface LiquidItemProps {
   morph?: MorphTuning
   /** Tuning for effect="move". */
   move?: MoveTuning
+  /** Tuning for effect="bend". */
+  bend?: BendTuning
+  /** Tuning for effect="melt": the image source (auto-detected from a child
+   *  <img> when omitted) plus the melt's physics. */
+  melt?: ImageMeltOptions & { src?: string }
   /** Melt this item's imagery into a touching neighbour at the contact point
    *  — a liquid warp, not a blur. Orthogonal to `effect`: it describes what
    *  your CONTENT does where two surfaces meet, not how the surface moves.
@@ -167,8 +189,46 @@ function mapMove(t: MoveTuning | undefined): MoveOptions {
 
 /** The public item: two effects, simple normalized knobs, `advanced` escape
  *  hatches into the raw engine options. */
+function mapBend(t: BendTuning | undefined): MoveOptions {
+  return {
+    // Springiness 1 on the public curve: the surface tracks the content
+    // 1:1, so all liquid character comes from the bends.
+    ...mapMove({ springiness: 1, stretch: 0, trail: 0 }),
+    bend: Math.min(1, Math.max(0, t?.vertical ?? 0.6)),
+    bendX: Math.min(1, Math.max(0, t?.horizontal ?? 0.35)),
+    ...t?.advanced,
+  }
+}
+
+/** The melt item is architecturally different: nothing registers with the
+ *  engine — the group's ImageMeltLayer paints the pair. Hooks order demands
+ *  its own component. */
+function MeltItem({
+  melt,
+  children,
+}: {
+  melt?: ImageMeltOptions & { src?: string }
+  children?: ReactNode
+}) {
+  const { imageMelt } = useGooeyContext()
+  const { src, ...tuning } = melt ?? {}
+  return (
+    <ImageMeltItem src={src} opts={{ ...IMAGE_MELT_DEFAULTS, ...tuning }} registry={imageMelt}>
+      {children}
+    </ImageMeltItem>
+  )
+}
+
 export function LiquidItem(props: LiquidItemProps) {
-  const { effect = 'morph', morph, move, dissolve, observe, ...rest } = props
+  const { effect = 'morph', morph, move, bend, melt, dissolve, observe, ...rest } = props
+
+  if (effect === 'melt') {
+    return <MeltItem melt={melt}>{rest.children}</MeltItem>
+  }
+
+  if (effect === 'bend') {
+    return <GooeyItem {...rest} observe effect="move" move={mapBend(bend)} />
+  }
 
   // `dissolve` is positioned as orthogonal to `effect`, but the melt is drawn
   // from the element's MEASURED rect while move's liquid deliberately lags on

@@ -7,11 +7,14 @@ export const Liquid = Object.assign(GooeyRoot, { Item: LiquidItem })
 
 export type { GooeyProps as LiquidProps } from './Gooey'
 export type {
+  BendTuning,
   LiquidEffect,
   LiquidItemProps,
   MorphTuning,
   MoveTuning,
 } from './LiquidItem'
+export { IMAGE_MELT_DEFAULTS } from './imageMelt'
+export type { ImageMeltOptions } from './imageMelt'
 
 // ---- advanced escape hatch (raw engine options + defaults) ----
 export type { DissolveOptions } from './GooeyItem'

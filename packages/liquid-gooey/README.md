@@ -44,7 +44,7 @@ import { Liquid } from 'liquid-gooey'
 
 Run the playground: `npm install && npm run dev` — add `?pro` to the URL for the full raw-physics control panels.
 
-## The two effects
+## The four effects
 
 ### Morph (default)
 
@@ -98,6 +98,73 @@ You move the element however you like (CSS, pointer events, Framer Motion) — t
 
 All defaults reproduce the library's tuned look exactly — knobs at rest change nothing.
 
+### Melt
+
+Two images running molten into each other: the goo averages their colours where
+they touch, each crisp face dissolves back at the seam, and a marbling pass folds
+the two palettes into streaks inside the contact area.
+
+```tsx
+<Liquid>
+  <Liquid.Item effect="melt">
+    <div className="card"><img src={a} /></div>
+  </Liquid.Item>
+  <Liquid.Item effect="melt">
+    <div className="card"><img src={b} /></div>
+  </Liquid.Item>
+</Liquid>
+```
+
+Move the elements however you like — the melt follows their rendered rects. The
+source is read from the first `<img>` inside the item, or passed as
+`melt={{ src }}`. Your element stays interactive (drag handlers, focus) but is
+painted by the melt layer, so style its size and radius as usual.
+
+Pairwise by design: the first two melt items in a group form the pair, because
+the seam maths is two-body.
+
+| Knob | Default | Meaning |
+| --- | --- | --- |
+| `blur` | `7` | Goo sigma — how far the bodies reach, and how wide the colour averaging runs. |
+| `contrast` | `40` | Sharpness of the liquid boundary. |
+| `reach` | `0.8` | How far each crisp face dissolves back before the neighbour. |
+| `fade` | `17` | Softness of that dissolve. |
+| `warp` | `0` | Turbulence displacement of the molten layer (px). |
+| `mix` | `1` | `0..1` — marbling strength in the touch area. |
+| `mixBlur` | `8` | Blur of the marble pass's source colours: low keeps image detail, high folds pre-averaged soup. |
+| `gravity` | `1.9` | How deep the marble zone reaches into each card. |
+| `waviness` | `12` | Wavelength of the warp noise: low = long lazy rolls, high = fine ripples. |
+
+### Bend
+
+The body deforms with velocity, like a soft bar pulled through liquid: dragging
+vertically arcs the long edges (the middle leads, the ends lag), dragging
+sideways reshapes the rounded caps (the leading one blunts, the trailing one
+stretches). The surface stays glued to its content — there is no lag and no
+tail, so text and icons never slide off their own card.
+
+```tsx
+<Liquid.Item effect="bend" bend={{ vertical: 0.6, horizontal: 0.35 }}>
+  <div className="card" style={{ transform: `translate(${x}px, ${y}px)` }}>…</div>
+</Liquid.Item>
+```
+
+| Knob | Default | Meaning |
+| --- | --- | --- |
+| `vertical` | `0.6` | `0..1` — bow strength of the long edges. |
+| `horizontal` | `0.35` | `0..1` — cap deformation. |
+
+The live bend is published on the item as CSS variables — `--lg-bend-x` /
+`--lg-bend-y` (px) and `--lg-bend-xn` / `--lg-bend-yn` (unitless, for `deg`
+maths) — so the content can lean, rotate or shear along with the silhouette:
+
+```css
+.card > * {
+  transform: translateY(calc(var(--lg-bend-y, 0px) * 2))
+             rotate(calc(var(--lg-bend-yn, 0) * 1deg));
+}
+```
+
 ## `<Liquid>` (the group)
 
 Renders a `position: relative` div; the liquid silhouette svg sits behind all children.
@@ -109,6 +176,8 @@ Renders a `position: relative` div; the liquid silhouette svg sits behind all ch
 | `fill` | `'#fff'` | Liquid surface color. Any CSS color; `var(--surface)` works (theming). |
 | `shadow` | — | `box-shadow` syntax, multi-layer supported. Rendered on the **merged** silhouette, so one consistent shadow hugs the liquid through every merge and split. `inset` layers paint INSIDE the liquid edge — inner rings and top highlights follow the merged goo too. |
 | `filterPadding` | `24` | Extra filter-region slack (px) if blobs travel outside the group's box. |
+| `waviness` | `0` | Max px the liquid boundary undulates — the silhouette and its shadows run through a gentle noise displacement, so edges read as fluid rather than geometric. |
+| `wavinessFreq` | `0.018` | Noise frequency of that undulation; lower = longer, lazier waves. |
 
 Plus all standard `div` props. **Size the group to contain the full travel of its items** (like a menu reserving its open footprint).
 
@@ -116,8 +185,8 @@ Plus all standard `div` props. **Size the group to contain the full travel of it
 
 | Prop | Description |
 | --- | --- |
-| `effect` | `'morph'` (default) or `'move'`. |
-| `morph` / `move` | The knobs above, plus `advanced` (below). |
+| `effect` | `'morph'` (default), `'move'`, `'melt'` or `'bend'`. |
+| `morph` / `move` / `melt` / `bend` | The knobs above, plus `advanced` (below). |
 | `dissolve` | `true`, `0..1`, or raw `DissolveOptions` — melts imagery where surfaces meet. Orthogonal to `effect`. |
 | `x` `y` `scale` `transition` `delay` | Component-driven position: the library animates element + liquid in one commit — pixel-perfect sync. `transition` is `'snappy' \| 'smooth' \| 'bouncy'`, `{ stiffness, damping, mass }` or `{ duration, ease }`. |
 | `observe` | Plain-merge items animated by *your* code: the liquid follows the child's rendered rect. Implied by `morph.shape`, `dissolve` and `effect="move"`. |

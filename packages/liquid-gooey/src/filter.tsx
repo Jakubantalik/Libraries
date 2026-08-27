@@ -83,11 +83,18 @@ export function GooFilterPrimitives({
   blur,
   contrast,
   shadows,
+  waviness = 0,
+  wavinessFreq = 0.018,
 }: {
   blur: number
   contrast: number
   shadows: ShadowLayer[]
+  /** Max px the liquid boundary undulates. 0 (default) = calm geometric edge. */
+  waviness?: number
+  /** Noise frequency of the undulation — lower = longer, lazier waves. */
+  wavinessFreq?: number
 }): ReactElement {
+  const wavy = waviness > 0
   // Intercept tracks the slope so the alpha threshold stays near the same
   // crossing as the classic 18/-7 goo pairing.
   const intercept = Math.round((0.5 - contrast * (5 / 12)) * 100) / 100
@@ -100,7 +107,35 @@ export function GooFilterPrimitives({
         values={`1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 ${contrast} ${intercept}`}
         result="goo"
       />
-      <feComposite in="SourceGraphic" in2="goo" operator="atop" result="shape" />
+      <feComposite
+        in="SourceGraphic"
+        in2="goo"
+        operator="atop"
+        result={wavy ? 'shape-raw' : 'shape'}
+      />
+      {/* The liquid boundary itself undulates: the whole silhouette — edges,
+          neck, shadow source — runs through one gentle displacement field, so
+          the surface reads as fluid even at rest. Shadows consume the
+          displaced 'shape', so they hug the wavy edge exactly. */}
+      {wavy && (
+        <>
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency={wavinessFreq}
+            numOctaves={2}
+            seed="7"
+            result="wave-noise"
+          />
+          <feDisplacementMap
+            in="shape-raw"
+            in2="wave-noise"
+            scale={waviness * 2}
+            xChannelSelector="R"
+            yChannelSelector="G"
+            result="shape"
+          />
+        </>
+      )}
       {/* Binarized silhouette, computed ONCE and shared by every pass that
           needs it. Each inset pass and each spread pass used to run this
           identical feColorMatrix themselves — on a 5-layer stack that was

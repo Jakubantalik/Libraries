@@ -1,4 +1,5 @@
 import { createContext, useContext } from 'react'
+import type { ImageMeltRegistry } from './imageMelt'
 import type { ObserveEngine } from './observer'
 
 export interface GooeyContextValue {
@@ -9,6 +10,8 @@ export interface GooeyContextValue {
   fill: string
   getGroup: () => HTMLDivElement | null
   engine: ObserveEngine
+  /** Pairwise image-melt items (effect="melt") register here. */
+  imageMelt: ImageMeltRegistry
 }
 
 export const GooeyContext = createContext<GooeyContextValue | null>(null)
