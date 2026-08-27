@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import type { DemoProps } from './App'
-import { Chips } from './demos/Chips'
+import { DragCard } from './demos/DragCard'
 import { EmailInput } from './demos/EmailInput'
+import { MeltPair } from './demos/MeltPair'
 import { PlusMenu } from './demos/PlusMenu'
 import { Slider } from './demos/Slider'
 import { SHADOWS, getSystemTheme, type Theme } from './theme'
@@ -531,12 +532,18 @@ export function SliderThumb({ x }: { x: number }) {
               <EmailInput {...heroProps} />
             </div>
           </div>
-          <div className="example-row-full">
-            <Chips {...heroProps} />
+          {/* Melt's showcase: two photos running molten into each other —
+              the full-width slot, since the effect needs room to be dragged. */}
+          <div className="example-row-full example-cell--drag">
+            <MeltPair {...heroProps} />
           </div>
           {/* Move's showcase: the one hero piece that isn't a morph. */}
           <div className="example-row-full example-row-short">
             <Slider {...heroProps} />
+          </div>
+          {/* Bend: the body deforms with the drag. */}
+          <div className="example-row-full example-row-short example-cell--drag">
+            <DragCard {...heroProps} />
           </div>
         </section>
 

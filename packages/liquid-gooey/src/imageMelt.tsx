@@ -207,10 +207,14 @@ function MeltPair({
       }}
     >
       <defs>
-        <pattern id={`${uid}-pa`} patternUnits="userSpaceOnUse" x={a.x} y={a.y} width={a.w} height={a.h}>
+        {/* No x/y: the rects referencing these patterns already sit inside a
+            translated <g>, and userSpaceOnUse resolves in that transformed
+            space — an origin here shifted the tile a second time, so the
+            image repeated instead of filling the card once. */}
+        <pattern id={`${uid}-pa`} patternUnits="userSpaceOnUse" width={a.w} height={a.h}>
           <image href={srcA} width={a.w} height={a.h} preserveAspectRatio="xMidYMid slice" />
         </pattern>
-        <pattern id={`${uid}-pb`} patternUnits="userSpaceOnUse" x={b.x} y={b.y} width={b.w} height={b.h}>
+        <pattern id={`${uid}-pb`} patternUnits="userSpaceOnUse" width={b.w} height={b.h}>
           <image href={srcB} width={b.w} height={b.h} preserveAspectRatio="xMidYMid slice" />
         </pattern>
         {/* Goo on colour: blur mixes both images, contrast re-solidifies only
