@@ -1374,3 +1374,123 @@ html[data-theme='light'] .footer-name:hover {
   display: block;
   pointer-events: none;
 }
+
+/* ---- Drag card (effect="bend") ----
+   Lives here, not in the lab stylesheet: the card is a marketing-page
+   hero block as well as a lab demo, and both pages load demo.css. */
+
+/* ---------- drag card (Figma 1363:35173 item pill on Move) ---------- */
+
+.dgc-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+/* The pill VISUAL is the liquid blob; this box only sizes and lays out the
+   crisp content. Backgroundless so the blob shows through as the surface. */
+.dgc-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  /* Figma 1221:5117 "Dropdown": 261x46, radius 54. */
+  width: 261px;
+  height: 46px;
+  margin: -23px 0 0 -130.5px;
+  border-radius: 54px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px 0 8px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.dgc-card:active {
+  cursor: grabbing;
+}
+
+.dgc-chip {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 40px;
+  /* Figma: near-transparent grey puck with a hairline inset ring. */
+  background: rgba(235, 235, 236, 0.3);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+[data-theme='dark'] .dgc-chip {
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.dgc-chip img {
+  width: 16px;
+  height: 16px;
+  display: block;
+  pointer-events: none;
+}
+
+[data-theme='dark'] .dgc-chip img {
+  filter: invert(1) brightness(1.6);
+}
+
+.dgc-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.dgc-count {
+  font-size: 13px;
+  color: var(--text);
+  opacity: 0.5;
+  white-space: nowrap;
+}
+
+/* The liquid group must OWN its box — without explicit size the container
+   collapses and the silhouette (the pill's fill and shadows) renders into a
+   zero-area filter region: content visible, liquid missing. */
+.dgc {
+  width: 320px;
+  height: 210px;
+  position: relative;
+}
+
+/* Content leans with the liquid bend: the engine publishes the live bow as
+   --lg-bend-x/--lg-bend-y on the item, and the card's children translate
+   with it — the middle piece most, the ends least, echoing the arc of the
+   silhouette (real DOM can't bend, so the falloff sells the curve). */
+.dgc-card > * {
+  /* Content DEFORMS with the liquid, not just translates: each piece rides
+     the arc (translate, middle most), ROTATES onto the arc's local tangent
+     (ends tilt toward the sag, middle stays level), and SHEARS with the
+     horizontal cap deformation so glyphs and the chip circle visibly
+     squash/lean. All driven by the engine's unitless bend vars; small-angle
+     degrees stand in for the true tangent. */
+  --dgc-k: calc(var(--dgc-cb, 0) * var(--dgc-arc, 1));
+  transform: translate(
+      calc(var(--lg-bend-x, 0px) * var(--dgc-k) * 2.4),
+      calc(var(--lg-bend-y, 0px) * var(--dgc-k) * 2.4)
+    )
+    rotate(calc(var(--lg-bend-yn, 0) * var(--dgc-rot, 0) * var(--dgc-cb, 0) * 1deg))
+    skewX(calc(var(--lg-bend-xn, 0) * var(--dgc-cb, 0) * -0.55deg))
+    scaleX(calc(1 - var(--lg-bend-xn, 0) * var(--dgc-cb, 0) * var(--dgc-sqx, 0.006)))
+    scaleY(calc(1 + var(--lg-bend-yn, 0) * var(--dgc-cb, 0) * var(--dgc-sqy, 0)));
+  transform-origin: center;
+}
+
+/* Arc tangents: left end tilts one way, right end the other, middle level.
+   The chip is a circle — it squashes hardest against the horizontal flow;
+   the centre text stretches slightly along a vertical bow. */
+.dgc-card > :nth-child(1) { --dgc-arc: 0.45; --dgc-rot: 1.6; --dgc-sqx: 0.014; }
+
+.dgc-card > :nth-child(2) { --dgc-arc: 1; --dgc-rot: 0; --dgc-sqy: 0.01; }
+
+.dgc-card > :nth-child(3) { --dgc-arc: 0.6; --dgc-rot: -1.6; }
