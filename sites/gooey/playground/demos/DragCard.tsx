@@ -11,8 +11,11 @@ import type { DemoProps } from '../App'
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 
-const CLAMP_X = 70
-const CLAMP_Y = 60
+/** Fallback travel when the stage cannot be measured. The real bounds come
+ *  from the group's own box at drag time — the card should be draggable
+ *  across the WHOLE block, and the block is a different width in the lab
+ *  card, the hero row and on a phone. */
+const CLAMP_FALLBACK = { x: 70, y: 60 }
 
 // The avatar group's drop animation, shared verbatim: 400ms with the
 // bounce-0.5 overshoot curve (Chips' dropEase(0.5)).
@@ -23,6 +26,19 @@ const DROP_EASE = 'cubic-bezier(0.34, 1.40, 0.64, 1)'
 export function DragCard({ blur, contrast, dark, shadow, pro, bare }: DemoProps) {
   const [pos, setPos] = useState({ x: 0, y: 0 })
   const [dragging, setDragging] = useState(false)
+  const stageRef = useRef<HTMLDivElement | null>(null)
+  const cardRef = useRef<HTMLDivElement | null>(null)
+  /** Half the free travel in each axis: the card sits centred and moves by
+   *  transform, so it may run to the group's edge but no further. */
+  const limits = () => {
+    const g = stageRef.current?.getBoundingClientRect()
+    const c = cardRef.current?.getBoundingClientRect()
+    if (!g || !c || !g.width || !c.width) return CLAMP_FALLBACK
+    return {
+      x: Math.max(0, (g.width - c.width) / 2),
+      y: Math.max(0, (g.height - c.height) / 2),
+    }
+  }
   // The goo shadow is baked into FILTER PRIMITIVES, so swapping the string
   // cuts between the two stacks instantly — CSS has nothing to transition.
   // Tweening the layer values ourselves and re-emitting the string each
@@ -64,9 +80,10 @@ export function DragCard({ blur, contrast, dark, shadow, pro, bare }: DemoProps)
   const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
     const d = drag.current
     if (!d || e.pointerId !== d.id) return
+    const lim = limits()
     setPos({
-      x: Math.max(-CLAMP_X, Math.min(CLAMP_X, e.clientX - d.dx)),
-      y: Math.max(-CLAMP_Y, Math.min(CLAMP_Y, e.clientY - d.dy)),
+      x: Math.max(-lim.x, Math.min(lim.x, e.clientX - d.dx)),
+      y: Math.max(-lim.y, Math.min(lim.y, e.clientY - d.dy)),
     })
   }
   const endDrag = () => {
@@ -104,6 +121,7 @@ export function DragCard({ blur, contrast, dark, shadow, pro, bare }: DemoProps)
             ].join(', ')
       }
       className="dgc"
+      ref={stageRef}
     >
       {/* springiness 1 = surface glued to content; tail 0 = no droplet at
           all, the bow carries the whole liquid feel. */}
@@ -117,6 +135,7 @@ export function DragCard({ blur, contrast, dark, shadow, pro, bare }: DemoProps)
       >
         <div
           className="dgc-card"
+          ref={cardRef}
           style={{
             transform: `translate(${pos.x}px, ${pos.y}px)`,
             transition: releasing ? `transform ${DROP_MS}ms ${DROP_EASE}` : 'none',

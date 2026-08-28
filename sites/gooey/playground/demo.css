@@ -1343,8 +1343,10 @@ html[data-theme='light'] .footer-name:hover {
 /* ---- Hero blocks for melt + bend (0.2.0) ---- */
 
 .example-cell--drag {
-  /* Both blocks are drag surfaces: no text selection or scroll-stealing. */
-  touch-action: none;
+  /* Only the CARDS inside claim the touch stream (they set touch-action
+     themselves). Putting `touch-action: none` on the whole row killed
+     vertical scrolling across the entire block on phones — the block is
+     mostly empty space, and a finger landing there must still scroll. */
   user-select: none;
   -webkit-user-select: none;
 }
@@ -1458,9 +1460,14 @@ html[data-theme='light'] .footer-name:hover {
    collapses and the silhouette (the pill's fill and shadows) renders into a
    zero-area filter region: content visible, liquid missing. */
 .dgc {
-  width: 320px;
+  /* Full width of whatever block hosts it: the card is draggable across the
+     WHOLE area, and a fixed 320px box would have pinned that travel to a
+     narrow strip in the middle of the hero row. */
+  width: 100%;
+  max-width: 640px;
   height: 210px;
   position: relative;
+  margin: 0 auto;
 }
 
 /* Content leans with the liquid bend: the engine publishes the live bow as
