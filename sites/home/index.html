@@ -109,6 +109,7 @@
       overflow: hidden; display: flex; align-items: center; justify-content: center;
       pointer-events: none;
     }
+    .hero-tile-img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .hero-tile-stage::after {
       content: ""; position: absolute; inset: 0; border-radius: inherit;
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), inset 0 0 0 1px rgba(191, 192, 203, 0.1);
@@ -130,13 +131,16 @@
     }
     .hero-tile-pill svg { width: 16px; height: 16px; display: block; color: #9a9a9a; transform: rotate(-90deg); }
     .hero-tile:hover .hero-tile-pill { opacity: 1; }
-    /* Scatter positions around the centered hero copy (desktop). */
-    .hero-tile--orb   { top: 4px;   left: calc(50% + 8px); }
-    .hero-tile--beam  { top: 96px;  left: calc(50% - 520px); }
-    .hero-tile--metal { top: 118px; left: calc(50% + 372px); }
-    .hero-tile--gooey { top: 330px; left: calc(50% - 400px); }
-    .hero-tile--image { top: 352px; left: calc(50% + 176px); }
-    @media (max-width: 1160px) {
+    /* Scatter positions around the centered hero copy — desktop only,
+       so the static-row fallback below 981px keeps untouched tiles. */
+    @media (min-width: 981px) {
+      .hero-tile--orb   { top: 4px;   left: calc(50% + 8px); }
+      .hero-tile--beam  { top: 96px;  left: calc(50% - 520px); }
+      .hero-tile--metal { top: 118px; left: calc(50% + 372px); }
+      .hero-tile--gooey { top: 330px; left: calc(50% - 400px); }
+      .hero-tile--image { top: 352px; left: calc(50% + 176px); }
+    }
+    @media (min-width: 981px) and (max-width: 1160px) {
       .hero-tile--beam  { left: calc(50% - 440px); }
       .hero-tile--metal { left: calc(50% + 310px); }
       .hero-tile--gooey { left: calc(50% - 340px); }
@@ -158,34 +162,17 @@
 
     /* ── Library grid cards (Figma 1413-37519): icon + meta row ── */
     .lib-card-hit { position: absolute; inset: 0; z-index: 6; border-radius: 24px; }
+    .lib-video { width: 100%; height: 100%; object-fit: cover; display: block; }
     .lib-card .card-stage { height: 245px; }
     .lib-meta {
       position: absolute; left: 16px; right: 16px; bottom: 16px;
       display: flex; align-items: center; gap: 12px;
     }
-    .lib-ico {
-      flex: none; width: 46px; height: 46px; border-radius: 12px;
-      background: rgba(42, 42, 42, 0.7);
-      display: flex; align-items: center; justify-content: center; overflow: hidden;
-      box-shadow:
-        0 1px 3px 0 rgba(0, 0, 0, 0.04),
-        inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
-        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
-        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
-        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
-    }
+    .lib-ico { flex: none; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; }
     .lib-ico img { width: 46px; height: 46px; display: block; }
-    /* Image-generation icon: the Figma tile is an authored pixel mosaic,
-       reproduced here as a tiny CSS grid (it is not an exported asset). */
-    .lib-ico--qr { position: relative; }
-    .lib-ico--qr .qr-inner {
-      width: 26px; height: 26px; border-radius: 6px; overflow: hidden;
-      background: linear-gradient(15deg, rgba(115, 115, 115, 0.3) 3%, rgba(203, 203, 203, 0.27) 152%);
-      box-shadow: inset 0 0 0.7px 0 rgba(255, 255, 255, 0.35), inset 0 0.7px 0 0 rgba(255, 255, 255, 0.29);
-      display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(6, 1fr);
-      padding: 2px; gap: 1px;
-    }
-    .lib-ico--qr .qr-inner i { background: #fff; border-radius: 0.5px; }
+    /* The image-generation export carries its drop shadow in the bitmap
+       (52px canvas for a 46px tile) — render at natural size, recentered. */
+    .lib-ico img.lib-ico-img--pad { width: 52px; height: 52px; max-width: none; margin: -3px; }
     .lib-meta-text { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
     .lib-name { font-size: 14px; font-weight: 500; line-height: 13px; color: #ededed; }
     .lib-desc {
@@ -277,6 +264,39 @@
     @media (prefers-reduced-motion: reduce) {
       .t-acc-panel, .t-acc-panel-inner, .t-acc-chevron, .hero-tile { transition: none !important; }
     }
+
+    /* Hero CTAs — Figma Button/Small (node 1292:4277): 32px pills,
+       light #e9e9e9 primary, #2a2a2a secondary with the material ring. */
+    .skill-cta-row { gap: 11px; }
+    .skill-cta-row .skill-btn {
+      height: 32px;
+      font-size: 13px;
+      line-height: 13px;
+      font-weight: 500;
+    }
+    .skill-cta-row .skill-btn--primary {
+      background: #e9e9e9;
+      color: #17181c;
+      padding: 0 16px;
+      border-radius: 26px;
+      box-shadow: none;
+    }
+    .skill-cta-row .skill-btn--primary:hover { background: #ffffff; }
+    .skill-cta-row .skill-btn--primary:active { background: #dcdcdc; }
+    .skill-cta-row .skill-btn--secondary {
+      background: #2a2a2a;
+      color: #ffffff;
+      padding: 0 12px;
+      border-radius: 24px;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+    }
+    .skill-cta-row .skill-btn--secondary:hover { background: #323232; }
+    .skill-cta-row .skill-btn--secondary:active { background: #262626; }
   </style>
 </head>
 <body>
@@ -299,14 +319,6 @@
           </nav>
         </div>
         <div class="site-nav-right">
-          <button type="button" class="nav-search" id="nav-search-btn" aria-label="Search (⌘K)">
-            <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="7" cy="7" r="5" />
-              <path d="M14 14l-3.5-3.5" />
-            </svg>
-            <span class="nav-search-label">Search</span>
-            <span class="nav-search-kbd" id="nav-search-kbd">⌘K</span>
-          </button>
           <a class="nav-get-pro" href="/pro.html"><span class="nav-get-pro-label"><span class="nav-get-pro-word">Get </span>Pro</span></a>
           <a
             class="icon-btn-pill"
@@ -394,23 +406,23 @@
       </div>
       <div class="hero-tiles-row">
         <a class="hero-tile hero-tile--orb" href="/orbs.html" aria-label="Thinking orbs">
-          <span class="hero-tile-stage"><span class="lib-stage" id="tile-orb"></span></span>
+          <span class="hero-tile-stage"><img class="hero-tile-img" src="/assets/previews/orbs.png" alt="" loading="lazy" decoding="async" /></span>
           <span class="hero-tile-pill">Thinking orbs <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.47 6.22a.75.75 0 0 1 1.06 0L8 8.69l2.47-2.47a.75.75 0 1 1 1.06 1.06l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 0 1 0-1.06Z" fill="currentColor"/></svg></span>
         </a>
         <a class="hero-tile hero-tile--beam" href="/beam.html" aria-label="Border beam">
-          <span class="hero-tile-stage"><span class="lib-stage" id="tile-beam"></span></span>
+          <span class="hero-tile-stage"><img class="hero-tile-img" src="/assets/previews/beam.jpg" alt="" loading="lazy" decoding="async" /></span>
           <span class="hero-tile-pill">Border beam <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.47 6.22a.75.75 0 0 1 1.06 0L8 8.69l2.47-2.47a.75.75 0 1 1 1.06 1.06l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 0 1 0-1.06Z" fill="currentColor"/></svg></span>
         </a>
         <a class="hero-tile hero-tile--metal" href="/metal.html" aria-label="Liquid metal">
-          <span class="hero-tile-stage"><span class="lib-stage" id="tile-metal"></span></span>
+          <span class="hero-tile-stage"><img class="hero-tile-img" src="/assets/previews/metal.jpg" alt="" loading="lazy" decoding="async" /></span>
           <span class="hero-tile-pill">Liquid metal <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.47 6.22a.75.75 0 0 1 1.06 0L8 8.69l2.47-2.47a.75.75 0 1 1 1.06 1.06l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 0 1 0-1.06Z" fill="currentColor"/></svg></span>
         </a>
         <a class="hero-tile hero-tile--gooey" href="/gooey.html" aria-label="Gooey">
-          <span class="hero-tile-stage"><span class="lib-stage" id="tile-gooey"></span></span>
+          <span class="hero-tile-stage"><img class="hero-tile-img" src="/assets/previews/gooey.jpg" alt="" loading="lazy" decoding="async" /></span>
           <span class="hero-tile-pill">Gooey <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.47 6.22a.75.75 0 0 1 1.06 0L8 8.69l2.47-2.47a.75.75 0 1 1 1.06 1.06l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 0 1 0-1.06Z" fill="currentColor"/></svg></span>
         </a>
         <a class="hero-tile hero-tile--image" href="/image.html" aria-label="Image generation">
-          <span class="hero-tile-stage"><span class="lib-stage" id="tile-image"></span></span>
+          <span class="hero-tile-stage"><img class="hero-tile-img" src="/assets/previews/image.jpg" alt="" loading="lazy" decoding="async" /></span>
           <span class="hero-tile-pill">Image generation <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.47 6.22a.75.75 0 0 1 1.06 0L8 8.69l2.47-2.47a.75.75 0 1 1 1.06 1.06l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 0 1 0-1.06Z" fill="currentColor"/></svg></span>
         </a>
       </div>
@@ -420,12 +432,10 @@
       <article class="card lib-card" data-lib="beam">
         <a class="lib-card-hit" href="/beam.html" aria-label="Border Beam playground"></a>
         <div class="card-stage">
-          <div class="stage-inner stage-inner--no-btn">
-            <div class="lib-stage" id="fx-beam"></div>
-          </div>
+          <video class="lib-video" src="/assets/videos/beam.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
         </div>
         <div class="lib-meta">
-          <span class="lib-ico"><img src="/assets/icons/icon-beam.svg" alt="" loading="lazy" decoding="async" /></span>
+          <span class="lib-ico"><img src="/assets/icons/tile-beam.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
           <span class="lib-meta-text">
             <span class="lib-name">Border Beam</span>
             <span class="lib-desc">Animated rainbow glow riding any border</span>
@@ -436,12 +446,10 @@
       <article class="card lib-card" data-lib="orb">
         <a class="lib-card-hit" href="/orbs.html" aria-label="Thinking orbs playground"></a>
         <div class="card-stage">
-          <div class="stage-inner stage-inner--no-btn">
-            <div class="lib-stage" id="fx-orb"></div>
-          </div>
+          <video class="lib-video" src="/assets/videos/orb.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
         </div>
         <div class="lib-meta">
-          <span class="lib-ico"><img src="/assets/icons/icon-orbs.svg" alt="" loading="lazy" decoding="async" /></span>
+          <span class="lib-ico"><img src="/assets/icons/tile-orbs.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
           <span class="lib-meta-text">
             <span class="lib-name">Thinking orbs</span>
             <span class="lib-desc">Thought-orb loading states for AI interfaces</span>
@@ -452,12 +460,10 @@
       <article class="card lib-card" data-lib="gooey">
         <a class="lib-card-hit" href="/gooey.html" aria-label="Gooey playground"></a>
         <div class="card-stage">
-          <div class="stage-inner stage-inner--no-btn">
-            <div class="lib-stage" id="fx-gooey"></div>
-          </div>
+          <video class="lib-video" src="/assets/videos/gooey.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
         </div>
         <div class="lib-meta">
-          <span class="lib-ico"><img src="/assets/icons/icon-gooey.svg" alt="" loading="lazy" decoding="async" /></span>
+          <span class="lib-ico"><img src="/assets/icons/tile-gooey.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
           <span class="lib-meta-text">
             <span class="lib-name">Gooey</span>
             <span class="lib-desc">Liquid UI — pieces merge and morph like goo</span>
@@ -468,12 +474,10 @@
       <article class="card lib-card" data-lib="metal">
         <a class="lib-card-hit" href="/metal.html" aria-label="Liquid Metal playground"></a>
         <div class="card-stage">
-          <div class="stage-inner stage-inner--no-btn">
-            <div class="lib-stage" id="fx-metal"></div>
-          </div>
+          <video class="lib-video" src="/assets/videos/metal.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
         </div>
         <div class="lib-meta">
-          <span class="lib-ico"><img src="/assets/icons/icon-orbs.svg" alt="" loading="lazy" decoding="async" /></span>
+          <span class="lib-ico"><img src="/assets/icons/tile-metal.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
           <span class="lib-meta-text">
             <span class="lib-name">Liquid Metal</span>
             <span class="lib-desc">Real-time chrome ring for buttons and icons</span>
@@ -484,12 +488,10 @@
       <article class="card lib-card" data-lib="image">
         <a class="lib-card-hit" href="/image.html" aria-label="Image generation playground"></a>
         <div class="card-stage">
-          <div class="stage-inner stage-inner--no-btn">
-            <div class="lib-stage" id="fx-image"></div>
-          </div>
+          <video class="lib-video" src="/assets/videos/image.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
         </div>
         <div class="lib-meta">
-          <span class="lib-ico lib-ico--qr"><span class="qr-inner"><i style="opacity:.45"></i><i style="opacity:.05"></i><i style="opacity:.3"></i><i style="opacity:.1"></i><i style="opacity:.5"></i><i style="opacity:.15"></i><i style="opacity:.05"></i><i style="opacity:.05"></i><i style="opacity:.3"></i><i style="opacity:.1"></i><i style="opacity:.5"></i><i style="opacity:.15"></i><i style="opacity:.45"></i><i style="opacity:.05"></i><i style="opacity:.3"></i><i style="opacity:.1"></i><i style="opacity:.15"></i><i style="opacity:.45"></i><i style="opacity:.05"></i><i style="opacity:.05"></i><i style="opacity:.1"></i><i style="opacity:.2"></i><i style="opacity:.4"></i><i style="opacity:.15"></i><i style="opacity:.45"></i><i style="opacity:.05"></i><i style="opacity:.3"></i><i style="opacity:.2"></i><i style="opacity:.15"></i><i style="opacity:.15"></i><i style="opacity:.05"></i><i style="opacity:.05"></i><i style="opacity:.1"></i><i style="opacity:.25"></i><i style="opacity:.15"></i><i style="opacity:.15"></i></span></span>
+          <span class="lib-ico"><img class="lib-ico-img--pad" src="/assets/icons/tile-image.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
           <span class="lib-meta-text">
             <span class="lib-name">Image generation</span>
             <span class="lib-desc">WebGL image-generation loader for cards</span>
@@ -689,6 +691,5 @@
   </script>
   <script src="/assets/site.js" defer></script>
   <script src="/assets/pro-client.js" defer></script>
-  <script type="module" src="/src/home.tsx"></script>
 </body>
 </html>
