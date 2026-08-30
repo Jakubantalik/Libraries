@@ -126,57 +126,64 @@ function ImagePreview() {
   );
 }
 
-/* Studio teaser — static mock of a controls panel. */
-function StudioPreview() {
-  const row = (label: string, pct: number, i: number) => (
-    <div key={i} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <div style={{ fontSize: 11, fontWeight: 500, color: "rgba(202,202,202,0.7)" }}>{label}</div>
-      <div style={{ position: "relative", height: 4, borderRadius: 2, background: "rgba(255,255,255,0.08)" }}>
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            top: 0,
-            bottom: 0,
-            width: `${pct}%`,
-            borderRadius: 2,
-            background: "#ededed",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            left: `${pct}%`,
-            top: "50%",
-            transform: "translate(-50%, -50%)",
-            width: 12,
-            height: 12,
-            borderRadius: 6,
-            background: "#fff",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
-          }}
-        />
-      </div>
+
+
+/* Hero tiles — miniature self-running previews inside the 108px stages. */
+
+function TileBeam() {
+  return (
+    <BorderBeam size="sm" theme="dark">
+      <div style={{ width: 72, height: 44, borderRadius: 10, background: "#1d1d1d" }} />
+    </BorderBeam>
+  );
+}
+
+function TileOrb() {
+  return <ThinkingOrb state="searching" size={64} theme="dark" />;
+}
+
+function TileGooey() {
+  return (
+    <div style={{ transform: "scale(0.62)", transformOrigin: "center" }}>
+      <GooeyPreview />
     </div>
   );
+}
+
+function TileMetal() {
   return (
-    <div
-      style={{
-        width: 200,
-        padding: 18,
-        borderRadius: 14,
-        background: "#181818",
-        boxShadow:
-          "0 1px 3px 0 rgba(0,0,0,0.04), inset 0 1px 0 0 rgba(255,255,255,0.04), inset 0 0 0 1px rgba(196,196,196,0.08)",
-        display: "flex",
-        flexDirection: "column",
-        gap: 14,
-      }}
+    <MetalFx variant="circle" preset="chromatic" strength={0.9}>
+      <button
+        type="button"
+        aria-hidden="true"
+        tabIndex={-1}
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          border: 0,
+          background: "#1b1b1b",
+          color: "#ededed",
+          fontSize: 15,
+          lineHeight: 1,
+          cursor: "pointer",
+        }}
+      >
+        {"\u2191"}
+      </button>
+    </MetalFx>
+  );
+}
+
+function TileImage() {
+  return (
+    <ImageGeneration
+      preset="pixels-organic"
+      images={["/images/gen-1.jpg", "/images/gen-2.jpg", "/images/gen-3.jpg"]}
+      autoReveal
     >
-      {row("Strength", 70, 0)}
-      {row("Speed", 45, 1)}
-      {row("Hue range", 85, 2)}
-    </div>
+      <div style={{ width: 84, height: 84, borderRadius: 12, background: "#1b1b1b" }} />
+    </ImageGeneration>
   );
 }
 
@@ -191,4 +198,8 @@ mount("fx-orb", <OrbPreview />);
 mount("fx-gooey", <GooeyPreview />);
 mount("fx-metal", <MetalPreview />);
 mount("fx-image", <ImagePreview />);
-mount("fx-studio", <StudioPreview />);
+mount("tile-beam", <TileBeam />);
+mount("tile-orb", <TileOrb />);
+mount("tile-gooey", <TileGooey />);
+mount("tile-metal", <TileMetal />);
+mount("tile-image", <TileImage />);
