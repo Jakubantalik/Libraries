@@ -15,6 +15,7 @@ export {
   setInstancePaused,
   setInstancePixelScale,
   setInstancePreset,
+  setInstanceSpeed,
   setInstanceStrength,
   setInstanceVisible,
   setMaxDpr,

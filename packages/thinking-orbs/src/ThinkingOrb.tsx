@@ -5,10 +5,28 @@
 // static representative frame that still follows the live theme.
 
 import { useEffect, useRef } from 'react';
-import { MODE_DRAWS } from './engine/registry';
+import { paintFrame, type OrbTint } from './engine/core';
+import { scaleCounts } from './engine/profiles';
+import { MODE_FRAMES } from './engine/registry';
 import { resolvePreset } from './presets';
 import { useReducedMotion, useResolvedDark } from './theme';
 import type { ThinkingOrbProps } from './types';
+
+/** Parse a CSS color into an RGB triple for the tinted ink painter.
+ *  Supports #rgb, #rrggbb and rgb()/rgba(); anything else -> no tint. */
+function parseTint(color: string | undefined): OrbTint | undefined {
+  if (!color) return undefined;
+  const hex = color.trim().match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  if (hex) {
+    let h = hex[1];
+    if (h.length === 3) h = h.replace(/./g, (c) => c + c);
+    const n = parseInt(h, 16);
+    return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+  }
+  const fn = color.trim().match(/^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/i);
+  if (fn) return { r: Number(fn[1]), g: Number(fn[2]), b: Number(fn[3]) };
+  return undefined;
+}
 
 const LABELS: Record<string, string> = {
   working: 'Working…',
@@ -28,6 +46,8 @@ export function ThinkingOrb({
   theme = 'auto',
   speed = 1,
   paused = false,
+  color,
+  dots = 1,
   style,
   'aria-label': ariaLabel,
   ...rest
@@ -45,14 +65,19 @@ export function ThinkingOrb({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const { mode, speed: baseSpeed, opts } = resolvePreset(state, size);
-    const draw = MODE_DRAWS[mode];
+    const { mode, speed: baseSpeed, opts: presetOpts } = resolvePreset(state, size);
+    // `dots` rescales every count knob of the resolved preset with the same
+    // sqrt-paired scaler the presets themselves use, so density changes keep
+    // the mode's balance. resolvePreset caches — never mutate its result.
+    const opts = dots !== 1 ? scaleCounts(presetOpts, Math.max(0.1, dots)) : presetOpts;
+    const frameFn = MODE_FRAMES[mode];
+    const tint = parseTint(color);
     const effSpeed = baseSpeed * speed;
 
     const frame = (tSec: number) => {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, size, size);
-      draw(ctx, size, tSec, dark, opts);
+      paintFrame(ctx, frameFn(size, tSec, opts), dark, tint);
     };
 
     // reduced motion → one static, deterministic frame
@@ -103,7 +128,7 @@ export function ThinkingOrb({
       io?.disconnect();
       document.removeEventListener('visibilitychange', onVis);
     };
-  }, [state, size, dark, speed, paused, reduced]);
+  }, [state, size, dark, speed, paused, reduced, color, dots]);
 
   return (
     <canvas

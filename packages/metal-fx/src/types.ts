@@ -109,6 +109,14 @@ export interface MetalFxProps extends Omit<HTMLAttributes<HTMLDivElement>, 'chil
   disableGlow?: boolean;
 
   /**
+   * Strength of the wandering halo overlay alone (0..1), multiplied on top
+   * of `strength`. Lets you soften the glow without dimming the metal ring.
+   * `0` hides the halo (like `disableGlow` but animatable); `1` (default)
+   * is the tuned look.
+   */
+  glowStrength?: number;
+
+  /**
    * Override the shader sampling scale. Larger values zoom into the shared
    * shader (visibly bigger pattern features); smaller values zoom out.
    * Defaults to the variant's baseline (1.6 for `'button'`, 1.3 for

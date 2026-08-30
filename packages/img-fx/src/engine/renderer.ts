@@ -112,6 +112,10 @@ export interface Instance {
   colorsOverride: (string | null | undefined)[] | null;
   /** Strength multiplier 0..1 (drives `canvas.style.opacity`). */
   strength: number;
+  /** Animation-clock multiplier on top of the preset's baked speed. Scales
+   *  the per-frame time delta, so drift, churn and flicker all speed up or
+   *  slow down together. 1 = preset tempo. */
+  speedMul: number;
   /** Pixel-cell on-screen size multiplier. 1 = preset default, 0.5 = cells at
    *  half size (finer / zoomed out), 2 = double size (chunkier / zoomed in).
    *  Applied by dividing the shader grid's base cell count so both the shader
@@ -325,7 +329,12 @@ function uploadInstanceUniforms(s: SharedRenderer, inst: Instance): void {
   const u = s.uniforms;
   u.u_effect.value = p.effectIndex;
   u.u_speed.value = p.speed;
-  u.u_intensity.value = p.intensity;
+  // Strength above 1 boosts the shader's palette intensity and highlight
+  // (canvas opacity is already at 1 there), so the top of the strength
+  // range reads as a markedly more prominent effect rather than saturating
+  // early. The 2.2 slope makes strength=2 roughly a 3× intensity push.
+  const boost = 1 + Math.max(0, inst.strength - 1) * 2.2;
+  u.u_intensity.value = p.intensity * boost;
   u.u_scale.value = p.scale;
   u.u_direction.value = (p.direction * Math.PI) / 180;
   u.u_softness.value = p.softness;
@@ -336,7 +345,7 @@ function uploadInstanceUniforms(s: SharedRenderer, inst: Instance): void {
   u.u_vignette.value = p.vignette;
   u.u_vigOpacity.value = p.vigOpacity;
   u.u_blur.value = p.blur;
-  u.u_highlight.value = p.highlight;
+  u.u_highlight.value = p.highlight * boost;
   u.u_shaderOpacity.value = p.shaderOpacity;
   u.u_dotMode.value = p.dotMode;
   u.u_sweepEase.value = p.sweepEase != null ? Math.floor(p.sweepEase) : 0;
@@ -598,7 +607,7 @@ const tick = (now: number): void => {
 
   for (const inst of SHARED.instances) {
     if (inst.visible && !inst.paused) {
-      inst.accumulatedTime += deltaSec;
+      inst.accumulatedTime += deltaSec * inst.speedMul;
     }
   }
 
@@ -632,6 +641,8 @@ export interface CreateInstanceOptions {
   cssHeight: number;
   preset: PresetMode;
   strength?: number;
+  /** Animation-clock multiplier (see `Instance.speedMul`). @default 1 */
+  speed?: number;
   cardBg?: string | null;
   /** Pixel-cell size multiplier (see `Instance.pixelScale`). @default 1 */
   pixelScale?: number;
@@ -671,7 +682,8 @@ export function createInstance(opts: CreateInstanceOptions): Instance {
     preset: opts.preset as EnginePresetMode,
     cardBgOverride: opts.cardBg ?? null,
     colorsOverride: null,
-    strength: opts.strength ?? 1,
+    strength: Math.max(0, Math.min(2, opts.strength ?? 1)),
+    speedMul: opts.speed != null && opts.speed > 0 ? opts.speed : 1,
     pixelScale: opts.pixelScale != null && opts.pixelScale > 0 ? opts.pixelScale : 1,
     visible: true,
     paused: false,
@@ -736,7 +748,14 @@ export function setInstancePaused(inst: Instance, paused: boolean): void {
 }
 
 export function setInstanceStrength(inst: Instance, strength: number): void {
-  inst.strength = Math.max(0, Math.min(1, strength));
+  inst.strength = Math.max(0, Math.min(2, strength));
+  // The boost region (>1) feeds u_intensity, which is baked into the cached
+  // uniform block — invalidate so the change paints on the next frame.
+  inst.uniformsDirty = true;
+}
+
+export function setInstanceSpeed(inst: Instance, speed: number): void {
+  inst.speedMul = speed > 0 ? speed : 1;
 }
 
 export function setInstancePixelScale(inst: Instance, pixelScale: number): void {

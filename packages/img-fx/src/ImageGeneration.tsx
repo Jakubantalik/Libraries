@@ -20,6 +20,7 @@ import {
   setInstancePaused,
   setInstancePixelScale,
   setInstancePreset,
+  setInstanceSpeed,
   setInstanceStrength,
   setInstanceVisible,
   updateInstanceSize,
@@ -132,6 +133,7 @@ export const ImageGeneration = forwardRef<ImageGenerationHandle, ImageGeneration
     preset = 'pixels-organic',
     theme = 'auto',
     strength = 1,
+    speed = 1,
     pixelScale = 1,
     cardBg: cardBgProp,
     colors,
@@ -328,6 +330,7 @@ export const ImageGeneration = forwardRef<ImageGenerationHandle, ImageGeneration
       cssHeight: initial.h,
       preset: presetMode,
       strength,
+      speed,
       cardBg: cardBgProp ?? null,
       pixelScale
     });
@@ -510,6 +513,13 @@ export const ImageGeneration = forwardRef<ImageGenerationHandle, ImageGeneration
       i.canvas.style.opacity = String(Math.max(0, Math.min(1, strength)));
     }
   }, [strength]);
+
+  // Sync speed — scales the instance's animation clock, no repaint needed.
+  useEffect(() => {
+    const i = instanceRef.current;
+    if (!i) return;
+    setInstanceSpeed(i, speed);
+  }, [speed]);
 
   // Sync pixelScale (recomputes the mosaic grid density) and repaint once so
   // the change is visible immediately even while paused.

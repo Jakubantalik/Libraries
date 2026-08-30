@@ -125,12 +125,22 @@ export interface ImageGenerationProps extends Omit<HTMLAttributes<HTMLDivElement
   theme?: ImageGenerationTheme;
 
   /**
-   * Effect strength (0..1). Multiplies the shader canvas opacity. The shader
-   * keeps animating at full intensity at any value; only the rendered alpha
-   * is scaled down.
+   * Effect strength (0..2). In 0..1 it multiplies the shader canvas opacity
+   * (the shader keeps animating at full intensity; only the rendered alpha
+   * is scaled down) — exactly the historical behavior. Above 1 the canvas
+   * stays fully opaque and the shader's palette intensity is boosted
+   * instead, making the effect markedly more prominent.
    * @default 1
    */
   strength?: number;
+
+  /**
+   * Animation speed multiplier on top of the preset's baked tempo. Scales
+   * the effect's whole clock — drift, churn and flicker together — so the
+   * character of the motion is preserved. `1` (default) is the preset
+   * tempo; `0.5` half speed, `2` double.
+   */
+  speed?: number;
 
   /**
    * Pixel-cell size multiplier for the mosaic effect. Scales the on-screen

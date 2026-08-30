@@ -643,25 +643,25 @@ function getLineBloomGradients(colorVariant: BorderBeamColorVariant, isDark: boo
   const glowAmb55  = isMono ? 'rgba(255, 255, 255, 0.015)': 'rgba(255, 255, 255, 0.03)';
 
   if (isDark) {
-    return `radial-gradient(ellipse calc(${thinW1} * var(--beam-spike-${id})) calc(${thinH1} * var(--beam-h-${id})) at 8% calc(100% - 2px), ${sc1}, ${sc1_mid} 30%, transparent 88%),
-       radial-gradient(ellipse calc(10px * var(--beam-spike2-${id})) calc(35px * var(--beam-h-${id})) at 22% calc(100% - 4px), ${sc2}, ${sc2_mid} 50%, transparent 95%),
-       radial-gradient(ellipse calc(${thinW2} * (2 - var(--beam-spike-${id}))) calc(${thinH2} * var(--beam-h-${id})) at 36% calc(100% - 3px), ${spikes[0].color1}, ${spikes[0].color2} 40%, transparent 90%),
-       radial-gradient(ellipse calc(14px * var(--beam-spike2-${id})) calc(28px * var(--beam-h-${id})) at 50% calc(100% - 2px), ${spikes[1].color1}, ${spikes[1].color2} 55%, transparent 96%),
-       radial-gradient(ellipse calc(${thinW3} * (2 - var(--beam-spike2-${id}))) calc(${thinH3} * var(--beam-h-${id})) at 64% calc(100% - 4px), ${spikes[2].color1}, ${spikes[2].color2} 35%, transparent 89%),
-       radial-gradient(ellipse calc(7px * var(--beam-spike-${id})) calc(45px * var(--beam-h-${id})) at 78% calc(100% - 2px), ${spikes[3].color1}, ${spikes[3].color2} 48%, transparent 94%),
-       radial-gradient(ellipse calc(${thinW4} * (2 - var(--beam-spike-${id}))) calc(${thinH4} * var(--beam-h-${id})) at 92% calc(100% - 3px), ${spikes[4].color1}, ${spikes[4].color2} 42%, transparent 91%),
+    return `radial-gradient(ellipse calc(${thinW1} * var(--beam-spike-${id}) * var(--beam-spike-mul, 1)) calc(${thinH1} * var(--beam-h-${id}) * var(--beam-spike-mul, 1)) at 8% calc(100% - 2px), ${sc1}, ${sc1_mid} 30%, transparent 88%),
+       radial-gradient(ellipse calc(10px * var(--beam-spike2-${id}) * var(--beam-spike-mul, 1)) calc(35px * var(--beam-h-${id}) * var(--beam-spike-mul, 1)) at 22% calc(100% - 4px), ${sc2}, ${sc2_mid} 50%, transparent 95%),
+       radial-gradient(ellipse calc(${thinW2} * (2 - var(--beam-spike-${id})) * var(--beam-spike-mul, 1)) calc(${thinH2} * var(--beam-h-${id}) * var(--beam-spike-mul, 1)) at 36% calc(100% - 3px), ${spikes[0].color1}, ${spikes[0].color2} 40%, transparent 90%),
+       radial-gradient(ellipse calc(14px * var(--beam-spike2-${id}) * var(--beam-spike-mul, 1)) calc(28px * var(--beam-h-${id}) * var(--beam-spike-mul, 1)) at 50% calc(100% - 2px), ${spikes[1].color1}, ${spikes[1].color2} 55%, transparent 96%),
+       radial-gradient(ellipse calc(${thinW3} * (2 - var(--beam-spike2-${id})) * var(--beam-spike-mul, 1)) calc(${thinH3} * var(--beam-h-${id}) * var(--beam-spike-mul, 1)) at 64% calc(100% - 4px), ${spikes[2].color1}, ${spikes[2].color2} 35%, transparent 89%),
+       radial-gradient(ellipse calc(7px * var(--beam-spike-${id}) * var(--beam-spike-mul, 1)) calc(45px * var(--beam-h-${id}) * var(--beam-spike-mul, 1)) at 78% calc(100% - 2px), ${spikes[3].color1}, ${spikes[3].color2} 48%, transparent 94%),
+       radial-gradient(ellipse calc(${thinW4} * (2 - var(--beam-spike-${id})) * var(--beam-spike-mul, 1)) calc(${thinH4} * var(--beam-h-${id}) * var(--beam-spike-mul, 1)) at 92% calc(100% - 3px), ${spikes[4].color1}, ${spikes[4].color2} 42%, transparent 91%),
        radial-gradient(ellipse calc(21px * var(--beam-spike-${id})) calc(15px * var(--beam-spike2-${id})) at calc(var(--beam-x-${id}) * 100%) calc(100% + 1px), ${glowDotC} 0%, ${glowDot20} 20%, ${glowDot50} 50%, transparent 100%),
        radial-gradient(ellipse calc(42px * var(--beam-w-${id})) calc(40px * var(--beam-h-${id})) at calc(var(--beam-x-${id}) * 100%) 100%, ${glowAmbC} 0%, ${glowAmb25} 25%, ${glowAmb55} 55%, transparent 80%)`;
   } else {
     const sc1_lt = isMono ? attenuateSpike(spikeColors.primary, 0.11) : withAlpha(spikeColors.primary, 0.85);
     const sc2_lt = isMono ? attenuateSpike(spikeColors.secondary, 0.09) : withAlpha(spikeColors.secondary, 0.7);
-    return `radial-gradient(ellipse calc(${thinW1} * var(--beam-spike-${id})) calc(${thinH1} * var(--beam-h-${id})) at 8% calc(100% - 2px), ${sc1}, ${sc1_lt} 30%, transparent 88%),
-       radial-gradient(ellipse calc(10px * var(--beam-spike2-${id})) calc(35px * var(--beam-h-${id})) at 22% calc(100% - 4px), ${sc2}, ${sc2_lt} 50%, transparent 95%),
-       radial-gradient(ellipse calc(${thinW2} * (2 - var(--beam-spike-${id}))) calc(${thinH2} * var(--beam-h-${id})) at 36% calc(100% - 3px), ${spikes[0].color1}, ${spikes[0].color2} 40%, transparent 90%),
-       radial-gradient(ellipse calc(14px * var(--beam-spike2-${id})) calc(28px * var(--beam-h-${id})) at 50% calc(100% - 2px), ${spikes[1].color1}, ${spikes[1].color2} 55%, transparent 96%),
-       radial-gradient(ellipse calc(${thinW3} * (2 - var(--beam-spike2-${id}))) calc(${thinH3} * var(--beam-h-${id})) at 64% calc(100% - 4px), ${spikes[2].color1}, ${spikes[2].color2} 35%, transparent 89%),
-       radial-gradient(ellipse calc(7px * var(--beam-spike-${id})) calc(45px * var(--beam-h-${id})) at 78% calc(100% - 2px), ${spikes[3].color1}, ${spikes[3].color2} 48%, transparent 94%),
-       radial-gradient(ellipse calc(${thinLW} * (2 - var(--beam-spike-${id}))) calc(${thinH4} * var(--beam-h-${id})) at 92% calc(100% - 3px), ${spikes[4].color1}, ${spikes[4].color2} 42%, transparent 91%),
+    return `radial-gradient(ellipse calc(${thinW1} * var(--beam-spike-${id}) * var(--beam-spike-mul, 1)) calc(${thinH1} * var(--beam-h-${id}) * var(--beam-spike-mul, 1)) at 8% calc(100% - 2px), ${sc1}, ${sc1_lt} 30%, transparent 88%),
+       radial-gradient(ellipse calc(10px * var(--beam-spike2-${id}) * var(--beam-spike-mul, 1)) calc(35px * var(--beam-h-${id}) * var(--beam-spike-mul, 1)) at 22% calc(100% - 4px), ${sc2}, ${sc2_lt} 50%, transparent 95%),
+       radial-gradient(ellipse calc(${thinW2} * (2 - var(--beam-spike-${id})) * var(--beam-spike-mul, 1)) calc(${thinH2} * var(--beam-h-${id}) * var(--beam-spike-mul, 1)) at 36% calc(100% - 3px), ${spikes[0].color1}, ${spikes[0].color2} 40%, transparent 90%),
+       radial-gradient(ellipse calc(14px * var(--beam-spike2-${id}) * var(--beam-spike-mul, 1)) calc(28px * var(--beam-h-${id}) * var(--beam-spike-mul, 1)) at 50% calc(100% - 2px), ${spikes[1].color1}, ${spikes[1].color2} 55%, transparent 96%),
+       radial-gradient(ellipse calc(${thinW3} * (2 - var(--beam-spike2-${id})) * var(--beam-spike-mul, 1)) calc(${thinH3} * var(--beam-h-${id}) * var(--beam-spike-mul, 1)) at 64% calc(100% - 4px), ${spikes[2].color1}, ${spikes[2].color2} 35%, transparent 89%),
+       radial-gradient(ellipse calc(7px * var(--beam-spike-${id}) * var(--beam-spike-mul, 1)) calc(45px * var(--beam-h-${id}) * var(--beam-spike-mul, 1)) at 78% calc(100% - 2px), ${spikes[3].color1}, ${spikes[3].color2} 48%, transparent 94%),
+       radial-gradient(ellipse calc(${thinLW} * (2 - var(--beam-spike-${id})) * var(--beam-spike-mul, 1)) calc(${thinH4} * var(--beam-h-${id}) * var(--beam-spike-mul, 1)) at 92% calc(100% - 3px), ${spikes[4].color1}, ${spikes[4].color2} 42%, transparent 91%),
        radial-gradient(ellipse calc(50px * var(--beam-w-${id})) calc(32px * var(--beam-h-${id})) at calc(var(--beam-x-${id}) * 100%) calc(100%), rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.18) 30%, rgba(0, 0, 0, 0.03) 60%, transparent 85%)`;
   }
 }

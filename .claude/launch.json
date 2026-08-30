@@ -5,7 +5,8 @@
       "name": "home",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "-w", "@sites/home"],
-      "port": 5173
+      "port": 5173,
+      "autoPort": true
     }
   ]
 }
