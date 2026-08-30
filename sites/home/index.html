@@ -87,7 +87,7 @@
     @media (min-width: 981px) {
       /* Clear the orb tile floating above the headline (Figma order:
          tile, badge, title). */
-      .hero-badge { margin-top: 158px; }
+      .hero-badge { margin-top: 178px; }
     }
     /* Floating preview tiles (Figma 1413-37491): 130px card chrome,
        108px inner stage, hover lightens + reveals a label pill. */
@@ -100,10 +100,10 @@
         inset 0 0 0 1px rgba(0, 0, 0, 0.06),
         inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
         inset 0 0 0 1px rgba(196, 196, 196, 0.1);
-      transition: background-color 0.15s ease, transform 300ms var(--ease-smooth-out);
+      transition: background-color 0.15s ease;
       z-index: 5;
     }
-    .hero-tile:hover { background: #1c1c1c; transform: translateY(-2px); }
+    .hero-tile:hover { background: #1c1c1c; }
     .hero-tile-stage {
       position: absolute; inset: 11px; border-radius: 14px; background: #101010;
       overflow: hidden; display: flex; align-items: center; justify-content: center;
@@ -134,16 +134,16 @@
     /* Scatter positions around the centered hero copy — desktop only,
        so the static-row fallback below 981px keeps untouched tiles. */
     @media (min-width: 981px) {
-      .hero-tile--orb   { top: 4px;   left: calc(50% + 8px); }
-      .hero-tile--beam  { top: 96px;  left: calc(50% - 520px); }
-      .hero-tile--metal { top: 118px; left: calc(50% + 372px); }
-      .hero-tile--gooey { top: 330px; left: calc(50% - 400px); }
-      .hero-tile--image { top: 352px; left: calc(50% + 176px); }
+      .hero-tile--orb   { top: 0;     left: calc(50% - 7px); }
+      .hero-tile--beam  { top: 147px; left: calc(50% - 481px); }
+      .hero-tile--metal { top: 171px; left: calc(50% + 317px); }
+      .hero-tile--gooey { top: 432px; left: calc(50% - 351px); }
+      .hero-tile--image { top: 475px; left: calc(50% + 90px); }
     }
     @media (min-width: 981px) and (max-width: 1160px) {
       .hero-tile--beam  { left: calc(50% - 440px); }
-      .hero-tile--metal { left: calc(50% + 310px); }
-      .hero-tile--gooey { left: calc(50% - 340px); }
+      .hero-tile--metal { left: calc(50% + 300px); }
+      .hero-tile--gooey { left: calc(50% - 330px); }
     }
     @media (max-width: 980px) {
       .header { padding-top: 40px; padding-bottom: 72px; }
@@ -157,7 +157,7 @@
     }
     @media (min-width: 981px) {
       .hero-tiles-row { display: contents; }
-      .header { min-height: 520px; }
+      .header { min-height: 625px; }
     }
 
     /* ── Library grid cards (Figma 1413-37519): icon + meta row ── */
