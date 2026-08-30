@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { MetalFx, type MetalFxPreset, type MetalFxVariant } from "metal-fx";
-import { PgTabs, PgSlider, PgToggles, PanelTitle, PanelSep, Snippet, num } from "./controls";
+import { ControlsPanel, PgTabs, PgSlider, PgToggles, PanelTitle, PanelSep, Snippet, num } from "./controls";
 
 /* Studio — Metal workbench. Public playground: variant/preset/strength/
    toggles. The Studio adds the engine surface: shader scale and ring width. */
@@ -129,7 +129,7 @@ export function MetalStudio({ visible = true }: { visible?: boolean }) {
         </button>
       </div>
 
-      <div className="pg-controls">
+      <ControlsPanel library="Metal">
         <PanelTitle>Metal</PanelTitle>
         <PgTabs label="Type" options={VARIANT_OPTIONS} value={variant} onChange={handleVariant} />
         <PgTabs label="Color" options={PRESET_OPTIONS} value={preset} onChange={setPreset} />
@@ -148,7 +148,7 @@ export function MetalStudio({ visible = true }: { visible?: boolean }) {
             { label: "No Reflection", active: disableReflection, onToggle: () => setDisableReflection((r) => !r) },
           ]}
         />
-      </div>
+      </ControlsPanel>
 
       <Snippet code={snippet} />
     </div>

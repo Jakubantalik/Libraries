@@ -1,6 +1,6 @@
 import { useCallback, useState, type CSSProperties } from "react";
 import { BorderBeam, type BorderBeamSize, type BorderBeamColorVariant } from "border-beam";
-import { PgTabs, PgSlider, PgToggles, PanelTitle, PanelSep, Snippet, num } from "./controls";
+import { ControlsPanel, PgTabs, PgSlider, PgToggles, PanelTitle, PanelSep, Snippet, num } from "./controls";
 
 /* Studio — Beam workbench. The public playground exposes family/type/color/
    strength; the Studio adds the rest of the prop surface (duration,
@@ -188,7 +188,7 @@ export function BeamStudio({ visible = true }: { visible?: boolean }) {
           </button>
         </div>
 
-        <div className="pg-controls">
+        <ControlsPanel library="Beam">
           <PanelTitle>Beam</PanelTitle>
           <PgTabs label="Family" options={FAMILY_OPTIONS} value={family} onChange={handleFamilyChange} />
           <PgTabs label="Type" options={SIZE_OPTIONS_BY_FAMILY[family]} value={size} onChange={handleSizeChange} />
@@ -227,7 +227,7 @@ export function BeamStudio({ visible = true }: { visible?: boolean }) {
               <PgSlider label="Glow boost" value={glowBoost} min={0.5} max={2} step={0.05} display={`${num(glowBoost)}×`} onChange={setGlowBoost} />
             </>
           )}
-        </div>
+        </ControlsPanel>
 
         <Snippet code={snippet} />
       </div>

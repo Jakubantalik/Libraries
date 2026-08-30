@@ -135,8 +135,12 @@
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), inset 0 0 0 1px rgba(191, 192, 203, 0.1);
       pointer-events: none; z-index: 10;
     }
+    /* The pill opens like a dropdown from the bottom edge of its tile —
+       the menu-dropdown recipe's scale-from-origin, on hover instead of a
+       click. Centred on the card, so it reads as belonging to the tile
+       rather than hanging off one corner. */
     .hero-tile-pill {
-      position: absolute; top: calc(100% + 12px); left: 9px;
+      position: absolute; top: calc(100% + 12px); left: 50%;
       display: inline-flex; align-items: center; gap: 2px; height: 28px;
       padding: 0 6px 0 12px; border-radius: 24px; background: #2a2a2a;
       font-size: 12px; font-weight: 500; line-height: 13px; color: #e8e8e8;
@@ -147,10 +151,29 @@
         inset 0 0 0 1px rgba(0, 0, 0, 0.06),
         inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
         inset 0 0 0 1px rgba(196, 196, 196, 0.1);
-      opacity: 0; transition: opacity 0.15s ease; pointer-events: none;
+      /* translateX carries the centring, so it has to ride along in every
+         transform the scale is written into. */
+      transform: translateX(-50%) scale(var(--dropdown-pre-scale));
+      transform-origin: top center;
+      opacity: 0;
+      pointer-events: none;
+      transition:
+        transform var(--dropdown-close-dur) var(--dropdown-ease),
+        opacity var(--dropdown-close-dur) var(--dropdown-ease);
+      will-change: transform, opacity;
     }
     .hero-tile-pill svg { width: 16px; height: 16px; display: block; color: #9a9a9a; transform: rotate(-90deg); }
-    .hero-tile:hover .hero-tile-pill { opacity: 1; }
+    .hero-tile:hover .hero-tile-pill,
+    .hero-tile:focus-visible .hero-tile-pill {
+      transform: translateX(-50%) scale(1);
+      opacity: 1;
+      transition:
+        transform var(--dropdown-open-dur) var(--dropdown-ease),
+        opacity var(--dropdown-open-dur) var(--dropdown-ease);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .hero-tile-pill { transition: none; }
+    }
     /* Scatter positions around the centered hero copy — desktop only,
        so the static-row fallback below 981px keeps untouched tiles. */
     @media (min-width: 981px) {

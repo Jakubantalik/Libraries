@@ -8,7 +8,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { Liquid } from "liquid-gooey";
-import { PgTabs, PgSlider, PgToggles, PgSwatches, PanelTitle, PanelSep, Snippet, num } from "./controls";
+import { ControlsPanel, PgTabs, PgSlider, PgToggles, PgSwatches, PanelTitle, PanelSep, Snippet, num } from "./controls";
 
 /* Studio — Gooey workbench. The four demos are the LIVE gooey demo page's
    prototypes (sites/gooey/playground/demos), ported verbatim in dark mode:
@@ -618,7 +618,7 @@ export function GooeyStudio({ visible = true }: { visible?: boolean }) {
         {visible && effect === "melt" && <MeltDemo melt={melt} />}
       </div>
 
-      <div className="pg-controls">
+      <ControlsPanel library="Gooey">
         <PanelTitle>Gooey</PanelTitle>
         <PgTabs label="Effect" options={EFFECT_OPTIONS} value={effect} onChange={setEffect} />
 
@@ -679,7 +679,7 @@ export function GooeyStudio({ visible = true }: { visible?: boolean }) {
             <PgSlider label="Gravity" value={melt.gravity} min={0} max={4} step={0.1} onChange={(v) => setMelt((m) => ({ ...m, gravity: v }))} />
           </>
         )}
-      </div>
+      </ControlsPanel>
 
       <Snippet code={snippet} />
     </div>

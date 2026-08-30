@@ -340,3 +340,149 @@ html[data-theme="dark"] .pg-controls {
 }
 .code-block .code-copy:hover { background: rgba(255, 255, 255, 0.1); color: var(--icon-color); }
 .code-block .code-copy svg { width: 14px; height: 14px; display: block; }
+
+/* ── Studio control panel pieces ──────────────────────────────
+   Shared by the Studio workbench and the Gooey detail page, which
+   renders the same controls. */
+.pg-controls-title {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+  margin: 4px 0 -8px;
+}
+.pg-controls-title:first-child { margin-top: 0; }
+.pg-controls-sep { height: 1px; background: rgba(255, 255, 255, 0.07); margin: 2px 0; }
+
+/* Color swatch row */
+.pg-swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+.pg-swatch {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  transition: transform 150ms var(--ease-smooth-out), box-shadow 150ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.pg-swatch:hover { transform: scale(1.1); }
+.pg-swatch[data-active="true"] {
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.3),
+    0 0 0 2px var(--bg),
+    0 0 0 3.5px #ededed;
+}
+.pg-swatch:focus-visible { outline: 2px solid var(--icon-color); outline-offset: 3px; }
+
+/* ── Studio panel: Manual control / Agent ─────────────────────
+   Same pill-and-indicator idiom as the detail-page tabs, sized to
+   the panel column. */
+.st-panel-tabs {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  background: var(--chip-bg);
+  border-radius: 48px;
+}
+.st-panel-tabs-indicator {
+  position: absolute; top: 3px; left: 0;
+  height: calc(100% - 6px); width: 0;
+  background: var(--card-bg);
+  border-radius: 48px;
+  box-shadow: var(--card-shadow), inset 0 0 0 1px var(--card-border);
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), width 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+  z-index: 0;
+}
+.st-panel-tab {
+  position: relative; z-index: 1;
+  flex: 1 1 auto;
+  font-family: var(--font-sans); font-size: 12px; font-weight: 500;
+  color: var(--text-muted);
+  background: transparent; border: 0;
+  height: 28px; padding: 0 10px;
+  border-radius: 48px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+.st-panel-tab:hover,
+.st-panel-tab[aria-selected="true"] { color: var(--text); }
+.st-panel-tab:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
+
+/* The knob stack keeps the column's own gap when it is the visible tab. */
+.st-panel-body { display: flex; flex-direction: column; gap: 20px; }
+.st-panel-body[hidden] { display: none; }
+
+/* Agent chat: transcript above, composer pinned under it */
+.st-chat { display: flex; flex-direction: column; gap: 12px; min-height: 320px; }
+.st-chat-log {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 340px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+}
+.st-chat-empty { margin: 0; font-size: 13px; line-height: 20px; color: var(--text-subtle); }
+.st-chat-msg {
+  font-size: 13px;
+  line-height: 20px;
+  padding: 9px 12px;
+  border-radius: 14px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+/* The viewer's own turns sit right and tinted; the agent's read as plain
+   text on the panel, so a long reply does not become a wall of chip. */
+.st-chat-msg[data-role="user"] {
+  align-self: flex-end;
+  max-width: 88%;
+  background: var(--chip-bg);
+  color: var(--text);
+}
+.st-chat-msg[data-role="agent"] { padding-left: 0; padding-right: 0; color: var(--text-muted); }
+
+.st-chat-composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 16px;
+  background: var(--chip-bg);
+}
+.st-chat-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  resize: none;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--text);
+}
+.st-chat-input::placeholder { color: var(--text-subtle); }
+.st-chat-input:focus { outline: none; }
+.st-chat-send {
+  flex: none;
+  width: 28px; height: 28px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 50%;
+  background: #ededed;
+  color: #17181c;
+  cursor: pointer;
+  transition: opacity 140ms ease, background 140ms ease;
+}
+.st-chat-send svg { width: 16px; height: 16px; display: block; }
+.st-chat-send:hover { background: #ffffff; }
+.st-chat-send:disabled { opacity: 0.35; cursor: default; }
+.st-chat-send:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }

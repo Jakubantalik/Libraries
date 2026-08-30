@@ -5,7 +5,7 @@ import {
   type ImageGenerationHandle,
   type ImageGenerationPreset,
 } from "img-fx";
-import { PgTabs, PgSlider, PgSwatches, PanelTitle, PanelSep, Snippet, num } from "./controls";
+import { ControlsPanel, PgTabs, PgSlider, PgSwatches, PanelTitle, PanelSep, Snippet, num } from "./controls";
 
 /* Studio — Image workbench. Public playground: preset + strength. The Studio
    adds pixel-cell scale and the card background the shader reasons against,
@@ -146,7 +146,7 @@ export function ImageStudio({ visible = true }: { visible?: boolean }) {
         </div>
       </div>
 
-      <div className="pg-controls">
+      <ControlsPanel library="Image">
         <PanelTitle>Image</PanelTitle>
         <PgTabs label="Type" options={PRESET_OPTIONS} value={preset} onChange={setPreset} />
         <PgSlider label="Strength" value={strength} min={0} max={100} step={1} display={`${strength}%`} onChange={setStrength} />
@@ -158,7 +158,7 @@ export function ImageStudio({ visible = true }: { visible?: boolean }) {
         <PanelSep />
         <PanelTitle>Grid</PanelTitle>
         <PgSlider label="Pixel scale" value={pixelScale} min={0.5} max={2} step={0.05} display={`${num(pixelScale)}×`} onChange={setPixelScale} />
-      </div>
+      </ControlsPanel>
 
       <Snippet code={snippet} />
     </div>

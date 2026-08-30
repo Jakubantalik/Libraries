@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ThinkingOrb, type OrbSize, type OrbState } from "thinking-orbs";
-import { PgTabs, PgSlider, PgSwatches, PanelTitle, PanelSep, Snippet, num } from "./controls";
+import { ControlsPanel, PgTabs, PgSlider, PgSwatches, PanelTitle, PanelSep, Snippet, num } from "./controls";
 
 /* Studio — Orb workbench: all nine states, both tuned sizes, speed, plus
    the ink tint and dot-density knobs. The orb ships exactly two hand-tuned
@@ -74,7 +74,7 @@ export function OrbStudio({ visible = true }: { visible?: boolean }) {
         </button>
       </div>
 
-      <div className="pg-controls">
+      <ControlsPanel library="Orb">
         <PanelTitle>Orb</PanelTitle>
         <PgTabs label="State" options={STATE_OPTIONS} value={state} onChange={setState} />
         <PgTabs
@@ -104,7 +104,7 @@ export function OrbStudio({ visible = true }: { visible?: boolean }) {
           display={`${num(dots)}×`}
           onChange={setDots}
         />
-      </div>
+      </ControlsPanel>
 
       <Snippet code={snippet} />
     </div>
