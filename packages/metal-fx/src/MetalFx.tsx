@@ -37,7 +37,14 @@ const GLOW_HOST_STYLE: CSSProperties = { position: 'absolute', inset: 0, pointer
 // Maps each live instance to its SVG glow handles and a theme ref.
 // Keyed by instance (not component) because the same component can be
 // remounted with a new instance after shape/glowEnabled changes.
-const glowHandlesMap = new Map<MetalFxInstance, { handles: ReturnType<typeof injectGlow>; themeRef: { current: 'dark' | 'light' } }>();
+const glowHandlesMap = new Map<
+  MetalFxInstance,
+  {
+    handles: ReturnType<typeof injectGlow>;
+    themeRef: { current: 'dark' | 'light' };
+    glowRef: { current: number };
+  }
+>();
 
 // Bridge between the shared animation loop and per-instance glow SVGs.
 // The loop module doesn't import glow directly — it invokes this callback
@@ -46,7 +53,7 @@ const glowHandlesMap = new Map<MetalFxInstance, { handles: ReturnType<typeof inj
 setGlowCallback((inst, nowMs) => {
   const entry = glowHandlesMap.get(inst);
   if (!entry) return;
-  updateGlow(entry.handles, inst, nowMs, inst.opacityMul, entry.themeRef.current);
+  updateGlow(entry.handles, inst, nowMs, inst.opacityMul * entry.glowRef.current, entry.themeRef.current);
 });
 
 /**
@@ -97,6 +104,7 @@ export const MetalFx = forwardRef<HTMLDivElement, MetalFxProps>(function MetalFx
     normalizeHostStyles = true,
     reflectionTargets,
     disableGlow = false,
+    glowStrength = 1,
     shaderScale,
     ringCssPx,
     scale = 1,
@@ -119,6 +127,9 @@ export const MetalFx = forwardRef<HTMLDivElement, MetalFxProps>(function MetalFx
   const instanceRef = useRef<MetalFxInstance | null>(null);
   const glowHandlesRef = useRef<ReturnType<typeof injectGlow> | null>(null);
   const themeRef = useRef<'dark' | 'light'>('dark');
+  // glowRef lets the glow callback read the live glow strength without a
+  // closure over render state (same pattern as themeRef).
+  const glowRef = useRef(1);
   const initialWrapperRadiusRef = useRef<number>(0);
 
   const [ready, setReady] = useState(false);
@@ -126,6 +137,7 @@ export const MetalFx = forwardRef<HTMLDivElement, MetalFxProps>(function MetalFx
   // Write during render (not in an effect) so the glow callback always sees
   // the up-to-date theme on the very next tick.
   themeRef.current = resolvedTheme;
+  glowRef.current = Math.max(0, Math.min(1, glowStrength));
   const shape: 'pill' | 'circle' = variant === 'circle' ? 'circle' : 'pill';
   const glowEnabled = !disableGlow;
 
@@ -241,7 +253,7 @@ export const MetalFx = forwardRef<HTMLDivElement, MetalFxProps>(function MetalFx
             width: next.cssWidth, height: next.cssHeight, cornerRadius: next.cornerRadius, kind: shape, scale,
           });
           if (inst && glowHandlesRef.current) {
-            glowHandlesMap.set(inst, { handles: glowHandlesRef.current, themeRef });
+            glowHandlesMap.set(inst, { handles: glowHandlesRef.current, themeRef, glowRef });
           }
         }
       });
@@ -261,7 +273,7 @@ export const MetalFx = forwardRef<HTMLDivElement, MetalFxProps>(function MetalFx
     }
 
     if (instanceRef.current && glowHandlesRef.current) {
-      glowHandlesMap.set(instanceRef.current, { handles: glowHandlesRef.current, themeRef });
+      glowHandlesMap.set(instanceRef.current, { handles: glowHandlesRef.current, themeRef, glowRef });
       registerGlowInstance(instanceRef.current);
     }
 

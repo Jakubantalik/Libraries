@@ -97,17 +97,44 @@ export function makeProj(yaw: number, tilt: number, cx: number, cy: number, scal
   };
 }
 
+/** Optional ink tint, resolved to an RGB triple (0–255 each). */
+export interface OrbTint {
+  r: number;
+  g: number;
+  b: number;
+}
+
+/**
+ * Map one ink value to a CSS color. Grayscale by default; with a tint the
+ * ink ramp is preserved as a ramp on the tint itself — on dark substrates
+ * the tint fades toward black with depth (as the grays do), on light ones
+ * it fades toward white — so depth reads identically in color.
+ */
+function inkColor(w: number, alpha: number, dark: boolean, tint?: OrbTint): string {
+  if (!tint) {
+    const g = Math.round((dark ? 1 - w : w) * 255);
+    return `rgba(${g},${g},${g},${alpha})`;
+  }
+  const ramp = (c: number) => Math.round(dark ? c * (1 - w) : c + (255 - c) * w);
+  return `rgba(${ramp(tint.r)},${ramp(tint.g)},${ramp(tint.b)},${alpha})`;
+}
+
 /**
  * Painter: z-sort far→near, matte grayscale dots. On dark substrates the
  * ink value is mirrored (1 - white) so near dots read bright — the same
  * depth language on an inverted substrate.
  */
-export function paint(ctx: CanvasRenderingContext2D, dots: Dot[], dark: boolean, rMin = 0.3): void {
+export function paint(
+  ctx: CanvasRenderingContext2D,
+  dots: Dot[],
+  dark: boolean,
+  rMin = 0.3,
+  tint?: OrbTint
+): void {
   for (const d of dots) {
     const alpha = d.a ?? 1;
     const w = Math.min(1, Math.max(0, d.white));
-    const g = Math.round((dark ? 1 - w : w) * 255);
-    ctx.fillStyle = `rgba(${g},${g},${g},${alpha})`;
+    ctx.fillStyle = inkColor(w, alpha, dark, tint);
     ctx.beginPath();
     ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
     ctx.fill();
@@ -115,12 +142,16 @@ export function paint(ctx: CanvasRenderingContext2D, dots: Dot[], dark: boolean,
 }
 
 /** Stroke pass for edge-based modes. Runs before `paint` so nodes sit on top. */
-export function paintLines(ctx: CanvasRenderingContext2D, lines: Line[], dark: boolean): void {
+export function paintLines(
+  ctx: CanvasRenderingContext2D,
+  lines: Line[],
+  dark: boolean,
+  tint?: OrbTint
+): void {
   for (const l of lines) {
     const alpha = l.a ?? 1;
     const w = Math.min(1, Math.max(0, l.white));
-    const g = Math.round((dark ? 1 - w : w) * 255);
-    ctx.strokeStyle = `rgba(${g},${g},${g},${alpha})`;
+    ctx.strokeStyle = inkColor(w, alpha, dark, tint);
     ctx.lineWidth = l.w;
     ctx.beginPath();
     ctx.moveTo(l.x1, l.y1);
@@ -151,9 +182,14 @@ export function finalizeFrame(dots: Dot[], lines: Line[], rMin = 0.3): OrbFrame 
 }
 
 /** Paint a finished frame. Lines first, so nodes sit on top of their edges. */
-export function paintFrame(ctx: CanvasRenderingContext2D, frame: OrbFrame, dark: boolean): void {
-  if (frame.lines.length) paintLines(ctx, frame.lines, dark);
-  paint(ctx, frame.dots, dark);
+export function paintFrame(
+  ctx: CanvasRenderingContext2D,
+  frame: OrbFrame,
+  dark: boolean,
+  tint?: OrbTint
+): void {
+  if (frame.lines.length) paintLines(ctx, frame.lines, dark, tint);
+  paint(ctx, frame.dots, dark, 0.3, tint);
 }
 
 /**

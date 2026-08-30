@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+
+  <title>Studio App · Libraries.dev</title>
+  <meta name="description" content="The Studio app — deep, live customization of Beam, Orb, Gooey, Metal and Image. A Libraries Pro feature." />
+  <meta name="author" content="Libraries.dev" />
+  <meta name="robots" content="noindex, follow" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="theme-color" content="#121212" />
+
+  <link rel="canonical" href="https://libraries.dev/studio/app.html" />
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/assets/favicon.svg" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Libraries.dev" />
+  <meta property="og:url" content="https://libraries.dev/studio/app.html" />
+  <meta property="og:title" content="Studio App · Libraries.dev" />
+  <meta property="og:description" content="Deep, live customization of every library. A Libraries Pro feature." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    rel="preload"
+    as="style"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
+  />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+  <link
+    rel="preload"
+    as="font"
+    type="font/woff2"
+    href="/assets/fonts/Saans-Medium.woff2"
+    crossorigin
+  />
+  <link rel="stylesheet" href="/assets/site.css" />
+  <link rel="stylesheet" href="/assets/playground.css" />
+  <style>
+    /* ============================================================ */
+    /* Studio app — dark-only workbench chrome. Control conventions */
+    /* (pg-*) come from playground.css; tokens from site.css.       */
+    /* ============================================================ */
+
+    /* Copy-button icon swap (same as the detail pages). */
+    .code-copy svg {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      transition: opacity 0.2s ease, transform 0.2s ease, filter 0.2s ease;
+    }
+    .code-copy .icon-check { opacity: 0; transform: translate(-50%, -50%) scale(0.4); filter: blur(3px); }
+    .code-copy[data-copied="true"] .icon-copy { opacity: 0; transform: translate(-50%, -50%) scale(0.4); filter: blur(3px); }
+    .code-copy[data-copied="true"] .icon-check { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0); }
+
+    /* ── App shell ─────────────────────────────────────────────── */
+    .st-app {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      max-width: 1240px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 0 24px 40px;
+    }
+    .st-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 0;
+    }
+    .st-top-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .st-top-sep { width: 1px; height: 18px; background: rgba(255, 255, 255, 0.12); }
+    .st-top-name {
+      font-family: "Saans", var(--font-sans);
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    /* Pro chip — transitions.dev's Pro blue (the same wash its "Get Pro"
+       pill wears in dark mode) at their eyebrow-badge proportions. */
+    .st-top-chip {
+      display: inline-flex;
+      align-items: center;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 50px;
+      background: rgba(85, 207, 255, 0.14);
+      color: #7cd4ff;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 16px;
+      /* The raised-surface ring every card and pill here wears, so the chip
+         sits on the same material instead of reading as a flat wash. */
+      box-shadow: var(--material-shadow);
+    }
+    .st-top-right { display: flex; align-items: center; gap: 8px; }
+    .st-top-email {
+      font-size: 13px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 220px;
+    }
+    .st-top-link {
+      display: inline-flex;
+      align-items: center;
+      height: 36px;
+      padding: 0 13px;
+      border: 0;
+      border-radius: 50px;
+      background: var(--chip-bg);
+      color: var(--text-muted);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color 0.15s ease, color 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .st-top-link:hover { background: var(--chip-bg-hover); color: var(--text); }
+
+    /* ── Workbench grid: sidebar · stage · controls ────────────── */
+    .st-body {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 176px minmax(0, 1fr);
+      gap: 24px;
+      align-items: start;
+    }
+    .st-side {
+      position: sticky;
+      top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 8px 0;
+    }
+    .st-side-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-subtle);
+      padding: 4px 12px 10px;
+    }
+    .st-lib {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 40px;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 12px;
+      background: none;
+      color: var(--text-muted);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 500;
+      text-align: left;
+      cursor: pointer;
+      transition: background-color 0.15s ease, color 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .st-lib:hover { background: rgba(255, 255, 255, 0.05); color: var(--text); }
+    .st-lib[data-active="true"] { background: rgba(255, 255, 255, 0.07); color: var(--text); }
+    .st-lib:focus-visible { outline: 2px solid var(--icon-color); outline-offset: 2px; }
+    .st-lib-ico { flex: none; width: 24px; height: 24px; border-radius: 6px; overflow: hidden; }
+    .st-lib-ico img { width: 100%; height: 100%; display: block; object-fit: cover; }
+
+    .st-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+    .st-main .pg { grid-template-columns: minmax(0, 1fr) 300px; row-gap: 16px; }
+    .st-main .pg-stage { min-height: 480px; }
+    .st-main .pg-controls {
+      max-height: 480px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+    }
+    .st-main .pg-snippet { grid-column: 1 / -1; }
+    .pg-controls-title {
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-subtle);
+      margin: 4px 0 -8px;
+    }
+    .pg-controls-title:first-child { margin-top: 0; }
+    .pg-controls-sep { height: 1px; background: rgba(255, 255, 255, 0.07); margin: 2px 0; }
+
+    /* Color swatch row */
+    .pg-swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+    .pg-swatch {
+      width: 26px;
+      height: 26px;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+      transition: transform 150ms var(--ease-smooth-out), box-shadow 150ms ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .pg-swatch:hover { transform: scale(1.1); }
+    .pg-swatch[data-active="true"] {
+      box-shadow:
+        inset 0 0 0 1px rgba(0, 0, 0, 0.3),
+        0 0 0 2px var(--bg),
+        0 0 0 3.5px #ededed;
+    }
+    .pg-swatch:focus-visible { outline: 2px solid var(--icon-color); outline-offset: 3px; }
+
+    @media (max-width: 980px) {
+      .st-body { grid-template-columns: minmax(0, 1fr); }
+      .st-side {
+        position: static;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 0;
+      }
+      .st-side-label { display: none; }
+      .st-lib { height: 36px; border-radius: 40px; }
+      .st-main .pg { grid-template-columns: minmax(0, 1fr); }
+      .st-main .pg-stage { min-height: 380px; }
+      .st-main .pg-controls { max-height: none; overflow: visible; }
+    }
+    @media (max-width: 639px) {
+      .st-app { padding: 0 12px 32px; }
+      .st-top-email { display: none; }
+    }
+
+    /* ── Gate states (shared look with /studio.html) ───────────── */
+    .st-gate {
+      flex: 1;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 48px;
+    }
+    .st-skeleton {
+      width: min(100%, 686px);
+      border-radius: 24px;
+      background: var(--card-bg);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .st-skeleton .sk-line {
+      height: 14px;
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.07);
+      animation: st-pulse 1.4s ease-in-out infinite;
+    }
+    .st-skeleton .sk-line:nth-child(1) { width: 38%; }
+    .st-skeleton .sk-line:nth-child(2) { width: 82%; animation-delay: 120ms; }
+    .st-skeleton .sk-line:nth-child(3) { width: 64%; animation-delay: 240ms; }
+    .st-skeleton .sk-block {
+      height: 220px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.05);
+      animation: st-pulse 1.4s ease-in-out infinite;
+      animation-delay: 360ms;
+    }
+    @keyframes st-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.45; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .st-skeleton .sk-line, .st-skeleton .sk-block { animation: none; }
+    }
+
+    .st-locked {
+      width: min(100%, 686px);
+      border-radius: 24px;
+      background: var(--card-bg);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+      padding: 56px 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      text-align: center;
+    }
+    .st-lock-glyph {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--chip-bg);
+      color: var(--text);
+    }
+    .st-locked-title {
+      margin: 0;
+      font-family: "Saans", var(--font-sans);
+      font-weight: 500;
+      font-size: 24px;
+      line-height: 1.25;
+      color: var(--text);
+    }
+    .st-locked-sub {
+      margin: 0;
+      max-width: 46ch;
+      font-size: 15px;
+      line-height: 1.65;
+      color: var(--text-muted);
+    }
+    .st-locked .skill-cta-row { margin-top: 8px; }
+
+    /* ── Demo pieces on the stage ──────────────────────────────── */
+
+    /* Beam: demo card wrapped by the beam. */
+    .beam-card {
+      width: 250px;
+      padding: 24px 26px;
+      border-radius: 16px;
+      background: #1d1d1d;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .beam-card-line { height: 8px; border-radius: 4px; background: rgba(238, 238, 239, 0.08); }
+    .beam-card-line--title { height: 10px; width: 55%; background: rgba(238, 238, 239, 0.14); }
+    .beam-card-line--short { width: 78%; }
+    .beam-card--sm {
+      width: 56px;
+      height: 56px;
+      padding: 0;
+      align-items: center;
+      justify-content: center;
+    }
+    .beam-card--sm .beam-card-dot { width: 14px; height: 14px; border-radius: 7px; background: rgba(238, 238, 239, 0.2); }
+
+    /* ── Gooey demos: the live demo page's prototypes, verbatim ──
+       Ported from sites/gooey/playground (styles.css + demo.css) with the
+       dark-theme token values inlined; --gd-ink (set by the island) stands
+       in for --btn-text so light fills flip the ink. */
+
+    /* Morph: plus menu (live .pm). */
+    .pm { position: relative; width: 200px; height: 140px; }
+    .pm-slot { position: absolute; left: 80px; top: 80px; }
+    .pm-btn {
+      width: 40px;
+      height: 40px;
+      border: 0;
+      padding: 0;
+      border-radius: 50%;
+      background: transparent;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      color: var(--gd-ink, #fbfbfb);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .pm-btn:focus-visible { outline: 2px solid #ededed; outline-offset: 2px; }
+    .pm-sat { pointer-events: none; }
+    .pm-open .pm-sat { pointer-events: auto; }
+    .pm-open .pm-sat:hover { background: rgba(255, 255, 255, 0.06); }
+    /* Icons hold back while the blob is merged, then materialise with a soft
+       cross-blur as the satellite pulls clear. */
+    .pm-sat-icon {
+      display: grid;
+      place-items: center;
+      opacity: 0;
+      filter: blur(2px);
+      transition: opacity 120ms ease, filter 120ms ease;
+    }
+    .pm-open .pm-sat-icon {
+      opacity: 1;
+      filter: blur(0);
+      transition-duration: var(--pm-icon-dur, 180ms);
+    }
+    /* Close anticipation: the whole liquid layer — and the main button riding
+       it — dips toward the returning satellites' momentum, then settles.
+       Longhands on purpose: WebKit mis-parses var() inside the `animation`
+       shorthand and falls back to 0s. */
+    @keyframes pm-anticipate {
+      0% { transform: translateY(0); }
+      30% { transform: translateY(var(--pm-anticip, 5px)); }
+      100% { transform: translateY(0); }
+    }
+    .pm-anticipating [data-gooey-svg],
+    .pm-anticipating .pm-main {
+      animation-name: pm-anticipate;
+      animation-duration: var(--pm-anticip-dur, 700ms);
+      animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+      animation-fill-mode: both;
+    }
+    .pm-plus {
+      display: grid;
+      place-items: center;
+      transform: rotate(0deg);
+      transition: transform 250ms ease-in-out;
+    }
+    .pm-open .pm-plus { transform: rotate(45deg); }
+
+    /* Move: liquid slider (live .sl). */
+    .sl { position: relative; width: 240px; height: 80px; }
+    .sl-track {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      top: 38px;
+      height: 8px;
+      border-radius: 4px;
+      background: rgba(115, 115, 115, 0.2);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+      /* Below the goo layer (svg sits at z -1): the liquid thumb and its
+         tail must paint OVER the track, not be sliced by it. */
+      z-index: -2;
+    }
+    /* The thumb element itself must stay unstyled: its surface AND shadow
+       are the liquid blob below. */
+    .sl-thumb {
+      position: absolute;
+      left: 14px;
+      top: 30px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .sl-thumb:active { cursor: grabbing; }
+    .sl-thumb:focus-visible { outline: 2px solid #ededed; outline-offset: 4px; }
+
+    /* Bend: drag card (live .dgc — Figma 1221:5117 "Dropdown", 261×46 r54).
+       The pill VISUAL is the liquid blob; this box only sizes and lays out
+       the crisp content. */
+    .dgc {
+      width: 100%;
+      max-width: 640px;
+      height: 210px;
+      position: relative;
+      margin: 0 auto;
+    }
+    .dgc-card {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 261px;
+      height: 46px;
+      margin: -23px 0 0 -130.5px;
+      border-radius: 54px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 16px 0 8px;
+      color: var(--gd-ink, #fbfbfb);
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .dgc-card:active { cursor: grabbing; }
+    .dgc-chip {
+      flex: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 40px;
+      background: rgba(255, 255, 255, 0.06);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .dgc-chip svg { width: 16px; height: 16px; display: block; }
+    .dgc-title { font-size: 13px; font-weight: 500; white-space: nowrap; }
+    .dgc-count { font-size: 13px; opacity: 0.5; white-space: nowrap; }
+    /* Content DEFORMS with the liquid bend: each piece rides the arc
+       (translate, middle most), rotates onto the arc's local tangent and
+       shears with the horizontal cap deformation — driven by the engine's
+       --lg-bend vars, scaled by the Content bend knob (--dgc-cb). */
+    .dgc-card > * {
+      --dgc-k: calc(var(--dgc-cb, 0) * var(--dgc-arc, 1));
+      transform: translate(
+          calc(var(--lg-bend-x, 0px) * var(--dgc-k) * 2.4),
+          calc(var(--lg-bend-y, 0px) * var(--dgc-k) * 2.4)
+        )
+        rotate(calc(var(--lg-bend-yn, 0) * var(--dgc-rot, 0) * var(--dgc-cb, 0) * 1deg))
+        skewX(calc(var(--lg-bend-xn, 0) * var(--dgc-cb, 0) * -0.55deg))
+        scaleX(calc(1 - var(--lg-bend-xn, 0) * var(--dgc-cb, 0) * var(--dgc-sqx, 0.006)))
+        scaleY(calc(1 + var(--lg-bend-yn, 0) * var(--dgc-cb, 0) * var(--dgc-sqy, 0)));
+      transform-origin: center;
+    }
+    .dgc-card > :nth-child(1) { --dgc-arc: 0.45; --dgc-rot: 1.6; --dgc-sqx: 0.014; }
+    .dgc-card > :nth-child(2) { --dgc-arc: 1; --dgc-rot: 0; --dgc-sqy: 0.01; }
+    .dgc-card > :nth-child(3) { --dgc-arc: 0.6; --dgc-rot: -1.6; }
+
+    /* Melt: two draggable photos running molten together (live .mp). */
+    .mp { position: relative; margin: 0 auto; }
+    .mp-card {
+      position: absolute;
+      /* width/height come from the component — see MeltDemo. */
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .mp-card:active { cursor: grabbing; }
+    .mp-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .pm-plus,
+      .pm-sat-icon {
+        transition: none !important;
+      }
+      .pm-anticipating [data-gooey-svg],
+      .pm-anticipating .pm-main {
+        animation: none !important;
+      }
+    }
+
+    /* Metal: preview pills (search field = reflection target + demo button). */
+    .metal-stage-row { display: flex; align-items: center; gap: 12px; }
+    .metal-search {
+      display: flex; align-items: center; gap: 6px;
+      width: 180px; height: 40px; border-radius: 999px;
+      padding: 10px 8px 10px 12px;
+      background: #1d1d1d; border: 1px solid rgba(44, 47, 54, 0.52);
+      box-shadow: inset 0 0 50px 0 rgba(255, 255, 255, 0.02);
+      color: #f8f8f8; font-size: 14px; font-weight: 500; cursor: text;
+    }
+    .metal-search svg { width: 18px; height: 18px; flex-shrink: 0; stroke: #8b8b8b; fill: none; }
+    .metal-search input {
+      flex: 1; min-width: 0; border: 0; background: transparent;
+      font: inherit; color: inherit; outline: none;
+    }
+    .metal-search input::placeholder { color: currentColor; opacity: 0.3; }
+    .metal-pill {
+      display: flex; align-items: center; justify-content: center;
+      width: 140px; height: 40px; padding: 0; border-radius: 999px;
+      background: #1d1d1d; border: 1px solid rgba(44, 47, 54, 0.52);
+      box-shadow: inset 0 0 50px 0 rgba(255, 255, 255, 0.02);
+      color: #f8f8f8; font-family: inherit; font-size: 14px; font-weight: 500;
+      white-space: nowrap; cursor: pointer;
+    }
+    .metal-pill--circle { width: 40px; }
+    .metal-pill svg { width: 16px; height: 16px; display: block; }
+
+    /* Image: toolbar row of stage buttons. */
+    .pg-toolbar {
+      position: absolute; left: 50%; transform: translateX(-50%);
+      bottom: 20px; display: flex; gap: 8px; z-index: 5;
+    }
+    .pg-toolbar .btn-animate { position: static; left: auto; bottom: auto; transform: none; }
+  </style>
+</head>
+<body>
+  <div id="studio-root">
+    <!-- Pre-React boot skeleton: replaced the moment the island mounts. -->
+    <div class="st-app">
+      <div class="st-top">
+        <div class="st-top-left">
+          <a class="brand" href="/studio.html" aria-label="Back to the Studio page">
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 22.6705 14.6705" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21.3352 10.3354L6.89079 13.3354L18.0019 7.33536L1.33524 9.33536L19.3352 1.33536L1.33524 4.33536L9.33524 1.33536" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span class="brand-word"><span class="brand-word-strong">Libraries</span><span class="brand-word-dim">.dev</span></span>
+          </a>
+          <span class="st-top-sep" aria-hidden="true"></span>
+          <span class="st-top-name">Studio <span class="st-top-chip">Pro</span></span>
+        </div>
+      </div>
+      <div class="st-gate">
+        <div class="st-skeleton" aria-hidden="true">
+          <span class="sk-line"></span>
+          <span class="sk-line"></span>
+          <span class="sk-line"></span>
+          <span class="sk-block"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/assets/pro-client.js" defer></script>
+  <script type="module" src="/src/studio/main.tsx"></script>
+</body>
+</html>

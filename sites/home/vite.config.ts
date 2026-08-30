@@ -5,8 +5,9 @@ import { resolve } from "node:path";
 // Multi-page static site: every top-level .html file is an entry.
 export default defineConfig({
   plugins: [react()],
-  // Preview harness assigns a port via PORT when 5173 is taken.
   server: {
+    // Honour PORT so a busy 5173 reassigns cleanly — several sites in this
+    // repo are often run side by side (matches the gooey site's config).
     port: Number(process.env.PORT) || 5173,
     strictPort: false
   },
@@ -22,6 +23,7 @@ export default defineConfig({
         image: resolve(__dirname, "image.html"),
         pro: resolve(__dirname, "pro.html"),
         studio: resolve(__dirname, "studio.html"),
+        "studio-app": resolve(__dirname, "studio/app.html"),
         account: resolve(__dirname, "account.html"),
         activate: resolve(__dirname, "activate.html"),
         success: resolve(__dirname, "success.html"),
