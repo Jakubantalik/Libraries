@@ -367,10 +367,17 @@ html {
 }
 /* Libraries scribble mark — natural 22.67×14.67 ratio in the 24px box. */
 .brand-mark svg { width: 22px; height: 15px; display: block; }
-.brand:hover .brand-mark { transform: rotate(-8deg) scale(1.06); }
+/* Watercolor paint-over (transitions.dev Pro gradient palette): the
+   colored stroke draws along the scribble like a wet brush pass. */
+.brand-paint {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  transition: stroke-dashoffset 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.brand:hover .brand-paint { stroke-dashoffset: 0; }
 @media (prefers-reduced-motion: reduce) {
-  .brand, .brand-mark { transition: none; }
-  .brand:hover, .brand:hover .brand-mark { transform: none; }
+  .brand, .brand-mark, .brand-paint { transition: none; }
+  .brand:hover { transform: none; }
 }
 .brand-word {
   font-size: 15px;
@@ -1307,7 +1314,7 @@ html[data-theme="dark"] .btn-animate:disabled:hover {
   transform-origin: center;
 }
 .footer-brand-logo:hover { opacity: 1; transform: scale(1.02); }
-.footer-brand-logo:hover .brand-mark { transform: rotate(-8deg) scale(1.06); }
+.footer-brand-logo:hover .brand-paint { stroke-dashoffset: 0; }
 @media (prefers-reduced-motion: reduce) {
   .footer-brand-logo { transition: opacity 150ms ease; }
   .footer-brand-logo:hover { transform: none; }

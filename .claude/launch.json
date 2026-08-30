@@ -4,8 +4,14 @@
     {
       "name": "home",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "-w", "@sites/home"],
-      "port": 5173
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "-w",
+        "@sites/home"
+      ],
+      "port": 5173,
+      "autoPort": true
     }
   ]
 }
