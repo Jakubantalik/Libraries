@@ -367,35 +367,24 @@ html {
 }
 /* Libraries scribble mark — natural 22.67×14.67 ratio in the 24px box. */
 .brand-mark svg { width: 22px; height: 15px; display: block; }
-/* Watercolor paint-over (transitions.dev Pro gradient palette) with a
-   border-beam-style bloom: the colored stroke draws along the scribble
-   like a wet brush pass, glows as it lands, and the hue keeps drifting
-   while hovered — same living-rainbow feel as the beam. */
-.brand-paint {
-  stroke-dasharray: 100;
-  stroke-dashoffset: 100;
-  filter: none;
-  transition:
-    stroke-dashoffset 700ms cubic-bezier(0.22, 1, 0.36, 1),
-    filter 500ms ease;
-}
-.brand:hover .brand-paint {
+/* Hand-drawn redraw on hover: the scribble erases itself stroke-first
+   and immediately redraws from the start, like a quick pencil pass.
+   One continuous dash slide (period 200 on a 100-length path) does
+   both halves in a single animation. */
+.brand-draw {
+  stroke-dasharray: 100 100;
   stroke-dashoffset: 0;
-  filter:
-    drop-shadow(0 0 1.5px rgba(160, 180, 255, 0.9))
-    drop-shadow(0 0 5px rgba(190, 120, 255, 0.6))
-    drop-shadow(0 0 12px rgba(80, 160, 255, 0.35));
 }
-.brand:hover .brand-mark svg {
-  animation: brand-hue 3s linear infinite;
+.brand:hover .brand-draw { animation: brand-redraw 1.15s ease-in-out; }
+@keyframes brand-redraw {
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: -200; }
 }
-@keyframes brand-hue {
-  to { filter: hue-rotate(360deg); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .brand, .brand-mark, .brand-paint { transition: none; }
+  .brand, .brand-mark { transition: none; }
   .brand:hover { transform: none; }
-  .brand:hover .brand-mark svg, .footer-brand-logo:hover .brand-mark svg { animation: none; }
+  .brand:hover .brand-draw, .footer-brand-logo:hover .brand-draw { animation: none; }
 }
 .brand-word {
   font-size: 15px;
@@ -1332,14 +1321,7 @@ html[data-theme="dark"] .btn-animate:disabled:hover {
   transform-origin: center;
 }
 .footer-brand-logo:hover { opacity: 1; transform: scale(1.02); }
-.footer-brand-logo:hover .brand-paint {
-  stroke-dashoffset: 0;
-  filter:
-    drop-shadow(0 0 1.5px rgba(160, 180, 255, 0.9))
-    drop-shadow(0 0 5px rgba(190, 120, 255, 0.6))
-    drop-shadow(0 0 12px rgba(80, 160, 255, 0.35));
-}
-.footer-brand-logo:hover .brand-mark svg { animation: brand-hue 3s linear infinite; }
+.footer-brand-logo:hover .brand-draw { animation: brand-redraw 1.15s ease-in-out; }
 @media (prefers-reduced-motion: reduce) {
   .footer-brand-logo { transition: opacity 150ms ease; }
   .footer-brand-logo:hover { transform: none; }
