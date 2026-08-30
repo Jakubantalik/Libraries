@@ -194,52 +194,135 @@
       </nav>
     </header>
 
-    <div class="detail-main">
-      <header class="detail-head">
-        <h1 class="detail-title">Beam</h1>
-        <p class="detail-subtitle">An animated rainbow glow that rides the border of any card, button or input.</p>
-      </header>
-
-      <section class="detail-section" id="playground" aria-label="Playground">
-        <div id="playground-root"></div>
-      </section>
-
-      <section class="detail-section" aria-label="Installation">
-        <h2 class="detail-section-title">Installation</h2>
-        <div class="code-block">
-          <pre>npm install border-beam</pre>
-          <button type="button" class="code-copy" data-copy-static aria-label="Copy install command">
-            <svg class="icon-copy" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-            </svg>
-            <svg class="icon-check" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </button>
+    <div class="docs" id="docs">
+      <aside class="docs-sidebar">
+        <div class="docs-group docs-group--links">
+          <div class="docs-group-label">Getting started</div>
+          <a class="docs-link docs-link--muted" href="/#components">Introduction</a>
+          <a class="docs-link docs-link--muted" href="/studio.html">Studio</a>
+          <a class="docs-link docs-link--muted" href="/pro.html">Get Pro</a>
         </div>
-      </section>
+        <div class="docs-group">
+          <div class="docs-group-label">Libraries</div>
+          <nav class="docs-list" aria-label="Libraries">
+            <a class="docs-link is-active" href="/beam.html" aria-current="page"><img class="docs-link-icon" src="/assets/icons/tile-beam.png" alt="" width="18" height="18" loading="lazy" decoding="async" />Beam</a>
+            <a class="docs-link" href="/orbs.html"><img class="docs-link-icon" src="/assets/icons/tile-orbs.png" alt="" width="18" height="18" loading="lazy" decoding="async" />Orb</a>
+            <a class="docs-link" href="/gooey.html"><img class="docs-link-icon" src="/assets/icons/tile-gooey.png" alt="" width="18" height="18" loading="lazy" decoding="async" />Gooey</a>
+            <a class="docs-link" href="/metal.html"><img class="docs-link-icon" src="/assets/icons/tile-metal.png" alt="" width="18" height="18" loading="lazy" decoding="async" />Metal</a>
+            <a class="docs-link" href="/image.html"><img class="docs-link-icon" src="/assets/icons/tile-image.png" alt="" width="18" height="18" loading="lazy" decoding="async" />Image</a>
+          </nav>
+        </div>
+      </aside>
 
-      <section class="detail-section" aria-label="Usage">
-        <h2 class="detail-section-title">Usage</h2>
-        <div class="code-block">
-          <pre>import { BorderBeam } from 'border-beam';
+      <div class="docs-main">
+        <div class="detail-topbar">
+          <a class="detail-arrow" href="/image.html" aria-label="Previous library — Image">
+            <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12.667 8H3.333M6.667 4.667 3.333 8l3.334 3.333" /></svg>
+          </a>
+          <a class="detail-arrow" href="/orbs.html" aria-label="Next library — Orb">
+            <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.333 8h9.334M9.333 4.667 12.667 8l-3.334 3.333" /></svg>
+          </a>
+        </div>
+
+        <header class="detail-head">
+          <div class="detail-titles">
+            <span class="detail-icon" aria-hidden="true"><img src="/assets/icons/tile-beam.png" alt="" width="46" height="46" decoding="async" /></span>
+            <h1 class="detail-title">Beam</h1>
+            <p class="detail-sub">An animated rainbow glow that rides the border of any card, button or input.</p>
+          </div>
+
+          <div class="detail-head-row">
+            <div class="detail-tabs proto-modal-tabs" data-detail-tabs role="tablist" aria-label="View">
+              <span class="proto-modal-tabs-indicator" aria-hidden="true"></span>
+              <button type="button" class="proto-modal-tab" role="tab" data-detail-tab="preview" aria-selected="true">Preview</button>
+              <button type="button" class="proto-modal-tab" role="tab" data-detail-tab="install" aria-selected="false">Install</button>
+              <button type="button" class="proto-modal-tab" role="tab" data-detail-tab="usage" aria-selected="false">Usage</button>
+            </div>
+
+            <button type="button" class="detail-prompt" data-prompt-target="#agent-prompt" aria-label="Copy agent prompt">
+              <span class="detail-prompt-icons" aria-hidden="true">
+                <svg class="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+                <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </span>
+              <span class="detail-prompt-label">Copy prompt</span>
+            </button>
+          </div>
+        </header>
+
+        <div class="detail-body">
+          <div class="detail-panel" id="playground" data-detail-panel="preview">
+            <div id="playground-root"></div>
+          </div>
+
+          <div class="detail-panel" data-detail-panel="install" hidden>
+            <div class="code-block">
+              <pre>npm install border-beam</pre>
+              <button type="button" class="code-copy" data-copy-static aria-label="Copy install command">
+                <svg class="icon-copy" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+                <svg class="icon-check" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="detail-panel" data-detail-panel="usage" hidden>
+            <div class="code-block">
+              <pre>import { BorderBeam } from 'border-beam';
 
 &lt;BorderBeam&gt;
   &lt;YourCard&gt;Content&lt;/YourCard&gt;
 &lt;/BorderBeam&gt;</pre>
-          <button type="button" class="code-copy" data-copy-static aria-label="Copy usage example">
-            <svg class="icon-copy" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-            </svg>
-            <svg class="icon-check" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </button>
+              <button type="button" class="code-copy" data-copy-static aria-label="Copy usage example">
+                <svg class="icon-copy" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+                <svg class="icon-check" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
-      </section>
+      </div>
     </div>
+
+    <!-- Agent prompt source for the Copy prompt button. A hidden <pre>
+         rather than a <script>: script content is raw text, so the
+         escaped tags below would reach the clipboard still escaped. -->
+    <pre id="agent-prompt" hidden>
+Add the Beam effect from Libraries.dev to my React app.
+
+Install:
+npm install border-beam
+
+Usage:
+import { BorderBeam } from 'border-beam';
+
+&lt;BorderBeam size="md" colorVariant="colorful" strength={0.7}&gt;
+  &lt;YourCard&gt;Content&lt;/YourCard&gt;
+&lt;/BorderBeam&gt;
+
+Props:
+- size: "md" | "sm" | "line" | "pulse-inner" | "pulse-outside"
+- colorVariant: "colorful" | "mono" | "ocean" | "sunset"
+- strength: 0-1, glow intensity
+- active: boolean, pauses the animation when false
+- theme: "light" | "dark"
+
+Beam wraps a child element and rides an animated glow around its border.
+It ships zero runtime dependencies and needs React 18 or newer.
+Docs: https://libraries.dev/beam.html
+    </pre>
 
     <footer class="footer">
       <div class="footer-top">

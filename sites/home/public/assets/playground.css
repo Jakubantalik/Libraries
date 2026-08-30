@@ -2,15 +2,175 @@
    Pill radio tabs, filled-track sliders, toggles, code blocks —
    the control conventions shared by all five library playgrounds. */
 
-.detail-main { width: 100%; max-width: 1008px; margin: 0 auto; }
+/* ── Detail page shell: sidebar + main, after transitions.dev/detail ──
+   Sidebar sticks under the nav and lists the five libraries; the main
+   column carries prev/next arrows, the head, and the tab panels. */
+.docs {
+  width: 100%;
+  max-width: 1008px;
+  margin: 0 auto;
+  padding: 32px 0 96px;
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  column-gap: 56px;
+  align-items: start;
+}
 
-/* Page header under the nav */
-.detail-head { padding: 32px 0 40px; text-align: center; display: flex; flex-direction: column; align-items: center; }
-.detail-title { font-family: "Saans", var(--font-sans); font-size: 36px; font-weight: 500; line-height: 42px; letter-spacing: -0.005em; }
-.detail-subtitle { margin-top: 8px; max-width: 480px; font-size: 16px; line-height: 24px; color: var(--text-muted); }
+.docs-sidebar {
+  position: sticky;
+  top: 84px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  max-height: calc(100vh - 108px);
+  overflow-y: auto;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+}
+.docs-sidebar::-webkit-scrollbar { display: none; }
+.docs-group { display: flex; flex-direction: column; min-width: 0; }
+.docs-list { display: flex; flex-direction: column; min-width: 0; }
+.docs-group-label { font-size: 11px; line-height: 14px; color: var(--text-subtle); padding: 9px 12px; }
+.docs-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 12px;
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  text-align: left;
+  text-decoration: none;
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background 140ms, color 140ms;
+}
+.docs-link:hover { background: var(--chip-bg); }
+.docs-link.is-active { background: var(--chip-bg-hover); }
+.docs-link--muted { color: var(--text-muted); }
+.docs-link:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
+/* The tile exports carry their own shadow on a larger canvas — clip to
+   the 18px slot so the sidebar rows keep a single baseline. */
+.docs-link-icon { flex: none; width: 18px; height: 18px; object-fit: contain; display: block; }
 
-/* Section headings */
-.detail-section { margin-top: 56px; width: 100%; }
+.docs-main { position: relative; min-width: 0; }
+
+/* Prev / next stepper, parked level with the title */
+.detail-topbar { position: absolute; top: 2px; right: 0; display: flex; align-items: center; gap: 15px; }
+.detail-arrow {
+  width: 36px; height: 36px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 50px;
+  background: var(--chip-bg);
+  color: var(--text);
+  text-decoration: none;
+  transition: background 140ms, opacity 140ms;
+}
+.detail-arrow:hover { background: var(--chip-bg-hover); }
+.detail-arrow svg { width: 16px; height: 16px; display: block; }
+
+.detail-head { display: flex; flex-direction: column; gap: 21px; padding-top: 4px; }
+.detail-titles { display: flex; flex-direction: column; gap: 12px; }
+/* Effect icon sits above the name, at the tile art's natural 46px. */
+.detail-icon { width: 46px; height: 46px; display: block; }
+.detail-icon img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.detail-title { margin: 0; font-family: "Saans", var(--font-sans); font-size: 36px; font-weight: 500; line-height: 42px; letter-spacing: -0.18px; color: var(--text); }
+.detail-sub { margin: 0; font-size: 16px; line-height: 24.2px; color: var(--text-muted); }
+
+/* Tabs left, copy-prompt right, sharing one baseline */
+.detail-head-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+.proto-modal-tabs {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  background: var(--chip-bg);
+  border-radius: 48px;
+}
+.proto-modal-tabs-indicator {
+  position: absolute; top: 3px; left: 0;
+  height: calc(100% - 6px); width: 0;
+  background: var(--card-bg);
+  border-radius: 48px;
+  box-shadow: var(--card-shadow), inset 0 0 0 1px var(--card-border);
+  transform: translateX(0);
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), width 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+  z-index: 0;
+}
+.proto-modal-tab {
+  position: relative; z-index: 1;
+  font-family: var(--font-sans); font-size: 13px; font-weight: 500;
+  color: var(--text-muted);
+  background: transparent; border: 0;
+  height: 30px; padding: 4px 12px;
+  border-radius: 48px;
+  cursor: pointer;
+  transition: color 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.proto-modal-tab:hover,
+.proto-modal-tab[aria-selected="true"] { color: var(--text); }
+.proto-modal-tab:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
+
+/* Copy prompt — hands the whole library to a coding agent in one paste */
+.detail-prompt {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 36px; padding: 0 14px;
+  border: 0; border-radius: 24px;
+  background: var(--chip-bg);
+  color: var(--text);
+  font-family: var(--font-sans); font-size: 13px; font-weight: 500; line-height: 13px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 140ms, color 140ms;
+}
+.detail-prompt:hover { background: var(--chip-bg-hover); }
+.detail-prompt:active { background: var(--chip-bg-pressed); }
+.detail-prompt:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
+.detail-prompt-icons { position: relative; width: 16px; height: 16px; flex: none; }
+.detail-prompt-icons svg {
+  position: absolute; inset: 0; width: 16px; height: 16px; display: block;
+  transform-origin: center;
+  transition: opacity 300ms cubic-bezier(0.22, 1, 0.36, 1), transform 300ms cubic-bezier(0.22, 1, 0.36, 1), filter 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.detail-prompt .icon-check { opacity: 0; transform: scale(0.25); filter: blur(4px); }
+.detail-prompt[data-copied="true"] .icon-copy { opacity: 0; transform: scale(0.25); filter: blur(4px); }
+.detail-prompt[data-copied="true"] .icon-check { opacity: 1; transform: scale(1); filter: blur(0); }
+/* Fixed width on the label swap so the pill does not jump on copy. */
+.detail-prompt-label { display: inline-block; min-width: 78px; text-align: left; }
+
+.detail-body { margin-top: 24px; }
+.detail-panel { position: relative; min-width: 0; }
+.detail-panel[hidden] { display: none; }
+
+@media (max-width: 900px) {
+  .docs { grid-template-columns: minmax(0, 1fr); padding-top: 16px; row-gap: 24px; }
+  .docs-sidebar {
+    position: static;
+    max-height: none;
+    flex-direction: row;
+    gap: 8px;
+    overflow-x: auto;
+  }
+  /* Only the library list travels to mobile — the "Getting started"
+     links repeat what the nav and footer already carry. */
+  .docs-group--links { display: none; }
+  .docs-list { flex-direction: row; gap: 6px; }
+  .docs-group-label { display: none; }
+  .detail-topbar { display: none; }
+}
+
+/* Section headings — still used by the code panels */
+.detail-section { margin-top: 0; width: 100%; }
 .detail-section-title { font-size: 15px; font-weight: 500; margin-bottom: 16px; color: var(--text); }
 
 /* Playground layout: stage left, controls right */

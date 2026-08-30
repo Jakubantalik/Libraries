@@ -296,4 +296,83 @@
       }, 1600);
     });
   });
+
+  /* ── Detail-page tabs (Preview / Install / Usage) ──────────
+   * The pill indicator is positioned from the selected button's own
+   * box, so it stays correct when the label widths differ per page.
+   * Measured on demand rather than cached: the tab bar is inside a
+   * flex row that reflows on resize. */
+  var tabBar = document.querySelector("[data-detail-tabs]");
+  if (tabBar) {
+    var indicator = tabBar.querySelector(".proto-modal-tabs-indicator");
+    var tabs = [].slice.call(tabBar.querySelectorAll("[data-detail-tab]"));
+    var panels = [].slice.call(document.querySelectorAll("[data-detail-panel]"));
+
+    function moveIndicator(btn) {
+      if (!indicator || !btn) return;
+      indicator.style.width = btn.offsetWidth + "px";
+      indicator.style.transform = "translateX(" + btn.offsetLeft + "px)";
+    }
+
+    function selectTab(name) {
+      tabs.forEach(function (t) {
+        var on = t.getAttribute("data-detail-tab") === name;
+        t.setAttribute("aria-selected", on ? "true" : "false");
+        if (on) moveIndicator(t);
+      });
+      panels.forEach(function (p) {
+        if (p.getAttribute("data-detail-panel") === name) p.removeAttribute("hidden");
+        else p.setAttribute("hidden", "");
+      });
+    }
+
+    tabs.forEach(function (t) {
+      t.addEventListener("click", function () {
+        selectTab(t.getAttribute("data-detail-tab"));
+      });
+    });
+
+    var initial = tabs.filter(function (t) {
+      return t.getAttribute("aria-selected") === "true";
+    })[0] || tabs[0];
+    if (initial) {
+      // Wait for webfonts: measuring before Saans/Inter land sizes the
+      // indicator to the fallback face and leaves it short.
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(function () { moveIndicator(initial); });
+      }
+      moveIndicator(initial);
+    }
+    window.addEventListener("resize", function () {
+      var current = tabs.filter(function (t) {
+        return t.getAttribute("aria-selected") === "true";
+      })[0];
+      moveIndicator(current);
+    });
+  }
+
+  /* ── Copy prompt ───────────────────────────────────────────
+   * Hands the whole library — install line, usage, prop vocabulary —
+   * to a coding agent in one paste. The wording lives in a hidden
+   * element the button points at, so each detail page keeps its
+   * prompt as readable source rather than an escaped attribute. */
+  var promptBtns = [].slice.call(document.querySelectorAll("[data-prompt-target]"));
+  promptBtns.forEach(function (btn) {
+    var label = btn.querySelector(".detail-prompt-label");
+    var idle = label ? label.textContent : "";
+    var timer = null;
+    btn.addEventListener("click", function () {
+      var src = document.querySelector(btn.getAttribute("data-prompt-target"));
+      var text = src ? (src.textContent || "").trim() : "";
+      if (!text) return;
+      if (navigator.clipboard) navigator.clipboard.writeText(text).catch(function () {});
+      btn.setAttribute("data-copied", "true");
+      if (label) label.textContent = "Copied";
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        btn.removeAttribute("data-copied");
+        if (label) label.textContent = idle;
+      }, 1600);
+    });
+  });
 })();

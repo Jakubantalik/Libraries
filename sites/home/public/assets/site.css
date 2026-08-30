@@ -380,7 +380,6 @@ html {
   from { stroke-dashoffset: 0; }
   to   { stroke-dashoffset: -200; }
 }
-}
 @media (prefers-reduced-motion: reduce) {
   .brand, .brand-mark { transition: none; }
   .brand:hover { transform: none; }
