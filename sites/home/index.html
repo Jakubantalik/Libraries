@@ -78,16 +78,36 @@
     .header { padding-top: 40px; padding-bottom: 96px; }
     .hero-badge {
       position: relative; z-index: 6;
-      display: inline-flex; align-items: center; height: 26px; padding: 0 12px;
-      border-radius: 40px; background: rgba(255, 255, 255, 0.05);
-      font-size: 12px; font-weight: 500; line-height: 16px; color: #9a9a9a;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
-      margin-bottom: 16px;
+      display: inline-flex; align-items: center; height: 28px; padding: 0 12px;
+      border-radius: 24px; background: #181818;
+      font-size: 13px; font-weight: 400; line-height: 24.2px; color: #b5b5b5;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.02),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.05);
+      margin-bottom: 12px;
+    }
+    .hero-badge-dim { color: #939393; margin-left: 4px; }
+    /* Figma type: Saans 42/45, -0.21px, #fefefe, wrapping at 409px;
+       subtitle 16/24.2 #9e9e9e single line; stack gaps 12/12/20. */
+    .header .title {
+      margin-top: 0;
+      font-size: 42px;
+      line-height: 45px;
+      letter-spacing: -0.21px;
+      color: #fefefe;
+      max-width: 409px;
+    }
+    .header .subtitle { margin-top: 12px; max-width: 560px; color: #9e9e9e; }
+    .header .skill-cta-row { margin-top: 20px; }
+    @media (max-width: 639px) {
+      .header .title { font-size: 30px; line-height: 34px; }
     }
     @media (min-width: 981px) {
       /* Clear the orb tile floating above the headline (Figma order:
          tile, badge, title). */
-      .hero-badge { margin-top: 158px; }
+      .header { padding-top: 0; }
+      .hero-badge { margin-top: 178px; }
     }
     /* Floating preview tiles (Figma 1413-37491): 130px card chrome,
        108px inner stage, hover lightens + reveals a label pill. */
@@ -100,10 +120,10 @@
         inset 0 0 0 1px rgba(0, 0, 0, 0.06),
         inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
         inset 0 0 0 1px rgba(196, 196, 196, 0.1);
-      transition: background-color 0.15s ease, transform 300ms var(--ease-smooth-out);
+      transition: background-color 0.15s ease;
       z-index: 5;
     }
-    .hero-tile:hover { background: #1c1c1c; transform: translateY(-2px); }
+    .hero-tile:hover { background: #1c1c1c; }
     .hero-tile-stage {
       position: absolute; inset: 11px; border-radius: 14px; background: #101010;
       overflow: hidden; display: flex; align-items: center; justify-content: center;
@@ -116,7 +136,7 @@
       pointer-events: none; z-index: 10;
     }
     .hero-tile-pill {
-      position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+      position: absolute; top: calc(100% + 12px); left: 9px;
       display: inline-flex; align-items: center; gap: 2px; height: 28px;
       padding: 0 6px 0 12px; border-radius: 24px; background: #2a2a2a;
       font-size: 12px; font-weight: 500; line-height: 13px; color: #e8e8e8;
@@ -134,16 +154,16 @@
     /* Scatter positions around the centered hero copy — desktop only,
        so the static-row fallback below 981px keeps untouched tiles. */
     @media (min-width: 981px) {
-      .hero-tile--orb   { top: 4px;   left: calc(50% + 8px); }
-      .hero-tile--beam  { top: 96px;  left: calc(50% - 520px); }
-      .hero-tile--metal { top: 118px; left: calc(50% + 372px); }
-      .hero-tile--gooey { top: 330px; left: calc(50% - 400px); }
-      .hero-tile--image { top: 352px; left: calc(50% + 176px); }
+      .hero-tile--orb   { top: 0;     left: calc(50% - 7px); }
+      .hero-tile--beam  { top: 147px; left: calc(50% - 481px); }
+      .hero-tile--metal { top: 171px; left: calc(50% + 317px); }
+      .hero-tile--gooey { top: 432px; left: calc(50% - 351px); }
+      .hero-tile--image { top: 475px; left: calc(50% + 90px); }
     }
     @media (min-width: 981px) and (max-width: 1160px) {
       .hero-tile--beam  { left: calc(50% - 440px); }
-      .hero-tile--metal { left: calc(50% + 310px); }
-      .hero-tile--gooey { left: calc(50% - 340px); }
+      .hero-tile--metal { left: calc(50% + 300px); }
+      .hero-tile--gooey { left: calc(50% - 330px); }
     }
     @media (max-width: 980px) {
       .header { padding-top: 40px; padding-bottom: 72px; }
@@ -157,7 +177,7 @@
     }
     @media (min-width: 981px) {
       .hero-tiles-row { display: contents; }
-      .header { min-height: 520px; }
+      .header { min-height: 625px; }
     }
 
     /* ── Library grid cards (Figma 1413-37519): icon + meta row ── */
@@ -168,7 +188,7 @@
       position: absolute; left: 16px; right: 16px; bottom: 16px;
       display: flex; align-items: center; gap: 12px;
     }
-    .lib-ico { flex: none; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; }
+    .lib-ico { flex: none; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; border-radius: 12px; overflow: hidden; }
     .lib-ico img { width: 46px; height: 46px; display: block; }
     /* The image-generation export carries its drop shadow in the bitmap
        (52px canvas for a 46px tile) — render at natural size, recentered. */
@@ -338,7 +358,7 @@
           <a class="brand" href="/" aria-label="Libraries.dev home">
             <span class="brand-mark" aria-hidden="true">
               <svg viewBox="0 0 22.6705 14.6705" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M21.3352 10.3354L6.89079 13.3354L18.0019 7.33536L1.33524 9.33536L19.3352 1.33536L1.33524 4.33536L9.33524 1.33536" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round"/>
+                <path class="brand-draw" d="M21.3352 10.3354L6.89079 13.3354L18.0019 7.33536L1.33524 9.33536L19.3352 1.33536L1.33524 4.33536L9.33524 1.33536" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" pathLength="100"/>
               </svg>
             </span>
             <span class="brand-word"><span class="brand-word-strong">Libraries</span><span class="brand-word-dim">.dev</span></span>
@@ -424,12 +444,9 @@
     </header>
 
     <header class="header">
-      <p class="hero-badge" id="installs-badge">1,400,000+ installs</p>
-      <h1 class="title">High-crafted UI<br />libraries for AI agents</h1>
-      <p class="subtitle">
-        UI effects for modern apps, ready to use with your coding agents —
-        or tuned in detail in the <a class="subtitle-skill" href="/studio.html">Studio</a>.
-      </p>
+      <p class="hero-badge" id="installs-badge"><span id="installs-count">1,400,000+</span><span class="hero-badge-dim">installs</span></p>
+      <h1 class="title">High-crafted UI libraries for AI agents</h1>
+      <p class="subtitle">UI effects for modern apps, ready to use with your coding agents.</p>
       <div class="skill-cta-row">
         <a class="skill-btn skill-btn--primary" href="#components">Browse</a>
         <a class="skill-btn skill-btn--secondary" href="/pro.html">Get Pro access</a>
@@ -695,7 +712,7 @@
           <a class="footer-brand-logo" href="/" aria-label="Libraries.dev home">
             <span class="brand-mark" aria-hidden="true">
               <svg viewBox="0 0 22.6705 14.6705" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M21.3352 10.3354L6.89079 13.3354L18.0019 7.33536L1.33524 9.33536L19.3352 1.33536L1.33524 4.33536L9.33524 1.33536" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round"/>
+                <path class="brand-draw" d="M21.3352 10.3354L6.89079 13.3354L18.0019 7.33536L1.33524 9.33536L19.3352 1.33536L1.33524 4.33536L9.33524 1.33536" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" pathLength="100"/>
               </svg>
             </span>
             <span class="brand-word"><span class="brand-word-strong">Libraries</span><span class="brand-word-dim">.dev</span></span>
@@ -744,13 +761,13 @@
       });
 
       /* Hero badge: live combined npm installs (last month), cached 1h. */
-      var badge = document.getElementById("installs-badge");
+      var badge = document.getElementById("installs-count");
       if (!badge) return;
       var KEY = "ldev:installs";
       var TTL = 60 * 60 * 1000;
       var PKGS = ["border-beam", "thinking-orbs", "liquid-gooey", "metal-fx", "img-fx"];
       function paint(n) {
-        badge.textContent = n.toLocaleString("en-US") + " installs";
+        badge.textContent = n.toLocaleString("en-US");
       }
       try {
         var c = JSON.parse(sessionStorage.getItem(KEY) || "null");

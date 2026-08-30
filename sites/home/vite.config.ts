@@ -5,10 +5,10 @@ import { resolve } from "node:path";
 // Multi-page static site: every top-level .html file is an entry.
 export default defineConfig({
   plugins: [react()],
+  // Preview harness assigns a port via PORT when 5173 is taken.
   server: {
-    // Honour PORT so a busy 5173 reassigns cleanly when several sites in
-    // this repo run side by side.
-    port: process.env.PORT ? Number(process.env.PORT) : 5173,
+    port: Number(process.env.PORT) || 5173,
+    strictPort: false
   },
   build: {
     outDir: "dist",
