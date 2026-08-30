@@ -1,0 +1,10 @@
+src
+demo
+playground
+node_modules
+*.log
+.DS_Store
+tsconfig*.json
+vite.config*.ts
+biome.json
+.gitignore

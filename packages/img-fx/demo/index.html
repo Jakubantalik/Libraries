@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Image generation</title>
+    <meta
+      name="description"
+      content="Image generation loader and reveal component."
+    />
+    <meta name="author" content="Jakub Antalik" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#070707" />
+    <link rel="canonical" href="https://image.jakubantalik.com/" />
+
+    <script>
+      // Resolve theme synchronously, before React boots, by reading the
+      // OS `prefers-color-scheme` preference and stamping `data-theme` on
+      // <html>. Doing this here (and not in App.tsx's first effect) is
+      // what keeps a light-mode visitor from seeing a single frame of
+      // dark page chrome while React mounts. Wrapped in try/catch so a
+      // very old browser without matchMedia silently falls back to dark
+      // — same as the previous hardcoded default.
+      (function () {
+        try {
+          var isLight =
+            window.matchMedia &&
+            window.matchMedia('(prefers-color-scheme: light)').matches;
+          document.documentElement.setAttribute(
+            'data-theme',
+            isLight ? 'light' : 'dark'
+          );
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      })();
+    </script>
+
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.png" />
+    <link rel="shortcut icon" type="image/png" href="/images/favicon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.png" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="img-fx" />
+    <meta property="og:url" content="https://image.jakubantalik.com/" />
+    <meta property="og:title" content="Image generation" />
+    <meta
+      property="og:description"
+      content="Image generation loader and reveal component."
+    />
+    <meta property="og:image" content="https://image.jakubantalik.com/images/og-image.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="img-fx — animated WebGL shader cards revealing images on loop" />
+    <meta property="og:locale" content="en_US" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@jakubantalik" />
+    <meta name="twitter:creator" content="@jakubantalik" />
+    <meta name="twitter:title" content="Image generation" />
+    <meta
+      name="twitter:description"
+      content="Image generation loader and reveal component."
+    />
+    <meta name="twitter:image" content="https://image.jakubantalik.com/images/og-image.jpg" />
+    <meta name="twitter:image:alt" content="img-fx — animated WebGL shader cards revealing images on loop" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400&display=swap"
+      rel="stylesheet"
+    />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Image generation",
+        "alternateName": "img-fx",
+        "description": "Image generation loader and reveal component.",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Web",
+        "url": "https://image.jakubantalik.com/",
+        "image": "https://image.jakubantalik.com/images/og-image.jpg",
+        "downloadUrl": "https://www.npmjs.com/package/img-fx",
+        "codeRepository": "https://github.com/Jakubantalik/img-fx",
+        "programmingLanguage": ["TypeScript", "GLSL"],
+        "license": "https://opensource.org/licenses/MIT",
+        "author": {
+          "@type": "Person",
+          "name": "Jakub Antalik",
+          "url": "https://x.com/jakubantalik"
+        },
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

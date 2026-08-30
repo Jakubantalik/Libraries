@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+
+  <title>Libraries.dev — High-crafted UI libraries for AI agents</title>
+  <meta
+    name="description"
+    content="Home of Jakub Antalik's UI effect libraries — Beam, Orb, Gooey, Metal and Image. Production-ready React effects you can install from npm."
+  />
+  <meta
+    name="keywords"
+    content="react, effects, webgl, border beam, thinking orb, gooey, liquid metal, image loader, UI libraries"
+  />
+  <meta name="author" content="Libraries.dev" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <meta name="googlebot" content="index, follow" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="theme-color" content="#121212" />
+  <meta name="apple-mobile-web-app-title" content="Libraries.dev" />
+  <meta name="application-name" content="Libraries.dev" />
+
+  <link rel="canonical" href="https://libraries.dev/" />
+  <link rel="alternate" hreflang="en" href="https://libraries.dev/" />
+  <link rel="alternate" hreflang="x-default" href="https://libraries.dev/" />
+
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/assets/favicon.svg" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Libraries.dev" />
+  <meta property="og:url" content="https://libraries.dev/" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:title" content="Libraries.dev — High-crafted UI libraries for AI agents" />
+  <meta property="og:description" content="Home of Jakub Antalik's UI effect libraries — Beam, Orb, Gooey, Metal and Image." />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Libraries.dev — High-crafted UI libraries for AI agents" />
+  <meta name="twitter:description" content="Home of Jakub Antalik's UI effect libraries — Beam, Orb, Gooey, Metal and Image." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    rel="preload"
+    as="style"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
+  />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+  <link
+    rel="preload"
+    as="font"
+    type="font/woff2"
+    href="/assets/fonts/Saans-Medium.woff2"
+    crossorigin
+  />
+  <link rel="stylesheet" href="/assets/site.css" />
+  <style>
+    /* Homepage-only: library preview stages */
+    .lib-stage { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+    .card-open {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 20px;
+      z-index: 5;
+      text-decoration: none;
+    }
+    /* npm install one-liner under card title, mono face */
+    .card-subtitle--mono { font-family: var(--font-mono); font-size: 12px; }
+
+    /* ── Hero (Figma 1292-3184): installs badge + floating tiles ── */
+    .header { padding-top: 40px; padding-bottom: 96px; }
+    .hero-badge {
+      position: relative; z-index: 6;
+      display: inline-flex; align-items: center; height: 26px; padding: 0 12px;
+      border-radius: 40px; background: rgba(255, 255, 255, 0.05);
+      font-size: 12px; font-weight: 500; line-height: 16px; color: #9a9a9a;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+      margin-bottom: 16px;
+    }
+    @media (min-width: 981px) {
+      /* Clear the orb tile floating above the headline (Figma order:
+         tile, badge, title). */
+      .hero-badge { margin-top: 158px; }
+    }
+    /* Floating preview tiles (Figma 1413-37491): 130px card chrome,
+       108px inner stage, hover lightens + reveals a label pill. */
+    .hero-tile {
+      position: absolute; width: 130px; height: 130px; display: block;
+      border-radius: 24px; background: #181818; text-decoration: none;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+      transition: background-color 0.15s ease, transform 300ms var(--ease-smooth-out);
+      z-index: 5;
+    }
+    .hero-tile:hover { background: #1c1c1c; transform: translateY(-2px); }
+    .hero-tile-stage {
+      position: absolute; inset: 11px; border-radius: 14px; background: #101010;
+      overflow: hidden; display: flex; align-items: center; justify-content: center;
+      pointer-events: none;
+    }
+    .hero-tile-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .hero-tile-stage::after {
+      content: ""; position: absolute; inset: 0; border-radius: inherit;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), inset 0 0 0 1px rgba(191, 192, 203, 0.1);
+      pointer-events: none; z-index: 10;
+    }
+    .hero-tile-pill {
+      position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+      display: inline-flex; align-items: center; gap: 2px; height: 28px;
+      padding: 0 6px 0 12px; border-radius: 24px; background: #2a2a2a;
+      font-size: 12px; font-weight: 500; line-height: 13px; color: #e8e8e8;
+      white-space: nowrap;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+      opacity: 0; transition: opacity 0.15s ease; pointer-events: none;
+    }
+    .hero-tile-pill svg { width: 16px; height: 16px; display: block; color: #9a9a9a; transform: rotate(-90deg); }
+    .hero-tile:hover .hero-tile-pill { opacity: 1; }
+    /* Scatter positions around the centered hero copy — desktop only,
+       so the static-row fallback below 981px keeps untouched tiles. */
+    @media (min-width: 981px) {
+      .hero-tile--orb   { top: 4px;   left: calc(50% + 8px); }
+      .hero-tile--beam  { top: 96px;  left: calc(50% - 520px); }
+      .hero-tile--metal { top: 118px; left: calc(50% + 372px); }
+      .hero-tile--gooey { top: 330px; left: calc(50% - 400px); }
+      .hero-tile--image { top: 352px; left: calc(50% + 176px); }
+    }
+    @media (min-width: 981px) and (max-width: 1160px) {
+      .hero-tile--beam  { left: calc(50% - 440px); }
+      .hero-tile--metal { left: calc(50% + 310px); }
+      .hero-tile--gooey { left: calc(50% - 340px); }
+    }
+    @media (max-width: 980px) {
+      .header { padding-top: 40px; padding-bottom: 72px; }
+      .hero-tile { position: static; flex: none; }
+      .hero-tile-pill { display: none; }
+      .hero-tiles-row {
+        display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+        margin-top: 40px; width: 100%;
+      }
+      .hero-tile { position: relative; }
+    }
+    @media (min-width: 981px) {
+      .hero-tiles-row { display: contents; }
+      .header { min-height: 520px; }
+    }
+
+    /* ── Library grid cards (Figma 1413-37519): icon + meta row ── */
+    .lib-card-hit { position: absolute; inset: 0; z-index: 6; border-radius: 24px; }
+    .lib-video { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .lib-card .card-stage { height: 245px; }
+    .lib-meta {
+      position: absolute; left: 16px; right: 16px; bottom: 16px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .lib-ico { flex: none; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; }
+    .lib-ico img { width: 46px; height: 46px; display: block; }
+    /* The image-generation export carries its drop shadow in the bitmap
+       (52px canvas for a 46px tile) — render at natural size, recentered. */
+    .lib-ico img.lib-ico-img--pad { width: 52px; height: 52px; max-width: none; margin: -3px; }
+    .lib-meta-text { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+    .lib-name { font-size: 14px; font-weight: 500; line-height: 13px; color: #ededed; }
+    .lib-desc {
+      font-size: 14px; font-weight: 400; line-height: 13px; color: #767676;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      padding-bottom: 2px; margin-bottom: -2px;
+    }
+
+    /* ── Kind words (styling from transitions.dev/pro testimonials) ── */
+    .home-section { width: 100%; max-width: 1008px; margin: 96px auto 0; }
+    .home-section-title {
+      text-align: center; font-family: "Saans", var(--font-sans);
+      font-size: 30px; font-weight: 500; letter-spacing: -0.01em;
+      color: var(--text); margin: 0 0 40px;
+    }
+    .pro-quotes {
+      list-style: none; margin: 0; padding: 0;
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px; align-items: stretch;
+    }
+    .pro-quote {
+      display: flex; flex-direction: column; gap: 24px; min-width: 0;
+      min-height: 240px; padding: 32px; border-radius: 24px;
+      background: #141414;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 -1px 0 0 rgba(255, 255, 255, 0.03);
+    }
+    .pro-quote-text { margin: 0; flex: 1 1 auto; font-size: 16px; line-height: 24.2px; color: #c9c9c9; overflow-wrap: anywhere; }
+    .pro-quote-author { display: flex; align-items: center; gap: 11px; min-width: 0; }
+    .pro-quote-avatar-link { flex: none; display: inline-flex; border-radius: 50px; text-decoration: none; transition: opacity 150ms var(--ease-smooth-out); }
+    .pro-quote-avatar-link:hover { opacity: 0.85; }
+    .pro-quote-avatar {
+      flex: none; width: 36px; height: 36px; border-radius: 50px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: rgba(255, 255, 255, 0.06); color: var(--text-muted);
+      font-size: 13px; font-weight: 500; overflow: hidden;
+    }
+    .pro-quote-id { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .pro-quote-name { align-self: flex-start; font-size: 13px; line-height: 16px; font-weight: 500; color: #ededed; text-decoration: none; }
+    a.pro-quote-name:hover { text-decoration: underline; text-underline-offset: 2px; }
+    .pro-quote-role { font-size: 13px; line-height: 16px; color: #737373; overflow-wrap: anywhere; }
+    @media (max-width: 900px) {
+      .pro-quotes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .pro-quote:last-child:nth-child(odd) { grid-column: 1 / -1; }
+    }
+    @media (max-width: 640px) {
+      .home-section { margin-top: 64px; }
+      .home-section-title { font-size: 23px; margin-bottom: 28px; }
+      .pro-quotes { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+      .pro-quote { min-height: 0; padding: 24px; gap: 20px; }
+      .pro-quote-text { font-size: 15px; line-height: 23px; }
+    }
+
+    /* ── FAQ accordion (styling from transitions.dev/pro) ───────── */
+    .faq-list {
+      --acc-expand: 250ms; --acc-collapse: 250ms; --acc-chevron: 250ms;
+      --acc-ease: var(--ease-smooth-out); --faq-border: rgba(255, 255, 255, 0.08);
+      display: flex; flex-direction: column; max-width: 640px; margin: 0 auto;
+    }
+    .t-acc { border-top: 1px solid var(--faq-border); }
+    .faq-list .t-acc:last-child { border-bottom: 1px solid var(--faq-border); }
+    .t-acc-head {
+      width: 100%; display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; padding: 16px 0; border: 0; background: none; cursor: pointer;
+      font-family: var(--font-sans); font-size: 15px; font-weight: 400; line-height: 22px;
+      color: var(--text); text-align: left; -webkit-tap-highlight-color: transparent;
+    }
+    .t-acc-head:focus-visible { outline: 2px solid var(--icon-color); outline-offset: 2px; border-radius: 6px; }
+    .t-acc-chevron {
+      display: inline-flex; flex-shrink: 0; color: var(--text-muted);
+      transform: scaleY(1); transform-origin: center;
+      transition: transform var(--acc-chevron) var(--acc-ease);
+    }
+    .t-acc-chevron svg { width: 16px; height: 16px; display: block; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .t-acc-chevron path { vector-effect: non-scaling-stroke; }
+    .t-acc[data-open="true"] .t-acc-chevron { transform: scaleY(-1); }
+    .t-acc-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--acc-collapse) var(--acc-ease); }
+    .t-acc[data-open="true"] .t-acc-panel { grid-template-rows: 1fr; transition: grid-template-rows var(--acc-expand) var(--acc-ease); }
+    .t-acc-panel-inner {
+      overflow: hidden; opacity: 0; filter: blur(var(--blur-small));
+      transition: opacity var(--acc-collapse) var(--acc-ease), filter var(--acc-collapse) var(--acc-ease);
+    }
+    .t-acc[data-open="true"] .t-acc-panel-inner {
+      opacity: 1; filter: blur(0);
+      transition: opacity var(--acc-expand) var(--acc-ease), filter var(--acc-expand) var(--acc-ease);
+    }
+    .t-acc-panel-inner p { margin: 0 0 16px; padding-right: 28px; font-size: 14px; line-height: 22px; color: var(--text-muted); }
+    .t-acc-panel-inner code { font-family: var(--font-mono); font-size: 12px; line-height: 18px; padding: 1px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.06); color: var(--text); }
+    .t-acc-panel-inner a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
+    @media (prefers-reduced-motion: reduce) {
+      .t-acc-panel, .t-acc-panel-inner, .t-acc-chevron, .hero-tile { transition: none !important; }
+    }
+
+    /* Hero CTAs — Figma Button/Small (node 1292:4277): 32px pills,
+       light #e9e9e9 primary, #2a2a2a secondary with the material ring. */
+    .skill-cta-row { gap: 11px; }
+    .skill-cta-row .skill-btn {
+      height: 32px;
+      font-size: 13px;
+      line-height: 13px;
+      font-weight: 500;
+    }
+    .skill-cta-row .skill-btn--primary {
+      background: #e9e9e9;
+      color: #17181c;
+      padding: 0 16px;
+      border-radius: 26px;
+      box-shadow: none;
+    }
+    .skill-cta-row .skill-btn--primary:hover { background: #ffffff; }
+    .skill-cta-row .skill-btn--primary:active { background: #dcdcdc; }
+    .skill-cta-row .skill-btn--secondary {
+      background: #2a2a2a;
+      color: #ffffff;
+      padding: 0 12px;
+      border-radius: 24px;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+    }
+    .skill-cta-row .skill-btn--secondary:hover { background: #323232; }
+    .skill-cta-row .skill-btn--secondary:active { background: #262626; }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#components">Skip to content</a>
+  <main id="main" class="app">
+    <header class="site-nav">
+      <div class="site-nav-inner">
+        <div class="site-nav-left">
+          <a class="brand" href="/" aria-label="Libraries.dev home">
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 22.6705 14.6705" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21.3352 10.3354L6.89079 13.3354L18.0019 7.33536L1.33524 9.33536L19.3352 1.33536L1.33524 4.33536L9.33524 1.33536" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span class="brand-word"><span class="brand-word-strong">Libraries</span><span class="brand-word-dim">.dev</span></span>
+          </a>
+          <nav class="site-nav-menu" aria-label="Primary">
+            <a class="nav-pill nav-pill--active" href="/#components">Libraries</a>
+            <a class="nav-pill" href="/studio.html">Studio</a>
+          </nav>
+        </div>
+        <div class="site-nav-right">
+          <a class="nav-get-pro" href="/pro.html"><span class="nav-get-pro-label"><span class="nav-get-pro-word">Get </span>Pro</span></a>
+          <a
+            class="icon-btn-pill"
+            id="gh-stars-btn"
+            href="https://github.com/Jakubantalik/Libraries"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub repository — star count"
+            data-loading="true"
+          >
+            <svg aria-hidden="true" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+            </svg>
+            <span class="pill-label" id="gh-stars-count">—</span>
+          </a>
+          <a
+            class="icon-btn"
+            href="https://x.com/jakubantalik"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="X (Twitter)"
+          >
+            <svg class="icon-x" aria-hidden="true" viewBox="0 0 16 17" xmlns="http://www.w3.org/2000/svg">
+              <path
+                fill="currentColor"
+                d="M12.4041 1.39726H14.6953L9.69087 7.2591L15.5781 15.2368H10.9696L7.35741 10.3996L3.22921 15.2368H0.934687L6.28641 8.96575L0.642598 1.39726H5.36795L8.62962 5.81859L12.4041 1.39726ZM11.5992 13.8329H12.8682L4.67667 2.72798H3.31359L11.5992 13.8329Z"
+              />
+            </svg>
+          </a>
+          <div class="pm-anchor" id="more-anchor">
+            <button type="button" class="icon-btn" id="more-btn" aria-label="More" aria-haspopup="menu" aria-expanded="false">
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 8C6.66667 7.26362 7.26362 6.66667 8 6.66667C8.73638 6.66667 9.33333 7.26362 9.33333 8C9.33333 8.73638 8.73638 9.33333 8 9.33333C7.26362 9.33333 6.66667 8.73638 6.66667 8Z" fill="currentColor"/>
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 3.33333C6.66667 2.59695 7.26362 2 8 2C8.73638 2 9.33333 2.59695 9.33333 3.33333C9.33333 4.06971 8.73638 4.66667 8 4.66667C7.26362 4.66667 6.66667 4.06971 6.66667 3.33333Z" fill="currentColor"/>
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 12.6667C6.66667 11.9303 7.26362 11.3333 8 11.3333C8.73638 11.3333 9.33333 11.9303 9.33333 12.6667C9.33333 13.403 8.73638 14 8 14C7.26362 14 6.66667 13.403 6.66667 12.6667Z" fill="currentColor"/>
+              </svg>
+            </button>
+            <div class="tl-menu t-dropdown" id="more-menu" data-origin="top-right" role="menu" aria-label="More options">
+              <div class="tl-menu-item" id="pm-signin" role="menuitem" tabindex="0">
+                <span class="tl-menu-item-label">Sign in</span>
+              </div>
+              <div class="tl-menu-divider"></div>
+              <a class="tl-menu-item" id="pm-support" href="mailto:jakubja@gmail.com" role="menuitem">
+                <span class="tl-menu-item-label">Support</span>
+              </a>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="icon-btn nav-burger"
+            id="nav-burger"
+            aria-label="Open menu"
+            aria-expanded="false"
+            aria-controls="mobile-menu"
+          >
+            <span class="nav-burger-box" aria-hidden="true">
+              <span class="nav-burger-line nav-burger-line--top"></span>
+              <span class="nav-burger-line nav-burger-line--bottom"></span>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <div class="mobile-menu-backdrop" id="mobile-menu-backdrop"></div>
+      <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile">
+        <ul class="mobile-menu-list">
+          <li><a class="mobile-menu-link mobile-menu-link--1" href="/#components">Libraries</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--2" href="/studio.html">Studio</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--3 mobile-menu-link--pro" href="/pro.html">Get Pro</a></li>
+        </ul>
+        <a class="mobile-menu-cta" id="mobile-signin" href="/pro.html">Sign in</a>
+      </nav>
+    </header>
+
+    <header class="header">
+      <p class="hero-badge" id="installs-badge">1,400,000+ installs</p>
+      <h1 class="title">High-crafted UI<br />libraries for AI agents</h1>
+      <p class="subtitle">
+        UI effects for modern apps, ready to use with your coding agents —
+        or tuned in detail in the <a class="subtitle-skill" href="/studio.html">Studio</a>.
+      </p>
+      <div class="skill-cta-row">
+        <a class="skill-btn skill-btn--primary" href="#components">Browse</a>
+        <a class="skill-btn skill-btn--secondary" href="/pro.html">Get Pro access</a>
+      </div>
+      <div class="hero-tiles-row">
+        <a class="hero-tile hero-tile--orb" href="/orbs.html" aria-label="Thinking orbs">
+          <span class="hero-tile-stage"><img class="hero-tile-img" src="/assets/previews/orbs.png" alt="" loading="lazy" decoding="async" /></span>
+          <span class="hero-tile-pill">Thinking orbs <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.47 6.22a.75.75 0 0 1 1.06 0L8 8.69l2.47-2.47a.75.75 0 1 1 1.06 1.06l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 0 1 0-1.06Z" fill="currentColor"/></svg></span>
+        </a>
+        <a class="hero-tile hero-tile--beam" href="/beam.html" aria-label="Border beam">
+          <span class="hero-tile-stage"><img class="hero-tile-img" src="/assets/previews/beam.jpg" alt="" loading="lazy" decoding="async" /></span>
+          <span class="hero-tile-pill">Border beam <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.47 6.22a.75.75 0 0 1 1.06 0L8 8.69l2.47-2.47a.75.75 0 1 1 1.06 1.06l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 0 1 0-1.06Z" fill="currentColor"/></svg></span>
+        </a>
+        <a class="hero-tile hero-tile--metal" href="/metal.html" aria-label="Liquid metal">
+          <span class="hero-tile-stage"><img class="hero-tile-img" src="/assets/previews/metal.jpg" alt="" loading="lazy" decoding="async" /></span>
+          <span class="hero-tile-pill">Liquid metal <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.47 6.22a.75.75 0 0 1 1.06 0L8 8.69l2.47-2.47a.75.75 0 1 1 1.06 1.06l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 0 1 0-1.06Z" fill="currentColor"/></svg></span>
+        </a>
+        <a class="hero-tile hero-tile--gooey" href="/gooey.html" aria-label="Gooey">
+          <span class="hero-tile-stage"><img class="hero-tile-img" src="/assets/previews/gooey.jpg" alt="" loading="lazy" decoding="async" /></span>
+          <span class="hero-tile-pill">Gooey <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.47 6.22a.75.75 0 0 1 1.06 0L8 8.69l2.47-2.47a.75.75 0 1 1 1.06 1.06l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 0 1 0-1.06Z" fill="currentColor"/></svg></span>
+        </a>
+        <a class="hero-tile hero-tile--image" href="/image.html" aria-label="Image generation">
+          <span class="hero-tile-stage"><img class="hero-tile-img" src="/assets/previews/image.jpg" alt="" loading="lazy" decoding="async" /></span>
+          <span class="hero-tile-pill">Image generation <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.47 6.22a.75.75 0 0 1 1.06 0L8 8.69l2.47-2.47a.75.75 0 1 1 1.06 1.06l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 0 1 0-1.06Z" fill="currentColor"/></svg></span>
+        </a>
+      </div>
+    </header>
+
+    <section class="cards" id="components" aria-label="Effect libraries" style="scroll-margin-top: 24px;">
+      <article class="card lib-card" data-lib="beam">
+        <a class="lib-card-hit" href="/beam.html" aria-label="Border Beam playground"></a>
+        <div class="card-stage">
+          <video class="lib-video" src="/assets/videos/beam.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
+        </div>
+        <div class="lib-meta">
+          <span class="lib-ico"><img src="/assets/icons/tile-beam.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
+          <span class="lib-meta-text">
+            <span class="lib-name">Border Beam</span>
+            <span class="lib-desc">Animated rainbow glow riding any border</span>
+          </span>
+        </div>
+      </article>
+
+      <article class="card lib-card" data-lib="orb">
+        <a class="lib-card-hit" href="/orbs.html" aria-label="Thinking orbs playground"></a>
+        <div class="card-stage">
+          <video class="lib-video" src="/assets/videos/orb.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
+        </div>
+        <div class="lib-meta">
+          <span class="lib-ico"><img src="/assets/icons/tile-orbs.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
+          <span class="lib-meta-text">
+            <span class="lib-name">Thinking orbs</span>
+            <span class="lib-desc">Thought-orb loading states for AI interfaces</span>
+          </span>
+        </div>
+      </article>
+
+      <article class="card lib-card" data-lib="gooey">
+        <a class="lib-card-hit" href="/gooey.html" aria-label="Gooey playground"></a>
+        <div class="card-stage">
+          <video class="lib-video" src="/assets/videos/gooey.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
+        </div>
+        <div class="lib-meta">
+          <span class="lib-ico"><img src="/assets/icons/tile-gooey.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
+          <span class="lib-meta-text">
+            <span class="lib-name">Gooey</span>
+            <span class="lib-desc">Liquid UI — pieces merge and morph like goo</span>
+          </span>
+        </div>
+      </article>
+
+      <article class="card lib-card" data-lib="metal">
+        <a class="lib-card-hit" href="/metal.html" aria-label="Liquid Metal playground"></a>
+        <div class="card-stage">
+          <video class="lib-video" src="/assets/videos/metal.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
+        </div>
+        <div class="lib-meta">
+          <span class="lib-ico"><img src="/assets/icons/tile-metal.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
+          <span class="lib-meta-text">
+            <span class="lib-name">Liquid Metal</span>
+            <span class="lib-desc">Real-time chrome ring for buttons and icons</span>
+          </span>
+        </div>
+      </article>
+
+      <article class="card lib-card" data-lib="image">
+        <a class="lib-card-hit" href="/image.html" aria-label="Image generation playground"></a>
+        <div class="card-stage">
+          <video class="lib-video" src="/assets/videos/image.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
+        </div>
+        <div class="lib-meta">
+          <span class="lib-ico"><img class="lib-ico-img--pad" src="/assets/icons/tile-image.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
+          <span class="lib-meta-text">
+            <span class="lib-name">Image generation</span>
+            <span class="lib-desc">WebGL image-generation loader for cards</span>
+          </span>
+        </div>
+      </article>
+    </section>
+
+
+    <section class="home-section" aria-labelledby="kind-words-title">
+      <h2 class="home-section-title" id="kind-words-title">Kind words</h2>
+      <ul class="pro-quotes">
+        <li class="pro-quote">
+          <p class="pro-quote-text">Thank you for building an awesome library! :)</p>
+          <div class="pro-quote-author">
+            <a class="pro-quote-avatar-link" href="https://x.com/witsdev" target="_blank" rel="noopener noreferrer" aria-label="wits on X" tabindex="-1">
+              <span class="pro-quote-avatar" aria-hidden="true">W</span>
+            </a>
+            <span class="pro-quote-id">
+              <a class="pro-quote-name" href="https://x.com/witsdev" target="_blank" rel="noopener noreferrer">wits</a>
+              <span class="pro-quote-role">Engineer at Vercel — after shipping Border Beam in the Vercel dashboard</span>
+            </span>
+          </div>
+        </li>
+        <li class="pro-quote">
+          <p class="pro-quote-text">Your AI agent&rsquo;s &ldquo;thinking...&rdquo; state doesn&rsquo;t have to be a boring spinner. 6 animated orb types, zero dependencies, light + dark mode built in — npm install and you&rsquo;re done.</p>
+          <div class="pro-quote-author">
+            <a class="pro-quote-avatar-link" href="https://x.com/tranmautritam" target="_blank" rel="noopener noreferrer" aria-label="Tran Mau Tri Tam on X" tabindex="-1">
+              <span class="pro-quote-avatar" aria-hidden="true">T</span>
+            </a>
+            <span class="pro-quote-id">
+              <a class="pro-quote-name" href="https://x.com/tranmautritam" target="_blank" rel="noopener noreferrer">Tran Mau Tri Tam</a>
+              <span class="pro-quote-role">Designer · on Thinking orbs</span>
+            </span>
+          </div>
+        </li>
+        <li class="pro-quote">
+          <p class="pro-quote-text">Using Beam, Orb, Gooey, Metal or Image somewhere nice? Tell me on X and I&rsquo;ll feature it here.</p>
+          <div class="pro-quote-author">
+            <a class="pro-quote-avatar-link" href="https://x.com/jakubantalik" target="_blank" rel="noopener noreferrer" aria-label="Jakub Antalik on X" tabindex="-1">
+              <span class="pro-quote-avatar" aria-hidden="true">J</span>
+            </a>
+            <span class="pro-quote-id">
+              <a class="pro-quote-name" href="https://x.com/jakubantalik" target="_blank" rel="noopener noreferrer">Jakub Antalik</a>
+              <span class="pro-quote-role">Creator of Libraries.dev</span>
+            </span>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <section class="home-section" aria-labelledby="faq-title">
+      <h2 class="home-section-title" id="faq-title">FAQs</h2>
+      <div class="faq-list">
+        <div class="t-acc" data-open="false">
+          <button class="t-acc-head" type="button" aria-expanded="false">
+            <span>Are the libraries free?</span>
+            <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
+          </button>
+          <div class="t-acc-panel"><div class="t-acc-panel-inner">
+            <p>Yes. All five libraries — Beam, Orb, Gooey, Metal and Image — are MIT-licensed and free on npm. Install any of them with <code>npm install border-beam</code>, <code>thinking-orbs</code>, <code>liquid-gooey</code>, <code>metal-fx</code> or <code>img-fx</code>.</p>
+          </div></div>
+        </div>
+
+        <div class="t-acc" data-open="false">
+          <button class="t-acc-head" type="button" aria-expanded="false">
+            <span>What do I need to use them?</span>
+            <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
+          </button>
+          <div class="t-acc-panel"><div class="t-acc-panel-inner">
+            <p>React 18 or newer. Each library is a standalone package with zero runtime dependencies, except Image generation which also needs <code>three</code> as a peer dependency. All five together weigh about 83&nbsp;KB gzipped.</p>
+          </div></div>
+        </div>
+
+        <div class="t-acc" data-open="false">
+          <button class="t-acc-head" type="button" aria-expanded="false">
+            <span>What is Pro and the Studio?</span>
+            <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
+          </button>
+          <div class="t-acc-panel"><div class="t-acc-panel-inner">
+            <p>One plan across every library. Pro unlocks the <a href="/studio.html">Studio</a> — deep, per-library customization beyond the public playgrounds, with export of the exact configuration — plus Pro presets and every future library and update. See <a href="/pro.html">pricing</a>.</p>
+          </div></div>
+        </div>
+
+        <div class="t-acc" data-open="false">
+          <button class="t-acc-head" type="button" aria-expanded="false">
+            <span>Do they work with coding agents?</span>
+            <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
+          </button>
+          <div class="t-acc-panel"><div class="t-acc-panel-inner">
+            <p>Yes — that is the point. Every library installs and configures cleanly from Cursor, Claude Code, Codex and similar tools, and the effects are designed so agent-built apps stop looking generic. Pro adds skills that teach your agent each library&rsquo;s full parameter vocabulary.</p>
+          </div></div>
+        </div>
+
+        <div class="t-acc" data-open="false">
+          <button class="t-acc-head" type="button" aria-expanded="false">
+            <span>Can I use them in commercial projects?</span>
+            <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
+          </button>
+          <div class="t-acc-panel"><div class="t-acc-panel-inner">
+            <p>The free libraries are MIT — use them anywhere, including commercial work. Pro content (Studio exports, Pro presets and recipes) is licensed to you or your team under the plan you buy, for unlimited projects.</p>
+          </div></div>
+        </div>
+
+        <div class="t-acc" data-open="false">
+          <button class="t-acc-head" type="button" aria-expanded="false">
+            <span>Do they work outside React?</span>
+            <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
+          </button>
+          <div class="t-acc-panel"><div class="t-acc-panel-inner">
+            <p>Officially the packages target React. Community ports exist — Expo and React Native for the orbs, Svelte and Vue ports of Beam and Gooey — and SwiftUI plus React Native ports for Beam and Orb live in the main repository.</p>
+          </div></div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <a class="footer-brand-logo" href="/" aria-label="Libraries.dev home">
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 22.6705 14.6705" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21.3352 10.3354L6.89079 13.3354L18.0019 7.33536L1.33524 9.33536L19.3352 1.33536L1.33524 4.33536L9.33524 1.33536" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span class="brand-word"><span class="brand-word-strong">Libraries</span><span class="brand-word-dim">.dev</span></span>
+          </a>
+          <p class="footer-tagline">High-crafted UI libraries for AI agents</p>
+        </div>
+        <nav class="footer-cols" aria-label="Footer">
+          <div class="footer-col">
+            <p class="footer-col-title">Libraries</p>
+            <a href="/beam.html">Beam</a>
+            <a href="/orbs.html">Orb</a>
+            <a href="/gooey.html">Gooey</a>
+            <a href="/metal.html">Metal</a>
+            <a href="/image.html">Image</a>
+          </div>
+          <div class="footer-col">
+            <p class="footer-col-title">Product</p>
+            <a href="/">Home</a>
+            <a href="/studio.html">Studio</a>
+            <a href="/pro.html">Get Pro</a>
+          </div>
+          <div class="footer-col">
+            <p class="footer-col-title">Legal &amp; Account</p>
+            <a href="/pro.html" id="footer-signin">Sign in</a>
+            <a href="/terms.html">Terms</a>
+            <a href="/privacy.html">Privacy</a>
+            <a href="mailto:jakubja@gmail.com">Contact</a>
+          </div>
+        </nav>
+      </div>
+      <p class="footer-credit"><span class="footer-muted">Created by</span><a class="footer-name" href="https://x.com/jakubantalik" target="_blank" rel="noopener noreferrer">Jakub Antalik</a></p>
+    </footer>
+  </main>
+
+  <script>
+    (function () {
+      /* FAQ accordion (transitions-dev P21). */
+      document.querySelectorAll(".faq-list .t-acc").forEach(function (acc) {
+        var head = acc.querySelector(".t-acc-head");
+        if (!head) return;
+        head.addEventListener("click", function () {
+          var open = acc.getAttribute("data-open") === "true";
+          acc.setAttribute("data-open", String(!open));
+          head.setAttribute("aria-expanded", String(!open));
+        });
+      });
+
+      /* Hero badge: live combined npm installs (last month), cached 1h. */
+      var badge = document.getElementById("installs-badge");
+      if (!badge) return;
+      var KEY = "ldev:installs";
+      var TTL = 60 * 60 * 1000;
+      var PKGS = ["border-beam", "thinking-orbs", "liquid-gooey", "metal-fx", "img-fx"];
+      function paint(n) {
+        badge.textContent = n.toLocaleString("en-US") + " installs";
+      }
+      try {
+        var c = JSON.parse(sessionStorage.getItem(KEY) || "null");
+        if (c && Date.now() - c.t < TTL) { paint(c.n); return; }
+      } catch (e) {}
+      Promise.all(PKGS.map(function (p) {
+        return fetch("https://api.npmjs.org/downloads/point/last-month/" + p)
+          .then(function (r) { return r.json(); })
+          .then(function (d) { return d.downloads || 0; })
+          .catch(function () { return 0; });
+      })).then(function (counts) {
+        var total = counts.reduce(function (a, b) { return a + b; }, 0);
+        if (total > 0) {
+          paint(total);
+          try { sessionStorage.setItem(KEY, JSON.stringify({ n: total, t: Date.now() })); } catch (e) {}
+        }
+      });
+    })();
+  </script>
+  <script src="/assets/site.js" defer></script>
+  <script src="/assets/pro-client.js" defer></script>
+</body>
+</html>

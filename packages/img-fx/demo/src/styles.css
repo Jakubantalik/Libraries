@@ -1,0 +1,1283 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html,
+body {
+  min-height: 100dvh;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #070707;
+  color: #fbfbfb;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+html[data-theme='light'],
+html[data-theme='light'] body {
+  background-color: #fdfdfd;
+  color: #17181c;
+  color-scheme: light;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+#root {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Skip link */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 16px;
+  z-index: 200;
+  padding: 12px 20px;
+  border-radius: 8px;
+  background: #fff;
+  color: #070707;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+.skip-link:focus {
+  top: 16px;
+}
+
+/* Main container */
+.app {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 883px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 24px 64px;
+}
+
+/* Top bar — ports skill.html `.top-bar` (lines 453-461): 8px gap
+ * between the chip-style action buttons, anchored to the top-right
+ * of the page. We use `right: 0` instead of the template's `right:
+ * 24px` because the parent `.header` already lives inside `.app`'s
+ * 24px horizontal padding, so the buttons end up the same 24px in
+ * from the viewport edge either way. */
+.top-bar-links {
+  position: absolute;
+  top: 16px;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 10;
+}
+
+/* Port of skill.html .theme-icon-stack + .theme-icon (lines 508-552
+ * + --p5-* tokens on line 241-244). Both icons live in the DOM
+ * permanently, stacked on top of each other inside a 16x16 wrapper,
+ * and the swap is driven by a single `data-active` attribute on the
+ * stack — both transitions kick off in the same frame so the icons
+ * crossfade in place via opacity / scale / blur (the P5 icon-swap
+ * pattern). Because our icons are inline <svg> with `currentColor`
+ * rather than <img>, we skip the template's brightness/invert trick
+ * and let the icon color flow from .icon-btn svg → muted at rest,
+ * full on hover. */
+.theme-icon-stack {
+  position: relative;
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+}
+
+/* Specificity (0,2,0) beats `.icon-btn svg` (0,1,1) so the absolute
+ * positioning + transition stack win for theme icons specifically. */
+.icon-btn .theme-icon {
+  position: absolute;
+  inset: 0;
+  width: 16px;
+  height: 16px;
+  display: block;
+  transform-origin: center;
+  pointer-events: none;
+  user-select: none;
+  transition:
+    opacity 200ms ease-in-out,
+    transform 200ms ease-in-out,
+    filter 200ms ease-in-out,
+    color 0.15s ease;
+  /* Default = inactive (hidden) state, matches P5 morph-out. */
+  opacity: 0;
+  transform: scale(0.25);
+  filter: blur(2px);
+}
+
+/* Active icon = visible at rest, sharp and full size. */
+.theme-icon-stack[data-active='moon'] .theme-icon-moon,
+.theme-icon-stack[data-active='sun'] .theme-icon-sun {
+  opacity: 1;
+  transform: scale(1);
+  filter: blur(0);
+}
+
+/* Top-bar chip — direct port of skill.html `.icon-btn`
+ * (transitions.dev/skill.html lines 463-499). Tokens used:
+ *   light:  --chip-bg #f4f4f4 / hover #f1f1f1 / pressed #eae9e9
+ *           --icon-color #0d0d0d / --icon-color-muted rgba(13,13,13,0.6)
+ *   dark:   --chip-bg rgba(255,255,255,0.07) / hover .10 / pressed .08
+ *           --icon-color #ededed / --icon-color-muted rgba(237,237,237,0.6)
+ * SVGs sit at the muted color at rest and transition to the full icon
+ * color on hover (color, not opacity, so it tracks the template feel).
+ * `.icon-x` is 16x17 because the X glyph is taller-than-wide in its
+ * artwork bounds — same exception as skill.html. */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #ededed;
+  cursor: pointer;
+  text-decoration: none;
+  padding: 0;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.icon-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.icon-btn:active {
+  background: rgba(255, 255, 255, 0.08);
+}
+.icon-btn:focus-visible {
+  outline: 2px solid #ededed;
+  outline-offset: 2px;
+}
+.icon-btn svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+  flex-shrink: 0;
+  fill: currentColor;
+  color: rgba(237, 237, 237, 0.6);
+  transition: color 0.15s ease;
+}
+.icon-btn svg.icon-x {
+  width: 16px;
+  height: 17px;
+}
+.icon-btn:hover svg {
+  color: #ededed;
+}
+
+html[data-theme='light'] .icon-btn {
+  background: #f4f4f4;
+  color: #0d0d0d;
+}
+html[data-theme='light'] .icon-btn:hover {
+  background: #f1f1f1;
+}
+html[data-theme='light'] .icon-btn:active {
+  background: #eae9e9;
+}
+html[data-theme='light'] .icon-btn:focus-visible {
+  outline-color: #0d0d0d;
+}
+html[data-theme='light'] .icon-btn svg {
+  color: rgba(13, 13, 13, 0.6);
+}
+html[data-theme='light'] .icon-btn:hover svg {
+  color: #0d0d0d;
+}
+
+/* Header */
+.header {
+  position: relative;
+  width: 100%;
+  height: 218px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 53px;
+}
+
+/* Header icon — source asset is 414×276 (2× for retina), displayed at
+ * 207×138 CSS px. Negative top margin pulls it up so it visually overlaps
+ * above the header box and the title/subtitle below sit on the header's
+ * bottom edge.
+ *
+ * The wrapper is a fixed 207×138 box that hosts BOTH theme variants as
+ * absolutely-positioned children. Both <img>s decode at page load and
+ * CSS picks which one is `display: block` based on the html[data-theme]
+ * attribute (port of skill.html .header-icon-img--light/--dark, lines
+ * 607-615). Without this, a single <img> with a theme-conditional `src`
+ * would drop the old asset and re-decode the new one on every toggle —
+ * the dark→light flash the user reported.
+ *
+ * Hover treatment is intentionally minimal: a single 500ms rotate, no
+ * scale and no filter (no hue shift, no brightness lift, no opacity
+ * change). The light/dark variants already carry their own colour, so
+ * adding a hue-rotate would tint one of them away from the design. */
+.header-icon {
+  position: relative;
+  z-index: 0;
+  width: 207px;
+  height: 138px;
+  margin-top: -190px;
+  margin-bottom: -20px;
+  line-height: 0;
+  cursor: pointer;
+}
+
+.header-icon-img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 207px;
+  height: 138px;
+  display: block;
+  user-select: none;
+  transform-origin: center;
+  transition:
+    transform 500ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 300ms ease;
+  will-change: transform, opacity;
+}
+
+/* Only apply the rotate on devices that actually have a hover capability.
+ * On touch screens `:hover` latches on tap and only releases when the
+ * user taps something else, so the icon used to rotate on first tap and
+ * stay rotated indefinitely. `(hover: hover)` filters out coarse pointer
+ * devices entirely. Touch users still get a brief tap feedback via the
+ * `:active` rule below. */
+@media (hover: hover) {
+  .header-icon:hover .header-icon-img {
+    transform: rotate(8deg);
+  }
+}
+.header-icon:active .header-icon-img {
+  transform: rotate(8deg);
+}
+
+/* Cross-fade the variant matching the active theme via opacity rather
+ * than `display: none` / `display: block`. The previous display-toggle
+ * caused a one-frame flash on theme switch: even with both assets
+ * cached, the browser had to re-layout the newly-displayed <img> and
+ * (on some browsers) only decoded pixels for a never-displayed image
+ * on first paint. Keeping both <img>s permanently rendered makes the
+ * swap a pure compositor op — no layout, no decode, no flash.
+ *
+ * The 300ms timing matches the body background-color/color transition
+ * (line 21) so the whole theme switch reads as one synchronized fade.
+ *
+ * `:not([data-theme='light'])` covers both the explicit `data-theme=
+ * "dark"` and the very short window before React's first effect runs
+ * and sets the attribute — so the dark asset shows up immediately on
+ * load and we never paint a both-visible state. */
+html:not([data-theme='light']) .header-icon-img--dark,
+html[data-theme='light'] .header-icon-img--light {
+  opacity: 1;
+}
+
+html[data-theme='light'] .header-icon-img--dark,
+html:not([data-theme='light']) .header-icon-img--light {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header-icon-img {
+    transition: none;
+  }
+  .header-icon:hover .header-icon-img,
+  .header-icon:active .header-icon-img {
+    transform: none;
+  }
+}
+
+.title {
+  position: relative;
+  z-index: 1;
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 30px;
+  color: inherit;
+}
+
+.subtitle-sm {
+  position: relative;
+  z-index: 1;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 21px;
+  color: #cacaca;
+  opacity: 0.5;
+}
+html[data-theme='light'] .subtitle-sm {
+  color: #767676;
+  opacity: 1;
+}
+
+/* UI Examples */
+.examples-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 48px;
+}
+
+.example-row-full {
+  width: 100%;
+  height: 370px;
+  border-radius: 30px;
+  background: rgba(217, 217, 217, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 40px;
+  overflow: hidden;
+}
+html[data-theme='light'] .example-row-full {
+  background: #f7f7f7;
+}
+
+.example-row-split {
+  display: grid;
+  grid-template-columns: 271fr 552fr;
+  gap: 12px;
+  width: 100%;
+}
+
+.example-cell {
+  border-radius: 30px;
+  background: rgba(217, 217, 217, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 40px;
+  min-height: 314px;
+  overflow: hidden;
+}
+html[data-theme='light'] .example-cell {
+  background: #f7f7f7;
+}
+
+/* Hero cards (these are the host children that ImageGeneration wraps) */
+.hero-card {
+  width: 280px;
+  height: 280px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.hero-card-wide {
+  width: 100%;
+  max-width: 320px;
+  height: 280px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.hero-card-tall {
+  width: 100%;
+  max-width: 220px;
+  height: 280px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* Section: Installation / Usage */
+.section {
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 34px;
+  color: inherit;
+  margin-bottom: 4px;
+  opacity: 0.95;
+}
+
+.section-title--muted {
+  opacity: 0.75;
+}
+
+/* Code block */
+.code-block {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  background: #121212;
+  border-radius: 10px;
+  padding: 4px 8px 4px 14px;
+  position: relative;
+}
+html[data-theme='light'] .code-block {
+  background: #f7f7f7;
+  box-shadow: none;
+}
+
+.code-block--multi {
+  height: auto;
+  padding: 6px 8px 6px 14px;
+  align-items: flex-start;
+}
+
+.code-block code {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 14px;
+  line-height: 22px;
+  color: #fff;
+  white-space: pre;
+  overflow-x: auto;
+  min-width: 0;
+  flex: 1;
+}
+html[data-theme='light'] .code-block code {
+  color: #3c3c3c;
+}
+
+/* Copy button — port of skill.html `.skill-code-row .card-copy`
+ * (lines 3127-3158). 32x32 ghost button sitting at the top-right of
+ * the code block, going from transparent → tinted on hover. The icon
+ * sits at the muted icon color at rest and brightens to the full icon
+ * color on hover. Both <svg>s render permanently inside the button and
+ * are crossfaded via opacity + scale + blur driven by `data-copied`
+ * on the parent, mirroring the template's P5 icon-swap pattern. */
+/* Verbatim port of `Essencial/skill.html` `.card-copy` (lines
+ * 741-792). 36x36 pill that sits visible at rest — semi-opaque white
+ * over a darker tint in light mode, 8% white over the dark surface
+ * in dark mode — and brightens to the next-step background on hover
+ * and pressed states. The icon-color tokens (muted at rest → full
+ * on hover) match `--icon-color` / `--icon-color-muted` from the
+ * template's light + dark `:root` blocks.
+ *
+ * Light mode uses the same `linear-gradient(90deg, var → var)` over
+ * a `--copy-bg-tint` backing the template uses, so the pill keeps
+ * its slight grey-tinted look even when stacked on the demo's
+ * `#f7f7f7` code-block surface (the tint shows through the white
+ * pill's 10% transparency just enough to differentiate the chip
+ * from the card). Dark mode collapses both the backing and the
+ * gradient down to a single solid because there's no tint to show.
+ *
+ * Note on positioning: kept the demo's `position: absolute; top:2;
+ * right:2` corner anchor (template uses `bottom: 16px` because its
+ * cards are taller). The visual treatment matches the template;
+ * the layout slot is demo-specific. */
+/* Copy button — port of skill.html `.skill-code-row .card-copy`
+ * (lines 3127-3158). The button sits inside an already-tinted code
+ * row, so the template intentionally drops the resting fill and lets
+ * the row itself form the chip; on hover a faint wash appears, and
+ * on press it deepens slightly. Icon goes from the muted icon-color
+ * to the full icon-color in step with the wash. Resist the urge to
+ * port the bigger `.card-copy` resting fill (--copy-bg-tint /
+ * --copy-bg) — that variant is for buttons floating over an UNtinted
+ * surface (e.g. the demo card body), which is NOT our context here. */
+.copy-btn {
+  position: relative;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  max-width: 32px;
+  max-height: 32px;
+  aspect-ratio: 1 / 1;
+  margin-right: -3px;
+  border: 0;
+  border-radius: 6px;
+  padding: 0;
+  line-height: 0;
+  background: transparent;
+  background-image: none;
+  color: rgba(237, 237, 237, 0.6);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+html[data-theme='light'] .copy-btn {
+  color: rgba(13, 13, 13, 0.6);
+}
+.copy-btn:hover {
+  background-image: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: #ededed;
+}
+.copy-btn:active {
+  background-image: none;
+  background: rgba(255, 255, 255, 0.08);
+}
+html[data-theme='light'] .copy-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: #0d0d0d;
+}
+html[data-theme='light'] .copy-btn:active {
+  background: rgba(0, 0, 0, 0.06);
+}
+.copy-btn:focus-visible {
+  outline: 2px solid #ededed;
+  outline-offset: 2px;
+}
+html[data-theme='light'] .copy-btn:focus-visible {
+  outline-color: #0d0d0d;
+}
+
+/* Both icons live in the DOM permanently. They share the same
+ * absolute center anchor so the blur/scale crossfade happens in place
+ * — no per-click image decode, no asymmetric enter/exit pacing. */
+.copy-btn svg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  display: block;
+  transform-origin: center;
+  will-change: opacity, transform, filter;
+  transition:
+    opacity 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.copy-btn .icon-copy {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+  filter: blur(0);
+}
+.copy-btn .icon-check {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.25);
+  filter: blur(4px);
+  color: currentColor;
+}
+.copy-btn[data-copied='true'] .icon-copy {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.25);
+  filter: blur(4px);
+}
+.copy-btn[data-copied='true'] .icon-check {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+  filter: blur(0);
+}
+
+/* Copy button tooltip — verbatim port of skill.html `.card-copy-tooltip`
+ * (lines 836-988). The pill sits above the button, fades in on hover /
+ * focus / copied state, and animates its width between two labels
+ * ("Copy code" ⇄ "Copied"). The labels' widths are measured once in JS
+ * after mount and exposed as `--tt-w-a` / `--tt-w-b` on `.tt-swap`, so
+ * the width transition is exact. The shared "Cop" stem stays static
+ * while only the suffix ("y code" / "ied") cross-blurs on swap. */
+.copy-btn-tooltip {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(100% + 8px);
+  box-sizing: border-box;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 40px;
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: 0;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear 150ms;
+  background: #ffffff;
+  color: #17181c;
+  box-shadow:
+    0 2px 8px 0 rgba(0, 0, 0, 0.04),
+    0 0 0 1px rgba(0, 0, 0, 0.06),
+    0 1px 1px 0 rgba(0, 0, 0, 0.04);
+}
+html[data-theme='dark'] .copy-btn-tooltip {
+  background: #181818;
+  color: #e3e3e3;
+  box-shadow:
+    0 1px 16px 0 rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+    inset 0 0 0 1px rgba(196, 196, 196, 0.08);
+}
+
+@media (hover: hover) {
+  .copy-btn:hover .copy-btn-tooltip,
+  .copy-btn:focus-visible .copy-btn-tooltip,
+  .copy-btn[data-copied='true'] .copy-btn-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transition:
+      opacity 150ms cubic-bezier(0.22, 1, 0.36, 1) 50ms,
+      visibility 0s linear 50ms;
+  }
+  .copy-btn[data-copied='true'] .copy-btn-tooltip {
+    transition:
+      opacity 150ms cubic-bezier(0.22, 1, 0.36, 1),
+      visibility 0s linear;
+  }
+}
+
+.copy-btn-tooltip .tt-text {
+  display: inline-flex;
+  align-items: baseline;
+  line-height: 16px;
+}
+
+.copy-btn-tooltip .tt-stem {
+  display: inline-block;
+  line-height: 16px;
+}
+
+.copy-btn-tooltip .tt-swap {
+  position: relative;
+  display: inline-block;
+  vertical-align: baseline;
+  line-height: 16px;
+  width: var(--tt-w-a, auto);
+  transition: width 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.copy-btn-tooltip .tt-swap[data-state='copied'] {
+  width: var(--tt-w-b, auto);
+}
+
+.copy-btn-tooltip .tt-label {
+  white-space: pre;
+  transition:
+    opacity 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, filter;
+}
+
+.copy-btn-tooltip .tt-a {
+  display: inline-block;
+}
+
+.copy-btn-tooltip .tt-b {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.copy-btn-tooltip .tt-swap .tt-a {
+  opacity: 1;
+  filter: blur(0);
+}
+.copy-btn-tooltip .tt-swap .tt-b {
+  opacity: 0;
+  filter: blur(2px);
+}
+.copy-btn-tooltip .tt-swap[data-state='copied'] .tt-a {
+  opacity: 0;
+  filter: blur(2px);
+}
+.copy-btn-tooltip .tt-swap[data-state='copied'] .tt-b {
+  opacity: 1;
+  filter: blur(0);
+}
+
+@media (hover: none) {
+  .copy-btn[data-copied='true'] .copy-btn-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transition:
+      opacity 150ms cubic-bezier(0.22, 1, 0.36, 1),
+      visibility 0s linear;
+  }
+  .copy-btn-tooltip .tt-swap {
+    width: var(--tt-w-b, auto);
+    transition: none;
+  }
+  .copy-btn-tooltip .tt-label {
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .copy-btn-tooltip,
+  .copy-btn-tooltip .tt-swap,
+  .copy-btn-tooltip .tt-label {
+    transition: none !important;
+  }
+}
+
+/* Playground */
+.playground-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 48px;
+}
+
+.playground-section .section-title {
+  margin-bottom: 0;
+}
+
+/* Playground controls panel — token values mirror the metal-fx demo so both
+ * libraries' marketing pages look identical:
+ *   --panel-bg / --tab-* / --strength-* / --text-muted come from
+ *   metal-fx/demo/tailwind.css. The same inset-highlight shadow is reused on
+ *   the active tab and the strength track so they read as raised pills.
+ */
+.playground-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 22px;
+  background: #121212;
+  border-radius: 10px;
+  padding: 16px;
+}
+html[data-theme='light'] .playground-controls {
+  background: #f7f7f7;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+}
+
+.control-label {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 14px;
+  color: rgba(251, 251, 251, 0.6);
+}
+html[data-theme='light'] .control-label {
+  color: #767676;
+}
+
+.control-options {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(251, 251, 251, 0.5);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 14px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+html[data-theme='light'] .tab-btn {
+  background: #ebebeb;
+  color: #17181c;
+}
+.tab-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(251, 251, 251, 0.7);
+}
+html[data-theme='light'] .tab-btn:hover {
+  background: #e2e2e2;
+  color: #17181c;
+}
+.tab-btn[data-active='true'] {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fbfbfb;
+  box-shadow:
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.02),
+    inset 0 0.5px 0 0 rgba(255, 255, 255, 0.06);
+}
+/* Light-mode active tab — Figma node 485:428. The pill reads as a raised
+ * white chip on the tinted panel: one soft drop shadow for elevation, a
+ * 0.5px hairline border, and a 0.5px bottom edge that hints at a baked-in
+ * highlight on the lower lip. Figma's spec includes a 4th `inset 0 0 0
+ * -0.5px rgba(196,196,196,0.1)` layer, but with zero offset and zero
+ * blur a negative spread paints nothing, so it's intentionally dropped
+ * here as dead pixels. */
+html[data-theme='light'] .tab-btn[data-active='true'] {
+  background: #ffffff;
+  color: #17181c;
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.04),
+    inset 0 0 0 0.5px rgba(0, 0, 0, 0.06),
+    inset 0 -0.5px 0 0 rgba(0, 0, 0, 0.1);
+}
+.tab-btn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+}
+html[data-theme='light'] .tab-btn:focus-visible {
+  outline-color: #17181c;
+}
+
+.control-group--strength {
+  min-width: 100px;
+  width: 140px;
+}
+
+.strength-track {
+  position: relative;
+  width: 100%;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow:
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.02),
+    inset 0 0.5px 0 0 rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  cursor: grab;
+  transition: background-color 0.15s ease;
+}
+.strength-track:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+.strength-track:active {
+  cursor: grabbing;
+}
+html[data-theme='light'] .strength-track {
+  background: #ebebeb;
+  box-shadow: none;
+}
+html[data-theme='light'] .strength-track:hover {
+  background: #e2e2e2;
+}
+
+.strength-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.02),
+    inset 0 0.5px 0 0 rgba(255, 255, 255, 0.06);
+  transition: width 0.08s ease-out;
+  pointer-events: none;
+}
+/* Light-mode fill shares the active-tab "raised white pill" treatment
+ * exactly (see `.tab-btn[data-active='true']` rules above, Figma node
+ * 485:428). Same drop shadow + 0.5px hairline border + 0.5px bottom
+ * edge so the filled portion of the slider reads as the same family
+ * of surface as the active tab button next to it. */
+html[data-theme='light'] .strength-fill {
+  background: #ffffff;
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.04),
+    inset 0 0 0 0.5px rgba(0, 0, 0, 0.06),
+    inset 0 -0.5px 0 0 rgba(0, 0, 0, 0.1);
+}
+
+.strength-value {
+  position: absolute;
+  top: 0;
+  left: 11px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 400;
+  color: rgba(251, 251, 251, 0.6);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 1;
+}
+html[data-theme='light'] .strength-value {
+  color: #17181c;
+}
+
+.strength-input {
+  -webkit-appearance: none;
+  appearance: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  cursor: grab;
+  opacity: 0;
+  z-index: 2;
+  /* Mobile drag fix: without `touch-action: none` the browser steals
+   * horizontal swipes for scroll/zoom gestures, so the slider never
+   * receives the touchmove stream and dragging silently no-ops on iOS
+   * / Android. `none` is the right value here (not `pan-y`) because the
+   * input fills its parent and we want every touch inside the track to
+   * drive the slider, not page-scroll. */
+  touch-action: none;
+  /* Kill the browser-native focus outline; some Chromium builds draw
+   * the range-input focus ring as a layer that ignores `opacity: 0` on
+   * the input, so the bright blue rectangle leaks across the visible
+   * track. Keyboard a11y signal is preserved on the parent via
+   * `.strength-track:focus-within` below using the same token palette
+   * as `.tab-btn:focus-visible` / `.icon-btn:focus-visible`. */
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.strength-input::-moz-focus-outer {
+  border: 0;
+}
+/* Give the thumb an explicit, full-height hit target. With
+ * `-webkit-appearance: none` on the input, iOS Safari collapses the
+ * default thumb to zero width, which leaves nothing to drag on touch
+ * even though the input visually fills the track. We set a square
+ * touch-friendly size on both engines; the input is `opacity: 0` so
+ * the visible style doesn't matter, only the hit area does. */
+.strength-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  background: transparent;
+  cursor: grab;
+}
+.strength-input::-moz-range-thumb {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  background: transparent;
+  cursor: grab;
+}
+/* Focus indicator on the track, but only when the inner <input> took
+ * focus via keyboard (`:focus-visible`) — not mouse click. The previous
+ * `:focus-within` rule fired on *any* focus including click, which
+ * painted a visible ring around the slider every time the user
+ * dragged it. `:has(:focus-visible)` keeps the keyboard-a11y signal
+ * (Tab to the slider still shows the ring) while making click-and-drag
+ * silent, matching the no-ring-on-click pattern used by
+ * `.tab-btn:focus-visible` and `.icon-btn:focus-visible`. */
+.strength-track:has(.strength-input:focus-visible) {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+}
+html[data-theme='light'] .strength-track:has(.strength-input:focus-visible) {
+  outline-color: rgba(0, 0, 0, 0.4);
+}
+
+.playground-preview {
+  width: 100%;
+  min-height: 304px;
+  border-radius: 10px;
+  background: rgba(217, 217, 217, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 48px;
+}
+html[data-theme='light'] .playground-preview {
+  background: #f7f7f7;
+}
+
+.playground-card {
+  width: 280px;
+  height: 280px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* Circular icon toggle buttons under the playground card. Same shape, size,
+ * and palette as the metal-fx PlayPauseToggle so the two demos feel
+ * consistent. The Reveal/Hide toggle reuses the exact same styling. */
+.playground-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.playground-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(251, 251, 251, 0.7);
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.playground-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fbfbfb;
+}
+.playground-toggle:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+}
+.playground-toggle svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+  stroke: none;
+}
+
+/* Text-label variant of the toggle (e.g. "Reveal image" / "Hide image").
+ * Reuses the dark/light palette from `.playground-toggle` but switches from
+ * a 32×32 circle to a 32px-tall pill so the text fits comfortably.
+ *
+ * `min-width: 108px` is sized to fit the longer "Reveal image" label so the
+ * button never resizes when the label flips to the shorter "Hide image".
+ */
+.playground-toggle--text {
+  min-width: 108px;
+  width: auto;
+  padding: 0 12px;
+  border-radius: 9999px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+html[data-theme='light'] .playground-toggle {
+  background: #ebebeb;
+  color: #17181c;
+}
+html[data-theme='light'] .playground-toggle:hover {
+  background: #e2e2e2;
+  color: #17181c;
+}
+html[data-theme='light'] .playground-toggle:focus-visible {
+  outline-color: #17181c;
+}
+
+/* Disabled state — used by the Reveal/Hide button while the playground is
+ * paused (the shader isn't running so a reveal would have nothing to fade
+ * over). 50% opacity and a not-allowed cursor on hover.
+ *
+ * We deliberately do NOT set `pointer-events: none` here: that would short-
+ * circuit hover detection entirely and the browser would fall back to the
+ * page-default cursor instead of the `not-allowed` we want to show. Click
+ * suppression is handled by the native `disabled` attribute on <button>,
+ * which already blocks click/focus without breaking cursor rendering.
+ *
+ * The :hover/:focus-visible overrides further down would otherwise re-tint
+ * the dim background, so we pin the resting colours on the disabled state. */
+.playground-toggle:disabled,
+.playground-toggle[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.playground-toggle:disabled:hover,
+.playground-toggle[aria-disabled='true']:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(251, 251, 251, 0.7);
+}
+html[data-theme='light'] .playground-toggle:disabled:hover,
+html[data-theme='light'] .playground-toggle[aria-disabled='true']:hover {
+  background: #ebebeb;
+  color: #17181c;
+}
+
+/* Footer */
+.footer {
+  font-size: 13px;
+  line-height: 14px;
+  text-align: center;
+  padding: 48px 0 24px;
+}
+
+.footer-muted {
+  color: rgba(251, 251, 251, 0.4);
+}
+html[data-theme='light'] .footer-muted {
+  color: #767676;
+}
+
+.footer-name {
+  color: rgba(251, 251, 251, 0.7);
+  text-decoration: none;
+}
+html[data-theme='light'] .footer-name {
+  color: #17181c;
+}
+.footer-name:hover {
+  color: rgba(251, 251, 251, 0.9);
+}
+html[data-theme='light'] .footer-name:hover {
+  color: #000000;
+}
+
+/* Mobile */
+@media (max-width: 639px) {
+  html,
+  body {
+    overflow-x: hidden;
+  }
+
+  .app {
+    padding: 0 16px 48px;
+  }
+
+  .header {
+    height: auto;
+    min-height: 180px;
+    padding-top: 60px;
+    padding-bottom: 32px;
+  }
+
+  .top-bar-links {
+    top: 12px;
+  }
+
+  .example-row-full {
+    height: auto;
+    min-height: 220px;
+    padding: 24px 18px;
+    border-radius: 20px;
+  }
+
+  .example-row-split {
+    grid-template-columns: 1fr;
+  }
+
+  .example-cell {
+    padding: 24px 18px;
+    min-height: 220px;
+    border-radius: 20px;
+    overflow: visible;
+  }
+
+  .hero-card,
+  .hero-card-tall,
+  .playground-card {
+    width: 100%;
+    max-width: 280px;
+    height: 220px;
+  }
+
+  .hero-card-wide {
+    height: 220px;
+  }
+
+  /* The playground passes no `className` to <ImageGeneration>, so the
+   * library's `.image-gen-root` wrapper renders with its defaults: it's
+   * `display: inline-block` and shrink-wraps to its content. Our inner
+   * `.playground-card` switches to `width: 100%` at this breakpoint, but
+   * `100%` of a shrink-wrapped (intrinsically 0-width) parent collapses to
+   * zero — the entire card disappears on mobile.
+   *
+   * The hero cards avoid the same trap by attaching `.hero-card{,-tall,-wide}`
+   * to <ImageGeneration>'s `className` prop, which lands on `.image-gen-root`
+   * directly and gives the wrapper a real width. The playground intentionally
+   * keeps its inner card as a normal child, so we fix the wrapper here.
+   *
+   * Promote the wrapper to a full-width block so the percentage chain has
+   * a real value to resolve against; the inner `.playground-card`
+   * `max-width: 280px` still caps the final visual size. */
+  .playground-preview > .image-gen-root {
+    display: block;
+    width: 100%;
+    max-width: 280px;
+  }
+
+  /* Keep the controls on a single row on mobile. The Type group keeps
+   * its intrinsic width (two preset buttons are content-sized) while
+   * the Strength group flex-fills the remaining space — the slider
+   * track is the only piece that's safe to shrink, since its visual
+   * scale (filled bar + "NN%" label) reads well at any width down to
+   * ~80px. Without these overrides, the locked `width: 140px` on
+   * `.control-group--strength` plus `flex-wrap: wrap` pushed the
+   * slider onto a second row even when ~200px of horizontal space was
+   * still available next to the preset buttons. */
+  .playground-controls {
+    flex-wrap: nowrap;
+    align-items: flex-end;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .control-group--strength {
+    width: auto;
+    min-width: 0;
+    flex: 1 1 0;
+  }
+
+  .strength-value {
+    left: 9px;
+  }
+
+  .playground-preview {
+    padding: 24px 16px;
+    min-height: 240px;
+  }
+
+  .code-block code {
+    font-size: 12px;
+    line-height: 20px;
+  }
+
+  .section-title {
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 883px) {
+  .example-row-full {
+    padding: 40px 32px;
+  }
+  .example-cell {
+    padding: 40px 24px;
+    min-height: 260px;
+  }
+  .playground-controls {
+    flex-wrap: wrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

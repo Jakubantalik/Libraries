@@ -1,0 +1,121 @@
+import type { EnginePreset } from './index';
+
+export const SWEEP_GRADIENT: EnginePreset = {
+  name: 'sweep-gradient',
+  modes: {
+    dark: {
+      theme: 'dark',
+      effectIndex: 25,
+      colors: ['#0f0f0f', '#0f0f0f', '#282828', '#3a3a3a', '#525252', '#0f0f0f', '#0f0f0f'],
+      alphas: [1, 1, 1, 1, 1, 1, 1],
+      cardBg: '#0f0f0f',
+      dotMode: 1,
+      pixelConfig: {
+        cellSize: 0.22,
+        gap: 0.14,
+        dotOpacity: 0.68,
+        dotSize: 0.8,
+        dotSoftness: 0.1,
+        hlScale: 0.8,
+        fillOpacity: 0.44,
+        edgeFade: 24,
+        fadeStr: 1
+      },
+      dotConfig: {
+        cellSize: 0.58,
+        gap: 0,
+        dotOpacity: 1,
+        dotSize: 0.22,
+        dotSoftness: 0.1,
+        hlScale: 0.26,
+        fillOpacity: 0,
+        edgeFade: 34,
+        fadeStr: 0.34
+      },
+      direction: 0,
+      speed: 2.65,
+      intensity: 1,
+      scale: 1,
+      softness: 0.76,
+      distortion: 0.3,
+      flicker: 0.5,
+      complexity: 0.2,
+      shape: 0.52,
+      blur: 1,
+      highlight: 0.32,
+      vignette: 0.26,
+      vigOpacity: 1,
+      shaderOpacity: 1,
+      sweepEase: 1,
+      revealConfig: {
+        duration: 3,
+        easing: 'easeOutCubic',
+        maskShape: 'gradientSweep',
+        softness: 0.5,
+        blur: 0,
+        pixDuration: 2.65,
+        pixEasing: 'easeOutCubic',
+        dotDuration: 2.05,
+        dotEasing: 'easeOutCubic'
+      },
+      effect: 'Gradient Sweep'
+    },
+    light: {
+      theme: 'light',
+      effectIndex: 25,
+      colors: ['#f5f5f5', '#f5f5f5', '#ededed', '#eaeaea', '#d2d2d2', '#f5f5f5', '#f5f5f5'],
+      alphas: [1, 1, 1, 1, 1, 1, 1],
+      cardBg: '#f5f5f5',
+      dotMode: 1,
+      pixelConfig: {
+        cellSize: 0.22,
+        gap: 0.14,
+        dotOpacity: 0.68,
+        dotSize: 0.8,
+        dotSoftness: 0.1,
+        hlScale: 0.8,
+        fillOpacity: 0.18,
+        edgeFade: 20,
+        fadeStr: 1
+      },
+      dotConfig: {
+        cellSize: 0.58,
+        gap: 0,
+        dotOpacity: 1,
+        dotSize: 0.22,
+        dotSoftness: 0.1,
+        hlScale: 0.26,
+        fillOpacity: 0,
+        edgeFade: 34,
+        fadeStr: 0.34
+      },
+      direction: 0,
+      speed: 2.65,
+      intensity: 0.85,
+      scale: 1,
+      softness: 0.76,
+      distortion: 0.3,
+      flicker: 0.5,
+      complexity: 0.2,
+      shape: 0.52,
+      blur: 1,
+      highlight: 0.92,
+      vignette: 0,
+      vigOpacity: 0,
+      shaderOpacity: 1,
+      sweepEase: 1,
+      revealConfig: {
+        duration: 3,
+        easing: 'easeOutCubic',
+        maskShape: 'gradientSweep',
+        softness: 0.5,
+        blur: 0,
+        pixDuration: 2.6,
+        pixEasing: 'easeOutCubic',
+        dotDuration: 2.05,
+        dotEasing: 'easeOutCubic'
+      },
+      effect: 'Gradient Sweep'
+    }
+  }
+};

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>img-fx playground</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400&display=swap"
+    />
+    <style>
+      :root {
+        --bg: #0a0a0a;
+        --surface: #141414;
+        --text: #d4d4d4;
+        --heading-fg: #ffffff;
+        --text-muted: #6b6b6b;
+        --input-bg: #1e1e1e;
+        --panel-border: #2a2a2a;
+        --accent: #ffffff;
+      }
+      html[data-theme='light'] {
+        --bg: #fdfdfd;
+        --surface: #f6f6f8;
+        --text: #1a1a22;
+        --heading-fg: #111;
+        --text-muted: #5c5c6e;
+        --input-bg: #fff;
+        --panel-border: #c8c8d4;
+        --accent: #111;
+      }
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+      .pg-page { max-width: 960px; margin: 0 auto; padding: 40px 32px 64px; }
+      .pg-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+      .pg-title { font-size: 16px; font-weight: 700; color: var(--heading-fg); letter-spacing: 0.3px; }
+      .pg-toolbar {
+        display: flex; gap: 24px; align-items: flex-end;
+        padding: 16px 20px;
+        background: var(--surface);
+        border: 1px solid var(--panel-border);
+        border-radius: 12px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+      }
+      .pg-control { display: flex; flex-direction: column; gap: 6px; }
+      .pg-control label, .pg-control-label {
+        font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px;
+        color: var(--text-muted);
+      }
+      .pg-toggle-row { display: flex; gap: 4px; }
+      .tab-btn {
+        background: transparent; color: var(--text-muted);
+        border: 1px solid transparent; border-radius: 7px;
+        padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
+        font-family: inherit;
+      }
+      .tab-btn:hover { color: var(--text); }
+      .tab-btn.active {
+        background: var(--input-bg); color: var(--accent); border-color: var(--panel-border);
+      }
+      .pg-num {
+        width: 80px; padding: 6px 10px;
+        border-radius: 7px; border: 1px solid var(--panel-border);
+        background: var(--input-bg); color: var(--text);
+        font-size: 12px; font-family: inherit;
+      }
+      .pg-preview {
+        border-radius: 16px;
+        background: var(--surface);
+        border: 1px solid var(--panel-border);
+        min-height: 360px;
+        display: flex; align-items: center; justify-content: center;
+        padding: 48px 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/playground/main.tsx"></script>
+  </body>
+</html>

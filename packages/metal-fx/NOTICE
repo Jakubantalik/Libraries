@@ -1,0 +1,22 @@
+metal-fx
+Copyright (c) Jakub Antalik
+
+This product includes software developed by Paper Design, Inc.
+
+  Paper Shaders (https://github.com/paper-design/shaders)
+  Copyright (c) Paper Design, Inc.
+  Licensed under the Apache License, Version 2.0
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Specifically:
+
+  * The `liquidMetal` fragment shader is consumed unmodified at build time
+    from the `@paper-design/shaders` npm package and inlined into the
+    distributed bundle. See src/engine/shaders.ts.
+
+  * The sizing vertex shader in src/engine/shaders.ts (`VERT_SHADER_SRC`) is
+    copied verbatim from `packages/shaders/src/vertex-shader.ts` @ 0.0.80.
+    It is vendored rather than imported because the package exposes it only
+    through `ShaderMount`, which owns its own canvas and animation loop.
+
+No changes were made to either shader's source.

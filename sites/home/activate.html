@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>Sign in · Libraries.dev</title>
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+  <!--
+    Sign-in / activation page (Figma 2330:2552 "Sign in" + 2330:2712 input states).
+    Entry points:
+      • Plain sign-in:    /activate.html
+      • Checkout return:  /activate.html?checkout=success&session_id=...
+      • Device activate:  /activate.html?code=WXYZ-WXYZ   (from `npx libraries-pro skill` / `add --pro`)
+    Redirect states from the API's magic-link callback:
+      ?signed_in=1 · ?device=approved · ?device=denied · ?error=link_invalid
+  -->
+  <link rel="preload" href="/assets/fonts/Saans-Medium.woff2" as="font" type="font/woff2" crossorigin />
+  <style>
+    @font-face {
+      font-family: "Saans";
+      src: url("/assets/fonts/Saans-Medium.woff2") format("woff2"),
+           url("/assets/fonts/Saans-Medium.woff") format("woff");
+      font-weight: 500;
+      font-style: normal;
+      font-display: optional;
+    }
+    :root {
+      --bg: #fdfdfd;
+      --text: #0d0d0d;
+      --muted: #8a8a8a;
+      --text-muted: #6c6c6c;
+      --text-faint: #8f8f8f;
+      --text-footer-name: #4a4a4a;
+      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, Helvetica, Arial, sans-serif;
+      /* transitions-dev motion tokens (subset used here). */
+      --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
+      --duration-fast: 250ms;
+      /* error-state-shake tokens (12-error-state-shake) */
+      --shake-distance: 6px;
+      --shake-overshoot: 4px;
+      --shake-dur-a: 80ms;
+      --shake-dur-b: 60ms;
+      --shake-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    html[data-theme="dark"] {
+      --bg: #0f0f10;
+      --text: #f2f2f2;
+      --muted: #9a9a9a;
+      --text-muted: rgba(202, 202, 202, 0.7);
+      --text-faint: #8f8f8f;
+      --text-footer-name: #e9e9e9;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      min-height: 100vh;
+    }
+
+    /* Back button — circular tertiary (top-left in the design). */
+    .back-btn {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      width: 36px;
+      height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      border-radius: 50px;
+      background: rgba(0, 0, 0, 0.03);
+      color: var(--text);
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .back-btn:hover { background: rgba(0, 0, 0, 0.06); }
+    html[data-theme="dark"] .back-btn { background: rgba(255, 255, 255, 0.06); }
+    /* Scale on press (0.96) — tactile feedback. */
+    .back-btn { transition: background 120ms ease, scale 120ms var(--ease-smooth-out); }
+    .back-btn:active { scale: 0.96; }
+    /* Extend the 36px control to a 44px touch target without changing its look. */
+    .back-btn::after { content: ""; position: absolute; inset: -4px; border-radius: inherit; }
+
+    .page {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 64px 20px 96px;
+      min-height: 100vh;
+    }
+
+    /* Brand cube icon — identical to skill.html / pro.html hero (136×140,
+       assets/icon light 2x.png / icon-dark-2x.png, theme-swapped + hover). */
+    .header-icon-wrap {
+      position: relative;
+      width: 136px;
+      height: 140px;
+      margin-top: -43px;
+      margin-bottom: -27px;
+      overflow: visible;
+    }
+    .header-icon-img {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 136px;
+      height: 140px;
+      display: block;
+      user-select: none;
+      transform-origin: center;
+      transition:
+        filter 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+        transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    @media (hover: hover) {
+      .header-icon-wrap:hover .header-icon-img {
+        filter: hue-rotate(60deg) saturate(1.6);
+        transform: rotate(8deg) scale(1.06);
+      }
+    }
+    html[data-theme="dark"] .header-icon-img--light,
+    html:not([data-theme="dark"]) .header-icon-img--dark { display: none; }
+    html:not([data-theme="dark"]) .header-icon-img--light,
+    html[data-theme="dark"] .header-icon-img--dark { display: block; }
+
+    .page-title {
+      margin: 0 0 30px;
+      font-family: "Saans", var(--font-sans);
+      font-weight: 500;
+      font-size: 36px;
+      line-height: 42px;
+      letter-spacing: -0.18px;
+      color: var(--text);
+      text-align: center;
+      text-wrap: balance;
+    }
+
+    /* Sign-in card (Figma 2330:2574): 369px, r24, p20, ring shadows. */
+    .signin-card {
+      position: relative;
+      width: min(92vw, 369px);
+      background: #fff;
+      border-radius: 24px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      box-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.04),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+    }
+    html[data-theme="dark"] .signin-card { background: #1b1b1d; }
+
+    .card-intro {
+      margin: 0;
+      font-size: 16px;
+      line-height: 24.2px;
+      color: var(--text);
+      text-wrap: pretty;
+    }
+    .card-intro .muted { color: var(--muted); }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field-label { font-size: 13px; line-height: 1.4; color: #4d4d4d; }
+    html[data-theme="dark"] .field-label { color: #b5b5b5; }
+
+    /* Input states (Figma 2330:2712): default #dcdcdc 1px, focus #585858 1.5px,
+       error #e23014 1.5px + #d62b11 message. */
+    .field-input {
+      width: 100%;
+      height: 40px;
+      padding: 4px 4px 4px 12px;
+      font-family: inherit;
+      font-size: 13px;
+      line-height: 1.4;
+      color: #0f0f0f;
+      background: #fff;
+      border: 1px solid #dcdcdc;
+      border-radius: 60px;
+      outline: none;
+      transition: border-color 120ms ease;
+    }
+    .field-input::placeholder { color: #828282; }
+    .field-input:focus { border: 1.5px solid #585858; padding-left: 11.5px; }
+    .field-input.is-error,
+    .field-input.is-error:focus { border: 1.5px solid #e23014; padding-left: 11.5px; }
+    html[data-theme="dark"] .field-input { background: #151517; color: #f2f2f2; border-color: #3a3a3d; }
+    html[data-theme="dark"] .field-input:focus { border-color: #a5a5a5; }
+    html[data-theme="dark"] .field-input.is-error { border-color: #e23014; }
+    .field-error { margin: -2px 0 0; font-size: 13px; line-height: 1.4; color: #d62b11; }
+
+    /* Error-state-shake (transitions-dev 12): the field shakes on invalid submit.
+       Per-segment easing; %-stops are cumulative (80,60,80,60 = 280ms). */
+    .field-input { will-change: transform; }
+    .field-input.is-shaking {
+      animation: t-input-shake calc(var(--shake-dur-a) * 2 + var(--shake-dur-b) * 2) linear;
+    }
+    @keyframes t-input-shake {
+      0%     { transform: translateX(0);                                 animation-timing-function: var(--shake-ease); }
+      28.57% { transform: translateX(var(--shake-distance));             animation-timing-function: var(--shake-ease); }
+      57.14% { transform: translateX(calc(var(--shake-distance) * -1));  animation-timing-function: var(--shake-ease); }
+      78.57% { transform: translateX(var(--shake-overshoot));            animation-timing-function: var(--shake-ease); }
+      100%   { transform: translateX(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .field-input { animation: none !important; transform: none !important; }
+    }
+
+    /* Primary pill button (Figma 2330:2584). */
+    .btn-primary {
+      width: 100%;
+      height: 40px;
+      border: 0;
+      border-radius: 26px;
+      background: #17181c;
+      color: #fff;
+      font-family: inherit;
+      font-size: 13px;
+      line-height: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+    .btn-primary[disabled] { opacity: 0.6; cursor: default; }
+    html[data-theme="dark"] .btn-primary { background: #f2f2f2; color: #111; }
+    /* Scale on press (0.96). */
+    .btn-primary { transition: scale 120ms var(--ease-smooth-out), opacity 120ms ease; }
+    .btn-primary:not([disabled]):active { scale: 0.96; }
+
+    .card-foot {
+      margin: 0;
+      font-size: 13px;
+      line-height: 16px;
+      color: #17181c;
+    }
+    .card-foot a { color: inherit; font-weight: 500; text-decoration: none; }
+    .card-foot a:hover { text-decoration: underline; }
+    html[data-theme="dark"] .card-foot { color: #e5e5e5; }
+
+    .card-note { margin: 0; font-size: 13px; line-height: 1.4; }
+    .card-note[data-kind="ok"] { color: #16a34a; }
+    .card-note[data-kind="err"] { color: #d62b11; }
+
+    .device-code {
+      font: 500 20px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: 0.12em;
+      padding: 10px 14px;
+      border: 1px dashed #dcdcdc;
+      border-radius: 12px;
+      align-self: center;
+    }
+    html[data-theme="dark"] .device-code { border-color: #3a3a3d; }
+
+    /* Shared site footer (identical to pro.html / account.html). */
+    .brand-mark {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 24px; height: 24px; color: currentColor;
+    }
+    .brand-mark svg { width: 22px; height: 15px; display: block; }
+    .brand-word { font-size: 15px; font-weight: 500; line-height: 1; letter-spacing: -0.01em; white-space: nowrap; }
+    .brand-word-dim { color: var(--text-muted); }
+
+    .footer {
+      width: 100%; max-width: 1008px; margin: auto auto 0; padding: 112px 20px 40px;
+      font-family: var(--font-sans); font-size: 13px; line-height: 18.2px; text-align: left;
+      display: flex; flex-direction: column; gap: 25px; box-sizing: border-box;
+    }
+    .footer-top { display: flex; justify-content: space-between; gap: 48px; flex-wrap: wrap; }
+    .footer-brand { display: flex; flex-direction: column; gap: 10px; max-width: 260px; }
+    .footer-brand-logo {
+      display: inline-flex; align-items: center; gap: 4px; opacity: 0.7;
+      text-decoration: none; color: var(--text);
+      transition: transform 400ms var(--ease-smooth-out), opacity 150ms ease; transform-origin: center;
+    }
+    .footer-brand-logo:hover { opacity: 1; transform: scale(1.02); }
+    .footer-brand-logo:hover .brand-mark { transform: rotate(60deg); transition: transform 400ms var(--ease-smooth-out); }
+    .footer-tagline { margin: 0; color: var(--text-muted); }
+    .footer-cols { display: flex; gap: 56px; }
+    .footer-col { display: flex; flex-direction: column; gap: 8px; }
+    .footer-col-title { margin: 0 0 2px; font-weight: 500; color: var(--text-muted); }
+    .footer-col a { color: var(--text-muted); text-decoration: none; transition: color 150ms var(--ease-smooth-out); }
+    .footer-col a:hover { color: var(--text); }
+    .footer-credit { margin: 0; }
+    .footer-muted { color: var(--text-faint); }
+    .footer-name { color: var(--text-footer-name); text-decoration: none; margin-left: 4px; }
+    .footer-name:hover { color: #0d0d0d; }
+    html[data-theme="dark"] .footer-name:hover { color: #ffffff; }
+    @media (max-width: 720px) {
+      .footer-top { flex-direction: column; gap: 32px; }
+      .footer-cols { gap: 40px; flex-wrap: wrap; row-gap: 32px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .footer-brand-logo { transition: opacity 150ms ease; }
+      .footer-brand-logo:hover, .footer-brand-logo:hover .brand-mark { transform: none; }
+    }
+
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <a class="back-btn" href="/" aria-label="Back to Libraries.dev">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 8H3.5M3.5 8L7.5 4M3.5 8L7.5 12"/></svg>
+  </a>
+
+  <main class="page">
+    <div class="header-icon-wrap" aria-hidden="true" style="display:flex;align-items:center;justify-content:center;">
+      <svg width="104" height="68" viewBox="0 0 22.6705 14.6705" fill="none" xmlns="http://www.w3.org/2000/svg" style="color:#fff">
+        <path d="M21.3352 10.3354L6.89079 13.3354L18.0019 7.33536L1.33524 9.33536L19.3352 1.33536L1.33524 4.33536L9.33524 1.33536" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <h1 class="page-title" id="a-title">Welcome back</h1>
+
+    <div class="signin-card">
+      <p class="card-intro" id="a-desc">Enter your email you used at checkout.
+        <span class="muted">We’ll send you a sign-in link.</span></p>
+
+      <!-- Device code display (device flow) -->
+      <span class="device-code" id="a-code" hidden></span>
+
+      <!-- Sign-in form (email → magic link) -->
+      <form id="a-signin" novalidate>
+        <div class="field">
+          <label class="field-label" for="a-email">Your email</label>
+          <input class="field-input" type="email" id="a-email" placeholder="name@example.com"
+                 autocomplete="email" />
+          <p class="field-error" id="a-email-error" role="alert" hidden>Please enter a valid email.</p>
+        </div>
+        <div style="height:24px"></div>
+        <button class="btn-primary" type="submit" id="a-signin-btn">Send login link</button>
+      </form>
+
+      <!-- Typed sign-in code (shown after a link is sent; rescues in-app-browser opens) -->
+      <form id="a-codeform" novalidate hidden>
+        <div class="field">
+          <label class="field-label" for="a-signin-code">Or enter the code from the email</label>
+          <input class="field-input" type="text" id="a-signin-code" placeholder="XXXX-XXXX"
+                 autocomplete="one-time-code" spellcheck="false" style="text-transform:uppercase" />
+          <p class="field-error" id="a-code-error" role="alert" hidden>That code didn’t work — check it and try again.</p>
+        </div>
+        <div style="height:24px"></div>
+        <button class="btn-primary" type="submit" id="a-code-btn">Sign in with code</button>
+      </form>
+
+      <!-- Approve button (signed-in + device code present) -->
+      <button class="btn-primary" id="a-approve" hidden>Approve this device</button>
+
+      <!-- Manage / account actions (signed-in) -->
+      <button class="btn-primary" id="a-portal" hidden>Manage subscription</button>
+
+      <p class="card-note" id="a-note" role="status" hidden></p>
+      <p class="card-foot" id="a-foot">No access? <a href="pro.html">Get Pro</a></p>
+    </div>
+
+    <footer class="footer">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <a class="footer-brand-logo" href="/" aria-label="Libraries.dev home">
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 22.6705 14.6705" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21.3352 10.3354L6.89079 13.3354L18.0019 7.33536L1.33524 9.33536L19.3352 1.33536L1.33524 4.33536L9.33524 1.33536" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span class="brand-word"><span class="brand-word-strong">Libraries</span><span class="brand-word-dim">.dev</span></span>
+          </a>
+          <p class="footer-tagline">Production-ready UI effect libraries for React</p>
+        </div>
+        <nav class="footer-cols" aria-label="Footer">
+          <div class="footer-col">
+            <p class="footer-col-title">Libraries</p>
+            <a href="/beam.html">Beam</a>
+            <a href="/orbs.html">Orb</a>
+            <a href="/gooey.html">Gooey</a>
+            <a href="/metal.html">Metal</a>
+            <a href="/image.html">Image</a>
+          </div>
+          <div class="footer-col">
+            <p class="footer-col-title">Product</p>
+            <a href="/">Home</a>
+            <a href="/studio.html">Studio</a>
+            <a href="/pro.html">Get Pro</a>
+          </div>
+          <div class="footer-col">
+            <p class="footer-col-title">Legal &amp; Account</p>
+            <a href="/pro.html" id="footer-signin">Sign in</a>
+            <a href="/terms.html">Terms</a>
+            <a href="/privacy.html">Privacy</a>
+            <a href="mailto:jakubja@gmail.com">Contact</a>
+          </div>
+        </nav>
+      </div>
+      <p class="footer-credit"><span class="footer-muted">Created by</span><a class="footer-name" href="https://x.com/jakubantalik" target="_blank" rel="noopener noreferrer">Jakub Antalik</a></p>
+    </footer>
+  </main>
+
+  <script src="/assets/pro-client.js" defer></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      var TP = window.LibrariesPro;
+      var q = new URLSearchParams(location.search);
+      var deviceCode = (q.get("code") || "").toUpperCase();
+      var inviteToken = q.get("invite") || "";
+
+      var el = function (id) { return document.getElementById(id); };
+      var title = el("a-title"), desc = el("a-desc"), note = el("a-note");
+      var codeEl = el("a-code");
+      var signinForm = el("a-signin"), emailInput = el("a-email"), signinBtn = el("a-signin-btn");
+      var emailError = el("a-email-error");
+      var approveBtn = el("a-approve"), portalBtn = el("a-portal");
+
+      function setNote(msg, kind) {
+        note.textContent = msg; note.hidden = !msg;
+        note.setAttribute("data-kind", kind || "");
+      }
+      function setIntro(main, mutedText) {
+        desc.textContent = main + " ";
+        if (mutedText) {
+          var m = document.createElement("span");
+          m.className = "muted";
+          m.textContent = mutedText;
+          desc.appendChild(m);
+        }
+      }
+      function setEmailError(on) {
+        emailInput.classList.toggle("is-error", on);
+        emailError.hidden = !on;
+        if (on) {
+          // Replay the shake from a clean baseline (remove → reflow → add).
+          emailInput.classList.remove("is-shaking");
+          void emailInput.offsetWidth;
+          emailInput.classList.add("is-shaking");
+          var shakeMs = 80 * 2 + 60 * 2;
+          setTimeout(function () { emailInput.classList.remove("is-shaking"); }, shakeMs + 20);
+        }
+      }
+      emailInput.addEventListener("input", function () { setEmailError(false); });
+      function show(node, on) { if (node) node.hidden = !on; }
+
+      // Redirect states from the magic-link callback.
+      if (q.get("error") === "link_invalid") setNote("That sign-in link was invalid or expired. Try again below.", "err");
+      if (q.get("device") === "approved") setNote("Device approved — you can return to your terminal.", "ok");
+      if (q.get("device") === "denied") setNote("This account doesn't have an active Pro plan, so the device wasn't approved.", "err");
+
+      if (deviceCode) { codeEl.textContent = deviceCode; show(codeEl, true); }
+
+      signinForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var email = emailInput.value.trim();
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { setEmailError(true); emailInput.focus(); return; }
+        setEmailError(false);
+        signinBtn.disabled = true; signinBtn.textContent = "Sending…";
+        TP.magicLink(email, deviceCode || null, inviteToken || null)
+          .then(function (data) {
+            // Refusals resolve rather than reject — say so instead of telling
+            // the user to watch for a mail that was never sent.
+            if (data && data.error === "no_plan") {
+              setNote("No Libraries.dev plan is attached to that email. " +
+                      "If you bought Pro with a different address, use that one.", "err");
+              return;
+            }
+            setNote("Check your email — click the link, or type the code below.", "ok");
+            var cf = document.getElementById("a-codeform");
+            if (cf) { cf.hidden = false; document.getElementById("a-signin-code").focus(); }
+          })
+          .catch(function () { setNote("Couldn't send the link. Please try again.", "err"); })
+          .finally(function () { signinBtn.disabled = false; signinBtn.textContent = "Send login link"; });
+      });
+
+      // Typed-code sign-in: works even when the emailed link opened in a mail
+      // app's in-app browser (the cookie lands there, not here). The code signs
+      // THIS browser in, and carries the same device/invite side effects.
+      document.getElementById("a-codeform").addEventListener("submit", function (e) {
+        e.preventDefault();
+        var cInput = document.getElementById("a-signin-code");
+        var cErr = document.getElementById("a-code-error");
+        var cBtn = document.getElementById("a-code-btn");
+        var code = cInput.value.trim();
+        if (!code) { cErr.hidden = false; cInput.focus(); return; }
+        cErr.hidden = true;
+        cBtn.disabled = true; cBtn.textContent = "Signing in…";
+        fetch(TP.apiBase + "/auth/code", {
+          method: "POST", credentials: "include",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ email: emailInput.value.trim(), code: code })
+        }).then(function (r) { return r.json().catch(function () { return {}; }); })
+          .then(function (r) {
+            if (!r || !r.ok) {
+              cErr.textContent = r && r.error === "too_many_attempts"
+                ? "Too many tries — request a fresh link and use its new code."
+                : "That code didn’t work — check it and try again.";
+              cErr.hidden = false;
+              cInput.classList.remove("is-shaking"); void cInput.offsetWidth; cInput.classList.add("is-shaking");
+              setTimeout(function () { cInput.classList.remove("is-shaking"); }, 300);
+              return;
+            }
+            if (r.next === "device_approved") { setNote("Device approved — return to your terminal.", "ok"); return; }
+            if (r.next === "device_denied") { setNote("Signed in, but this account has no active Pro plan, so the device wasn't approved.", "err"); return; }
+            location.href = "account.html?signed_in=1" + (r.next === "joined" ? "&joined=1" : "");
+          })
+          .catch(function () { cErr.hidden = false; })
+          .finally(function () { cBtn.disabled = false; cBtn.textContent = "Sign in with code"; });
+      });
+
+      approveBtn.addEventListener("click", function () {
+        approveBtn.disabled = true;
+        TP.approveDevice(deviceCode).then(function (r) {
+          if (r && r.status === "approved") setNote("Device approved — return to your terminal.", "ok");
+          else setNote("Couldn't approve — your account may not have an active Pro plan.", "err");
+        }).catch(function () { setNote("Approval failed. Try again.", "err"); })
+          .finally(function () { approveBtn.disabled = false; });
+      });
+
+      portalBtn.addEventListener("click", function () { TP.portal(); });
+
+      // If arriving from a team invite, look up the team name + invited email.
+      var invitePreview = inviteToken
+        ? TP.team.previewInvite(inviteToken).catch(function () { return { valid: false }; })
+        : Promise.resolve(null);
+
+      // Paint according to auth + context.
+      Promise.all([TP.refresh(), invitePreview]).then(function (res) {
+        var state = res[0];
+        var inv = res[1];
+
+        // ── Team invitation ──
+        if (inviteToken) {
+          if (!inv || !inv.valid) {
+            title.textContent = "Invitation not found";
+            setIntro("This invitation is invalid or has expired.", "Ask the team owner to send a new one.");
+            show(signinForm, false); show(el("a-foot"), false);
+            return;
+          }
+          if (state.authenticated) {
+            // Signed in already — accept directly.
+            show(signinForm, false);
+            title.textContent = "Join " + inv.team_name;
+            setIntro("Accepting your invitation…", "");
+            TP.team.accept(inviteToken).then(function (r) {
+              if (r && r.ok) {
+                setIntro("You've joined " + inv.team_name + ".", "Pro is now active on your account.");
+                setNote("Redirecting to your account…", "ok");
+                setTimeout(function () { location.href = "account.html?joined=1"; }, 900);
+              } else if (r && r.error === "email_mismatch") {
+                setIntro("This invite was sent to " + inv.email + ".", "Sign in with that email to accept.");
+              } else {
+                setNote("Couldn't accept the invitation. It may have expired.", "err");
+              }
+            });
+          } else {
+            title.textContent = "Join " + inv.team_name;
+            setIntro("You've been invited to " + inv.team_name + ".", "Sign in with " + inv.email + " to accept.");
+            emailInput.value = inv.email;
+            show(el("a-foot"), false);
+          }
+          return;
+        }
+
+        if (state.authenticated) {
+          show(signinForm, false);
+          if (deviceCode) {
+            title.textContent = "Approve device";
+            setIntro("Signed in as " + (state.email || "your account") + ".", "Approve this device to finish setup.");
+            show(approveBtn, true);
+          } else if (q.get("checkout") === "success") {
+            title.textContent = "You're all set";
+            setIntro("Payment received and you're signed in as " + (state.email || "your account") + ".", "");
+            show(portalBtn, state.pro);
+            show(el("a-foot"), false);
+          } else {
+            title.textContent = state.pro ? "Libraries Pro" : "Your account";
+            setIntro("Signed in as " + (state.email || "your account") + ".",
+              state.pro ? "Pro is active." : "No active Pro plan.");
+            show(portalBtn, state.pro);
+            if (state.pro) show(el("a-foot"), false);
+          }
+        } else {
+          if (q.get("checkout") === "success") {
+            title.textContent = "Payment received";
+            // Default intro copy already matches this state (Figma copy).
+          } else if (deviceCode) {
+            title.textContent = "Activate device";
+            setIntro("Sign in to approve this device.", "We'll email you a one-time link.");
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
