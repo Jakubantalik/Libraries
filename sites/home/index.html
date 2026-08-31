@@ -467,7 +467,7 @@
     </header>
 
     <header class="header">
-      <p class="hero-badge" id="installs-badge"><span id="installs-count">1,400,000+</span><span class="hero-badge-dim">installs</span></p>
+      <p class="hero-badge" id="installs-badge"><span id="installs-count">2,300,000+</span><span class="hero-badge-dim">installs</span></p>
       <h1 class="title">High-crafted UI libraries for AI agents</h1>
       <p class="subtitle">UI effects for modern apps, ready to use with your coding agents.</p>
       <div class="skill-cta-row">
@@ -500,14 +500,14 @@
 
     <section class="cards" id="components" aria-label="Effect libraries" style="scroll-margin-top: 24px;">
       <article class="card lib-card" data-lib="beam">
-        <a class="lib-card-hit" href="/beam.html" aria-label="Border Beam playground"></a>
+        <a class="lib-card-hit" href="/beam.html" aria-label="Border beam playground"></a>
         <div class="card-stage">
           <video class="lib-video" src="/assets/videos/beam.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
         </div>
         <div class="lib-meta">
           <span class="lib-ico"><img src="/assets/icons/tile-beam.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
           <span class="lib-meta-text">
-            <span class="lib-name">Border Beam</span>
+            <span class="lib-name">Border beam</span>
             <span class="lib-desc">Animated rainbow glow riding any border</span>
           </span>
         </div>
@@ -783,24 +783,60 @@
         });
       });
 
-      /* Hero badge: live combined npm installs (last month), cached 1h. */
+      /* Hero badge: live combined npm installs, all-time, cached 1h.
+       *
+       * npm has no all-time endpoint — /point/last-year caps at 365 days,
+       * which is the whole history today but would start undercounting the
+       * moment the oldest package turns one. So this walks /downloads/range
+       * from before the first publish to today. That endpoint allows at most
+       * 18 months per call, hence the chunking; days before a package existed
+       * come back as zero, which is why one shared start date works for all
+       * five. */
       var badge = document.getElementById("installs-count");
       if (!badge) return;
-      var KEY = "ldev:installs";
+      var KEY = "ldev:installs-total";
       var TTL = 60 * 60 * 1000;
       var PKGS = ["border-beam", "thinking-orbs", "liquid-gooey", "metal-fx", "img-fx"];
+      var START = "2026-01-01"; // earlier than the first package (2026-04-12)
+      var MAX_MONTHS = 17;      // one under npm's limit, to stay clear of edges
+
       function paint(n) {
         badge.textContent = n.toLocaleString("en-US");
       }
+      function iso(d) {
+        return d.toISOString().slice(0, 10);
+      }
+
       try {
         var c = JSON.parse(sessionStorage.getItem(KEY) || "null");
         if (c && Date.now() - c.t < TTL) { paint(c.n); return; }
       } catch (e) {}
+
+      /* Windows are built once and reused for every package. */
+      var windows = [];
+      var cursor = new Date(START + "T00:00:00Z");
+      var today = new Date();
+      while (cursor < today) {
+        var end = new Date(cursor);
+        end.setUTCMonth(end.getUTCMonth() + MAX_MONTHS);
+        if (end > today) end = today;
+        windows.push(iso(cursor) + ":" + iso(end));
+        cursor = new Date(end);
+        cursor.setUTCDate(cursor.getUTCDate() + 1);
+      }
+
       Promise.all(PKGS.map(function (p) {
-        return fetch("https://api.npmjs.org/downloads/point/last-month/" + p)
-          .then(function (r) { return r.json(); })
-          .then(function (d) { return d.downloads || 0; })
-          .catch(function () { return 0; });
+        return Promise.all(windows.map(function (w) {
+          return fetch("https://api.npmjs.org/downloads/range/" + w + "/" + p)
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+              if (!d || !d.downloads) return 0;
+              return d.downloads.reduce(function (a, day) { return a + (day.downloads || 0); }, 0);
+            })
+            .catch(function () { return 0; });
+        })).then(function (parts) {
+          return parts.reduce(function (a, b) { return a + b; }, 0);
+        });
       })).then(function (counts) {
         var total = counts.reduce(function (a, b) { return a + b; }, 0);
         if (total > 0) {
