@@ -70,7 +70,8 @@
    width as padding and keep one left edge down the whole sidebar. */
 .docs-group--links .docs-link { padding-left: 40px; }
 .docs-link:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
-/* Same 24px ringed tile the Studio nav uses. */
+/* Same 24px ringed tile the Studio nav uses. On a replaced element the
+   inset ring paints over the bitmap, so it can sit on the <img> itself. */
 .docs-link-icon {
   flex: none;
   width: 24px;
@@ -78,7 +79,12 @@
   border-radius: 7px;
   object-fit: cover;
   display: block;
-  box-shadow: var(--material-shadow);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
+        0 0 0 1px rgba(0, 0, 0, 0.06) inset,
+        0 -1px 0 0 rgba(0, 0, 0, 0.06) inset,
+        0 0 0 1px rgba(196, 196, 196, 0.1) inset;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.04));
 }
 /* The image-generation export sits on a larger canvas than the rest, so
    scale it up to crop that padding away. */

@@ -189,16 +189,29 @@
         inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
     }
     .st-lib:focus-visible { outline: 2px solid var(--icon-color); outline-offset: 2px; }
-    /* The tile bitmaps carry no shadow of their own, so the raised-surface
-       ring comes from CSS — the same --material-shadow the site's other
-       tiles and pills wear (Figma 1419:38602). */
+    /* The tile bitmaps carry no shadow of their own, so the card ring and
+       drop shadow come from CSS. The ring rides an ::after overlay because
+       an inset box-shadow on the slot would paint under the <img>. */
     .st-lib-ico {
+      position: relative;
       flex: none;
       width: 24px;
       height: 24px;
       border-radius: 7px;
       overflow: hidden;
-      box-shadow: var(--material-shadow);
+      filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.04));
+    }
+    .st-lib-ico::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      box-shadow:
+        0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
+        0 0 0 1px rgba(0, 0, 0, 0.06) inset,
+        0 -1px 0 0 rgba(0, 0, 0, 0.06) inset,
+        0 0 0 1px rgba(196, 196, 196, 0.1) inset;
+      pointer-events: none;
     }
     .st-lib-ico img { width: 100%; height: 100%; display: block; object-fit: cover; }
     /* The image-generation export sits on a larger canvas (104px against

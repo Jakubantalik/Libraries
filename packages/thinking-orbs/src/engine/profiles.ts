@@ -70,6 +70,35 @@ export function scaleRadii(opts: ModeOpts, scale: number): ModeOpts {
   return out;
 }
 
+/**
+ * How many dots a resolved profile draws.
+ *
+ * There is no single count knob: a mode either lays its dots out on a grid
+ * (a lat/lon sphere, a lane/segment ribbon) or carries standalone counts,
+ * and several modes do both. This sums exactly the knobs `scaleCounts`
+ * treats as counts — grid pairs as their product, the rest as themselves —
+ * so the number tracks what `dots` actually scales. Density-driven layers
+ * have no fixed count and are left out.
+ */
+export function countDots(opts: ModeOpts): number {
+  let total = 0;
+  const done = new Set<string>();
+  for (const [a, b] of COUNT_PAIRS) {
+    const va = opts[a];
+    const vb = opts[b];
+    if (va != null && vb != null && !done.has(a) && !done.has(b)) {
+      total += va * vb;
+      done.add(a);
+      done.add(b);
+    }
+  }
+  for (const k of COUNT_KEYS) {
+    const v = opts[k];
+    if (v != null && v !== 0 && !done.has(k)) total += v;
+  }
+  return Math.round(total);
+}
+
 /** Base (fine) profiles per mode, before preset multipliers. */
 export const BASE_PROFILES: Record<string, ModeOpts> = {
   globe: {

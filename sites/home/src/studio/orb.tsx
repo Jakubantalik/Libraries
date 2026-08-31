@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { ThinkingOrb, type OrbSize, type OrbState } from "thinking-orbs";
+import {
+  ThinkingOrb,
+  countDots,
+  resolvePreset,
+  scaleCounts,
+  type OrbSize,
+  type OrbState,
+} from "thinking-orbs";
 import { ControlsPanel, PgTabs, PgSlider, PgSwatches, PanelTitle, PanelSep, Snippet, num } from "./controls";
 
 /* Studio — Orb workbench: all nine states, both tuned sizes, speed, plus
@@ -41,6 +48,8 @@ export function OrbStudio({ visible = true }: { visible?: boolean }) {
   const [ink, setInk] = useState<string>(INK_DEFAULT);
   const [dots, setDots] = useState(1);
   const [paused, setPaused] = useState(false);
+
+  const dotTotal = countDots(scaleCounts(resolvePreset(state, size).opts, Math.max(0.1, dots)));
 
   const tinted = ink !== INK_DEFAULT;
   const props = [`state="${state}"`, `size={${size}}`];
@@ -96,13 +105,17 @@ export function OrbStudio({ visible = true }: { visible?: boolean }) {
         <PanelSep />
         <PanelTitle>Ink</PanelTitle>
         <PgSwatches label="Color" options={INK_OPTIONS} value={ink} onChange={setInk} />
+        {/* The library scales every count knob of a state together, so the
+            prop is a multiplier — but a multiplier is a poor thing to aim
+            with. The slider reads out the dots the current state and size
+            will actually draw, recomputed as either of those changes. */}
         <PgSlider
           label="Dots"
           value={dots}
           min={0.4}
           max={2}
           step={0.05}
-          display={`${num(dots)}×`}
+          display={`${dotTotal}`}
           onChange={setDots}
         />
       </ControlsPanel>
