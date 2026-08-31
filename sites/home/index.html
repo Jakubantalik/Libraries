@@ -236,11 +236,10 @@
       display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 18px; align-items: stretch;
     }
+    /* Fill and shadow come from the gallery card surface in site.css. */
     .pro-quote {
       display: flex; flex-direction: column; gap: 24px; min-width: 0;
       min-height: 240px; padding: 32px; border-radius: 24px;
-      background: #141414;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 -1px 0 0 rgba(255, 255, 255, 0.03);
     }
     .pro-quote-text { margin: 0; flex: 1 1 auto; font-size: 16px; line-height: 24.2px; color: #c9c9c9; overflow-wrap: anywhere; }
     .pro-quote-author { display: flex; align-items: center; gap: 11px; min-width: 0; }
@@ -276,8 +275,7 @@
     }
     .howto-step {
       display: flex; flex-direction: column; gap: 12px; min-width: 0;
-      padding: 32px; border-radius: 24px; background: #141414;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 -1px 0 0 rgba(255, 255, 255, 0.03);
+      padding: 32px; border-radius: 24px;
     }
     .howto-step-num {
       width: 28px; height: 28px; border-radius: 50px;
