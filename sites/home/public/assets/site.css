@@ -155,6 +155,8 @@ html[data-theme="dark"] {
   --p16-bar-bg: #f1f1f1; --p16-pill-bg: #ffffff;
   --p16-text-muted: rgba(15, 15, 15, 0.8); --p16-text-active: #0f0f0f;
   --p16-dur: 250ms; --p16-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Sliding tabs read the same pair (transitions.dev tabs-sliding). */
+  --tabs-dur: var(--p16-dur); --tabs-ease: var(--p16-ease);
   --tl-menu-line: #f0f0f0; --nav-line: #eeeeee;
 }
 html[data-theme="dark"] {

@@ -320,48 +320,74 @@ function AgentChat({ library }: { library: string }) {
 export function ControlsPanel({ library, children }: { library: string; children: ReactNode }) {
   const [tab, setTab] = useState<PanelTab>("manual");
   const barRef = useRef<HTMLDivElement | null>(null);
-  const [pill, setPill] = useState({ left: 0, width: 0 });
+  const pillRef = useRef<HTMLSpanElement | null>(null);
+  /* move() reads the current tab from a ref so the measure effect does not
+     have to re-subscribe its observer every time the tab changes. */
+  const tabRef = useRef<PanelTab>("manual");
 
   /* Measure from the selected button rather than assuming equal widths —
-     "Manual control" is far wider than "Agent". Re-measured on tab change
-     and once webfonts land, which shifts both labels. */
+     "Manual controls" is far wider than "Agent".
+
+     Following the tabs-sliding recipe, the pill only tweens when a tab is
+     clicked. First paint and resize write the same values with the
+     transition suspended, so it snaps into place instead of animating out
+     of nothing. */
+  const move = useCallback((animate: boolean) => {
+    const bar = barRef.current;
+    const pill = pillRef.current;
+    if (!bar || !pill) return;
+    const btn = bar.querySelector<HTMLElement>(`[data-tab="${tabRef.current}"]`);
+    if (!btn || !btn.offsetWidth) return;
+    if (!animate) {
+      const prev = pill.style.transition;
+      pill.style.transition = "none";
+      pill.style.transform = `translateX(${btn.offsetLeft}px)`;
+      pill.style.width = `${btn.offsetWidth}px`;
+      void pill.offsetWidth; // flush, so restoring the transition cannot tween
+      pill.style.transition = prev;
+      return;
+    }
+    pill.style.transform = `translateX(${btn.offsetLeft}px)`;
+    pill.style.width = `${btn.offsetWidth}px`;
+  }, []);
+
+  const select = useCallback(
+    (next: PanelTab) => {
+      setTab(next);
+      tabRef.current = next;
+      move(true);
+    },
+    [move]
+  );
+
   useLayoutEffect(() => {
-    const measure = () => {
-      const bar = barRef.current;
-      if (!bar) return;
-      const btn = bar.querySelector<HTMLElement>(`[data-tab="${tab}"]`);
-      if (btn) setPill({ left: btn.offsetLeft, width: btn.offsetWidth });
-    };
-    measure();
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
-    window.addEventListener("resize", measure);
+    const snap = () => move(false);
+    snap();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(snap);
+    window.addEventListener("resize", snap);
     /* The Studio keeps every library's panel mounted and hides the ones it
        is not showing, and a hidden element measures 0 — so without this the
        indicator stays collapsed until the window happens to resize. The
        observer fires when the bar gets its width on becoming visible. */
-    const ro = new ResizeObserver(measure);
+    const ro = new ResizeObserver(snap);
     if (barRef.current) ro.observe(barRef.current);
     return () => {
-      window.removeEventListener("resize", measure);
+      window.removeEventListener("resize", snap);
       ro.disconnect();
     };
-  }, [tab]);
+  }, [move]);
 
   return (
     <div className="pg-controls">
       <div className="st-panel-tabs" ref={barRef} role="tablist" aria-label="Control mode">
-        <span
-          className="st-panel-tabs-indicator"
-          aria-hidden="true"
-          style={{ transform: `translateX(${pill.left}px)`, width: pill.width }}
-        />
+        <span className="st-panel-tabs-indicator" ref={pillRef} aria-hidden="true" />
         <button
           type="button"
           className="st-panel-tab"
           role="tab"
           data-tab="manual"
           aria-selected={tab === "manual"}
-          onClick={() => setTab("manual")}
+          onClick={() => select("manual")}
         >
           Manual controls
         </button>
@@ -371,7 +397,7 @@ export function ControlsPanel({ library, children }: { library: string; children
           role="tab"
           data-tab="agent"
           aria-selected={tab === "agent"}
-          onClick={() => setTab("agent")}
+          onClick={() => select("agent")}
         >
           Agent
         </button>
