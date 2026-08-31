@@ -31,13 +31,16 @@
 .docs-sidebar::-webkit-scrollbar { display: none; }
 .docs-group { display: flex; flex-direction: column; min-width: 0; }
 .docs-list { display: flex; flex-direction: column; min-width: 0; }
-.docs-group-label { font-size: 11px; line-height: 14px; color: var(--text-subtle); padding: 9px 12px; }
+.docs-group-label { font-size: 13px; line-height: 14px; color: #979797; padding: 4px 8px 8px; }
+
+/* Rows follow the Studio nav (.st-lib): 40px on a 12px radius, the active
+   one lifted on the material ring. */
 .docs-link {
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 32px;
-  padding: 0 12px;
+  height: 40px;
+  padding: 0 8px;
   width: 100%;
   border: 0;
   border-radius: 12px;
@@ -45,20 +48,41 @@
   text-align: left;
   text-decoration: none;
   font-size: 13px;
-  line-height: 16px;
-  color: var(--text);
+  font-weight: 500;
+  line-height: 13px;
+  color: #bbbbbb;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: background 140ms, color 140ms;
+  transition: background 140ms, color 140ms, box-shadow 140ms;
 }
-.docs-link:hover { background: var(--chip-bg); }
-.docs-link.is-active { background: var(--chip-bg-hover); }
-.docs-link--muted { color: var(--text-muted); }
+.docs-link:hover { background: rgba(255, 255, 255, 0.04); }
+.docs-link.is-active {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f5f5f5;
+  box-shadow:
+    0 1px 1px 0 rgba(0, 0, 0, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+}
+.docs-link--muted { color: #979797; }
+/* The text-only rows have no icon to indent them, so they take the icon's
+   width as padding and keep one left edge down the whole sidebar. */
+.docs-group--links .docs-link { padding-left: 40px; }
 .docs-link:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
-/* The tile exports carry their own shadow on a larger canvas — clip to
-   the 18px slot so the sidebar rows keep a single baseline. */
-.docs-link-icon { flex: none; width: 18px; height: 18px; object-fit: contain; display: block; }
+/* Same 24px ringed tile the Studio nav uses. */
+.docs-link-icon {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  object-fit: cover;
+  display: block;
+  box-shadow: var(--material-shadow);
+}
+/* The image-generation export sits on a larger canvas than the rest, so
+   scale it up to crop that padding away. */
+.docs-link-icon[src*="tile-image"] { width: 27px; height: 27px; max-width: none; margin: -1.5px; }
 
 .docs-main { position: relative; min-width: 0; }
 
