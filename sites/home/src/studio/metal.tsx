@@ -130,7 +130,7 @@ export function MetalStudio({ visible = true }: { visible?: boolean }) {
       </div>
 
       <ControlsPanel library="Metal">
-        <PanelTitle>Metal</PanelTitle>
+        <PanelTitle>Main</PanelTitle>
         <PgTabs label="Type" options={VARIANT_OPTIONS} value={variant} onChange={handleVariant} />
         <PgTabs label="Color" options={PRESET_OPTIONS} value={preset} onChange={setPreset} />
         <PgSlider label="Strength" value={strength} min={0} max={100} step={1} display={`${strength}%`} onChange={setStrength} />

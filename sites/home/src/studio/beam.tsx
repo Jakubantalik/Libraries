@@ -196,7 +196,7 @@ export function BeamStudio({ visible = true }: { visible?: boolean }) {
         </div>
 
         <ControlsPanel library="Border beam">
-          <PanelTitle>Border beam</PanelTitle>
+          <PanelTitle>Main</PanelTitle>
           <PgTabs label="Family" options={FAMILY_OPTIONS} value={family} onChange={handleFamilyChange} />
           <PgTabs label="Type" options={SIZE_OPTIONS_BY_FAMILY[family]} value={size} onChange={handleSizeChange} />
           <PgTabs label="Color" options={COLOR_OPTIONS} value={colorVariant} onChange={setColorVariant} />

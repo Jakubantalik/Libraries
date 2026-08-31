@@ -616,25 +616,25 @@ html[data-theme="dark"] .pg-stage::after { box-shadow: inset 0 0 0 1px rgba(191,
   margin: 4px 0 -8px;
 }
 .pg-controls-title:first-child { margin-top: 0; }
-/* Group separators are drawn by CSS rather than placed by hand, so no
-   group can end up without one. Absolutely positioned in the middle of
-   the 14px gap and bled past the panel's 16px padding, they run the full
-   width of the panel. */
-.pg-controls > * + *,
-.pg-controls .st-panel-body > * + * { position: relative; }
-.pg-controls > * + *::before,
-.pg-controls .st-panel-body > * + *::before {
+/* A rule separates sections, not the groups inside one. It is drawn by
+   CSS rather than placed by hand so a section can never end up without
+   one, sits above each section heading (and above the body, dividing it
+   from the tabs), and bleeds past the panel's 16px padding to run the
+   full width. The heading carries 12px of space beneath the rule. */
+.pg-controls > .st-panel-body,
+.pg-controls .st-panel-body > .pg-controls-title:not(:first-child) { position: relative; }
+.pg-controls > .st-panel-body::before,
+.pg-controls .st-panel-body > .pg-controls-title:not(:first-child)::before {
   content: "";
   position: absolute;
   left: -16px;
   right: -16px;
-  top: -7px;
+  top: -12px;
   height: 1px;
   background: rgba(255, 255, 255, 0.04);
   pointer-events: none;
 }
-/* A section heading and the group under it are one unit — no rule between. */
-.pg-controls .st-panel-body > .pg-controls-title + *::before { display: none; }
+.pg-controls .st-panel-body > .pg-controls-title:not(:first-child) { margin-top: 12px; }
 /* The hand-placed separator element is redundant now. */
 .pg-controls-sep { display: none; }
 

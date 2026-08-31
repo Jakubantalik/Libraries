@@ -85,7 +85,7 @@ export function OrbStudio({ visible = true }: { visible?: boolean }) {
       </div>
 
       <ControlsPanel library="Thinking orbs">
-        <PanelTitle>Thinking orbs</PanelTitle>
+        <PanelTitle>Main</PanelTitle>
         <PgTabs label="State" options={STATE_OPTIONS} value={state} onChange={setState} />
         <PgTabs
           label="Size"

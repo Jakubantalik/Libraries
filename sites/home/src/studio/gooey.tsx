@@ -637,7 +637,7 @@ export function GooeyStudio({
       </div>
 
       <Controls>
-        {!isPublic && <PanelTitle>Gooey</PanelTitle>}
+        {!isPublic && <PanelTitle>Main</PanelTitle>}
         <PgTabs label="Effect" options={EFFECT_OPTIONS} value={effect} onChange={setEffect} />
 
         {isPublic && effect !== "melt" && (
