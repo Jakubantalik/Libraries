@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { MetalFx, type MetalFxPreset, type MetalFxVariant } from "metal-fx";
 import { ControlsPanel, PgTabs, PgSlider, PgToggles, PanelTitle, PanelSep, Snippet, num } from "./controls";
 
@@ -19,6 +19,19 @@ const VARIANT_OPTIONS = [
 /* Variant baselines — shaderScale / ringCssPx defaults per the metal-fx docs. */
 const BASE_SHADER_SCALE: Record<MetalFxVariant, number> = { button: 1.6, circle: 1.3 };
 const BASE_RING: Record<MetalFxVariant, number> = { button: 1, circle: 2 };
+
+/* Param key -> the knob's own label, for the agent's applied-change line. */
+const METAL_PARAM_LABELS: Record<string, string> = {
+  variant: "Type",
+  preset: "Color",
+  strength: "Strength",
+  glow: "Glow strength",
+  shaderScale: "Shader scale",
+  ring: "Ring width",
+  disableGlow: "No Glow",
+  disableReflection: "No Reflection",
+  paused: "Paused",
+};
 
 function ArrowUpIcon() {
   return (
@@ -56,6 +69,27 @@ export function MetalStudio({ visible = true }: { visible?: boolean }) {
     setShaderScale(BASE_SHADER_SCALE[v]);
     setRing(BASE_RING[v]);
   };
+
+  /* Agent wiring — keys match the Worker's spec, which owns the ranges. */
+  const agentParams: Record<string, unknown> = {
+    variant, preset, strength, glow, shaderScale, ring,
+    disableGlow, disableReflection, paused,
+  };
+
+  const applyAgentParams = useCallback((patch: Record<string, unknown>) => {
+    /* Variant first, and through handleVariant so the shape's tuned
+       shaderScale/ring baselines land — then any explicit values in the
+       same patch overwrite them, rather than being reset by the switch. */
+    if (typeof patch.variant === "string") handleVariant(patch.variant as MetalFxVariant);
+    if (typeof patch.preset === "string") setPreset(patch.preset as MetalFxPreset);
+    if (typeof patch.strength === "number") setStrength(patch.strength);
+    if (typeof patch.glow === "number") setGlow(patch.glow);
+    if (typeof patch.shaderScale === "number") setShaderScale(patch.shaderScale);
+    if (typeof patch.ring === "number") setRing(patch.ring);
+    if (typeof patch.disableGlow === "boolean") setDisableGlow(patch.disableGlow);
+    if (typeof patch.disableReflection === "boolean") setDisableReflection(patch.disableReflection);
+    if (typeof patch.paused === "boolean") setPaused(patch.paused);
+  }, []);
 
   const scaleTouched = shaderScale !== BASE_SHADER_SCALE[variant];
   const ringTouched = ring !== BASE_RING[variant];
@@ -129,7 +163,15 @@ export function MetalStudio({ visible = true }: { visible?: boolean }) {
         </button>
       </div>
 
-      <ControlsPanel library="Metal">
+      <ControlsPanel
+        library="Metal"
+        agent={{
+          libraryId: "metal",
+          params: agentParams,
+          labels: METAL_PARAM_LABELS,
+          onApply: applyAgentParams,
+        }}
+      >
         <PanelTitle>Metal</PanelTitle>
         <PgTabs label="Type" options={VARIANT_OPTIONS} value={variant} onChange={handleVariant} />
         <PgTabs label="Color" options={PRESET_OPTIONS} value={preset} onChange={setPreset} />

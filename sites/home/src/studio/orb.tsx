@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { ThinkingOrb, type OrbSize, type OrbState } from "thinking-orbs";
 import { ControlsPanel, PgTabs, PgSlider, PgSwatches, PanelTitle, PanelSep, Snippet, num } from "./controls";
 
@@ -33,6 +33,16 @@ const SIZE_OPTIONS = [
   { value: "20", label: "20px" },
 ] as const;
 
+/* Param key -> the knob's own label, for the agent's applied-change line. */
+const ORB_PARAM_LABELS: Record<string, string> = {
+  state: "State",
+  size: "Size",
+  speed: "Speed",
+  ink: "Color",
+  dots: "Dots",
+  paused: "Paused",
+};
+
 export function OrbStudio({ visible = true }: { visible?: boolean }) {
   const [state, setState] = useState<OrbState>("listening");
   const [size, setSize] = useState<OrbSize>(64);
@@ -40,6 +50,22 @@ export function OrbStudio({ visible = true }: { visible?: boolean }) {
   const [ink, setInk] = useState<string>(INK_DEFAULT);
   const [dots, setDots] = useState(1);
   const [paused, setPaused] = useState(false);
+
+  /* Agent wiring — keys match the Worker's spec, which owns the ranges and
+     rejects anything outside them. `size` arrives as a string, since the
+     library only offers two hand-tuned presets rather than a range. */
+  const agentParams: Record<string, unknown> = {
+    state, size: String(size), speed, ink, dots, paused,
+  };
+
+  const applyAgentParams = useCallback((patch: Record<string, unknown>) => {
+    if (typeof patch.state === "string") setState(patch.state as OrbState);
+    if (typeof patch.size === "string") setSize(Number(patch.size) as OrbSize);
+    if (typeof patch.speed === "number") setSpeed(patch.speed);
+    if (typeof patch.ink === "string") setInk(patch.ink);
+    if (typeof patch.dots === "number") setDots(patch.dots);
+    if (typeof patch.paused === "boolean") setPaused(patch.paused);
+  }, []);
 
   const tinted = ink !== INK_DEFAULT;
   const props = [`state="${state}"`, `size={${size}}`];
@@ -74,7 +100,15 @@ export function OrbStudio({ visible = true }: { visible?: boolean }) {
         </button>
       </div>
 
-      <ControlsPanel library="Orb">
+      <ControlsPanel
+        library="Orb"
+        agent={{
+          libraryId: "orb",
+          params: agentParams,
+          labels: ORB_PARAM_LABELS,
+          onApply: applyAgentParams,
+        }}
+      >
         <PanelTitle>Orb</PanelTitle>
         <PgTabs label="State" options={STATE_OPTIONS} value={state} onChange={setState} />
         <PgTabs
