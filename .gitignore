@@ -42,3 +42,9 @@ sites/beam/parity-web/
 sites/beam/parity-diff/
 packages/border-beam/ports/ios/BorderBeamShowcase/build/
 packages/border-beam/ports/ios/BorderBeamShowcase/BorderBeamShowcase.xcodeproj/
+
+# Local Worker secrets (never commit)
+.dev.vars
+
+# Wrangler local dev state
+.wrangler/

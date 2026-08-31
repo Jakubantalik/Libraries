@@ -296,8 +296,13 @@ export async function handleStudioChat(
         })
       );
     } catch (err) {
-      const message = err instanceof Error ? err.message : "unknown error";
-      await writer.write(sse({ type: "error", message }));
+      /* The upstream message can carry request ids, key states and other
+         internals, so it goes to the log and never to the panel. In
+         `wrangler dev` the log is the terminal running the Worker. */
+      console.error("[studio-chat] turn failed", err);
+      await writer.write(
+        sse({ type: "error", message: "The agent hit an error. Try again in a moment." })
+      );
     } finally {
       await writer.close();
     }

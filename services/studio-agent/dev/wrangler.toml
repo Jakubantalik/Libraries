@@ -1,0 +1,17 @@
+# Local development only — this Worker has NO authentication (see index.ts).
+# Do not `wrangler deploy` it. The real route lives in the api.libraries.dev
+# Worker; see ../README.md.
+name = "studio-agent-dev"
+main = "index.ts"
+compatibility_date = "2026-06-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Port the Studio falls back to on localhost (sites/home/src/studio/agent.ts).
+[dev]
+port = 8787
+
+# Turn and spend counters. In `wrangler dev` this is simulated on disk, so the
+# placeholder id is never resolved against a real namespace.
+[[kv_namespaces]]
+binding = "STUDIO_USAGE"
+id = "studio_usage_local"
