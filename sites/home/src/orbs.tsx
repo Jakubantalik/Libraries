@@ -4,7 +4,7 @@ import { ThinkingOrb, type OrbSize, type OrbState } from "thinking-orbs";
 
 /* Orb detail page — playground island (stage + controls + live snippet).
    Mirrors the live playground at sites/orbs/components/Playground.tsx:
-   nine state tabs, 64/20 size tabs, 25–300% speed slider, starts paused. */
+   nine state tabs, 64/32/20 size tabs, 25–300% speed slider, starts paused. */
 
 const STATES: OrbState[] = [
   "working",
@@ -17,7 +17,7 @@ const STATES: OrbState[] = [
   "breathing",
   "shaping",
 ];
-const SIZES: OrbSize[] = [64, 20];
+const SIZES: OrbSize[] = [64, 32, 20];
 
 const SPEED_MIN = 25;
 const SPEED_MAX = 300;

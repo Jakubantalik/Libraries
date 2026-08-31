@@ -160,6 +160,10 @@ const COLOR_OPTIONS = [
   { value: "mono", label: "Mono" },
   { value: "ocean", label: "Ocean" },
   { value: "sunset", label: "Sunset" },
+  { value: "forest", label: "Forest" },
+  { value: "candy", label: "Candy" },
+  { value: "ice", label: "Ice" },
+  { value: "gold", label: "Gold" },
 ] as const;
 
 /* Tuned CSS vars for the pulse-outside preview — same values the live beam

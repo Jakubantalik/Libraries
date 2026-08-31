@@ -38,6 +38,10 @@ const COLOR_OPTIONS = [
   { value: "mono", label: "Mono" },
   { value: "ocean", label: "Ocean" },
   { value: "sunset", label: "Sunset" },
+  { value: "forest", label: "Forest" },
+  { value: "candy", label: "Candy" },
+  { value: "ice", label: "Ice" },
+  { value: "gold", label: "Gold" },
 ] as const;
 
 /* Tuned CSS vars for the pulse-outside preview — same values the live beam
@@ -90,6 +94,7 @@ export function BeamStudio({ visible = true }: { visible?: boolean }) {
   const [staticColors, setStaticColors] = useState(false);
   const [radius, setRadius] = useState(16);
   const [spikes, setSpikes] = useState(1);
+  const [glowSize, setGlowSize] = useState(1);
   const [glowSx, setGlowSx] = useState(1);
   const [glowSy, setGlowSy] = useState(1);
   const [glowBoost, setGlowBoost] = useState(1);
@@ -141,6 +146,7 @@ export function BeamStudio({ visible = true }: { visible?: boolean }) {
   if (colorVariant !== "colorful") props.push(`colorVariant="${colorVariant}"`);
   if (strength !== 100) props.push(`strength={${num(strength / 100)}}`);
   if (duration !== defaultDuration) props.push(`duration={${num(duration)}}`);
+  if (glowSize !== 1) props.push(`glowSize={${num(glowSize)}}`);
   if (brightness !== 1.3) props.push(`brightness={${num(brightness)}}`);
   if (saturation !== 1.2) props.push(`saturation={${num(saturation)}}`);
   if (hueRange !== 30) props.push(`hueRange={${num(hueRange)}}`);
@@ -168,6 +174,7 @@ export function BeamStudio({ visible = true }: { visible?: boolean }) {
             active={active}
             strength={strength / 100}
             duration={duration}
+            glowSize={glowSize}
             brightness={brightness}
             saturation={saturation}
             hueRange={hueRange}
@@ -209,6 +216,7 @@ export function BeamStudio({ visible = true }: { visible?: boolean }) {
           />
           <PanelSep />
           <PanelTitle>Glow</PanelTitle>
+          <PgSlider label="Size" value={glowSize} min={0.25} max={3} step={0.05} display={`${num(glowSize)}×`} onChange={setGlowSize} />
           <PgSlider label="Brightness" value={brightness} min={0.5} max={2.2} step={0.05} display={`${num(brightness)}×`} onChange={setBrightness} />
           <PgSlider label="Saturation" value={saturation} min={0.4} max={2.2} step={0.05} display={`${num(saturation)}×`} onChange={setSaturation} />
           {!staticColors && (

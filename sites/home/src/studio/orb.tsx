@@ -30,6 +30,7 @@ const STATE_OPTIONS: ReadonlyArray<{ value: OrbState; label: string }> = [
 
 const SIZE_OPTIONS = [
   { value: "64", label: "64px" },
+  { value: "32", label: "32px" },
   { value: "20", label: "20px" },
 ] as const;
 
@@ -80,7 +81,7 @@ export function OrbStudio({ visible = true }: { visible?: boolean }) {
         <PgTabs
           label="Size"
           options={SIZE_OPTIONS}
-          value={String(size) as "64" | "20"}
+          value={String(size) as "64" | "32" | "20"}
           onChange={(v) => setSize(Number(v) as OrbSize)}
         />
         <PgSlider
