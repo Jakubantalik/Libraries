@@ -1,6 +1,11 @@
 import { StrictMode, useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { createRoot } from "react-dom/client";
 import { BorderBeam, type BorderBeamSize, type BorderBeamColorVariant } from "border-beam";
+import {
+  MockChatInput,
+  MockIconButton,
+  MockSearchBar,
+} from "./examples/beam-mocks";
 
 /* Beam detail page — one React island rendering the whole playground grid
    (stage + controls) plus the live-updating snippet below it. Controls
@@ -167,6 +172,39 @@ function BeamPlayground() {
 
   return (
     <>
+      {/* The demo page's own examples come first: real UI wearing the
+          effect, before any knobs. The playground below is for trying a
+          setting, not for meeting the library. */}
+      <div className="detail-examples">
+        <div className="example-row-full">
+          <BorderBeam className="beam-host" size="md" colorVariant="colorful" theme="dark" active={active}>
+            <MockChatInput />
+          </BorderBeam>
+        </div>
+        <div className="example-row-split">
+          <div className="example-cell">
+            <BorderBeam className="beam-host" size="sm" colorVariant="colorful" theme="dark" active={active}>
+              <MockIconButton />
+            </BorderBeam>
+          </div>
+          <div className="example-cell">
+            <BorderBeam
+              className="beam-host"
+              size="line"
+              colorVariant="colorful"
+              theme="dark"
+              active={active}
+              duration={3.1}
+              borderRadius={20}
+            >
+              <MockSearchBar />
+            </BorderBeam>
+          </div>
+        </div>
+      </div>
+
+      <p className="detail-playground-label">Playground</p>
+
       <div className="pg">
         <div className="pg-stage" id="playground-stage">
           <BorderBeam

@@ -137,6 +137,30 @@ function ImagePlayground() {
 
   return (
     <>
+      {/* The demo page's own examples first: the loader resolving into real
+          images at the card sizes it was drawn for, before any knobs. */}
+      <div className="detail-examples">
+        <div className="example-row-full">
+          <ImageGeneration preset="pixels-organic" theme="dark" cardBg="#1B1B1B" images={IMAGE_POOL} autoReveal>
+            <div className="ex-image-card" />
+          </ImageGeneration>
+        </div>
+        <div className="example-row-split">
+          <div className="example-cell">
+            <ImageGeneration preset="pixels-mechanic" theme="dark" cardBg="#1B1B1B" images={IMAGE_POOL} autoReveal>
+              <div className="ex-image-card ex-image-card--sm" />
+            </ImageGeneration>
+          </div>
+          <div className="example-cell">
+            <ImageGeneration preset="sweep-gradient" theme="dark" cardBg="#1B1B1B" images={IMAGE_POOL} autoReveal>
+              <div className="ex-image-card ex-image-card--sm" />
+            </ImageGeneration>
+          </div>
+        </div>
+      </div>
+
+      <p className="detail-playground-label">Playground</p>
+
       <div className="pg-stage">
         <ImageGeneration
           ref={handleRef}

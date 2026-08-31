@@ -134,6 +134,35 @@ function MetalPlayground() {
 
   return (
     <>
+      {/* The demo page's own examples first: the three presets on the pill
+          and circle controls they were drawn for, before any knobs. */}
+      <div className="detail-examples">
+        <div className="example-row-full">
+          <div className="ex-stack">
+            <MetalFx preset="chromatic" variant="button" theme="dark">
+              <div className="ex-metal-pill">Upgrade to Pro</div>
+            </MetalFx>
+            <MetalFx preset="gold" variant="circle" theme="dark">
+              <div className="ex-metal-circle">+</div>
+            </MetalFx>
+          </div>
+        </div>
+        <div className="example-row-split">
+          <div className="example-cell">
+            <MetalFx preset="silver" variant="button" theme="dark">
+              <div className="ex-metal-pill">Silver</div>
+            </MetalFx>
+          </div>
+          <div className="example-cell">
+            <MetalFx preset="gold" variant="button" theme="dark">
+              <div className="ex-metal-pill">Gold</div>
+            </MetalFx>
+          </div>
+        </div>
+      </div>
+
+      <p className="detail-playground-label">Playground</p>
+
       <div className="pg-stage">
         <div className="metal-stage-row">
           <label ref={searchRef} className="metal-search">

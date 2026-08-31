@@ -70,6 +70,43 @@ function OrbPlayground() {
 
   return (
     <>
+      {/* The demo page's own examples first: the orb doing its job inside
+          the status pills and chips it was drawn for, before any knobs. */}
+      <div className="detail-examples">
+        <div className="example-row-full">
+          <div className="ex-stack">
+            <span className="ex-pill">
+              <ThinkingOrb state="solving" size={64} theme="dark" paused={paused} />
+              Solving…
+            </span>
+          </div>
+        </div>
+        <div className="example-row-split">
+          <div className="example-cell">
+            <div className="ex-stack">
+              <span className="ex-chip">
+                <ThinkingOrb state="searching" size={20} theme="dark" paused={paused} />
+                Searching
+              </span>
+              <span className="ex-chip">
+                <ThinkingOrb state="weaving" size={20} theme="dark" paused={paused} />
+                Planning
+              </span>
+            </div>
+          </div>
+          <div className="example-cell">
+            <div className="ex-stack">
+              <span className="ex-pill">
+                <ThinkingOrb state="composing" size={64} theme="dark" paused={paused} />
+                Thinking…
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p className="detail-playground-label">Playground</p>
+
       <div className="pg-stage">
         {/* key remounts the canvas on state/size change, matching the live playground */}
         <ThinkingOrb key={`${state}-${size}`} state={state} size={size} paused={paused} theme="dark" />
