@@ -321,6 +321,57 @@
 .detail-studio svg,
 .detail-studio img { position: relative; z-index: 1; width: 16px; height: 16px; display: block; flex: none; }
 
+/* Wand sparks on hover — the Refine tool's refine button (.tl-refine-btn
+   .tl-refine-sparks). Ten 1.5px dots pinned to the wand's tip, each with
+   its own start offset, travel vector, duration and stagger, looping while
+   the pointer is over the button. Origin is shifted 2px up from the
+   source's 15px because this pill is 32px tall against its 36px. */
+.detail-studio-sparks {
+  position: absolute;
+  left: 23px;
+  top: 13px;
+  width: 0;
+  height: 0;
+  z-index: 3;
+  pointer-events: none;
+  color: #ffffff;
+}
+.detail-studio-sparks i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1.5px;
+  height: 1.5px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0;
+}
+.detail-studio:hover .detail-studio-sparks i {
+  animation: detail-studio-spark var(--sd) linear var(--sdelay, 0ms) infinite;
+}
+@keyframes detail-studio-spark {
+  0% {
+    opacity: 0;
+    transform: translate(var(--ox, 0), var(--oy, 0)) scale(0.4);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(
+        calc(var(--ox, 0) + var(--sx, 0) * 0.2),
+        calc(var(--oy, 0) + var(--sy, -12px) * 0.2)
+      )
+      scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(var(--ox, 0) + var(--sx, 0)), calc(var(--oy, 0) + var(--sy, -12px)))
+      scale(0.6);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .detail-studio:hover .detail-studio-sparks i { animation: none; }
+}
+
 /* Copy prompt — hands the whole library to a coding agent in one paste */
 .detail-prompt {
   display: inline-flex; align-items: center; justify-content: center;
