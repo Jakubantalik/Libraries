@@ -52,6 +52,27 @@ const PULSE_OUTSIDE_TUNED_VARS = {
 
 const DEFAULT_DURATION: Record<string, number> = { line: 2.4 };
 
+/* Param key -> the knob's own label, so an agent-applied change reads
+   "Duration 1.96 → 3.2" in the transcript rather than naming the prop. */
+const BEAM_PARAM_LABELS: Record<string, string> = {
+  size: "Type",
+  colorVariant: "Color",
+  strength: "Strength",
+  duration: "Duration",
+  brightness: "Brightness",
+  saturation: "Saturation",
+  hueRange: "Hue range",
+  hueShift: "Hue shift",
+  staticColors: "Static colors",
+  radius: "Corner radius",
+  spikes: "Spikes",
+  glowSx: "Glow spread X",
+  glowSy: "Glow spread Y",
+  glowBoost: "Glow boost",
+  cardScale: "Card size",
+  active: "Playing",
+};
+
 type CardScale = "s" | "m" | "l";
 const CARD_SCALE_OPTIONS = [
   { value: "s", label: "Small" },
@@ -112,6 +133,47 @@ export function BeamStudio({ visible = true }: { visible?: boolean }) {
     (next: BeamFamily) => {
       setFamily(next);
       handleSizeChange(DEFAULT_SIZE_BY_FAMILY[next]);
+    },
+    [handleSizeChange]
+  );
+
+  /* ── Agent wiring ──────────────────────────────────────────────────
+   * The knobs stay the source of truth; the agent just drives the same
+   * setters. Keys match the Worker's spec (services/studio-agent/spec.ts),
+   * which owns the ranges and rejects anything out of them, so nothing is
+   * re-validated here. */
+  const agentParams: Record<string, unknown> = {
+    size, colorVariant, strength, duration, brightness, saturation,
+    hueRange, hueShift, staticColors, radius, spikes,
+    glowSx, glowSy, glowBoost, cardScale, active,
+  };
+
+  const applyAgentParams = useCallback(
+    (patch: Record<string, unknown>) => {
+      /* `size` goes through handleSizeChange rather than setSize so an
+         untouched duration still follows the type's default, and family
+         is derived from it — the agent picks a type, not a family, and a
+         stale family would leave the Type tabs offering the wrong set. */
+      if (typeof patch.size === "string") {
+        const next = patch.size as BorderBeamSize;
+        setFamily(next === "pulse-inner" || next === "pulse-outside" ? "pulse" : "rotate");
+        handleSizeChange(next);
+      }
+      if (typeof patch.colorVariant === "string") setColorVariant(patch.colorVariant as BorderBeamColorVariant);
+      if (typeof patch.strength === "number") setStrength(patch.strength);
+      if (typeof patch.duration === "number") setDuration(patch.duration);
+      if (typeof patch.brightness === "number") setBrightness(patch.brightness);
+      if (typeof patch.saturation === "number") setSaturation(patch.saturation);
+      if (typeof patch.hueRange === "number") setHueRange(patch.hueRange);
+      if (typeof patch.hueShift === "number") setHueShift(patch.hueShift);
+      if (typeof patch.staticColors === "boolean") setStaticColors(patch.staticColors);
+      if (typeof patch.radius === "number") setRadius(patch.radius);
+      if (typeof patch.spikes === "number") setSpikes(patch.spikes);
+      if (typeof patch.glowSx === "number") setGlowSx(patch.glowSx);
+      if (typeof patch.glowSy === "number") setGlowSy(patch.glowSy);
+      if (typeof patch.glowBoost === "number") setGlowBoost(patch.glowBoost);
+      if (typeof patch.cardScale === "string") setCardScale(patch.cardScale as CardScale);
+      if (typeof patch.active === "boolean") setActive(patch.active);
     },
     [handleSizeChange]
   );
@@ -188,7 +250,15 @@ export function BeamStudio({ visible = true }: { visible?: boolean }) {
           </button>
         </div>
 
-        <ControlsPanel library="Beam">
+        <ControlsPanel
+          library="Beam"
+          agent={{
+            libraryId: "beam",
+            params: agentParams,
+            labels: BEAM_PARAM_LABELS,
+            onApply: applyAgentParams,
+          }}
+        >
           <PanelTitle>Beam</PanelTitle>
           <PgTabs label="Family" options={FAMILY_OPTIONS} value={family} onChange={handleFamilyChange} />
           <PgTabs label="Type" options={SIZE_OPTIONS_BY_FAMILY[family]} value={size} onChange={handleSizeChange} />

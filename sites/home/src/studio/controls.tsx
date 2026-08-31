@@ -7,6 +7,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from "react";
+import { describePatch, streamAgentTurn, type ChatTurn } from "./agent";
 
 /* Studio — shared control components. Same pg-* conventions the detail-page
    playgrounds use (playground.css), plus Studio-only pieces: section titles,
@@ -237,36 +238,157 @@ export function num(v: number): string {
 type PanelTab = "manual" | "agent";
 
 interface ChatMessage {
-  role: "user" | "agent";
+  /* Stable identity, because deltas stream into a bubble that already
+     exists. Updating by index would break the moment an applied-change
+     line lands between two halves of the same sentence. */
+  id: number;
+  role: "user" | "agent" | "applied" | "error";
   text: string;
 }
 
-/* No model is wired to the Studio yet. Rather than fake a reply that
-   looks like tuning happened, the agent says plainly that it cannot
-   reach the controls, and the composer keeps the transcript so the
-   phrasing someone tried is not lost. */
+/** What a library must hand over for its Agent tab to actually tune. */
+export interface AgentWiring {
+  /** Key the Worker's spec table is keyed by — "beam", not "Beam". */
+  libraryId: string;
+  /** Live values, sent every turn so the model reasons from real state. */
+  params: Record<string, unknown>;
+  /** Param key -> the knob's own label, for the applied-change line. */
+  labels: Record<string, string>;
+  onApply: (patch: Record<string, unknown>) => void;
+}
+
+/* A library whose controls aren't wired to the agent yet says so plainly
+   rather than faking a reply that looks like tuning happened, and keeps
+   the transcript so the phrasing someone tried is not lost. */
 const AGENT_UNAVAILABLE =
-  "The Studio agent is not connected yet, so I can't move the controls for you. " +
+  "The agent doesn't reach this library's controls yet. " +
   "Your message is kept here — switch to Manual control to tune by hand, or use " +
   "Copy prompt on the library page to hand the whole library to your own coding agent.";
 
-function AgentChat({ library }: { library: string }) {
+function AgentChat({ library, wiring }: { library: string; wiring?: AgentWiring }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
+  const [busy, setBusy] = useState(false);
+  /* Distinct from `busy`: the thinking dots stand in only until the first
+     token lands, after which the streaming text is its own progress. */
+  const [streaming, setStreaming] = useState(false);
   const logRef = useRef<HTMLDivElement | null>(null);
+  const seq = useRef(0);
+  const nextId = () => ++seq.current;
 
-  // Pin to the newest message after each send.
+  /* The send closure outlives the render it was made in — a turn takes
+     seconds and the panel re-renders on every applied patch — so both the
+     transcript and the live params are read through refs. */
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
+  const wiringRef = useRef(wiring);
+  wiringRef.current = wiring;
+
+  // Pin to the newest message as the reply streams in.
   useLayoutEffect(() => {
     const log = logRef.current;
     if (log) log.scrollTop = log.scrollHeight;
   }, [messages]);
 
+  /* Abort an in-flight turn if the panel goes away mid-stream. */
+  const abortRef = useRef<AbortController | null>(null);
+  useEffect(() => () => abortRef.current?.abort(), []);
+
   const send = useCallback(() => {
     const text = draft.trim();
-    if (!text) return;
-    setMessages((prev) => [...prev, { role: "user", text }, { role: "agent", text: AGENT_UNAVAILABLE }]);
+    if (!text || busy) return;
     setDraft("");
-  }, [draft]);
+
+    const userMsg: ChatMessage = { id: nextId(), role: "user", text };
+    setMessages((prev) => [...prev, userMsg]);
+
+    const active = wiringRef.current;
+    if (!active) {
+      const reply: ChatMessage = { id: nextId(), role: "agent", text: AGENT_UNAVAILABLE };
+      setMessages((prev) => [...prev, reply]);
+      return;
+    }
+
+    /* Only the prose turns go to the model. Applied-change lines are a UI
+       affordance, and the parameter state they describe is sent separately
+       and authoritatively as `params`. */
+    const turns: ChatTurn[] = [
+      ...messagesRef.current
+        .filter((m): m is ChatMessage & { role: "user" | "agent" } =>
+          m.role === "user" || m.role === "agent"
+        )
+        .map((m) => ({ role: m.role, text: m.text })),
+      { role: "user", text },
+    ];
+
+    /* Snapshot of the values this turn started from, advanced as patches
+       land so a second change in the same turn reads "3.2 → 4", not
+       "1.96 → 4". */
+    const before = { ...active.params };
+
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setBusy(true);
+    setStreaming(false);
+
+    /* Prose arrives as deltas but is written back as the whole accumulated
+       string, so a double-invoked updater (StrictMode) is a no-op rather
+       than a doubled sentence. */
+    let bubbleId: number | null = null;
+    let bubbleText = "";
+
+    streamAgentTurn(
+      {
+        library: active.libraryId,
+        params: before,
+        messages: turns,
+        signal: controller.signal,
+      },
+      {
+        onText: (delta) => {
+          setStreaming(true);
+          if (bubbleId === null) {
+            const opened: ChatMessage = { id: nextId(), role: "agent", text: "" };
+            bubbleId = opened.id;
+            bubbleText = "";
+            setMessages((prev) =>
+              prev.some((m) => m.id === opened.id) ? prev : [...prev, opened]
+            );
+          }
+          bubbleText += delta;
+          const id = bubbleId;
+          const snapshot = bubbleText;
+          setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, text: snapshot } : m)));
+        },
+        onParams: (patch) => {
+          wiringRef.current?.onApply(patch);
+          const line: ChatMessage = {
+            id: nextId(),
+            role: "applied",
+            text: describePatch(patch, before, wiringRef.current?.labels ?? {}),
+          };
+          Object.assign(before, patch);
+          setMessages((prev) => (prev.some((m) => m.id === line.id) ? prev : [...prev, line]));
+          // Any prose after a change starts a fresh bubble below that line.
+          bubbleId = null;
+        },
+      }
+    )
+      .catch((err: unknown) => {
+        if ((err as Error)?.name === "AbortError") return;
+        const line: ChatMessage = {
+          id: nextId(),
+          role: "error",
+          text: err instanceof Error ? err.message : "The agent hit an error.",
+        };
+        setMessages((prev) => (prev.some((m) => m.id === line.id) ? prev : [...prev, line]));
+      })
+      .finally(() => {
+        if (abortRef.current === controller) abortRef.current = null;
+        setBusy(false);
+        setStreaming(false);
+      });
+  }, [draft, busy]);
 
   const onKeyDown = (e: ReactKeyboardEvent<HTMLTextAreaElement>) => {
     // Enter sends; Shift+Enter keeps the newline, as in every chat composer.
@@ -285,11 +407,16 @@ function AgentChat({ library }: { library: string }) {
             glow slower and cooler”, “tighter corners”, “calmer motion”.
           </p>
         ) : (
-          messages.map((m, i) => (
-            <div className="st-chat-msg" data-role={m.role} key={i}>
+          messages.map((m) => (
+            <div className="st-chat-msg" data-role={m.role} key={m.id}>
               {m.text}
             </div>
           ))
+        )}
+        {busy && !streaming && (
+          <div className="st-chat-thinking" role="status">
+            <span /><span /><span />
+          </div>
         )}
       </div>
 
@@ -307,7 +434,7 @@ function AgentChat({ library }: { library: string }) {
           type="button"
           className="st-chat-send"
           onClick={send}
-          disabled={!draft.trim()}
+          disabled={!draft.trim() || busy}
           aria-label="Send message"
         >
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -319,8 +446,18 @@ function AgentChat({ library }: { library: string }) {
   );
 }
 
-/** The knob column, wrapped in the Manual control / Agent tab pair. */
-export function ControlsPanel({ library, children }: { library: string; children: ReactNode }) {
+/** The knob column, wrapped in the Manual control / Agent tab pair.
+    `agent` is optional: a library that hasn't been wired up yet still gets
+    the tab, and the chat says so instead of pretending. */
+export function ControlsPanel({
+  library,
+  agent,
+  children,
+}: {
+  library: string;
+  agent?: AgentWiring;
+  children: ReactNode;
+}) {
   const [tab, setTab] = useState<PanelTab>("manual");
   const barRef = useRef<HTMLDivElement | null>(null);
   const [pill, setPill] = useState({ left: 0, width: 0 });
@@ -371,12 +508,15 @@ export function ControlsPanel({ library, children }: { library: string; children
         </button>
       </div>
 
-      {/* The knob stack stays mounted while the Agent tab is open, so
-          switching back does not reset anything the user tuned. */}
+      {/* Both halves stay mounted whichever tab is open, so switching back
+          resets neither what the user tuned nor the conversation that
+          tuned it. */}
       <div className="st-panel-body" hidden={tab !== "manual"}>
         {children}
       </div>
-      {tab === "agent" && <AgentChat library={library} />}
+      <div className="st-panel-body" hidden={tab !== "agent"}>
+        <AgentChat library={library} wiring={agent} />
+      </div>
     </div>
   );
 }
