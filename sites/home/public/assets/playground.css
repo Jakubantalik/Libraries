@@ -470,6 +470,70 @@ html[data-theme="dark"] .pg-controls {
   color: #e2857a;
 }
 
+/* Presets / reset / copy prompt — the utility row under both panel tabs. */
+.st-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 14px;
+  margin-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+.st-actions-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.st-actions-btn {
+  border: 0;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--chip-bg);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+.st-actions-btn:hover { color: var(--text); background: rgba(255, 255, 255, 0.1); }
+.st-actions-btn[data-copied="true"] { color: var(--text); }
+.st-actions-btn:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
+.st-actions-name {
+  border: 0;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-family: var(--font-sans);
+  background: var(--chip-bg);
+  color: var(--text);
+  width: 130px;
+}
+.st-actions-name:focus { outline: 2px solid var(--text-muted); outline-offset: 2px; }
+.st-actions-presets { display: flex; gap: 6px; flex-wrap: wrap; }
+.st-preset-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+}
+.st-preset-apply {
+  border: 0;
+  background: transparent;
+  padding: 5px 4px 5px 11px;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.st-preset-apply:hover { color: var(--text); }
+.st-preset-remove {
+  border: 0;
+  background: transparent;
+  padding: 5px 9px 5px 3px;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--text-subtle);
+  cursor: pointer;
+}
+.st-preset-remove:hover { color: var(--text); }
+.st-preset-apply:focus-visible,
+.st-preset-remove:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 1px; }
+
 /* Three dots while the turn is in flight, gone once prose starts arriving. */
 .st-chat-thinking { display: flex; gap: 4px; padding: 6px 0; }
 .st-chat-thinking span {

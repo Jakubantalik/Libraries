@@ -108,6 +108,7 @@ export function OrbStudio({ visible = true }: { visible?: boolean }) {
           labels: ORB_PARAM_LABELS,
           onApply: applyAgentParams,
         }}
+        prompt={{ pkg: "thinking-orbs", docsPath: "/orbs.html", snippet }}
       >
         <PanelTitle>Orb</PanelTitle>
         <PgTabs label="State" options={STATE_OPTIONS} value={state} onChange={setState} />

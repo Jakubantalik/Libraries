@@ -446,16 +446,210 @@ function AgentChat({ library, wiring }: { library: string; wiring?: AgentWiring 
   );
 }
 
+/* ── Presets, reset, copy prompt ───────────────────────────────────
+ * The agent wiring already carries exactly what these need: the full
+ * live parameter record and a callback that applies a patch. A preset
+ * is a saved copy of the former fed back through the latter; reset is
+ * the mount-time snapshot fed through it.
+ *
+ * Presets live in localStorage for now — the account backend
+ * (api.libraries.dev) does not exist yet, the same gap GATE_ENABLED
+ * papers over. The stored shape {name, params, savedAt} is what an
+ * account sync would upload verbatim, so when that Worker exists this
+ * becomes a fetch and nothing here changes shape. */
+
+interface StoredPreset {
+  name: string;
+  params: Record<string, unknown>;
+  savedAt: number;
+}
+
+function presetKey(libraryId: string): string {
+  return `ldev:studio:presets:${libraryId}`;
+}
+
+function readPresets(libraryId: string): StoredPreset[] {
+  try {
+    const raw = localStorage.getItem(presetKey(libraryId));
+    const list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+}
+
+function writePresets(libraryId: string, presets: StoredPreset[]) {
+  try {
+    localStorage.setItem(presetKey(libraryId), JSON.stringify(presets));
+  } catch {
+    /* Storage full or blocked — the Save button simply won't persist. */
+  }
+}
+
+/** The coding-agent prompt, same shape as the detail pages' hidden
+    #agent-prompt block, but the Usage section is the live tuned snippet. */
+export interface PromptMeta {
+  /** npm package name, e.g. "border-beam". */
+  pkg: string;
+  /** Docs path on libraries.dev, e.g. "/beam.html". */
+  docsPath: string;
+  /** The live snippet string the studio already renders. */
+  snippet: string;
+}
+
+function buildAgentPrompt(library: string, meta: PromptMeta): string {
+  return [
+    `Add the ${library} effect from Libraries.dev to my React app.`,
+    "",
+    "Install:",
+    `npm install ${meta.pkg}`,
+    "",
+    "Use exactly this configuration — it was tuned by hand in the Libraries.dev Studio:",
+    "",
+    meta.snippet,
+    "",
+    "Keep the prop values exactly as given; adapt only the child content to my app.",
+    `Needs React 18 or newer. Docs: https://libraries.dev${meta.docsPath}`,
+  ].join("\n");
+}
+
+function StudioActions({
+  library,
+  libraryId,
+  agent,
+  prompt,
+}: {
+  /** Display name for the prompt text ("Beam"); libraryId keys storage. */
+  library: string;
+  libraryId: string;
+  agent: AgentWiring;
+  prompt?: PromptMeta;
+}) {
+  const [presets, setPresets] = useState<StoredPreset[]>(() => readPresets(libraryId));
+  const [naming, setNaming] = useState(false);
+  const [name, setName] = useState("");
+  const [copied, setCopied] = useState(false);
+  const copyTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(copyTimer.current), []);
+
+  /* The values the studio mounted with ARE its defaults — every knob's
+     useState starts there — so reset needs no per-library default table. */
+  const defaultsRef = useRef<Record<string, unknown>>({ ...agent.params });
+  const agentRef = useRef(agent);
+  agentRef.current = agent;
+
+  const saveCurrent = useCallback(() => {
+    const trimmed = name.trim() || `Preset ${presets.length + 1}`;
+    const next: StoredPreset[] = [
+      ...presets.filter((p) => p.name !== trimmed),
+      { name: trimmed, params: { ...agentRef.current.params }, savedAt: Date.now() },
+    ];
+    setPresets(next);
+    writePresets(libraryId, next);
+    setNaming(false);
+    setName("");
+  }, [name, presets, libraryId]);
+
+  const removePreset = useCallback(
+    (presetName: string) => {
+      const next = presets.filter((p) => p.name !== presetName);
+      setPresets(next);
+      writePresets(libraryId, next);
+    },
+    [presets, libraryId]
+  );
+
+  const copyPrompt = useCallback(() => {
+    if (!prompt) return;
+    const text = buildAgentPrompt(library, prompt);
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
+    setCopied(true);
+    window.clearTimeout(copyTimer.current);
+    copyTimer.current = window.setTimeout(() => setCopied(false), 1600);
+  }, [prompt]);
+
+  return (
+    <div className="st-actions">
+      <div className="st-actions-row">
+        {naming ? (
+          <input
+            className="st-actions-name"
+            autoFocus
+            value={name}
+            placeholder={`Preset ${presets.length + 1}`}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") saveCurrent();
+              if (e.key === "Escape") { setNaming(false); setName(""); }
+            }}
+            onBlur={() => { setNaming(false); setName(""); }}
+            aria-label="Preset name"
+          />
+        ) : (
+          <button type="button" className="st-actions-btn" onClick={() => setNaming(true)}>
+            Save preset
+          </button>
+        )}
+        <button
+          type="button"
+          className="st-actions-btn"
+          onClick={() => agentRef.current.onApply({ ...defaultsRef.current })}
+        >
+          Reset
+        </button>
+        {prompt && (
+          <button
+            type="button"
+            className="st-actions-btn"
+            onClick={copyPrompt}
+            data-copied={copied ? "true" : undefined}
+          >
+            {copied ? "Copied" : "Copy prompt"}
+          </button>
+        )}
+      </div>
+      {presets.length > 0 && (
+        <div className="st-actions-presets" role="list" aria-label="Saved presets">
+          {presets.map((p) => (
+            <span className="st-preset-chip" role="listitem" key={p.name}>
+              <button
+                type="button"
+                className="st-preset-apply"
+                onClick={() => agentRef.current.onApply({ ...p.params })}
+                title={`Apply ${p.name}`}
+              >
+                {p.name}
+              </button>
+              <button
+                type="button"
+                className="st-preset-remove"
+                onClick={() => removePreset(p.name)}
+                aria-label={`Delete preset ${p.name}`}
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** The knob column, wrapped in the Manual control / Agent tab pair.
     `agent` is optional: a library that hasn't been wired up yet still gets
     the tab, and the chat says so instead of pretending. */
 export function ControlsPanel({
   library,
   agent,
+  prompt,
   children,
 }: {
   library: string;
   agent?: AgentWiring;
+  prompt?: PromptMeta;
   children: ReactNode;
 }) {
   const [tab, setTab] = useState<PanelTab>("manual");
@@ -517,6 +711,13 @@ export function ControlsPanel({
       <div className="st-panel-body" hidden={tab !== "agent"}>
         <AgentChat library={library} wiring={agent} />
       </div>
+
+      {/* Presets / reset / copy prompt sit under both tabs — a preset saved
+          from a manual tuning session and one saved from an agent session
+          are the same thing. */}
+      {agent && (
+        <StudioActions library={library} libraryId={agent.libraryId} agent={agent} prompt={prompt} />
+      )}
     </div>
   );
 }

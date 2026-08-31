@@ -171,6 +171,7 @@ export function MetalStudio({ visible = true }: { visible?: boolean }) {
           labels: METAL_PARAM_LABELS,
           onApply: applyAgentParams,
         }}
+        prompt={{ pkg: "metal-fx", docsPath: "/metal.html", snippet }}
       >
         <PanelTitle>Metal</PanelTitle>
         <PgTabs label="Type" options={VARIANT_OPTIONS} value={variant} onChange={handleVariant} />

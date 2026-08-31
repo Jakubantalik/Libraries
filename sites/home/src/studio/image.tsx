@@ -180,6 +180,7 @@ export function ImageStudio({ visible = true }: { visible?: boolean }) {
           labels: IMAGE_PARAM_LABELS,
           onApply: applyAgentParams,
         }}
+        prompt={{ pkg: "img-fx", docsPath: "/image.html", snippet }}
       >
         <PanelTitle>Image</PanelTitle>
         <PgTabs label="Type" options={PRESET_OPTIONS} value={preset} onChange={setPreset} />

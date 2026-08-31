@@ -258,6 +258,7 @@ export function BeamStudio({ visible = true }: { visible?: boolean }) {
             labels: BEAM_PARAM_LABELS,
             onApply: applyAgentParams,
           }}
+          prompt={{ pkg: "border-beam", docsPath: "/beam.html", snippet }}
         >
           <PanelTitle>Beam</PanelTitle>
           <PgTabs label="Family" options={FAMILY_OPTIONS} value={family} onChange={handleFamilyChange} />

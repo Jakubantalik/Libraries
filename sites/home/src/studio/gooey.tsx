@@ -734,6 +734,7 @@ export function GooeyStudio({ visible = true }: { visible?: boolean }) {
           labels: GOOEY_PARAM_LABELS,
           onApply: applyAgentParams,
         }}
+        prompt={{ pkg: "liquid-gooey", docsPath: "/gooey.html", snippet }}
       >
         <PanelTitle>Gooey</PanelTitle>
         <PgTabs label="Effect" options={EFFECT_OPTIONS} value={effect} onChange={setEffect} />
