@@ -162,7 +162,7 @@ function Workbench() {
             onClick={() => select(l.id)}
           >
             <span className="st-lib-ico" aria-hidden="true">
-              <img src={l.icon} alt="" draggable={false} />
+              <img src={l.icon} alt="" draggable={false} data-pad={l.id === "image" ? "" : undefined} />
             </span>
             {l.label}
           </button>
