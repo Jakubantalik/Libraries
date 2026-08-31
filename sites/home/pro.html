@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark" />
 
   <title>Libraries Pro: Unlock the Studio for every library</title>
-  <meta name="description" content="Libraries Pro unlocks the Studio — deep customization of all five UI effect libraries (Beam, Orb, Gooey, Metal and Image) — plus Pro content and every future update." />
+  <meta name="description" content="Libraries Pro unlocks the Studio: deep customization of all five UI effect libraries (Beam, Orb, Gooey, Metal and Image), plus Pro content and every future update." />
   <meta name="keywords" content="Libraries Pro, Studio, UI effect libraries, React effects, WebGL, Beam, Orb, Gooey, Metal, Image" />
   <meta name="author" content="Libraries.dev" />
   <meta name="robots" content="index, follow, max-image-preview:large" />
@@ -29,11 +29,11 @@
   <meta property="og:url" content="https://libraries.dev/pro.html" />
   <meta property="og:locale" content="en_US" />
   <meta property="og:title" content="Libraries Pro: Unlock the Studio for every library" />
-  <meta property="og:description" content="Libraries Pro unlocks the Studio — deep customization of all five UI effect libraries (Beam, Orb, Gooey, Metal and Image) — plus Pro content and every future update." />
+  <meta property="og:description" content="Libraries Pro unlocks the Studio: deep customization of all five UI effect libraries (Beam, Orb, Gooey, Metal and Image), plus Pro content and every future update." />
 
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="Libraries Pro: Unlock the Studio for every library" />
-  <meta name="twitter:description" content="Libraries Pro unlocks the Studio — deep customization of all five UI effect libraries (Beam, Orb, Gooey, Metal and Image) — plus Pro content and every future update." />
+  <meta name="twitter:description" content="Libraries Pro unlocks the Studio: deep customization of all five UI effect libraries (Beam, Orb, Gooey, Metal and Image), plus Pro content and every future update." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -63,7 +63,7 @@
           "@id": "https://libraries.dev/#website",
           "url": "https://libraries.dev/",
           "name": "Libraries.dev",
-          "description": "Home of Jakub Antalik's UI effect libraries — Beam, Orb, Gooey, Metal and Image.",
+          "description": "Home of Jakub Antalik's UI effect libraries: Beam, Orb, Gooey, Metal and Image.",
           "inLanguage": "en"
         },
         {
@@ -620,9 +620,27 @@
       height: 24px;
       color: var(--icon-color);
     }
-    /* Natural 18×20.295 ratio centered in the 24px box (Figma vector
-       inset 7.72%/12.5%), not stretched edge-to-edge. */
-    .brand-mark svg { width: 18px; height: 20.295px; display: block; }
+    /* Libraries scribble mark: natural 22.67×14.67 ratio in the 24px box.
+       Ported from site.css, which this page does not link. */
+    .brand-mark svg { width: 22px; height: 15px; display: block; }
+    /* Hand-drawn redraw on hover: the scribble erases itself stroke-first
+       and immediately redraws from the start, like a quick pencil pass.
+       One continuous dash slide (period 200 on a 100-length path) does
+       both halves in a single animation. */
+    .brand-draw {
+      stroke-dasharray: 100 100;
+      stroke-dashoffset: 0;
+    }
+    .brand:hover .brand-draw,
+    .footer-brand-logo:hover .brand-draw { animation: brand-redraw 1.15s ease-in-out; }
+    @keyframes brand-redraw {
+      from { stroke-dashoffset: 0; }
+      to   { stroke-dashoffset: -200; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .brand:hover .brand-draw,
+      .footer-brand-logo:hover .brand-draw { animation: none; }
+    }
     .brand-word {
       font-size: 15px;
       font-weight: 500;
@@ -1548,7 +1566,6 @@
       transform-origin: center;
     }
     .footer-brand-logo:hover { opacity: 1; transform: scale(1.02); }
-    .footer-brand-logo:hover .brand-mark { transform: rotate(60deg); }
     @media (prefers-reduced-motion: reduce) {
       .footer-brand-logo { transition: opacity 150ms ease; }
       .footer-brand-logo:hover { transform: none; }
@@ -3607,7 +3624,6 @@
       transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
       transform-origin: center;
     }
-    .brand:hover .brand-mark { transform: rotate(60deg); }
     @media (prefers-reduced-motion: reduce) {
       .brand, .brand-mark { transition: none; }
       .brand:hover, .brand:hover .brand-mark { transform: none; }
@@ -4033,6 +4049,8 @@
     .pro-badge--react svg { width: 16.95px; height: 15.08px; }
     .pro-badge--ts svg { width: 24px; height: 24px; }
     .pro-badge--next svg { width: 16.8px; height: 16.8px; }
+    .pro-badge--swift svg { width: 17px; height: 17px; }
+    .pro-badge--rn svg { width: 18px; height: 16px; }
     .pro-badge:focus-visible {
       outline: 2px solid var(--text);
       outline-offset: 2px;
@@ -5020,22 +5038,17 @@
     </header>
 
     <header class="header">
-      <div class="header-icon-wrap" aria-hidden="true" style="display:flex;align-items:center;justify-content:center;">
-        <svg width="104" height="68" viewBox="0 0 22.6705 14.6705" fill="none" xmlns="http://www.w3.org/2000/svg" style="color:#fff">
-          <path d="M21.3352 10.3354L6.89079 13.3354L18.0019 7.33536L1.33524 9.33536L19.3352 1.33536L1.33524 4.33536L9.33524 1.33536" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
       <h1 class="title">Libraries <span class="title-pro">Pro</span></h1>
       <p class="subtitle">
-        Unlock the Studio — deep customization of all five libraries<br />
-        (Beam, Orb, Gooey, Metal and Image) — plus Pro content<br />
+        Unlock the Studio: deep customization of all five libraries<br />
+        (Beam, Orb, Gooey, Metal and Image), plus Pro content<br />
         and every future update, right in your browser.
       </p>
     </header>
 
 
     <!-- ─── Framework badges (Figma 2332:3489) ─────────────────── -->
-    <div class="pro-badges" aria-label="Works with React, TypeScript and Next.js">
+    <div class="pro-badges" aria-label="Works with React, TypeScript, Next.js, Swift and React Native">
       <span class="pro-badge pro-badge--react" tabindex="0" aria-label="React">
         <svg viewBox="0 0 16.9469 15.0779" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M13.9338 4.88706C13.7535 4.82519 13.5716 4.76787 13.3883 4.71516C13.4187 4.59167 13.4468 4.46762 13.4726 4.34309C13.8855 2.33849 13.6155 0.723587 12.6935 0.191987C11.8095 -0.317863 10.3636 0.213737 8.90337 1.48446C8.75948 1.60996 8.61879 1.73908 8.48142 1.87169C8.38943 1.78351 8.29581 1.69705 8.20062 1.61234C6.67025 0.253487 5.13627 -0.319063 4.2152 0.214112C3.332 0.725387 3.0704 2.24361 3.44217 4.14336C3.47916 4.33149 3.52092 4.51865 3.56742 4.70466C3.35037 4.76631 3.14075 4.83201 2.9402 4.90191C1.14605 5.52741 0.000195312 6.50781 0.000195312 7.52466C0.000195312 8.57496 1.2302 9.62841 3.09905 10.2671C3.25058 10.3187 3.40338 10.3664 3.5573 10.4104C3.50729 10.6108 3.4629 10.8125 3.42417 11.0154C3.06972 12.8821 3.34655 14.3644 4.22742 14.8725C5.13725 15.3971 6.66425 14.8579 8.1512 13.5581C8.26872 13.4554 8.3867 13.3464 8.50482 13.2322C8.65361 13.3757 8.80637 13.5151 8.96292 13.6501C10.4032 14.8895 11.8257 15.39 12.7058 14.8805C13.6148 14.3543 13.9101 12.762 13.5266 10.8247C13.4973 10.6767 13.4632 10.5256 13.425 10.3717C13.5322 10.34 13.6374 10.3073 13.7401 10.2733C15.6829 9.62961 16.9469 8.58899 16.9469 7.52466C16.9469 6.50414 15.7641 5.51714 13.9338 4.88706Z" fill="var(--pro-badge-fg)"/>
@@ -5058,6 +5071,21 @@
           <defs><clipPath id="pro-next-clip"><rect width="16.8" height="16.8" fill="white"/></clipPath></defs>
         </svg>
         <span class="pro-badge-tip" role="tooltip">Next.js</span>
+      </span>
+      <span class="pro-badge pro-badge--swift" tabindex="0" aria-label="Swift">
+        <svg viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M12.8 13.68c-1.66.96-3.94 1.06-6.24.07A10.1 10.1 0 0 1 1.9 9.9c.55.4 1.18.75 1.86 1.03 2.72 1.27 5.44 1.18 7.35 0-2.72-2.09-5.03-4.81-6.75-7.03A12.4 12.4 0 0 1 3.08 2.4c2.06 1.88 5.3 4.24 6.47 4.9C7.08 4.85 4.9 1.85 4.99 1.94a37 37 0 0 0 6.42 5.07c.1.05.17.1.23.14.14-.35.26-.72.34-1.1.28-1.31.05-2.8-.86-4.05 2.1 1.27 3.34 3.66 2.82 6.42-.01.07-.03.14-.05.2v.01c1.09 1.36.79 2.8.65 2.53-.58-1.14-1.66-.78-2.21-.5l.47 1.02Z" fill="var(--pro-badge-fg)"/>
+        </svg>
+        <span class="pro-badge-tip" role="tooltip">Swift</span>
+      </span>
+      <span class="pro-badge pro-badge--rn" tabindex="0" aria-label="React Native">
+        <svg viewBox="0 0 18 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M9 9.6a1.6 1.6 0 1 0 0-3.2 1.6 1.6 0 0 0 0 3.2Z" fill="var(--pro-badge-fg)"/>
+          <path d="M9 11.3c4.4 0 8-1.48 8-3.3S13.4 4.7 9 4.7 1 6.18 1 8s3.6 3.3 8 3.3Z" stroke="var(--pro-badge-fg)" stroke-width="1.1"/>
+          <path d="M6.2 9.65c2.2 3.81 5.03 6.16 6.6 5.25 1.58-.91 1.3-4.74-.9-8.55C9.7 2.54 6.87.19 5.3 1.1c-1.58.91-1.3 4.74.9 8.55Z" stroke="var(--pro-badge-fg)" stroke-width="1.1"/>
+          <path d="M6.2 6.35c-2.2 3.81-2.48 7.64-.9 8.55 1.57.91 4.4-1.44 6.6-5.25 2.2-3.81 2.48-7.64.9-8.55-1.57-.91-4.4 1.44-6.6 5.25Z" stroke="var(--pro-badge-fg)" stroke-width="1.1"/>
+        </svg>
+        <span class="pro-badge-tip" role="tooltip">React Native</span>
       </span>
     </div>
 
@@ -5089,9 +5117,9 @@
         </div>
         <div class="pro-price-divider"></div>
         <ul class="pro-feature-list">
-          <li class="pro-feature"><span class="pro-feature-check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.2l2 2 4-4.4" /></svg></span>Studio access — deep customization of all five libraries</li>
-          <li class="pro-feature"><span class="pro-feature-check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.2l2 2 4-4.4" /></svg></span>Beam, Orb, Gooey, Metal and Image — every Pro preset and variant</li>
-          <li class="pro-feature"><span class="pro-feature-check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.2l2 2 4-4.4" /></svg></span>Pro content — recipes and guides for React, Next.js, TypeScript</li>
+          <li class="pro-feature"><span class="pro-feature-check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.2l2 2 4-4.4" /></svg></span>Studio access: deep customization of all five libraries</li>
+          <li class="pro-feature"><span class="pro-feature-check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.2l2 2 4-4.4" /></svg></span>Beam, Orb, Gooey, Metal and Image: every Pro preset and variant</li>
+          <li class="pro-feature"><span class="pro-feature-check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.2l2 2 4-4.4" /></svg></span>Pro content: recipes and guides for React, Next.js, TypeScript</li>
           <li class="pro-feature"><span class="pro-feature-check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.2l2 2 4-4.4" /></svg></span>Every future library and update, free</li>
           <li class="pro-feature"><span class="pro-feature-check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.2l2 2 4-4.4" /></svg></span>Commercial license, unlimited projects</li>
         </ul>
@@ -5108,7 +5136,7 @@
       <div class="pro-bento">
         <div class="pro-bento-card pro-bento-card--tall">
           <h3 class="pro-bento-title">Full library access</h3>
-          <p class="pro-bento-desc">All five libraries <span class="dim">— Beam, Orb, Gooey, Metal and Image — with every Pro preset, React and TypeScript ready, plus each future drop.</span></p>
+          <p class="pro-bento-desc">All five libraries <span class="dim">(Beam, Orb, Gooey, Metal and Image) with every Pro preset, React and TypeScript ready, plus each future drop.</span></p>
           <div class="pro-lib-stage">
             <div class="lib-card" style="left:-148px; top:299px">
               <div class="card">
@@ -5172,7 +5200,7 @@
 
         <div class="pro-bento-card pro-bento-card--sm">
           <h3 class="pro-bento-title">The Studio</h3>
-          <p class="pro-bento-desc">Customize every library in detail — tune parameters live, preview the result, and export the exact configuration.</p>
+          <p class="pro-bento-desc">Customize every library in detail: tune parameters live, preview the result, and export the exact configuration.</p>
           <div class="pro-refine-frame" aria-hidden="true">
             <div class="rf-topbar">
               <span class="rf-tb-label">Selected library</span>
@@ -5207,7 +5235,7 @@ description: Production-ready UI effect
   libraries for React. Deep-customize
   Beam, Orb, Gooey, Metal and Image
   in the Studio, or let your agent
-  apply the Pro presets — border
+  apply the Pro presets: border
   beams, thinking orbs, gooey UI,
   liquid metal, image loaders…</div>
         </div>
@@ -5224,7 +5252,7 @@ description: Production-ready UI effect
             <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
           </button>
           <div class="t-acc-panel"><div class="t-acc-panel-inner">
-            <p>Libraries Pro is one plan across all five UI effect libraries — Beam, Orb, Gooey, Metal and Image. It unlocks the <a href="/studio.html">Studio</a>, where you customize every library in detail and export the exact configuration, plus the Pro content: extended presets, recipes and guides, with every future update included.</p>
+            <p>Libraries Pro is one plan across all five UI effect libraries: Beam, Orb, Gooey, Metal and Image. It unlocks the <a href="/studio.html">Studio</a>, where you customize every library in detail and export the exact configuration, plus the Pro content: extended presets, recipes and guides, with every future update included.</p>
           </div></div>
         </div>
 
@@ -5234,7 +5262,7 @@ description: Production-ready UI effect
             <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
           </button>
           <div class="t-acc-panel"><div class="t-acc-panel-inner">
-            <p>The free libraries are open source and stay free — install them from npm and use them anywhere. Pro adds the Studio (deep, per-library customization beyond the public playgrounds), the Pro presets and recipes for every library, and priority updates for the life of your plan.</p>
+            <p>The free libraries are open source and stay free. Install them from npm and use them anywhere. Pro adds the Studio (deep, per-library customization beyond the public playgrounds), the Pro presets and recipes for every library, and priority updates for the life of your plan.</p>
           </div></div>
         </div>
 
@@ -5244,7 +5272,7 @@ description: Production-ready UI effect
             <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
           </button>
           <div class="t-acc-panel"><div class="t-acc-panel-inner">
-            <p>No. The Studio runs in your browser and every library works as a plain npm package in any React project. The Pro skill is an optional accelerator for agent-driven workflows — it plugs into Cursor, Claude Code, Codex and similar tools.</p>
+            <p>No. The Studio runs in your browser and every library works as a plain npm package in any React project. The Pro skill is an optional accelerator for agent-driven workflows. It plugs into Cursor, Claude Code, Codex and similar tools.</p>
           </div></div>
         </div>
 
@@ -5254,7 +5282,7 @@ description: Production-ready UI effect
             <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
           </button>
           <div class="t-acc-panel"><div class="t-acc-panel-inner">
-            <p><strong>Solo</strong> is a single seat for one person across all of their projects. <strong>Team</strong> is $39/mo and includes 5 seats for people in the same organization; each seat beyond 5 is an extra $9/mo. Prefer to pay once? <strong>Lifetime</strong> is a one-time purchase — $149 for Solo, $499 for a 5-seat Team — with every future update included, forever. Switch the plan tab above to see team pricing.</p>
+            <p><strong>Solo</strong> is a single seat for one person across all of their projects. <strong>Team</strong> is $39/mo and includes 5 seats for people in the same organization; each seat beyond 5 is an extra $9/mo. Prefer to pay once? <strong>Lifetime</strong> is a one-time purchase ($149 for Solo, $499 for a 5-seat Team) with every future update included, forever. Switch the plan tab above to see team pricing.</p>
           </div></div>
         </div>
 

@@ -206,7 +206,10 @@
     /* ── Library grid cards (Figma 1413-37519): icon + meta row ── */
     .lib-card-hit { position: absolute; inset: 0; z-index: 6; border-radius: 24px; }
     .lib-video { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .lib-card .card-stage { height: 245px; }
+    /* 254 not 245: the meta row is inset 16px from the card's bottom, and
+       the gap above it should read the same. Card height is fixed at
+       344px, so the stage takes up the 9px difference. */
+    .lib-card .card-stage { height: 254px; }
     .lib-meta {
       position: absolute; left: 16px; right: 16px; bottom: 16px;
       display: flex; align-items: center; gap: 12px;
