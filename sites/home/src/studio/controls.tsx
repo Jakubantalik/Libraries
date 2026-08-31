@@ -335,7 +335,16 @@ export function ControlsPanel({ library, children }: { library: string; children
     measure();
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
     window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+    /* The Studio keeps every library's panel mounted and hides the ones it
+       is not showing, and a hidden element measures 0 — so without this the
+       indicator stays collapsed until the window happens to resize. The
+       observer fires when the bar gets its width on becoming visible. */
+    const ro = new ResizeObserver(measure);
+    if (barRef.current) ro.observe(barRef.current);
+    return () => {
+      window.removeEventListener("resize", measure);
+      ro.disconnect();
+    };
   }, [tab]);
 
   return (
