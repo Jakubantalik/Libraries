@@ -118,8 +118,8 @@ function TopBar({ email, pro }: { email: string | null; pro: boolean }) {
 }
 
 const LIBS = [
-  { id: "beam", label: "Beam", icon: "/assets/icons/tile-beam.png" },
-  { id: "orb", label: "Orb", icon: "/assets/icons/tile-orbs.png" },
+  { id: "beam", label: "Border beam", icon: "/assets/icons/tile-beam.png" },
+  { id: "orb", label: "Thinking orbs", icon: "/assets/icons/tile-orbs.png" },
   { id: "gooey", label: "Gooey", icon: "/assets/icons/tile-gooey.png" },
   { id: "metal", label: "Metal", icon: "/assets/icons/tile-metal.png" },
   { id: "image", label: "Image", icon: "/assets/icons/tile-image.png" },
