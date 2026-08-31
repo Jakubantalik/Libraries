@@ -347,8 +347,7 @@ html[data-theme="dark"] .pg-controls {
 .pg-controls-title {
   font-size: 12px;
   font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
   color: var(--text-subtle);
   margin: 4px 0 -8px;
 }

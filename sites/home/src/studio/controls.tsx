@@ -708,7 +708,7 @@ export function ControlsPanel({
       <div className="st-panel-body" hidden={tab !== "manual"}>
         {children}
       </div>
-      <div className="st-panel-body" hidden={tab !== "agent"}>
+      <div className="st-panel-body st-panel-body--chat" hidden={tab !== "agent"}>
         <AgentChat library={library} wiring={agent} />
       </div>
 
