@@ -142,7 +142,7 @@
    non-uniform scale, which CSS radial-gradient() cannot express, so they
    stay as the recipe's own data-URI SVGs rather than being re-derived. */
 :root {
-  --probtn-strength:  0.7;
+  --probtn-strength:  0.5; /* recipe default is 0.7 */
   --probtn-core:      50%;
   --probtn-core-blur: 150%;
   --probtn-blur:      6px;
