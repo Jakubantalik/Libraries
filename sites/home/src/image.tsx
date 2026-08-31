@@ -92,23 +92,19 @@ function Slider({
 }) {
   const pct = ((value - min) / (max - min)) * 100;
   return (
-    <div className="pg-slider-row">
-      <div className="pg-slider">
-        <div className="pg-slider-track">
-          <div className="pg-slider-fill" style={{ width: `${pct}%` }} />
-          <div className="pg-slider-thumb" style={{ left: `${pct}%` }} />
-        </div>
-        <input
-          type="range"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          aria-label={ariaLabel}
-        />
-      </div>
-      <span className="pg-slider-value">{format(value)}</span>
+    <div className="pg-vslider">
+      <div className="pg-vslider-fill" style={{ width: `${pct}%` }} />
+      <span className="pg-vslider-label">{ariaLabel}</span>
+      <span className="pg-vslider-value">{format(value)}</span>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        aria-label={ariaLabel}
+      />
     </div>
   );
 }
@@ -215,7 +211,6 @@ function ImagePlayground() {
         </div>
 
         <div className="pg-field">
-          <span className="pg-label">Strength</span>
           <Slider
             min={0}
             max={100}
@@ -223,7 +218,7 @@ function ImagePlayground() {
             value={strength}
             onChange={setStrength}
             format={(v) => `${v}%`}
-            ariaLabel="Effect strength"
+            ariaLabel="Strength"
           />
         </div>
       </div>

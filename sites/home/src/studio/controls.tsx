@@ -107,7 +107,9 @@ export function PgTabs<T extends string>({
   );
 }
 
-/** Filled-track slider (visual track + invisible native range for a11y).
+/** Value slider + input (Figma 1418:38136): the fill grows inside a 32px
+    block, the label rides the fill, the value sits at the right. The
+    invisible native range stays on top for pointer + keyboard + readers.
     Values re-round after parse so float dust never reaches the label. */
 export function PgSlider({
   label,
@@ -136,24 +138,19 @@ export function PgSlider({
   );
   return (
     <div className="pg-field">
-      <span className="pg-label">{label}</span>
-      <div className="pg-slider-row">
-        <div className="pg-slider">
-          <div className="pg-slider-track">
-            {pct > 0 && <div className="pg-slider-fill" style={{ width: `${pct}%` }} />}
-            <div className="pg-slider-thumb" style={{ left: `${pct}%` }} />
-          </div>
-          <input
-            type="range"
-            value={value}
-            min={min}
-            max={max}
-            step={step}
-            onChange={(e) => handleChange(parseFloat(e.target.value))}
-            aria-label={label}
-          />
-        </div>
-        <span className="pg-slider-value">{display ?? value}</span>
+      <div className="pg-vslider">
+        <div className="pg-vslider-fill" style={{ width: `${pct}%` }} />
+        <span className="pg-vslider-label">{label}</span>
+        <span className="pg-vslider-value">{display ?? value}</span>
+        <input
+          type="range"
+          value={value}
+          min={min}
+          max={max}
+          step={step}
+          onChange={(e) => handleChange(parseFloat(e.target.value))}
+          aria-label={label}
+        />
       </div>
     </div>
   );
@@ -357,7 +354,7 @@ export function ControlsPanel({ library, children }: { library: string; children
           aria-selected={tab === "manual"}
           onClick={() => setTab("manual")}
         >
-          Manual control
+          Manual controls
         </button>
         <button
           type="button"

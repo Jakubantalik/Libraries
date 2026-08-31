@@ -268,61 +268,51 @@
   .t-pro-btn::before { animation: none; }
 }
 
-/* Customize in Studio: the way out of the page's trimmed playground and
-   into the full workbench, deep-linked to this library's panel. It is the
-   recipe's pill, sized to sit level with Copy prompt beside it.
-
-   The recipe ships a white pill; this site is dark-only, so the body takes
-   the dark pill idiom used elsewhere here (#2a2a2a on the material ring)
-   while the ::before wash is left exactly as the recipe wrote it. The rim
-   glow only reads better against dark, and the mask still keeps the label's
-   backdrop clean. */
+/* Tune in Studio: the way out of the page's trimmed playground and into
+   the full workbench, deep-linked to this library's panel. Body per the
+   Figma small button; the Get Pro recipe's rim wash stays on ::before. */
 .detail-studio {
-  height: 36px;
-  padding: 0 14px;
-  gap: 7px;
+  height: 32px;
+  padding: 0 12px;
+  gap: 8px;
   text-decoration: none;
-  background: #2a2a2a;
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fbfbfb;
+  line-height: 14px;
   box-shadow:
-    0 1px 3px 0 rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.06),
-    inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
-    inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+    0 1px 1px 0 rgba(0, 0, 0, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
   transition: background 140ms var(--ease-smooth-out);
 }
-.detail-studio:hover { background: #323232; }
-.detail-studio:active { background: #262626; }
+.detail-studio:hover { background: rgba(255, 255, 255, 0.1); }
+.detail-studio:active { background: rgba(255, 255, 255, 0.12); }
 .detail-studio:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
-.detail-studio svg { position: relative; z-index: 1; width: 16px; height: 16px; display: block; flex: none; }
+.detail-studio svg,
+.detail-studio img { position: relative; z-index: 1; width: 16px; height: 16px; display: block; flex: none; }
 
 /* Copy prompt — hands the whole library to a coding agent in one paste */
 .detail-prompt {
-  display: inline-flex; align-items: center; gap: 7px;
-  height: 36px; padding: 0 14px;
-  border: 0; border-radius: 24px;
-  background: var(--chip-bg);
-  color: var(--text);
-  font-family: var(--font-sans); font-size: 13px; font-weight: 500; line-height: 13px;
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 32px; padding: 0 12px;
+  border: 0; border-radius: 36px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fbfbfb;
+  font-family: var(--font-sans); font-size: 13px; font-weight: 500; line-height: 14px;
+  white-space: nowrap;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: background 140ms, color 140ms;
+  box-shadow:
+    0 1px 1px 0 rgba(0, 0, 0, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  transition: background 140ms;
 }
-.detail-prompt:hover { background: var(--chip-bg-hover); }
-.detail-prompt:active { background: var(--chip-bg-pressed); }
+.detail-prompt:hover { background: rgba(255, 255, 255, 0.1); }
+.detail-prompt:active { background: rgba(255, 255, 255, 0.12); }
 .detail-prompt:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
-.detail-prompt-icons { position: relative; width: 16px; height: 16px; flex: none; }
-.detail-prompt-icons svg {
-  position: absolute; inset: 0; width: 16px; height: 16px; display: block;
-  transform-origin: center;
-  transition: opacity 300ms cubic-bezier(0.22, 1, 0.36, 1), transform 300ms cubic-bezier(0.22, 1, 0.36, 1), filter 300ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-.detail-prompt .icon-check { opacity: 0; transform: scale(0.25); filter: blur(4px); }
-.detail-prompt[data-copied="true"] .icon-copy { opacity: 0; transform: scale(0.25); filter: blur(4px); }
-.detail-prompt[data-copied="true"] .icon-check { opacity: 1; transform: scale(1); filter: blur(0); }
-/* Fixed width on the label swap so the pill does not jump on copy. */
-.detail-prompt-label { display: inline-block; min-width: 78px; text-align: left; }
+/* Fixed width so the pill does not jump when the label swaps to Copied. */
+.detail-prompt-label { display: inline-block; min-width: 82px; text-align: center; }
 
 .detail-body { margin-top: 24px; }
 .detail-panel { position: relative; min-width: 0; }
@@ -352,7 +342,7 @@
 /* Playground layout: stage left, controls right */
 .pg {
   display: grid;
-  grid-template-columns: 1fr 280px;
+  grid-template-columns: 1fr 348px;
   gap: 24px;
   align-items: stretch;
 }
@@ -380,97 +370,163 @@
 html[data-theme="dark"] .pg-stage { background: #131313; }
 html[data-theme="dark"] .pg-stage::after { box-shadow: inset 0 0 0 1px rgba(191, 192, 203, 0.08); }
 
+/* Panel surface and rhythm from Figma 1418:38255: #1b1b1b at 16px radius,
+   12px side padding, 14px between groups, hairline separators. */
 .pg-controls {
-  border-radius: 24px;
-  background: var(--card-bg);
+  border-radius: 16px;
+  background: #1b1b1b;
   box-shadow:
-    var(--card-shadow),
-    inset 0 0 0 1px var(--card-border),
-    inset 0 -1px 0 0 var(--card-border);
-  padding: 20px;
+    0 2px 6px 0 rgba(0, 0, 0, 0.05),
+    0 4px 42px 0 rgba(0, 0, 0, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.02);
+  padding: 15px 12px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-}
-html[data-theme="dark"] .pg-controls {
-  background: #181818;
-  box-shadow:
-    0 1px 3px 0 rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.06),
-    inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
-    inset 0 0 0 1px rgba(196, 196, 196, 0.07);
+  gap: 14px;
 }
 
 .pg-field { display: flex; flex-direction: column; gap: 8px; }
-.pg-label { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+.pg-label { font-size: 13px; font-weight: 400; line-height: 14px; color: #979797; }
 
-/* Pill radio tabs */
-.pg-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+/* Pill radio tabs (Figma 1418:38136): the selected pill lifts on the
+   material ring, the rest sit flat and only brighten their label. */
+.pg-tabs { display: flex; flex-wrap: wrap; gap: 4px; }
 .pg-tab {
   appearance: none;
   border: 0;
-  height: 30px;
+  height: 32px;
   padding: 0 12px;
-  border-radius: 40px;
-  background: var(--chip-bg);
-  color: var(--text-muted);
+  border-radius: 36px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #b1b1b1;
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
+  line-height: 16px;
   cursor: pointer;
   white-space: nowrap;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
   -webkit-tap-highlight-color: transparent;
 }
-.pg-tab:hover { background: var(--chip-bg-hover); color: var(--text); }
-.pg-tab[data-active="true"] { background: rgba(255, 255, 255, 0.14); color: var(--text); }
+.pg-tab:hover { color: #e0e0e0; }
+.pg-tab[data-active="true"] {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fbfbfb;
+  box-shadow:
+    0 1px 1px 0 rgba(0, 0, 0, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+}
 
-/* Filled-track slider (invisible native range on top for a11y) */
-.pg-slider { position: relative; height: 28px; display: flex; align-items: center; }
-.pg-slider-track { position: relative; width: 100%; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.08); }
-.pg-slider-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; background: #ededed; }
-.pg-slider-thumb {
+/* Value slider + input (Figma 1418:38136): a 32px block the fill grows
+   inside, label riding the fill at the left, value at the right. The
+   invisible native range stays on top for pointer + keyboard + readers. */
+.pg-vslider {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  transition: background-color 0.15s ease;
+}
+.pg-vslider:hover { background: rgba(255, 255, 255, 0.08); }
+.pg-vslider-fill {
   position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 14px;
-  height: 14px;
-  border-radius: 7px;
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  left: 0;
+  top: 0;
+  bottom: 0;
+  min-width: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 1px 1px 0 rgba(0, 0, 0, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  transition: background-color 0.15s ease;
+}
+.pg-vslider:hover .pg-vslider-fill,
+.pg-vslider:active .pg-vslider-fill { background: rgba(255, 255, 255, 0.12); }
+/* Grab bar at the fill's edge — hinted on hover, solid while dragging. */
+.pg-vslider-fill::after {
+  content: "";
+  position: absolute;
+  right: 8px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  border-radius: 2px;
+  background: #767676;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.pg-vslider:hover .pg-vslider-fill::after { opacity: 0.6; }
+.pg-vslider:active .pg-vslider-fill::after { opacity: 1; }
+.pg-vslider-label {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+  padding-left: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 14px;
+  color: #fbfbfb;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   pointer-events: none;
 }
-.pg-slider input[type="range"] {
+.pg-vslider-value {
+  position: relative;
+  z-index: 1;
+  padding: 0 12px 0 8px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 14px;
+  color: #fbfbfb;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.pg-vslider input[type="range"] {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   opacity: 0;
-  cursor: pointer;
+  cursor: ew-resize;
   margin: 0;
 }
-.pg-slider-value { font-size: 12px; color: var(--text-subtle); min-width: 42px; text-align: right; }
-.pg-slider-row { display: flex; align-items: center; gap: 10px; }
-.pg-slider-row .pg-slider { flex: 1; }
+.pg-vslider:has(input:focus-visible) { outline: 2px solid var(--text-muted); outline-offset: 2px; }
 
 /* Toggle buttons */
 .pg-toggle {
   appearance: none;
   border: 0;
-  height: 30px;
+  height: 32px;
   padding: 0 12px;
-  border-radius: 40px;
-  background: var(--chip-bg);
-  color: var(--text-muted);
+  border-radius: 36px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #b1b1b1;
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
+  line-height: 16px;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
 }
-.pg-toggle:hover { background: var(--chip-bg-hover); }
-.pg-toggle[data-active="true"] { background: rgba(255, 255, 255, 0.14); color: var(--text); }
+.pg-toggle:hover { color: #e0e0e0; }
+.pg-toggle[data-active="true"] {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fbfbfb;
+  box-shadow:
+    0 1px 1px 0 rgba(0, 0, 0, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+}
 
 /* Play / pause pill on the stage */
 .pg-play {
@@ -529,7 +585,7 @@ html[data-theme="dark"] .pg-controls {
   margin: 4px 0 -8px;
 }
 .pg-controls-title:first-child { margin-top: 0; }
-.pg-controls-sep { height: 1px; background: rgba(255, 255, 255, 0.07); margin: 2px 0; }
+.pg-controls-sep { height: 1px; background: rgba(255, 255, 255, 0.04); margin: 0; }
 
 /* Color swatch row */
 .pg-swatches { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -561,16 +617,21 @@ html[data-theme="dark"] .pg-controls {
   display: flex;
   align-items: center;
   gap: 3px;
+  height: 36px;
   padding: 3px;
-  background: var(--chip-bg);
+  background: #141414;
   border-radius: 48px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 .st-panel-tabs-indicator {
   position: absolute; top: 3px; left: 0;
-  height: calc(100% - 6px); width: 0;
-  background: var(--card-bg);
-  border-radius: 48px;
-  box-shadow: var(--card-shadow), inset 0 0 0 1px var(--card-border);
+  height: 30px; width: 0;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 36px;
+  box-shadow:
+    0 1px 1px 0 rgba(0, 0, 0, 0.12),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
   transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), width 320ms cubic-bezier(0.22, 1, 0.36, 1);
   pointer-events: none;
   z-index: 0;
@@ -578,21 +639,20 @@ html[data-theme="dark"] .pg-controls {
 .st-panel-tab {
   position: relative; z-index: 1;
   flex: 1 1 auto;
-  font-family: var(--font-sans); font-size: 12px; font-weight: 500;
-  color: var(--text-muted);
+  font-family: var(--font-sans); font-size: 13px; font-weight: 500;
+  color: #979797;
   background: transparent; border: 0;
-  height: 28px; padding: 0 10px;
-  border-radius: 48px;
+  height: 30px; padding: 0 12px;
+  border-radius: 36px;
   cursor: pointer;
   white-space: nowrap;
   transition: color 320ms cubic-bezier(0.22, 1, 0.36, 1);
   -webkit-tap-highlight-color: transparent;
 }
 .st-panel-tab:hover,
-.st-panel-tab[aria-selected="true"] { color: var(--text); }
+.st-panel-tab[aria-selected="true"] { color: #fbfbfb; }
 .st-panel-tab:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
 
-/* The knob stack keeps the column's own gap when it is the visible tab. */
 .st-panel-body { display: flex; flex-direction: column; gap: 20px; }
 .st-panel-body[hidden] { display: none; }
 
