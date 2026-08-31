@@ -247,7 +247,7 @@ interface ChatMessage {
    phrasing someone tried is not lost. */
 const AGENT_UNAVAILABLE =
   "The Studio agent is not connected yet, so I can't move the controls for you. " +
-  "Your message is kept here — switch to Manual control to tune by hand, or use " +
+  "Your message is kept here. Switch to Manual control to tune by hand, or use " +
   "Copy prompt on the library page to hand the whole library to your own coding agent.";
 
 function AgentChat({ library }: { library: string }) {
@@ -281,7 +281,7 @@ function AgentChat({ library }: { library: string }) {
       <div className="st-chat-log" ref={logRef} role="log" aria-label="Agent conversation">
         {messages.length === 0 ? (
           <p className="st-chat-empty">
-            Describe the look you want and the agent tunes {library} for you — “make the
+            Describe the look you want and the agent tunes {library} for you: “make the
             glow slower and cooler”, “tighter corners”, “calmer motion”.
           </p>
         ) : (

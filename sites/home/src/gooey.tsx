@@ -6,14 +6,15 @@ import { GooeyStudio } from "./studio/gooey";
    second, thinner copy of it. The Studio demos are the live gooey demo
    page's prototypes ported verbatim (same geometry, physics defaults,
    fills and shadows) and cover all four effects: morph, move, bend and
-   melt. The page this replaced had only morph and move, on an older set
-   of prototypes. */
+   melt. It renders the public variant: same demos, but only the effect
+   switch and the two surface knobs, and no Agent tab — the deeper tuning
+   stays in the Studio. */
 
 const rootEl = document.getElementById("playground-root");
 if (rootEl) {
   createRoot(rootEl).render(
     <StrictMode>
-      <GooeyStudio />
+      <GooeyStudio variant="public" />
     </StrictMode>
   );
 }

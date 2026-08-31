@@ -130,6 +130,28 @@
   .proto-modal-tabs-indicator { transition: none; }
 }
 
+/* The two head actions sit together, opposite the tabs. */
+.detail-head-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* Customize in Studio: the way out of the page's trimmed playground and
+   into the full workbench, deep-linked to this library's panel. */
+.detail-studio {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 36px; padding: 0 14px;
+  border: 0; border-radius: 24px;
+  background: #e9e9e9;
+  color: #17181c;
+  font-family: var(--font-sans); font-size: 13px; font-weight: 500; line-height: 13px;
+  text-decoration: none;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 140ms;
+}
+.detail-studio:hover { background: #ffffff; }
+.detail-studio:active { background: #dcdcdc; }
+.detail-studio:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
+.detail-studio svg { width: 16px; height: 16px; display: block; flex: none; }
+
 /* Copy prompt — hands the whole library to a coding agent in one paste */
 .detail-prompt {
   display: inline-flex; align-items: center; gap: 7px;

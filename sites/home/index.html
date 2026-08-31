@@ -124,6 +124,19 @@
       z-index: 5;
     }
     .hero-tile:hover { background: #1c1c1c; }
+    /* Invisible margin around each tile: a 130px target scattered in open
+       space is easy to miss, and the label reads better if it opens just
+       before the pointer lands on the art. A transparent pseudo-element
+       still hit-tests, and events on it target the <a>, so this widens both
+       the click target and :hover with no extra markup.
+       The size is set per-breakpoint below — halos must never overlap, or
+       one tile starts swallowing its neighbour's clicks. */
+    .hero-tile::before {
+      content: "";
+      position: absolute;
+      inset: calc(-1 * var(--tile-safe, 0px));
+      border-radius: calc(24px + var(--tile-safe, 0px));
+    }
     .hero-tile-stage {
       position: absolute; inset: 11px; border-radius: 14px; background: #101010;
       overflow: hidden; display: flex; align-items: center; justify-content: center;
@@ -177,6 +190,7 @@
     /* Scatter positions around the centered hero copy — desktop only,
        so the static-row fallback below 981px keeps untouched tiles. */
     @media (min-width: 981px) {
+      .hero-tile { --tile-safe: 30px; }
       .hero-tile--orb   { top: 0;     left: calc(50% - 7px); }
       .hero-tile--beam  { top: 147px; left: calc(50% - 481px); }
       .hero-tile--metal { top: 171px; left: calc(50% + 317px); }
@@ -196,7 +210,7 @@
         display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
         margin-top: 40px; width: 100%;
       }
-      .hero-tile { position: relative; }
+      .hero-tile { position: relative; --tile-safe: 8px; }
     }
     @media (min-width: 981px) {
       .hero-tiles-row { display: contents; }
