@@ -46,6 +46,8 @@ const MESSAGES: Record<string, string> = {
   pro_required: "The Studio agent is a Pro feature.",
   turn_cap_reached:
     "You've hit this month's agent limit. Manual control still works, and the limit resets next month.",
+  budget_exhausted:
+    "The agent is paused for the rest of this month. Manual control still works — nothing you tuned is lost.",
   unknown_library: "The agent doesn't know this library yet.",
 };
 

@@ -83,12 +83,21 @@ re-sends it every turn.
 reasoning, and output tokens dominate per-turn cost here. Raise it only if
 measurement on real prompts says quality needs it.
 
-**Caps.** 150 turns/user/month in KV, keyed by month so it resets without a
-cron. A tuning session is 10–15 turns, so the cap is far past honest use and
-bounds a single user's worst case at a few dollars rather than the whole $9
-subscription. Verify `cache_read_input_tokens` is non-zero on the second turn
-of a session — if it is zero, input cost roughly triples and something has
-made the system prompt unstable.
+**Caps, in two layers.** 150 turns/user/month bounds one abusive account;
+`MONTHLY_BUDGET_USD = 100` bounds the total bill if a thousand honest ones
+arrive at once. Both live in KV keyed by month, so they reset without a cron.
+
+The $100 ceiling is a **soft** cap: KV is eventually consistent, so concurrent
+turns can read a stale total and overshoot a little, and it cannot see spend
+from anything else sharing the API key. **The hard limit is the monthly spend
+limit on the Anthropic Console** for the workspace this key belongs to — that
+one Anthropic enforces and it cannot be overshot. Set both. Keep the Console
+limit at or a little above $100 so the soft cap trips first and users get a
+real message instead of a failed request.
+
+Verify `cache_read_input_tokens` is non-zero on the second turn of a session —
+if it is zero, input cost roughly triples and something has made the system
+prompt unstable.
 
 ## Adding the other four libraries
 

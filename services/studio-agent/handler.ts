@@ -30,6 +30,40 @@ export type ResolvePro = (request: Request) => Promise<{ userId: string; pro: bo
    and caps a single user's worst case at a few dollars rather than the whole
    subscription. */
 const MONTHLY_TURN_CAP = 150;
+
+/* Ceiling on what the whole feature may spend in a calendar month, across
+   every user. The per-user turn cap above bounds one abusive account; this
+   bounds the bill if a thousand honest ones show up at once.
+ *
+ * This is a SOFT cap and deliberately the second line of defence. It is
+ * enforced from a KV counter that is eventually consistent, so a burst of
+ * concurrent requests can read a stale total and overshoot slightly, and it
+ * cannot see spend from anything else sharing the API key. The hard limit is
+ * the monthly spend limit set on the Anthropic Console for this workspace —
+ * that one is enforced by Anthropic and cannot be overshot. Set both, and
+ * keep the Console limit at or above this number so this one trips first and
+ * gives users a real message instead of a 400. */
+const MONTHLY_BUDGET_USD = 100;
+
+/* claude-opus-5, USD per million tokens. Cache writes cost 1.25x input and
+   reads 0.1x; the system prompt is the only cached block, so a read-heavy
+   month sits far below the input line. */
+const PRICE_PER_MTOK = { input: 5, output: 25, cacheWrite: 6.25, cacheRead: 0.5 };
+
+function turnCostUsd(u: {
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
+}): number {
+  return (
+    (u.inputTokens * PRICE_PER_MTOK.input +
+      u.outputTokens * PRICE_PER_MTOK.output +
+      u.cacheReadTokens * PRICE_PER_MTOK.cacheRead +
+      u.cacheWriteTokens * PRICE_PER_MTOK.cacheWrite) /
+    1_000_000
+  );
+}
 /* Only the recent transcript is resent. Tuning turns are near-independent —
    the current parameter values are sent fresh every turn regardless — so the
    older history buys little and grows input cost on every message. */
@@ -114,11 +148,20 @@ export async function handleStudioChat(
     return json({ error: "no_message" }, 400);
   }
 
-  /* Turn cap. Keyed by month so it resets on its own without a cron. */
+  /* Both caps are keyed by month so they reset on their own without a cron. */
   const month = new Date().toISOString().slice(0, 7);
   const usageKey = `studio:${session.userId}:${month}`;
-  const used = Number((await env.STUDIO_USAGE.get(usageKey)) ?? 0);
+  const spendKey = `studio:spend:${month}`;
+
+  const [usedRaw, spentRaw] = await Promise.all([
+    env.STUDIO_USAGE.get(usageKey),
+    env.STUDIO_USAGE.get(spendKey),
+  ]);
+  const used = Number(usedRaw ?? 0);
+  const spent = Number(spentRaw ?? 0);
+
   if (used >= MONTHLY_TURN_CAP) return json({ error: "turn_cap_reached" }, 429);
+  if (spent >= MONTHLY_BUDGET_USD) return json({ error: "budget_exhausted" }, 429);
 
   const params = body.params ?? {};
   const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
@@ -156,6 +199,7 @@ export async function handleStudioChat(
     let outputTokens = 0;
     let inputTokens = 0;
     let cacheReadTokens = 0;
+    let cacheWriteTokens = 0;
 
     try {
       for (let hop = 0; hop < 4; hop++) {
@@ -186,6 +230,7 @@ export async function handleStudioChat(
         inputTokens += message.usage.input_tokens;
         outputTokens += message.usage.output_tokens;
         cacheReadTokens += message.usage.cache_read_input_tokens ?? 0;
+        cacheWriteTokens += message.usage.cache_creation_input_tokens ?? 0;
 
         messages.push({ role: "assistant", content: message.content });
 
@@ -228,16 +273,25 @@ export async function handleStudioChat(
         messages.push({ role: "user", content: results });
       }
 
-      await env.STUDIO_USAGE.put(usageKey, String(used + 1), {
-        /* 40 days outlives the month the key names; the next month writes a
-           fresh key, so no cleanup job is needed. */
-        expirationTtl: 60 * 60 * 24 * 40,
-      });
+      /* 40 days outlives the month each key names; the next month writes a
+         fresh key, so no cleanup job is needed. Counters are advanced only
+         once the turn has actually completed — a failed turn that billed
+         nothing should not eat someone's allowance. */
+      const cost = turnCostUsd({ inputTokens, outputTokens, cacheReadTokens, cacheWriteTokens });
+      const expirationTtl = 60 * 60 * 24 * 40;
+      await Promise.all([
+        env.STUDIO_USAGE.put(usageKey, String(used + 1), { expirationTtl }),
+        /* Read-modify-write on an eventually-consistent store: concurrent
+           turns can lose an increment, so the recorded total runs slightly
+           low under load. Acceptable for a backstop whose hard counterpart
+           is the Console spend limit; it is not an accounting record. */
+        env.STUDIO_USAGE.put(spendKey, (spent + cost).toFixed(4), { expirationTtl }),
+      ]);
 
       await writer.write(
         sse({
           type: "done",
-          usage: { inputTokens, outputTokens, cacheReadTokens },
+          usage: { inputTokens, outputTokens, cacheReadTokens, cacheWriteTokens, costUsd: cost },
           turnsRemaining: Math.max(0, MONTHLY_TURN_CAP - used - 1),
         })
       );
