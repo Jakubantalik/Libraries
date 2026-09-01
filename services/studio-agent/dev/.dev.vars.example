@@ -1,0 +1,4 @@
+# Copy to .dev.vars (gitignored) and paste your key from console.anthropic.com.
+# .dev.vars is read only by `wrangler dev`; the deployed Worker uses
+# `wrangler secret put ANTHROPIC_API_KEY` instead.
+ANTHROPIC_API_KEY=sk-ant-...

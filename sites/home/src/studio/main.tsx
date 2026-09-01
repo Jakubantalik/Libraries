@@ -36,6 +36,7 @@ declare global {
   interface Window {
     LibrariesPro?: {
       state: ProState;
+      apiBase?: string;
       signIn?: () => void;
       refresh?: () => void;
     };

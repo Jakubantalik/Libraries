@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
   ThinkingOrb,
   countDots,
@@ -41,6 +41,16 @@ const SIZE_OPTIONS = [
   { value: "20", label: "20px" },
 ] as const;
 
+/* Param key -> the knob's own label, for the agent's applied-change line. */
+const ORB_PARAM_LABELS: Record<string, string> = {
+  state: "State",
+  size: "Size",
+  speed: "Speed",
+  ink: "Color",
+  dots: "Dots",
+  paused: "Paused",
+};
+
 export function OrbStudio({ visible = true }: { visible?: boolean }) {
   const [state, setState] = useState<OrbState>("listening");
   const [size, setSize] = useState<OrbSize>(64);
@@ -50,6 +60,23 @@ export function OrbStudio({ visible = true }: { visible?: boolean }) {
   const [paused, setPaused] = useState(false);
 
   const dotTotal = countDots(scaleCounts(resolvePreset(state, size).opts, Math.max(0.1, dots)));
+
+
+  /* Agent wiring — keys match the Worker's spec, which owns the ranges and
+     rejects anything outside them. `size` arrives as a string, since the
+     library only offers two hand-tuned presets rather than a range. */
+  const agentParams: Record<string, unknown> = {
+    state, size: String(size), speed, ink, dots, paused,
+  };
+
+  const applyAgentParams = useCallback((patch: Record<string, unknown>) => {
+    if (typeof patch.state === "string") setState(patch.state as OrbState);
+    if (typeof patch.size === "string") setSize(Number(patch.size) as OrbSize);
+    if (typeof patch.speed === "number") setSpeed(patch.speed);
+    if (typeof patch.ink === "string") setInk(patch.ink);
+    if (typeof patch.dots === "number") setDots(patch.dots);
+    if (typeof patch.paused === "boolean") setPaused(patch.paused);
+  }, []);
 
   const tinted = ink !== INK_DEFAULT;
   const props = [`state="${state}"`, `size={${size}}`];
@@ -84,7 +111,16 @@ export function OrbStudio({ visible = true }: { visible?: boolean }) {
         </button>
       </div>
 
-      <ControlsPanel library="Thinking orbs">
+      <ControlsPanel
+        library="Thinking orbs"
+        agent={{
+          libraryId: "orb",
+          params: agentParams,
+          labels: ORB_PARAM_LABELS,
+          onApply: applyAgentParams,
+        }}
+        prompt={{ pkg: "thinking-orbs", docsPath: "/orbs.html", snippet }}
+      >
         <PanelTitle>Main</PanelTitle>
         <PgTabs label="State" options={STATE_OPTIONS} value={state} onChange={setState} />
         <PgTabs

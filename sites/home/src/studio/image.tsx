@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   ImageGeneration,
   type ImageGenerationCycleEvent,
@@ -41,6 +41,17 @@ const PALETTES: Record<Exclude<PaletteKey, "preset">, string[]> = {
 
 const IMAGE_POOL = ["/images/gen-1.jpg", "/images/gen-2.jpg", "/images/gen-3.jpg"];
 
+/* Param key -> the knob's own label, for the agent's applied-change line. */
+const IMAGE_PARAM_LABELS: Record<string, string> = {
+  preset: "Type",
+  strength: "Strength",
+  speed: "Speed",
+  palette: "Palette",
+  cardBg: "Card background",
+  pixelScale: "Pixel scale",
+  paused: "Paused",
+};
+
 export function ImageStudio({ visible = true }: { visible?: boolean }) {
   const [preset, setPreset] = useState<ImageGenerationPreset>("pixels-organic");
   /* Strength slider maps 0–100% onto the library's 0..2 range: 50% is the
@@ -69,6 +80,21 @@ export function ImageStudio({ visible = true }: { visible?: boolean }) {
   const onRegenerate = () => {
     handleRef.current?.triggerRegenerate({ durationMs: 3000 });
   };
+
+  /* Agent wiring — keys match the Worker's spec, which owns the ranges. */
+  const agentParams: Record<string, unknown> = {
+    preset, strength, speed, palette, cardBg, pixelScale, paused,
+  };
+
+  const applyAgentParams = useCallback((patch: Record<string, unknown>) => {
+    if (typeof patch.preset === "string") setPreset(patch.preset as ImageGenerationPreset);
+    if (typeof patch.strength === "number") setStrength(patch.strength);
+    if (typeof patch.speed === "number") setSpeed(patch.speed);
+    if (typeof patch.palette === "string") setPalette(patch.palette as PaletteKey);
+    if (typeof patch.cardBg === "string") setCardBg(patch.cardBg);
+    if (typeof patch.pixelScale === "number") setPixelScale(patch.pixelScale);
+    if (typeof patch.paused === "boolean") setPaused(patch.paused);
+  }, []);
 
   const colors = palette !== "preset" ? PALETTES[palette] : undefined;
 
@@ -146,7 +172,16 @@ export function ImageStudio({ visible = true }: { visible?: boolean }) {
         </div>
       </div>
 
-      <ControlsPanel library="Image">
+      <ControlsPanel
+        library="Image"
+        agent={{
+          libraryId: "image",
+          params: agentParams,
+          labels: IMAGE_PARAM_LABELS,
+          onApply: applyAgentParams,
+        }}
+        prompt={{ pkg: "img-fx", docsPath: "/image.html", snippet }}
+      >
         <PanelTitle>Main</PanelTitle>
         <PgTabs label="Type" options={PRESET_OPTIONS} value={preset} onChange={setPreset} />
         <PgSlider label="Strength" value={strength} min={0} max={100} step={1} display={`${strength}%`} onChange={setStrength} />

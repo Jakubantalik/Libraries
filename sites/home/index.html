@@ -250,11 +250,10 @@
       display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 18px; align-items: stretch;
     }
+    /* Fill and shadow come from the gallery card surface in site.css. */
     .pro-quote {
       display: flex; flex-direction: column; gap: 24px; min-width: 0;
       min-height: 240px; padding: 32px; border-radius: 24px;
-      background: #141414;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 -1px 0 0 rgba(255, 255, 255, 0.03);
     }
     .pro-quote-text { margin: 0; flex: 1 1 auto; font-size: 16px; line-height: 24.2px; color: #c9c9c9; overflow-wrap: anywhere; }
     .pro-quote-author { display: flex; align-items: center; gap: 11px; min-width: 0; }
@@ -290,14 +289,23 @@
     }
     .howto-step {
       display: flex; flex-direction: column; gap: 12px; min-width: 0;
-      padding: 32px; border-radius: 24px; background: #141414;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 -1px 0 0 rgba(255, 255, 255, 0.03);
+      padding: 32px; border-radius: 24px;
     }
     .howto-step-num {
       width: 28px; height: 28px; border-radius: 50px;
       display: inline-flex; align-items: center; justify-content: center;
-      background: rgba(255, 255, 255, 0.06); color: var(--text-muted);
-      font-size: 13px; font-weight: 500; margin-bottom: 8px;
+      margin-bottom: 8px;
+      background: #3e3e3e;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+      color: rgba(237, 237, 237, 0.8);
+      font-size: 12px;
+      line-height: 13px;
+      font-weight: 500;
     }
     .howto-step-title { margin: 0; font-size: 15px; font-weight: 500; line-height: 20px; color: #ededed; }
     .howto-step-text { margin: 0; font-size: 14px; line-height: 22px; color: var(--text-muted); overflow-wrap: anywhere; }

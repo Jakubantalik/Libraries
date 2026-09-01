@@ -356,9 +356,16 @@
       align-items: center;
       justify-content: center;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.06);
-      color: var(--text);
+      background: #3e3e3e;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+      color: rgba(237, 237, 237, 0.8);
       font-size: 12px;
+      line-height: 13px;
       font-weight: 500;
     }
     .studio-step-body { padding-top: 3px; }

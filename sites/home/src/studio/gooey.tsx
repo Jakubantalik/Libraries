@@ -54,6 +54,37 @@ const FILL_OPTIONS = [
   { value: "#ffd28f", label: "Amber" },
 ] as const;
 
+/* Param key -> the knob's own label, for the agent's applied-change line.
+   The agent's namespace is flat and prefixed per effect, so several keys
+   collapse back onto the same panel label — "Goo blur" belongs to both the
+   shared surface and to melt, which never appear together. */
+const GOOEY_PARAM_LABELS: Record<string, string> = {
+  effect: "Effect",
+  blur: "Goo blur",
+  contrast: "Contrast",
+  waviness: "Waviness",
+  fill: "Fill",
+  morphDuration: "Duration",
+  morphEasing: "Easing",
+  morphStagger: "Stagger",
+  morphSpread: "Spread",
+  morphAnticipation: "Anticipation",
+  moveSpringiness: "Springiness",
+  moveWobble: "Wobble",
+  moveStretch: "Stretch",
+  moveTrail: "Trail",
+  bendVertical: "Vertical bow",
+  bendHorizontal: "Horizontal caps",
+  bendContent: "Content bend",
+  meltBlur: "Goo blur",
+  meltContrast: "Contrast",
+  meltReach: "Reach",
+  meltFade: "Fade",
+  meltWarp: "Warp",
+  meltMarbling: "Marbling",
+  meltGravity: "Gravity",
+};
+
 /* The Logram surface shadow (dark), shared by the menu, the slider thumb and
    the drag card on the live page (sites/gooey/playground/theme.ts + Slider). */
 const LIQUID_SHADOW =
@@ -628,13 +659,104 @@ export function GooeyStudio({
     []
   );
 
+  /* Agent wiring. The knobs live in five nested objects; the agent sees one
+     flat namespace, prefixed per effect so `blur` (shared surface) and
+     `meltBlur` (melt's own) stay distinct. Keys match the Worker's spec,
+     which owns the ranges and rejects whatever the current effect makes
+     inert. */
+  const agentParams: Record<string, unknown> = {
+    effect,
+    blur: group.blur,
+    contrast: group.contrast,
+    waviness: group.waviness,
+    fill: group.fill,
+    morphDuration: morph.openDur,
+    morphEasing: morph.openEase,
+    morphStagger: morph.openStagger,
+    morphSpread: morph.spread,
+    morphAnticipation: morph.anticipDist,
+    moveSpringiness: move.springiness,
+    moveWobble: move.wobble,
+    moveStretch: move.stretch,
+    moveTrail: move.trail,
+    bendVertical: bend.vertical,
+    bendHorizontal: bend.horizontal,
+    bendContent: bend.content,
+    meltBlur: melt.blur,
+    meltContrast: melt.contrast,
+    meltReach: melt.reach,
+    meltFade: melt.fade,
+    meltWarp: melt.warp,
+    meltMarbling: melt.mix,
+    meltGravity: melt.gravity,
+  };
+
+  const applyAgentParams = useCallback((patch: Record<string, unknown>) => {
+    const n = (k: string) => (typeof patch[k] === "number" ? (patch[k] as number) : undefined);
+
+    if (typeof patch.effect === "string") setEffect(patch.effect as EffectType);
+
+    setGroup((g) => ({
+      ...g,
+      blur: n("blur") ?? g.blur,
+      contrast: n("contrast") ?? g.contrast,
+      waviness: n("waviness") ?? g.waviness,
+      fill: typeof patch.fill === "string" ? patch.fill : g.fill,
+    }));
+    setMorph((m) => ({
+      ...m,
+      openDur: n("morphDuration") ?? m.openDur,
+      openEase: typeof patch.morphEasing === "string" ? (patch.morphEasing as EaseName) : m.openEase,
+      openStagger: n("morphStagger") ?? m.openStagger,
+      spread: n("morphSpread") ?? m.spread,
+      anticipDist: n("morphAnticipation") ?? m.anticipDist,
+    }));
+    setMove((m) => ({
+      ...m,
+      springiness: n("moveSpringiness") ?? m.springiness,
+      wobble: n("moveWobble") ?? m.wobble,
+      stretch: n("moveStretch") ?? m.stretch,
+      trail: n("moveTrail") ?? m.trail,
+    }));
+    setBend((b) => ({
+      ...b,
+      vertical: n("bendVertical") ?? b.vertical,
+      horizontal: n("bendHorizontal") ?? b.horizontal,
+      content: n("bendContent") ?? b.content,
+    }));
+    setMelt((m) => ({
+      ...m,
+      blur: n("meltBlur") ?? m.blur,
+      contrast: n("meltContrast") ?? m.contrast,
+      reach: n("meltReach") ?? m.reach,
+      fade: n("meltFade") ?? m.fade,
+      warp: n("meltWarp") ?? m.warp,
+      mix: n("meltMarbling") ?? m.mix,
+      gravity: n("meltGravity") ?? m.gravity,
+    }));
+  }, []);
+
   const snippet = buildSnippet(effect, group, morph, move, bend, melt);
 
   /* The public page skips ControlsPanel entirely, so the Agent tab never
-     renders there rather than rendering hidden. */
+     renders there rather than rendering hidden — which also means it never
+     mounts the agent wiring the Studio side passes below. */
   const Controls = isPublic
     ? ({ children }: { children: ReactNode }) => <div className="pg-controls">{children}</div>
-    : ({ children }: { children: ReactNode }) => <ControlsPanel library="Gooey">{children}</ControlsPanel>;
+    : ({ children }: { children: ReactNode }) => (
+        <ControlsPanel
+          library="Gooey"
+          agent={{
+            libraryId: "gooey",
+            params: agentParams,
+            labels: GOOEY_PARAM_LABELS,
+            onApply: applyAgentParams,
+          }}
+          prompt={{ pkg: "liquid-gooey", docsPath: "/gooey.html", snippet }}
+        >
+          {children}
+        </ControlsPanel>
+      );
 
   return (
     <div className="pg">
