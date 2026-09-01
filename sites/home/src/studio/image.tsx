@@ -182,7 +182,7 @@ export function ImageStudio({ visible = true }: { visible?: boolean }) {
         }}
         prompt={{ pkg: "img-fx", docsPath: "/image.html", snippet }}
       >
-        <PanelTitle>Image</PanelTitle>
+        <PanelTitle>Main</PanelTitle>
         <PgTabs label="Type" options={PRESET_OPTIONS} value={preset} onChange={setPreset} />
         <PgSlider label="Strength" value={strength} min={0} max={100} step={1} display={`${strength}%`} onChange={setStrength} />
         <PgSlider label="Speed" value={speed} min={25} max={300} step={5} display={`${num(speed / 100)}×`} onChange={setSpeed} />

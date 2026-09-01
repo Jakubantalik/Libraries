@@ -151,12 +151,22 @@ html[data-theme="dark"] {
   --dropdown-open-dur: 250ms; --dropdown-close-dur: 150ms;
   --dropdown-pre-scale: 0.97; --dropdown-closing-scale: 0.99;
   --dropdown-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Sliding-tab pills, values taken from transitions.dev's detail tabs. */
+  --p16-bar-bg: #f1f1f1; --p16-pill-bg: #ffffff;
+  --p16-text-muted: rgba(15, 15, 15, 0.8); --p16-text-active: #0f0f0f;
+  --p16-dur: 250ms; --p16-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Sliding tabs read the same pair (transitions.dev tabs-sliding). */
+  --tabs-dur: var(--p16-dur); --tabs-ease: var(--p16-ease);
   --tl-menu-line: #f0f0f0; --nav-line: #eeeeee;
 }
 html[data-theme="dark"] {
   --accent: #55cfff; --accent-hover: #74d8ff;
   --accent-soft: rgba(85, 207, 255, 0.12); --accent-soft-hover: rgba(85, 207, 255, 0.2);
   --menu-shadow: 0 0 0 1px rgba(0,0,0,0.06), 0 2px 6px rgba(0,0,0,0.05), 0 4px 42px rgba(0,0,0,0.24);
+  /* Dark counterparts: the bar recedes, the pill lifts. Same relationship
+     transitions.dev has in light, inverted for this site's one theme. */
+  --p16-bar-bg: rgba(255, 255, 255, 0.05); --p16-pill-bg: #2a2a2a;
+  --p16-text-muted: rgba(237, 237, 237, 0.55); --p16-text-active: #ffffff;
   --tl-menu-line: #262626; --nav-line: rgba(255, 255, 255, 0.08);
 }
 
@@ -1352,6 +1362,9 @@ html[data-theme="dark"] .btn-animate:disabled:hover {
 .footer-tagline {
   margin: 0;
   color: var(--text-muted);
+  /* Evens the two lines instead of dropping "React" alone on the second.
+     Ignored by browsers without it, which just fall back to normal wrapping. */
+  text-wrap: balance;
 }
 .footer-cols {
   display: flex;

@@ -1,5 +1,12 @@
 import { useCallback, useState } from "react";
-import { ThinkingOrb, type OrbSize, type OrbState } from "thinking-orbs";
+import {
+  ThinkingOrb,
+  countDots,
+  resolvePreset,
+  scaleCounts,
+  type OrbSize,
+  type OrbState,
+} from "thinking-orbs";
 import { ControlsPanel, PgTabs, PgSlider, PgSwatches, PanelTitle, PanelSep, Snippet, num } from "./controls";
 
 /* Studio — Orb workbench: all nine states, both tuned sizes, speed, plus
@@ -30,6 +37,7 @@ const STATE_OPTIONS: ReadonlyArray<{ value: OrbState; label: string }> = [
 
 const SIZE_OPTIONS = [
   { value: "64", label: "64px" },
+  { value: "32", label: "32px" },
   { value: "20", label: "20px" },
 ] as const;
 
@@ -50,6 +58,9 @@ export function OrbStudio({ visible = true }: { visible?: boolean }) {
   const [ink, setInk] = useState<string>(INK_DEFAULT);
   const [dots, setDots] = useState(1);
   const [paused, setPaused] = useState(false);
+
+  const dotTotal = countDots(scaleCounts(resolvePreset(state, size).opts, Math.max(0.1, dots)));
+
 
   /* Agent wiring — keys match the Worker's spec, which owns the ranges and
      rejects anything outside them. `size` arrives as a string, since the
@@ -101,7 +112,7 @@ export function OrbStudio({ visible = true }: { visible?: boolean }) {
       </div>
 
       <ControlsPanel
-        library="Orb"
+        library="Thinking orbs"
         agent={{
           libraryId: "orb",
           params: agentParams,
@@ -110,12 +121,12 @@ export function OrbStudio({ visible = true }: { visible?: boolean }) {
         }}
         prompt={{ pkg: "thinking-orbs", docsPath: "/orbs.html", snippet }}
       >
-        <PanelTitle>Orb</PanelTitle>
+        <PanelTitle>Main</PanelTitle>
         <PgTabs label="State" options={STATE_OPTIONS} value={state} onChange={setState} />
         <PgTabs
           label="Size"
           options={SIZE_OPTIONS}
-          value={String(size) as "64" | "20"}
+          value={String(size) as "64" | "32" | "20"}
           onChange={(v) => setSize(Number(v) as OrbSize)}
         />
         <PgSlider
@@ -130,13 +141,17 @@ export function OrbStudio({ visible = true }: { visible?: boolean }) {
         <PanelSep />
         <PanelTitle>Ink</PanelTitle>
         <PgSwatches label="Color" options={INK_OPTIONS} value={ink} onChange={setInk} />
+        {/* The library scales every count knob of a state together, so the
+            prop is a multiplier — but a multiplier is a poor thing to aim
+            with. The slider reads out the dots the current state and size
+            will actually draw, recomputed as either of those changes. */}
         <PgSlider
           label="Dots"
           value={dots}
           min={0.4}
           max={2}
           step={0.05}
-          display={`${num(dots)}×`}
+          display={`${dotTotal}`}
           onChange={setDots}
         />
       </ControlsPanel>

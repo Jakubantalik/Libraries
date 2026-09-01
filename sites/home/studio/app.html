@@ -42,6 +42,7 @@
   />
   <link rel="stylesheet" href="/assets/site.css" />
   <link rel="stylesheet" href="/assets/playground.css" />
+  <link rel="stylesheet" href="/assets/examples.css" />
   <style>
     /* ============================================================ */
     /* Studio app — dark-only workbench chrome. Control conventions */
@@ -78,7 +79,17 @@
       padding: 16px 0;
     }
     .st-top-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
-    .st-top-sep { width: 1px; height: 18px; background: rgba(255, 255, 255, 0.12); }
+    /* Fades out at both ends rather than stopping on a hard edge. */
+    .st-top-sep {
+      width: 1px;
+      height: 18px;
+      background: linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.12) 50%,
+        rgba(255, 255, 255, 0) 100%
+      );
+    }
     .st-top-name {
       font-family: "Saans", var(--font-sans);
       font-size: 15px;
@@ -154,38 +165,59 @@
       padding: 8px 0;
     }
     .st-side-label {
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: 0.01em;
-      color: var(--text-subtle);
-      padding: 4px 12px 10px;
+      font-size: 13px;
+      font-weight: 400;
+      line-height: 14px;
+      color: #979797;
+      padding: 4px 8px 8px;
     }
     .st-lib {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       height: 40px;
-      padding: 0 12px;
+      padding: 0 8px;
       border: 0;
       border-radius: 12px;
       background: none;
-      color: var(--text-muted);
+      color: #bbbbbb;
       font-family: var(--font-sans);
       font-size: 13px;
       font-weight: 500;
+      line-height: 13px;
       text-align: left;
       cursor: pointer;
-      transition: background-color 0.15s ease, color 0.15s ease;
+      transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
       -webkit-tap-highlight-color: transparent;
     }
-    .st-lib:hover { background: rgba(255, 255, 255, 0.05); color: var(--text); }
-    .st-lib[data-active="true"] { background: rgba(255, 255, 255, 0.07); color: var(--text); }
+    .st-lib:hover { background: rgba(255, 255, 255, 0.04); }
+    .st-lib[data-active="true"] {
+      background: rgba(255, 255, 255, 0.08);
+      color: #f5f5f5;
+      box-shadow:
+        0 1px 1px 0 rgba(0, 0, 0, 0.24),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.02),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+    }
     .st-lib:focus-visible { outline: 2px solid var(--icon-color); outline-offset: 2px; }
-    .st-lib-ico { flex: none; width: 24px; height: 24px; border-radius: 6px; overflow: hidden; }
+    /* The homepage card's icon treatment (.lib-ico): a clipped box with no
+       CSS shadow of its own — the depth is in the tile bitmap. */
+    .st-lib-ico {
+      position: relative;
+      flex: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 7px;
+      overflow: hidden;
+    }
     .st-lib-ico img { width: 100%; height: 100%; display: block; object-fit: cover; }
+    /* The image-generation export sits on a larger canvas (104px against
+       the 92px the others use), so scale it up to crop that padding away
+       and let its art fill the slot like every other tile. */
+    .st-lib-ico img[data-pad] { width: 27px; height: 27px; max-width: none; margin: -1.5px; }
 
     .st-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-    .st-main .pg { grid-template-columns: minmax(0, 1fr) 300px; grid-template-rows: auto 1fr; row-gap: 16px; align-items: start; }
+    .st-main .pg { grid-template-columns: minmax(0, 1fr) 348px; grid-template-rows: auto 1fr; row-gap: 16px; align-items: start; }
     /* The control column runs its full length rather than scrolling inside a
        capped box — a workbench panel that hides half its knobs reads as broken.
        It spans both grid rows, so the snippet sits in the left column directly
@@ -329,195 +361,8 @@
     }
     .beam-card--sm .beam-card-dot { width: 14px; height: 14px; border-radius: 7px; background: rgba(238, 238, 239, 0.2); }
 
-    /* ── Gooey demos: the live demo page's prototypes, verbatim ──
-       Ported from sites/gooey/playground (styles.css + demo.css) with the
-       dark-theme token values inlined; --gd-ink (set by the island) stands
-       in for --btn-text so light fills flip the ink. */
-
-    /* Morph: plus menu (live .pm). */
-    .pm { position: relative; width: 200px; height: 140px; }
-    .pm-slot { position: absolute; left: 80px; top: 80px; }
-    .pm-btn {
-      width: 40px;
-      height: 40px;
-      border: 0;
-      padding: 0;
-      border-radius: 50%;
-      background: transparent;
-      display: grid;
-      place-items: center;
-      cursor: pointer;
-      color: var(--gd-ink, #fbfbfb);
-      -webkit-tap-highlight-color: transparent;
-    }
-    .pm-btn:focus-visible { outline: 2px solid #ededed; outline-offset: 2px; }
-    .pm-sat { pointer-events: none; }
-    .pm-open .pm-sat { pointer-events: auto; }
-    .pm-open .pm-sat:hover { background: rgba(255, 255, 255, 0.06); }
-    /* Icons hold back while the blob is merged, then materialise with a soft
-       cross-blur as the satellite pulls clear. */
-    .pm-sat-icon {
-      display: grid;
-      place-items: center;
-      opacity: 0;
-      filter: blur(2px);
-      transition: opacity 120ms ease, filter 120ms ease;
-    }
-    .pm-open .pm-sat-icon {
-      opacity: 1;
-      filter: blur(0);
-      transition-duration: var(--pm-icon-dur, 180ms);
-    }
-    /* Close anticipation: the whole liquid layer — and the main button riding
-       it — dips toward the returning satellites' momentum, then settles.
-       Longhands on purpose: WebKit mis-parses var() inside the `animation`
-       shorthand and falls back to 0s. */
-    @keyframes pm-anticipate {
-      0% { transform: translateY(0); }
-      30% { transform: translateY(var(--pm-anticip, 5px)); }
-      100% { transform: translateY(0); }
-    }
-    .pm-anticipating [data-gooey-svg],
-    .pm-anticipating .pm-main {
-      animation-name: pm-anticipate;
-      animation-duration: var(--pm-anticip-dur, 700ms);
-      animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
-      animation-fill-mode: both;
-    }
-    .pm-plus {
-      display: grid;
-      place-items: center;
-      transform: rotate(0deg);
-      transition: transform 250ms ease-in-out;
-    }
-    .pm-open .pm-plus { transform: rotate(45deg); }
-
-    /* Move: liquid slider (live .sl). */
-    .sl { position: relative; width: 240px; height: 80px; }
-    .sl-track {
-      position: absolute;
-      left: 14px;
-      right: 14px;
-      top: 38px;
-      height: 8px;
-      border-radius: 4px;
-      background: rgba(115, 115, 115, 0.2);
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
-      /* Below the goo layer (svg sits at z -1): the liquid thumb and its
-         tail must paint OVER the track, not be sliced by it. */
-      z-index: -2;
-    }
-    /* The thumb element itself must stay unstyled: its surface AND shadow
-       are the liquid blob below. */
-    .sl-thumb {
-      position: absolute;
-      left: 14px;
-      top: 30px;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      cursor: grab;
-      touch-action: none;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-    .sl-thumb:active { cursor: grabbing; }
-    .sl-thumb:focus-visible { outline: 2px solid #ededed; outline-offset: 4px; }
-
-    /* Bend: drag card (live .dgc — Figma 1221:5117 "Dropdown", 261×46 r54).
-       The pill VISUAL is the liquid blob; this box only sizes and lays out
-       the crisp content. */
-    .dgc {
-      width: 100%;
-      max-width: 640px;
-      height: 210px;
-      position: relative;
-      margin: 0 auto;
-    }
-    .dgc-card {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      width: 261px;
-      height: 46px;
-      margin: -23px 0 0 -130.5px;
-      border-radius: 54px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 0 16px 0 8px;
-      color: var(--gd-ink, #fbfbfb);
-      cursor: grab;
-      touch-action: none;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-    .dgc-card:active { cursor: grabbing; }
-    .dgc-chip {
-      flex: none;
-      width: 32px;
-      height: 32px;
-      border-radius: 40px;
-      background: rgba(255, 255, 255, 0.06);
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .dgc-chip svg { width: 16px; height: 16px; display: block; }
-    .dgc-title { font-size: 13px; font-weight: 500; white-space: nowrap; }
-    .dgc-count { font-size: 13px; opacity: 0.5; white-space: nowrap; }
-    /* Content DEFORMS with the liquid bend: each piece rides the arc
-       (translate, middle most), rotates onto the arc's local tangent and
-       shears with the horizontal cap deformation — driven by the engine's
-       --lg-bend vars, scaled by the Content bend knob (--dgc-cb). */
-    .dgc-card > * {
-      --dgc-k: calc(var(--dgc-cb, 0) * var(--dgc-arc, 1));
-      transform: translate(
-          calc(var(--lg-bend-x, 0px) * var(--dgc-k) * 2.4),
-          calc(var(--lg-bend-y, 0px) * var(--dgc-k) * 2.4)
-        )
-        rotate(calc(var(--lg-bend-yn, 0) * var(--dgc-rot, 0) * var(--dgc-cb, 0) * 1deg))
-        skewX(calc(var(--lg-bend-xn, 0) * var(--dgc-cb, 0) * -0.55deg))
-        scaleX(calc(1 - var(--lg-bend-xn, 0) * var(--dgc-cb, 0) * var(--dgc-sqx, 0.006)))
-        scaleY(calc(1 + var(--lg-bend-yn, 0) * var(--dgc-cb, 0) * var(--dgc-sqy, 0)));
-      transform-origin: center;
-    }
-    .dgc-card > :nth-child(1) { --dgc-arc: 0.45; --dgc-rot: 1.6; --dgc-sqx: 0.014; }
-    .dgc-card > :nth-child(2) { --dgc-arc: 1; --dgc-rot: 0; --dgc-sqy: 0.01; }
-    .dgc-card > :nth-child(3) { --dgc-arc: 0.6; --dgc-rot: -1.6; }
-
-    /* Melt: two draggable photos running molten together (live .mp). */
-    .mp { position: relative; margin: 0 auto; }
-    .mp-card {
-      position: absolute;
-      /* width/height come from the component — see MeltDemo. */
-      border-radius: 16px;
-      overflow: hidden;
-      cursor: grab;
-      touch-action: none;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-    .mp-card:active { cursor: grabbing; }
-    .mp-card img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      pointer-events: none;
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .pm-plus,
-      .pm-sat-icon {
-        transition: none !important;
-      }
-      .pm-anticipating [data-gooey-svg],
-      .pm-anticipating .pm-main {
-        animation: none !important;
-      }
-    }
+    /* The Gooey demo prototypes' CSS moved to assets/examples.css —
+       the detail page renders the same demos and needs it too. */
 
     /* Metal: preview pills (search field = reflection target + demo button). */
     .metal-stage-row { display: flex; align-items: center; gap: 12px; }

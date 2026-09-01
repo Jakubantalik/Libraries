@@ -5,10 +5,12 @@
 /* ── Detail page shell: sidebar + main, after transitions.dev/detail ──
    Sidebar sticks under the nav and lists the five libraries; the main
    column carries prev/next arrows, the head, and the tab panels. */
+/* Fills the .app container like transitions.dev's — no cap of its own, so
+   the sidebar's left edge lands on the same 24px app padding as the nav
+   brand, and the content column starts right of it instead of centring.
+   The 686px cap on the panels is what bounds the content. */
 .docs {
   width: 100%;
-  max-width: 1008px;
-  margin: 0 auto;
   padding: 32px 0 96px;
   display: grid;
   grid-template-columns: 200px minmax(0, 1fr);
@@ -31,13 +33,16 @@
 .docs-sidebar::-webkit-scrollbar { display: none; }
 .docs-group { display: flex; flex-direction: column; min-width: 0; }
 .docs-list { display: flex; flex-direction: column; min-width: 0; }
-.docs-group-label { font-size: 11px; line-height: 14px; color: var(--text-subtle); padding: 9px 12px; }
+.docs-group-label { font-size: 13px; line-height: 14px; color: #979797; padding: 4px 8px 8px; }
+
+/* Rows follow the Studio nav (.st-lib): 40px on a 12px radius, the active
+   one lifted on the material ring. */
 .docs-link {
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 32px;
-  padding: 0 12px;
+  height: 40px;
+  padding: 0 8px;
   width: 100%;
   border: 0;
   border-radius: 12px;
@@ -45,20 +50,39 @@
   text-align: left;
   text-decoration: none;
   font-size: 13px;
-  line-height: 16px;
-  color: var(--text);
+  font-weight: 500;
+  line-height: 13px;
+  color: #bbbbbb;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: background 140ms, color 140ms;
+  transition: background 140ms, color 140ms, box-shadow 140ms;
 }
-.docs-link:hover { background: var(--chip-bg); }
-.docs-link.is-active { background: var(--chip-bg-hover); }
-.docs-link--muted { color: var(--text-muted); }
+.docs-link:hover { background: rgba(255, 255, 255, 0.04); }
+.docs-link.is-active {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f5f5f5;
+  box-shadow:
+    0 1px 1px 0 rgba(0, 0, 0, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+}
+.docs-link--muted { color: #979797; }
 .docs-link:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
-/* The tile exports carry their own shadow on a larger canvas — clip to
-   the 18px slot so the sidebar rows keep a single baseline. */
-.docs-link-icon { flex: none; width: 18px; height: 18px; object-fit: contain; display: block; }
+/* Same 24px tile the Studio nav uses, on the homepage card's treatment
+   (.lib-ico): a clipped box with no CSS shadow of its own — the depth is
+   in the tile bitmap. */
+.docs-link-icon {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  object-fit: cover;
+  display: block;
+}
+/* The image-generation export sits on a larger canvas than the rest, so
+   scale it up to crop that padding away. */
+.docs-link-icon[src*="tile-image"] { width: 27px; height: 27px; max-width: none; margin: -1.5px; }
 
 .docs-main { position: relative; min-width: 0; }
 
@@ -87,69 +111,294 @@
 /* Tabs left, copy-prompt right, sharing one baseline */
 .detail-head-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 
+/* Sliding tab pills — transitions.dev's detail tabs: no shadow on the
+   indicator, 250ms on its own easing, and a muted label that is only
+   partly dimmed rather than the full --text-muted. */
 .proto-modal-tabs {
   position: relative;
   display: inline-flex;
   align-items: center;
   gap: 3px;
   padding: 3px;
-  background: var(--chip-bg);
+  background: var(--p16-bar-bg);
   border-radius: 48px;
 }
 .proto-modal-tabs-indicator {
   position: absolute; top: 3px; left: 0;
   height: calc(100% - 6px); width: 0;
-  background: var(--card-bg);
+  background: var(--p16-pill-bg);
   border-radius: 48px;
-  box-shadow: var(--card-shadow), inset 0 0 0 1px var(--card-border);
   transform: translateX(0);
-  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), width 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition:
+    transform var(--p16-dur) var(--p16-ease),
+    width var(--p16-dur) var(--p16-ease);
   pointer-events: none;
   z-index: 0;
 }
 .proto-modal-tab {
   position: relative; z-index: 1;
   font-family: var(--font-sans); font-size: 13px; font-weight: 500;
-  color: var(--text-muted);
+  color: var(--p16-text-muted);
   background: transparent; border: 0;
   height: 30px; padding: 4px 12px;
   border-radius: 48px;
   cursor: pointer;
-  transition: color 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: color var(--p16-dur) var(--p16-ease);
+  -webkit-tap-highlight-color: transparent;
 }
 .proto-modal-tab:hover,
-.proto-modal-tab[aria-selected="true"] { color: var(--text); }
+.proto-modal-tab[aria-selected="true"] { color: var(--p16-text-active); }
 .proto-modal-tab:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .proto-modal-tabs-indicator { transition: none; }
+}
+
+/* The two head actions sit together, opposite the tabs. */
+.detail-head-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* ── Get Pro button (Transitions Pro recipe: get-pro-button) ──
+   A rim-only wash of the Pro colour system drifting around the pill's
+   perimeter while a hue cycle turns the palette. A radial mask keeps the
+   middle clean, so the label reads on the pill body and the colour looks
+   like atmosphere creeping in from the edges. Copied verbatim from the
+   recipe — the seven layers are Figma radial gradients with rotation and
+   non-uniform scale, which CSS radial-gradient() cannot express, so they
+   stay as the recipe's own data-URI SVGs rather than being re-derived. */
+:root {
+  --probtn-strength:  0.5; /* recipe default is 0.7 */
+  --probtn-core:      50%;
+  --probtn-core-blur: 150%;
+  --probtn-blur:      6px;
+  --probtn-hue-dur:   4000ms;
+  --probtn-drift-dur: 5000ms;
+}
+
+/* The pill: plain white button chrome. Only `position: relative` and
+   `overflow: hidden` matter to the effect — restyle the rest freely. */
+.t-pro-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 18px;
+  border: 0;
+  cursor: pointer;
+  background: #fff;
+  border-radius: 50px;
+  overflow: hidden;
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #0f0f0f;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.04),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.1),
+    inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+}
+
+/* The wash. Seven Figma radial gradients preserved as inline-SVG
+   layers (their rotated ellipses can't be expressed with CSS
+   radial-gradient()), blown up to 180% so the blobs sweep
+   corner-to-corner as they orbit. */
+.t-pro-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image:
+    url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='0.88'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(0.34726 -1.3118e-7 8.6482e-7 0.89585 33.5 21)'><stop stop-color='rgba(0,110,245,1)' offset='0'/><stop stop-color='rgba(0,110,245,0)' offset='1'/></radialGradient></defs></svg>"),
+    url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='0.5'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(-1.3 0.25 -1.2633 -2.7471 33.5 21)'><stop stop-color='rgba(0,110,245,1)' offset='0'/><stop stop-color='rgba(0,110,245,0)' offset='1'/></radialGradient></defs></svg>"),
+    url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='0.4'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(1.05 -0.8 0.46018 3.6184 33.5 21)'><stop stop-color='rgba(204,0,167,1)' offset='0'/><stop stop-color='rgba(170,0,204,0)' offset='0.71709'/></radialGradient></defs></svg>"),
+    url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(-0.51067 -3.3275e-16 -4.3352e-14 -1.1396 33.5 21)'><stop stop-color='rgba(204,0,167,1)' offset='0'/><stop stop-color='rgba(170,0,204,0)' offset='1'/></radialGradient></defs></svg>"),
+    url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(-0.45 -0.75 1.9052 -0.7091 33.5 21)'><stop stop-color='rgba(255,173,85,1)' offset='0'/><stop stop-color='rgba(255,173,85,0)' offset='1'/></radialGradient></defs></svg>"),
+    url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(1.25 -0.35 -0.4013 3.5959 33.5 21)'><stop stop-color='rgba(0,204,68,1)' offset='0'/><stop stop-color='rgba(0,196,102,0.75)' offset='0.25'/><stop stop-color='rgba(0,187,136,0.5)' offset='0.5'/><stop stop-color='rgba(0,170,204,0)' offset='1'/></radialGradient></defs></svg>"),
+    url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(-0.87391 0.73043 -4.1482 -1.9503 33.5 21)'><stop stop-color='rgba(0,170,204,1)' offset='0'/><stop stop-color='rgba(0,170,204,0)' offset='1'/></radialGradient></defs></svg>");
+  background-size: 180% 180%, 180% 180%, 180% 180%, 180% 180%,
+                   180% 180%, 180% 180%, 180% 180%;
+  background-repeat: no-repeat;
+  /* Rim-only wash: the mask clears the centre so the label sits on
+     clean white and the colour reads as a glow creeping in from the
+     edges. The ellipse is deliberately smaller than the pill (46%)
+     so full opacity is reached INSIDE the border — sizing it past
+     the edge would clip the opaque end of the ramp and leave the
+     whole wash near-invisible. */
+  -webkit-mask-image: radial-gradient(
+    ellipse 46% 46% at 50% 50%,
+    transparent var(--probtn-core),
+    black calc(var(--probtn-core) + var(--probtn-core-blur))
+  );
+  mask-image: radial-gradient(
+    ellipse 46% 46% at 50% 50%,
+    transparent var(--probtn-core),
+    black calc(var(--probtn-core) + var(--probtn-core-blur))
+  );
+  opacity: var(--probtn-strength);
+  animation:
+    t-pro-btn-hue var(--probtn-hue-dur) linear infinite,
+    t-pro-btn-drift var(--probtn-drift-dur) ease-in-out infinite;
+}
+
+/* The label rides above the wash. */
+.t-pro-btn-label {
+  position: relative;
+  z-index: 1;
+}
+
+/* Full hue cycle — ends where it starts, so the loop is seamless.
+   The saturate boost keeps the washes punchy at the 180% blow-up;
+   the blur turns blobs into atmosphere. Compositor-only. */
+@keyframes t-pro-btn-hue {
+  from { filter: hue-rotate(0deg) saturate(1.3) blur(var(--probtn-blur)); }
+  to   { filter: hue-rotate(-360deg) saturate(1.3) blur(var(--probtn-blur)); }
+}
+/* Blob travel — the same perimeter orbit as the Pro gradient text,
+   minus its static grey-ramp layer: each blob is pinned to the ring
+   of edge stops TL,T,TR,R,BR,B,BL,L and advances two ring stops per
+   keyframe — a full lap around the pill per cycle, so colour hugs
+   and travels the rim while the mask keeps the middle clean. */
+@keyframes t-pro-btn-drift {
+  0%, 100% {
+    background-position:
+      100% 0%, 0% 50%, 100% 50%, 0% 100%,
+      0% 0%, 50% 0%, 50% 100%;
+  }
+  25% {
+    background-position:
+      100% 100%, 50% 0%, 50% 100%, 0% 0%,
+      100% 0%, 100% 50%, 0% 50%;
+  }
+  50% {
+    background-position:
+      0% 100%, 100% 0%, 0% 100%, 100% 0%,
+      100% 100%, 100% 100%, 0% 0%;
+  }
+  75% {
+    background-position:
+      0% 0%, 100% 100%, 0% 0%, 100% 100%,
+      50% 100%, 0% 100%, 100% 50%;
+  }
+}
+
+/* Reduced motion — required: the wash freezes on its first frame,
+   which still reads as a premium rim glow. */
+@media (prefers-reduced-motion: reduce) {
+  .t-pro-btn::before { animation: none; }
+}
+
+/* Tune in Studio: the way out of the page's trimmed playground and into
+   the full workbench, deep-linked to this library's panel. Body per the
+   Figma small button; the Get Pro recipe's rim wash stays on ::before. */
+.detail-studio {
+  height: 32px;
+  padding: 0 12px;
+  gap: 8px;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fbfbfb;
+  line-height: 14px;
+  box-shadow:
+    0 1px 1px 0 rgba(0, 0, 0, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  transition: background 140ms var(--ease-smooth-out);
+}
+.detail-studio:hover { background: rgba(255, 255, 255, 0.1); }
+.detail-studio:active { background: rgba(255, 255, 255, 0.12); }
+.detail-studio:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
+.detail-studio svg,
+.detail-studio img { position: relative; z-index: 1; width: 16px; height: 16px; display: block; flex: none; }
+
+/* Wand sparks on hover — the Refine tool's refine button (.tl-refine-btn
+   .tl-refine-sparks). Ten 1.5px dots pinned to the wand's tip, each with
+   its own start offset, travel vector, duration and stagger, looping while
+   the pointer is over the button. Origin is shifted 2px up from the
+   source's 15px because this pill is 32px tall against its 36px. */
+.detail-studio-sparks {
+  position: absolute;
+  left: 23px;
+  top: 13px;
+  width: 0;
+  height: 0;
+  z-index: 3;
+  pointer-events: none;
+  color: #ffffff;
+}
+.detail-studio-sparks i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1.5px;
+  height: 1.5px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0;
+}
+.detail-studio:hover .detail-studio-sparks i {
+  animation: detail-studio-spark var(--sd) linear var(--sdelay, 0ms) infinite;
+}
+@keyframes detail-studio-spark {
+  0% {
+    opacity: 0;
+    transform: translate(var(--ox, 0), var(--oy, 0)) scale(0.4);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(
+        calc(var(--ox, 0) + var(--sx, 0) * 0.2),
+        calc(var(--oy, 0) + var(--sy, -12px) * 0.2)
+      )
+      scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(var(--ox, 0) + var(--sx, 0)), calc(var(--oy, 0) + var(--sy, -12px)))
+      scale(0.6);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .detail-studio:hover .detail-studio-sparks i { animation: none; }
+}
 
 /* Copy prompt — hands the whole library to a coding agent in one paste */
 .detail-prompt {
-  display: inline-flex; align-items: center; gap: 7px;
-  height: 36px; padding: 0 14px;
-  border: 0; border-radius: 24px;
-  background: var(--chip-bg);
-  color: var(--text);
-  font-family: var(--font-sans); font-size: 13px; font-weight: 500; line-height: 13px;
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 32px; padding: 0 12px;
+  border: 0; border-radius: 36px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fbfbfb;
+  font-family: var(--font-sans); font-size: 13px; font-weight: 500; line-height: 14px;
+  white-space: nowrap;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: background 140ms, color 140ms;
+  box-shadow:
+    0 1px 1px 0 rgba(0, 0, 0, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  transition: background 140ms;
 }
-.detail-prompt:hover { background: var(--chip-bg-hover); }
-.detail-prompt:active { background: var(--chip-bg-pressed); }
+.detail-prompt:hover { background: rgba(255, 255, 255, 0.1); }
+.detail-prompt:active { background: rgba(255, 255, 255, 0.12); }
 .detail-prompt:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
-.detail-prompt-icons { position: relative; width: 16px; height: 16px; flex: none; }
-.detail-prompt-icons svg {
-  position: absolute; inset: 0; width: 16px; height: 16px; display: block;
-  transform-origin: center;
-  transition: opacity 300ms cubic-bezier(0.22, 1, 0.36, 1), transform 300ms cubic-bezier(0.22, 1, 0.36, 1), filter 300ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-.detail-prompt .icon-check { opacity: 0; transform: scale(0.25); filter: blur(4px); }
-.detail-prompt[data-copied="true"] .icon-copy { opacity: 0; transform: scale(0.25); filter: blur(4px); }
-.detail-prompt[data-copied="true"] .icon-check { opacity: 1; transform: scale(1); filter: blur(0); }
-/* Fixed width on the label swap so the pill does not jump on copy. */
-.detail-prompt-label { display: inline-block; min-width: 78px; text-align: left; }
+/* Fixed width so the pill does not jump when the label swaps to Copied. */
+.detail-prompt-label { display: inline-block; min-width: 82px; text-align: center; }
 
 .detail-body { margin-top: 24px; }
-.detail-panel { position: relative; min-width: 0; }
+/* transitions.dev caps every detail panel at 686px — the column can be
+   wider, but the content holds this measure. The head row takes the same
+   cap so the tabs and actions align with the panels' right edge. */
+.detail-panel { position: relative; min-width: 0; max-width: 686px; }
+.detail-head-row { max-width: 686px; }
+.detail-examples,
+.detail-playground-label,
+.detail-body .pg,
+.detail-body .pg-snippet { max-width: 686px; }
 .detail-panel[hidden] { display: none; }
 
 @media (max-width: 900px) {
@@ -176,11 +425,25 @@
 /* Playground layout: stage left, controls right */
 .pg {
   display: grid;
-  grid-template-columns: 1fr 280px;
+  grid-template-columns: 1fr 348px;
   gap: 24px;
   align-items: stretch;
 }
 @media (max-width: 860px) { .pg { grid-template-columns: 1fr; } }
+
+/* Detail playgrounds split in two: the stage on the left, the options
+   panel in the Studio's 348px column on the right, the pair sharing the
+   686px measure. Gooey keeps its snippet inside .pg, so it spans both
+   columns underneath. */
+.detail-body .pg {
+  grid-template-columns: minmax(0, 1fr) 348px;
+  gap: 12px;
+}
+.detail-body .pg > .pg-snippet { grid-column: 1 / -1; }
+@media (max-width: 860px) {
+  .detail-body .pg { grid-template-columns: minmax(0, 1fr); }
+  .detail-body .pg > .pg-snippet { grid-column: 1; }
+}
 
 .pg-stage {
   position: relative;
@@ -204,97 +467,163 @@
 html[data-theme="dark"] .pg-stage { background: #131313; }
 html[data-theme="dark"] .pg-stage::after { box-shadow: inset 0 0 0 1px rgba(191, 192, 203, 0.08); }
 
+/* Panel surface and rhythm from Figma 1418:38255: #1b1b1b at 16px radius,
+   12px side padding, 14px between groups, hairline separators. */
 .pg-controls {
-  border-radius: 24px;
-  background: var(--card-bg);
+  border-radius: 16px;
+  background: #1b1b1b;
   box-shadow:
-    var(--card-shadow),
-    inset 0 0 0 1px var(--card-border),
-    inset 0 -1px 0 0 var(--card-border);
-  padding: 20px;
+    0 2px 6px 0 rgba(0, 0, 0, 0.05),
+    0 4px 42px 0 rgba(0, 0, 0, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.02);
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-}
-html[data-theme="dark"] .pg-controls {
-  background: #181818;
-  box-shadow:
-    0 1px 3px 0 rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.06),
-    inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
-    inset 0 0 0 1px rgba(196, 196, 196, 0.07);
+  gap: 14px;
 }
 
 .pg-field { display: flex; flex-direction: column; gap: 8px; }
-.pg-label { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+.pg-label { font-size: 13px; font-weight: 400; line-height: 14px; color: #979797; }
 
-/* Pill radio tabs */
-.pg-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+/* Pill radio tabs (Figma 1418:38136): the selected pill lifts on the
+   material ring, the rest sit flat and only brighten their label. */
+.pg-tabs { display: flex; flex-wrap: wrap; gap: 4px; }
 .pg-tab {
   appearance: none;
   border: 0;
-  height: 30px;
+  height: 32px;
   padding: 0 12px;
-  border-radius: 40px;
-  background: var(--chip-bg);
-  color: var(--text-muted);
+  border-radius: 36px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #b1b1b1;
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
+  line-height: 16px;
   cursor: pointer;
   white-space: nowrap;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
   -webkit-tap-highlight-color: transparent;
 }
-.pg-tab:hover { background: var(--chip-bg-hover); color: var(--text); }
-.pg-tab[data-active="true"] { background: rgba(255, 255, 255, 0.14); color: var(--text); }
+.pg-tab:hover { color: #e0e0e0; }
+.pg-tab[data-active="true"] {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fbfbfb;
+  box-shadow:
+    0 1px 1px 0 rgba(0, 0, 0, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+}
 
-/* Filled-track slider (invisible native range on top for a11y) */
-.pg-slider { position: relative; height: 28px; display: flex; align-items: center; }
-.pg-slider-track { position: relative; width: 100%; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.08); }
-.pg-slider-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; background: #ededed; }
-.pg-slider-thumb {
+/* Value slider + input (Figma 1418:38136): a 32px block the fill grows
+   inside, label riding the fill at the left, value at the right. The
+   invisible native range stays on top for pointer + keyboard + readers. */
+.pg-vslider {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  transition: background-color 0.15s ease;
+}
+.pg-vslider:hover { background: rgba(255, 255, 255, 0.08); }
+.pg-vslider-fill {
   position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 14px;
-  height: 14px;
-  border-radius: 7px;
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  left: 0;
+  top: 0;
+  bottom: 0;
+  min-width: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 1px 1px 0 rgba(0, 0, 0, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  transition: background-color 0.15s ease;
+}
+.pg-vslider:hover .pg-vslider-fill,
+.pg-vslider:active .pg-vslider-fill { background: rgba(255, 255, 255, 0.12); }
+/* Grab bar at the fill's edge — hinted on hover, solid while dragging. */
+.pg-vslider-fill::after {
+  content: "";
+  position: absolute;
+  right: 8px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  border-radius: 2px;
+  background: #767676;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.pg-vslider:hover .pg-vslider-fill::after { opacity: 0.6; }
+.pg-vslider:active .pg-vslider-fill::after { opacity: 1; }
+.pg-vslider-label {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+  padding-left: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 14px;
+  color: #fbfbfb;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   pointer-events: none;
 }
-.pg-slider input[type="range"] {
+.pg-vslider-value {
+  position: relative;
+  z-index: 1;
+  padding: 0 12px 0 8px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 14px;
+  color: #fbfbfb;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.pg-vslider input[type="range"] {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   opacity: 0;
-  cursor: pointer;
+  cursor: ew-resize;
   margin: 0;
 }
-.pg-slider-value { font-size: 12px; color: var(--text-subtle); min-width: 42px; text-align: right; }
-.pg-slider-row { display: flex; align-items: center; gap: 10px; }
-.pg-slider-row .pg-slider { flex: 1; }
+.pg-vslider:has(input:focus-visible) { outline: 2px solid var(--text-muted); outline-offset: 2px; }
 
 /* Toggle buttons */
 .pg-toggle {
   appearance: none;
   border: 0;
-  height: 30px;
+  height: 32px;
   padding: 0 12px;
-  border-radius: 40px;
-  background: var(--chip-bg);
-  color: var(--text-muted);
+  border-radius: 36px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #b1b1b1;
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
+  line-height: 16px;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
 }
-.pg-toggle:hover { background: var(--chip-bg-hover); }
-.pg-toggle[data-active="true"] { background: rgba(255, 255, 255, 0.14); color: var(--text); }
+.pg-toggle:hover { color: #e0e0e0; }
+.pg-toggle[data-active="true"] {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fbfbfb;
+  box-shadow:
+    0 1px 1px 0 rgba(0, 0, 0, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+}
 
 /* Play / pause pill on the stage */
 .pg-play {
@@ -306,53 +635,133 @@ html[data-theme="dark"] .pg-controls {
 }
 
 /* Code blocks (install / usage / live snippet) */
+/* Snippet card — transitions.dev's detail-page code block: a 24px card on
+   the panel surface with the scroll and its padding inside, so a long
+   snippet scrolls without the card's corners clipping the text. Its copy
+   button is a 32px ghost at 9px radius, tinting only on hover. */
 .code-block {
   position: relative;
-  border-radius: 14px;
-  background: #131313;
-  box-shadow: inset 0 0 0 1px rgba(191, 192, 203, 0.08);
-  padding: 16px 52px 16px 18px;
-  overflow-x: auto;
+  width: 100%;
+  border-radius: 24px;
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow), inset 0 0 0 1px var(--card-border);
+  overflow: hidden;
+}
+html[data-theme="dark"] .code-block {
+  background: #181818;
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.04),
+    inset 0 0 0 1px rgba(196, 196, 196, 0.07);
 }
 .code-block pre {
   margin: 0;
+  max-height: 520px;
+  overflow: auto;
+  padding: 24px 26px;
   font-family: var(--font-mono);
-  font-size: 13px;
-  line-height: 20px;
-  color: #d6d6d6;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--text);
   white-space: pre;
+  scrollbar-width: thin;
+  scrollbar-color: var(--chip-bg-pressed) transparent;
 }
+.code-block pre::-webkit-scrollbar { width: 8px; height: 8px; }
+.code-block pre::-webkit-scrollbar-track { background: transparent; }
+.code-block pre::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  border: 2px solid var(--card-bg);
+  background-clip: padding-box;
+  background-color: var(--chip-bg-pressed);
+}
+.code-block pre::-webkit-scrollbar-thumb:hover { background-color: var(--text-faint); }
 .code-block .code-copy {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 14px;
+  right: 14px;
   width: 32px;
   height: 32px;
   border: 0;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--icon-color-muted);
+  border-radius: 9px;
+  background: none;
+  box-shadow: none;
+  color: var(--text-muted);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background 140ms, color 140ms;
 }
-.code-block .code-copy:hover { background: rgba(255, 255, 255, 0.1); color: var(--icon-color); }
-.code-block .code-copy svg { width: 14px; height: 14px; display: block; }
+.code-block .code-copy:hover { background: var(--chip-bg-hover); color: var(--text); }
+.code-block .code-copy svg { width: 15px; height: 15px; display: block; }
+
+/* The snippet copy button — transitions.dev's .detail-code-copy, verbatim.
+   It overrides .card-copy's own bottom-right placement and pill radius. */
+.detail-code-copy {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  bottom: auto;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 9px;
+  background: var(--chip-bg);
+  background-image: none;
+  box-shadow: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+.detail-code-copy:hover { background: var(--chip-bg-hover); color: var(--text); }
+.detail-code-copy svg { width: 15px; height: 15px; }
+/* Right-align the tooltip to the button so the pill grows leftward and
+   never overhangs the card's right edge. */
+.detail-code-copy .card-copy-tooltip {
+  top: auto;
+  bottom: calc(100% + 8px);
+  left: auto;
+  right: 0;
+  transform: none;
+}
 
 /* ── Studio control panel pieces ──────────────────────────────
    Shared by the Studio workbench and the Gooey detail page, which
    renders the same controls. */
+/* Section heading: same size as the group labels, brighter and medium so
+   it reads as a heading without shouting in all-caps. */
 .pg-controls-title {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
-  letter-spacing: 0.01em;
-  color: var(--text-subtle);
+  line-height: 14px;
+  color: #fbfbfb;
   margin: 4px 0 -8px;
 }
 .pg-controls-title:first-child { margin-top: 0; }
-.pg-controls-sep { height: 1px; background: rgba(255, 255, 255, 0.07); margin: 2px 0; }
+/* A rule separates sections, not the groups inside one. It is drawn by
+   CSS rather than placed by hand so a section can never end up without
+   one, sits above each section heading (and above the body, dividing it
+   from the tabs), and bleeds past the panel's 16px padding to run the
+   full width. The heading carries 12px of space beneath the rule. */
+.pg-controls > .st-panel-body,
+.pg-controls .st-panel-body > .pg-controls-title:not(:first-child) { position: relative; }
+.pg-controls > .st-panel-body::before,
+.pg-controls .st-panel-body > .pg-controls-title:not(:first-child)::before {
+  content: "";
+  position: absolute;
+  left: -16px;
+  right: -16px;
+  top: -12px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.04);
+  pointer-events: none;
+}
+.pg-controls .st-panel-body > .pg-controls-title:not(:first-child) { margin-top: 12px; }
+/* The hand-placed separator element is redundant now. */
+.pg-controls-sep { display: none; }
 
 /* Color swatch row */
 .pg-swatches { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -381,41 +790,51 @@ html[data-theme="dark"] .pg-controls {
    the panel column. */
 .st-panel-tabs {
   position: relative;
-  display: flex;
+  display: inline-flex;
+  align-self: flex-start;
   align-items: center;
   gap: 3px;
+  height: 36px;
   padding: 3px;
-  background: var(--chip-bg);
+  background: #272727;
   border-radius: 48px;
+  overflow: hidden;
 }
 .st-panel-tabs-indicator {
   position: absolute; top: 3px; left: 0;
-  height: calc(100% - 6px); width: 0;
-  background: var(--card-bg);
-  border-radius: 48px;
-  box-shadow: var(--card-shadow), inset 0 0 0 1px var(--card-border);
-  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), width 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  height: 30px; width: 0;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 36px;
+  box-shadow:
+    0 1px 1px 0 rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  transition:
+    transform var(--tabs-dur) var(--tabs-ease),
+    width var(--tabs-dur) var(--tabs-ease);
+  will-change: transform, width;
   pointer-events: none;
   z-index: 0;
 }
 .st-panel-tab {
   position: relative; z-index: 1;
-  flex: 1 1 auto;
-  font-family: var(--font-sans); font-size: 12px; font-weight: 500;
-  color: var(--text-muted);
+  font-family: var(--font-sans); font-size: 13px; font-weight: 500;
+  color: #979797;
   background: transparent; border: 0;
-  height: 28px; padding: 0 10px;
-  border-radius: 48px;
+  height: 30px; padding: 0 12px;
+  border-radius: 36px;
   cursor: pointer;
   white-space: nowrap;
-  transition: color 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: color var(--tabs-dur) var(--tabs-ease);
   -webkit-tap-highlight-color: transparent;
 }
 .st-panel-tab:hover,
-.st-panel-tab[aria-selected="true"] { color: var(--text); }
+.st-panel-tab[aria-selected="true"] { color: #fbfbfb; }
 .st-panel-tab:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
 
-/* The knob stack keeps the column's own gap when it is the visible tab. */
+@media (prefers-reduced-motion: reduce) {
+  .st-panel-tabs-indicator, .st-panel-tab { transition: none !important; }
+}
+
 .st-panel-body { display: flex; flex-direction: column; gap: 20px; }
 .st-panel-body[hidden] { display: none; }
 
@@ -585,3 +1004,45 @@ html[data-theme="dark"] .pg-controls {
 .st-chat-send:hover { background: #ffffff; }
 .st-chat-send:disabled { opacity: 0.35; cursor: default; }
 .st-chat-send:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
+
+/* ── Docs prose: the written pages in the docs shell ──────────
+   Same sidebar + main column as a library page; the main column
+   carries prose instead of tabs and panels. */
+.docs-prose { max-width: 686px; }
+.docs-prose > * + * { margin-top: 16px; }
+.docs-prose p { font-size: 15px; line-height: 25px; color: var(--text-muted); }
+.docs-prose h2 {
+  margin-top: 40px;
+  font-family: "Saans", var(--font-sans);
+  font-size: 20px; font-weight: 500; line-height: 28px;
+  color: var(--text);
+}
+.docs-prose h3 { margin-top: 24px; font-size: 15px; font-weight: 500; line-height: 22px; color: var(--text); }
+.docs-prose a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
+.docs-prose code {
+  font-family: var(--font-mono); font-size: 13px;
+  padding: 1px 6px; border-radius: 6px;
+  background: var(--chip-bg); color: var(--text);
+}
+.docs-prose ol, .docs-prose ul { padding-left: 20px; }
+.docs-prose li { font-size: 15px; line-height: 25px; color: var(--text-muted); }
+.docs-prose li + li { margin-top: 6px; }
+.docs-prose li strong { color: var(--text); font-weight: 500; }
+
+/* Numbered steps and statement cards share the quote-card material. */
+.docs-cards { display: grid; gap: 12px; margin-top: 20px; }
+.docs-card {
+  padding: 20px 24px;
+  border-radius: 18px;
+  background: var(--card-bg);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 -1px 0 0 rgba(255, 255, 255, 0.03);
+}
+.docs-card h3 { margin: 0 0 6px; font-size: 15px; font-weight: 500; line-height: 22px; color: var(--text); }
+.docs-card p { margin: 0; font-size: 14px; line-height: 22px; }
+.docs-card-step {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; margin-bottom: 10px;
+  border-radius: 50px;
+  background: var(--chip-bg); color: var(--text-muted);
+  font-size: 12px; font-weight: 500;
+}

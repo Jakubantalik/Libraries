@@ -25,8 +25,20 @@ export type BorderBeamTheme = 'dark' | 'light' | 'auto';
  * - 'mono': Monochromatic grayscale
  * - 'ocean': Blue and purple tones
  * - 'sunset': Warm orange, yellow, and red tones
+ * - 'forest': Green and teal tones
+ * - 'candy': Pink and magenta tones
+ * - 'ice': Cyan and pale blue tones
+ * - 'gold': Amber and yellow tones
  */
-export type BorderBeamColorVariant = 'colorful' | 'mono' | 'ocean' | 'sunset';
+export type BorderBeamColorVariant =
+  | 'colorful'
+  | 'mono'
+  | 'ocean'
+  | 'sunset'
+  | 'forest'
+  | 'candy'
+  | 'ice'
+  | 'gold';
 
 /**
  * Configuration for a size preset
@@ -126,6 +138,15 @@ export interface BorderBeamProps extends Omit<HTMLAttributes<HTMLDivElement>, 'c
    * @default 1.2 for dark, varies for light
    */
   saturation?: number;
+
+  /**
+   * Multiplies the blur radius of every glow layer, so the halo reads
+   * tighter (< 1) or wider and softer (> 1). Each layer keeps its own
+   * tuned proportion — the core stays tighter than the bloom — because
+   * this scales the presets rather than replacing them.
+   * @default 1
+   */
+  glowSize?: number;
 
   /**
    * Hue rotation range in degrees for the hue-shift animation

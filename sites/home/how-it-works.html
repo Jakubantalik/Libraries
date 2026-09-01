@@ -5,75 +5,38 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="color-scheme" content="dark" />
 
-  <title>Orb: thinking-orbs playground | Libraries.dev</title>
-  <meta
-    name="description"
-    content="Thought-orb loading indicators for AI interfaces. Nine hand-tuned animated states on a 2D canvas. Try them live and install thinking-orbs from npm."
-  />
-  <meta
-    name="keywords"
-    content="react, effects, webgl, border beam, thinking orb, gooey, liquid metal, image loader, UI libraries"
-  />
+  <title>How it works | Libraries.dev</title>
+  <meta name="description" content="How to use the Libraries.dev React effect libraries and the Studio: install, wrap, tune, and hand the whole thing to a coding agent." />
   <meta name="author" content="Libraries.dev" />
   <meta name="robots" content="index, follow, max-image-preview:large" />
-  <meta name="googlebot" content="index, follow" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  <meta name="format-detection" content="telephone=no" />
   <meta name="theme-color" content="#121212" />
-  <meta name="apple-mobile-web-app-title" content="Libraries.dev" />
-  <meta name="application-name" content="Libraries.dev" />
 
-  <link rel="canonical" href="https://libraries.dev/orbs.html" />
-  <link rel="alternate" hreflang="en" href="https://libraries.dev/orbs.html" />
-  <link rel="alternate" hreflang="x-default" href="https://libraries.dev/orbs.html" />
-
+  <link rel="canonical" href="https://libraries.dev/how-it-works.html" />
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="/assets/favicon.svg" />
 
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Libraries.dev" />
-  <meta property="og:url" content="https://libraries.dev/orbs.html" />
-  <meta property="og:locale" content="en_US" />
-  <meta property="og:title" content="Orb: thinking-orbs playground | Libraries.dev" />
-  <meta property="og:description" content="Thought-orb loading indicators for AI interfaces. Nine hand-tuned animated states on a 2D canvas. Try them live and install thinking-orbs from npm." />
-
+  <meta property="og:url" content="https://libraries.dev/how-it-works.html" />
+  <meta property="og:title" content="How it works · Libraries.dev" />
+  <meta property="og:description" content="How to use the Libraries.dev React effect libraries and the Studio — install, wrap, tune, and hand the whole thing to a coding agent." />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Orb: thinking-orbs playground | Libraries.dev" />
-  <meta name="twitter:description" content="Thought-orb loading indicators for AI interfaces. Nine hand-tuned animated states on a 2D canvas. Try them live and install thinking-orbs from npm." />
+  <meta name="twitter:title" content="How it works · Libraries.dev" />
+  <meta name="twitter:description" content="How to use the Libraries.dev React effect libraries and the Studio — install, wrap, tune, and hand the whole thing to a coding agent." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    rel="preload"
-    as="style"
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
-  />
-  <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
     rel="stylesheet"
   />
-  <link
-    rel="preload"
-    as="font"
-    type="font/woff2"
-    href="/assets/fonts/Saans-Medium.woff2"
-    crossorigin
-  />
+  <link rel="preload" as="font" type="font/woff2" href="/assets/fonts/Saans-Medium.woff2" crossorigin />
   <link rel="stylesheet" href="/assets/site.css" />
   <link rel="stylesheet" href="/assets/playground.css" />
-  <link rel="stylesheet" href="/assets/examples.css" />
-  <style>
-    /* Detail page: copy-button icon swap + full-width live snippet */
-    .code-copy .icon-check { display: none; }
-    .code-copy[data-copied="true"] .icon-copy { display: none; }
-    .code-copy[data-copied="true"] .icon-check { display: block; }
-    .pg-snippet { grid-column: 1 / -1; margin-top: 0; }
-    #playground { margin-top: 0; scroll-margin-top: 24px; }
-    .pg { row-gap: 16px; }
-  </style>
 </head>
 <body>
-  <a class="skip-link" href="#playground">Skip to content</a>
+  <a class="skip-link" href="#docs">Skip to content</a>
   <main id="main" class="app">
     <header class="site-nav">
       <div class="site-nav-inner">
@@ -89,7 +52,6 @@
           <nav class="site-nav-menu" aria-label="Primary">
             <a class="nav-pill nav-pill--active" href="/#components">Libraries</a>
             <a class="nav-pill" href="/studio.html">Studio</a>
-            <a class="nav-pill" href="/how-to-use.html">How to use</a>
           </nav>
         </div>
         <div class="site-nav-right">
@@ -161,8 +123,7 @@
         <ul class="mobile-menu-list">
           <li><a class="mobile-menu-link mobile-menu-link--1" href="/#components">Libraries</a></li>
           <li><a class="mobile-menu-link mobile-menu-link--2" href="/studio.html">Studio</a></li>
-          <li><a class="mobile-menu-link mobile-menu-link--3" href="/how-to-use.html">How to use</a></li>
-          <li><a class="mobile-menu-link mobile-menu-link--4 mobile-menu-link--pro" href="/pro.html">Get Pro</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--3 mobile-menu-link--pro" href="/pro.html">Get Pro</a></li>
         </ul>
         <a class="mobile-menu-cta" id="mobile-signin" href="/pro.html">Sign in</a>
       </nav>
@@ -172,7 +133,7 @@
       <aside class="docs-sidebar">
         <div class="docs-group docs-group--links">
           <div class="docs-group-label">Getting started</div>
-          <a class="docs-link docs-link--muted" href="/how-it-works.html">How it works</a>
+          <a class="docs-link is-active" href="/how-it-works.html" aria-current="page">How it works</a>
           <a class="docs-link docs-link--muted" href="/accessibility.html">Accessibility</a>
           <a class="docs-link docs-link--muted" href="/studio.html">Studio</a>
           <a class="docs-link docs-link--muted" href="/pro.html">Get Pro</a>
@@ -181,7 +142,7 @@
           <div class="docs-group-label">Libraries</div>
           <nav class="docs-list" aria-label="Libraries">
             <a class="docs-link" href="/beam.html"><img class="docs-link-icon" src="/assets/icons/tile-beam.png" alt="" width="18" height="18" loading="lazy" decoding="async" />Border beam</a>
-            <a class="docs-link is-active" href="/orbs.html" aria-current="page"><img class="docs-link-icon" src="/assets/icons/tile-orbs.png" alt="" width="18" height="18" loading="lazy" decoding="async" />Thinking orbs</a>
+            <a class="docs-link" href="/orbs.html"><img class="docs-link-icon" src="/assets/icons/tile-orbs.png" alt="" width="18" height="18" loading="lazy" decoding="async" />Thinking orbs</a>
             <a class="docs-link" href="/gooey.html"><img class="docs-link-icon" src="/assets/icons/tile-gooey.png" alt="" width="18" height="18" loading="lazy" decoding="async" />Gooey</a>
             <a class="docs-link" href="/metal.html"><img class="docs-link-icon" src="/assets/icons/tile-metal.png" alt="" width="18" height="18" loading="lazy" decoding="async" />Metal</a>
             <a class="docs-link" href="/image.html"><img class="docs-link-icon" src="/assets/icons/tile-image.png" alt="" width="18" height="18" loading="lazy" decoding="async" />Image</a>
@@ -190,109 +151,98 @@
       </aside>
 
       <div class="docs-main">
-        <div class="detail-topbar">
-          <a class="detail-arrow" href="/beam.html" aria-label="Previous library — Beam">
-            <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12.667 8H3.333M6.667 4.667 3.333 8l3.334 3.333" /></svg>
-          </a>
-          <a class="detail-arrow" href="/gooey.html" aria-label="Next library — Gooey">
-            <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.333 8h9.334M9.333 4.667 12.667 8l-3.334 3.333" /></svg>
-          </a>
-        </div>
-
         <header class="detail-head">
           <div class="detail-titles">
-            <span class="detail-icon" aria-hidden="true"><img src="/assets/icons/tile-orbs.png" alt="" width="46" height="46" decoding="async" /></span>
-            <h1 class="detail-title">Thinking orbs</h1>
-            <p class="detail-sub">Thought-orb loading indicators for AI interfaces, with nine hand-tuned animated states.</p>
-          </div>
-
-          <div class="detail-head-row">
-            <div class="detail-tabs proto-modal-tabs" data-detail-tabs role="tablist" aria-label="View">
-              <span class="proto-modal-tabs-indicator" aria-hidden="true"></span>
-              <button type="button" class="proto-modal-tab" role="tab" data-detail-tab="preview" aria-selected="true">Preview</button>
-              <button type="button" class="proto-modal-tab" role="tab" data-detail-tab="install" aria-selected="false">Install</button>
-              <button type="button" class="proto-modal-tab" role="tab" data-detail-tab="usage" aria-selected="false">Usage</button>
-            </div>
-
-            <div class="detail-head-actions">
-              <a class="t-pro-btn detail-studio" href="/studio/app.html#orb">
-                <img src="/assets/icons/magic-wand.svg" alt="" width="16" height="16" decoding="async" />
-                <span class="detail-studio-sparks" aria-hidden="true"><i style="--ox: -1px; --oy: -3px; --sx: 0px; --sy: -11px; --sd: 900ms; --sdelay: 0ms;"></i><i style="--ox: 2px; --oy: -2px; --sx: 9px; --sy: -9px; --sd: 1000ms; --sdelay: 120ms;"></i><i style="--ox: 2px; --oy: 5px; --sx: 9px; --sy: 9px; --sd: 950ms; --sdelay: 240ms;"></i><i style="--ox: -5px; --oy: -2px; --sx: -9px; --sy: -9px; --sd: 1000ms; --sdelay: 360ms;"></i><i style="--ox: 3px; --oy: 1px; --sx: 12px; --sy: 1px; --sd: 920ms; --sdelay: 480ms;"></i><i style="--ox: -1px; --oy: -3px; --sx: 0px; --sy: -11px; --sd: 950ms; --sdelay: 520ms;"></i><i style="--ox: 2px; --oy: -2px; --sx: 9px; --sy: -9px; --sd: 900ms; --sdelay: 650ms;"></i><i style="--ox: 2px; --oy: 5px; --sx: 9px; --sy: 9px; --sd: 1000ms; --sdelay: 760ms;"></i><i style="--ox: -5px; --oy: -2px; --sx: -9px; --sy: -9px; --sd: 930ms; --sdelay: 180ms;"></i><i style="--ox: 3px; --oy: 1px; --sx: 12px; --sy: 1px; --sd: 980ms; --sdelay: 300ms;"></i></span>
-                <span class="t-pro-btn-label">Tune in Studio</span>
-              </a>
-
-              <button type="button" class="detail-prompt" data-prompt-target="#agent-prompt" aria-label="Copy agent prompt">
-                <span class="detail-prompt-label">Copy prompt</span>
-              </button>
-            </div>
+            <h1 class="detail-title">How it works</h1>
+            <p class="detail-sub">Five React effect libraries and one workbench. Here is the whole thing in a few minutes.</p>
           </div>
         </header>
 
-        <div class="detail-body">
-          <div class="detail-panel" id="playground" data-detail-panel="preview">
-            <div id="playground-root"></div>
-          </div>
+        <div class="detail-body docs-prose">
+          <p>
+            Every effect on this site is its own npm package. There is no
+            framework to adopt and no account needed to use them. You install
+            the one you want, wrap an element, and you are done. Everything is
+            MIT-licensed and free.
+          </p>
 
-          <div class="detail-panel" data-detail-panel="install" hidden>
-            <div class="code-block">
-              <pre id="install-code">npm install thinking-orbs</pre>
-              <button type="button" class="code-copy" data-copy-target="#install-code" aria-label="Copy install command">
-                <svg class="icon-copy" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </svg>
-                <svg class="icon-check" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              </button>
+          <h2>Using a library</h2>
+
+          <div class="docs-cards">
+            <div class="docs-card">
+              <span class="docs-card-step" aria-hidden="true">1</span>
+              <h3>Pick the effect</h3>
+              <p>
+                Open any library in the sidebar: <a href="/beam.html">Border beam</a>,
+                <a href="/orbs.html">Thinking orbs</a>, <a href="/gooey.html">Gooey</a>,
+                <a href="/metal.html">Metal</a> or <a href="/image.html">Image</a>. Each page has a
+                live playground, so you can try the effect before you install anything.
+              </p>
+            </div>
+            <div class="docs-card">
+              <span class="docs-card-step" aria-hidden="true">2</span>
+              <h3>Install it</h3>
+              <p>
+                Each page's Install tab has the one command you need, for example
+                <code>npm install border-beam</code>. You need React 18 or newer. The packages
+                have no runtime dependencies, except Image, which also needs <code>three</code>.
+              </p>
+            </div>
+            <div class="docs-card">
+              <span class="docs-card-step" aria-hidden="true">3</span>
+              <h3>Wrap your element</h3>
+              <p>
+                The Usage tab shows the shape. Most libraries wrap whatever you already
+                have, whether that is a card, a button or an avatar, and animate around
+                it, so your own markup does not change.
+              </p>
+            </div>
+            <div class="docs-card">
+              <span class="docs-card-step" aria-hidden="true">4</span>
+              <h3>Tune it</h3>
+              <p>
+                Change the controls in the playground and the code block below it updates
+                as you go. Copy that snippet and you have the exact settings you were
+                looking at.
+              </p>
             </div>
           </div>
 
-          <div class="detail-panel" data-detail-panel="usage" hidden>
-            <div class="code-block">
-              <pre id="usage-code">import { ThinkingOrb } from 'thinking-orbs';
+          <h2>If you build with a coding agent</h2>
+          <p>
+            Every library page has a <strong>Copy prompt</strong> button next to the tabs. It
+            copies a short brief written for Cursor, Claude Code, Codex or whatever you
+            use: the install command, a usage example, and the full list of props. Paste it
+            into your agent and it has everything it needs, without guessing at an API.
+          </p>
 
-&lt;ThinkingOrb state="searching" size={64} /&gt;</pre>
-              <button type="button" class="code-copy" data-copy-target="#usage-code" aria-label="Copy usage example">
-                <svg class="icon-copy" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </svg>
-                <svg class="icon-check" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              </button>
-            </div>
-          </div>
+          <h2>The Studio</h2>
+          <p>
+            The playground on each library page covers the settings most people want. The
+            <a href="/studio.html">Studio</a> is the full workbench: every library in one place,
+            with far more parameters than the public playgrounds expose, and a live code snippet
+            that always matches what you see.
+          </p>
+          <p>
+            Each panel has two tabs. <strong>Manual control</strong> is the knobs. <strong>Agent</strong>
+            is a chat: describe the look you are after in plain words and let it dial the
+            settings in for you. Switching between them keeps your work; nothing resets.
+          </p>
+          <p>
+            When you are happy, copy the snippet and paste it into your project. The Studio is
+            part of <a href="/pro.html">Libraries Pro</a>.
+          </p>
+
+          <h2>Questions we get a lot</h2>
+          <ul>
+            <li><strong>Do I need Pro to use the libraries?</strong> No. All five are free and MIT-licensed. Pro adds the Studio and Pro presets.</li>
+            <li><strong>Does it work outside React?</strong> The packages target React. Community ports exist for Svelte, Vue, Expo and React Native, and SwiftUI ports for Border beam and Thinking orbs live in the main repository.</li>
+            <li><strong>Can I use them commercially?</strong> Yes, MIT covers commercial work.</li>
+            <li><strong>How heavy are they?</strong> About 83&nbsp;KB gzipped for all five together, and you only ship the ones you install.</li>
+          </ul>
         </div>
       </div>
     </div>
-
-    <!-- Agent prompt source for the Copy prompt button. A hidden <pre>
-         rather than a <script>: script content is raw text, so the
-         escaped tags below would reach the clipboard still escaped. -->
-    <pre id="agent-prompt" hidden>
-Add the Orb effect from Libraries.dev to my React app.
-
-Install:
-npm install thinking-orbs
-
-Usage:
-import { ThinkingOrb } from 'thinking-orbs';
-
-&lt;ThinkingOrb state="searching" size={64} /&gt;
-
-Props:
-- state: "working" | "searching" | "solving" | "listening" | "connecting" | "weaving" | "composing" | "breathing" | "shaping"
-- size: 64 (chat-avatar scale) or 20 (inline-text scale) — each is separately tuned
-- speed: multiplies the animation clock, default 1
-- dark: boolean, picks the light or dark tuning
-- paused: boolean, freezes the animation
-
-Orb replaces the spinner in an AI "thinking" state with nine hand-tuned animated
-states. It ships zero runtime dependencies and needs React 18 or newer.
-Docs: https://libraries.dev/orbs.html
-    </pre>
 
     <footer class="footer">
       <div class="footer-top">
@@ -320,7 +270,6 @@ Docs: https://libraries.dev/orbs.html
             <p class="footer-col-title">Product</p>
             <a href="/">Home</a>
             <a href="/studio.html">Studio</a>
-            <a href="/how-to-use.html">How to use</a>
             <a href="/pro.html">Get Pro</a>
           </div>
           <div class="footer-col">
@@ -336,23 +285,7 @@ Docs: https://libraries.dev/orbs.html
     </footer>
   </main>
 
-  <script>
-    (function () {
-      document.querySelectorAll(".code-copy[data-copy-target]").forEach(function (btn) {
-        var timer = null;
-        btn.addEventListener("click", function () {
-          var src = document.querySelector(btn.getAttribute("data-copy-target"));
-          if (!src) return;
-          if (navigator.clipboard) navigator.clipboard.writeText(src.textContent || "").catch(function () {});
-          btn.setAttribute("data-copied", "true");
-          clearTimeout(timer);
-          timer = setTimeout(function () { btn.removeAttribute("data-copied"); }, 1600);
-        });
-      });
-    })();
-  </script>
   <script src="/assets/site.js" defer></script>
   <script src="/assets/pro-client.js" defer></script>
-  <script type="module" src="/src/orbs.tsx"></script>
 </body>
 </html>

@@ -6,6 +6,7 @@ import {
   useState,
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
+  type ReactNode,
 } from "react";
 import { Liquid } from "liquid-gooey";
 import { ControlsPanel, PgTabs, PgSlider, PgToggles, PgSwatches, PanelTitle, PanelSep, Snippet, num } from "./controls";
@@ -169,7 +170,7 @@ const ANTICIP_DUR = 700;
 const ICON_DUR = 180;
 const ICON_DELAY = 120;
 
-function MorphDemo({ group, knobs }: { group: GroupTuning; knobs: MorphKnobs }) {
+export function MorphDemo({ group, knobs }: { group: GroupTuning; knobs: MorphKnobs }) {
   const [open, setOpen] = useState(false);
   const [anticipating, setAnticipating] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -270,7 +271,7 @@ interface MoveKnobs {
 }
 const MOVE_DEFAULTS: MoveKnobs = { springiness: 0.5, wobble: 0.5, stretch: 0.6, trail: 0.35 };
 
-function MoveDemo({ group, knobs }: { group: GroupTuning; knobs: MoveKnobs }) {
+export function MoveDemo({ group, knobs }: { group: GroupTuning; knobs: MoveKnobs }) {
   const [x, setX] = useState(84);
   const drag = useRef<number | null>(null);
 
@@ -333,7 +334,7 @@ interface BendKnobs {
 }
 const BEND_DEFAULTS: BendKnobs = { vertical: 0.6, horizontal: 0.35, content: 0.3 };
 
-function BendDemo({ group, knobs }: { group: GroupTuning; knobs: BendKnobs }) {
+export function BendDemo({ group, knobs }: { group: GroupTuning; knobs: BendKnobs }) {
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const [releasing, setReleasing] = useState(false);
   const stageRef = useRef<HTMLDivElement | null>(null);
@@ -483,7 +484,7 @@ function MeltCard({
   );
 }
 
-function MeltDemo({ melt }: { melt: MeltKnobs }) {
+export function MeltDemo({ melt }: { melt: MeltKnobs }) {
   const stageRef = useRef<HTMLDivElement | null>(null);
   const [a, setA] = useState<Pos>({ x: 0, y: (MELT_STAGE_H - MELT_CARD) / 2 });
   const [b, setB] = useState<Pos>({ x: MELT_CARD + 24, y: (MELT_STAGE_H - MELT_CARD) / 2 });
@@ -621,7 +622,27 @@ function buildSnippet(
 
 /* ── The workbench ─────────────────────────────────────────────── */
 
-export function GooeyStudio({ visible = true }: { visible?: boolean }) {
+/* One component, two surfaces. The Studio gets the whole panel behind its
+   Manual control / Agent tabs; the public detail page gets the same demos
+   with only the effect switch and the two surface knobs, and no Agent —
+   the deeper tuning is what Pro is for. */
+/* The demo page's own defaults, so the detail-page examples render the
+   effect exactly as that page does without carrying the Studio's state. */
+export const GOOEY_EXAMPLE_DEFAULTS = {
+  group: { blur: 6, contrast: 18, fill: SURFACE_DEFAULT, waviness: 0 } as GroupTuning,
+  morph: MORPH_DEFAULTS,
+  move: MOVE_DEFAULTS,
+  bend: BEND_DEFAULTS,
+};
+
+export function GooeyStudio({
+  visible = true,
+  variant = "studio",
+}: {
+  visible?: boolean;
+  variant?: "studio" | "public";
+}) {
+  const isPublic = variant === "public";
   const [effect, setEffect] = useState<EffectType>("morph");
 
   const [group, setGroup] = useState<GroupTuning>({ blur: 6, contrast: 18, fill: SURFACE_DEFAULT, waviness: 0 });
@@ -717,6 +738,26 @@ export function GooeyStudio({ visible = true }: { visible?: boolean }) {
 
   const snippet = buildSnippet(effect, group, morph, move, bend, melt);
 
+  /* The public page skips ControlsPanel entirely, so the Agent tab never
+     renders there rather than rendering hidden — which also means it never
+     mounts the agent wiring the Studio side passes below. */
+  const Controls = isPublic
+    ? ({ children }: { children: ReactNode }) => <div className="pg-controls">{children}</div>
+    : ({ children }: { children: ReactNode }) => (
+        <ControlsPanel
+          library="Gooey"
+          agent={{
+            libraryId: "gooey",
+            params: agentParams,
+            labels: GOOEY_PARAM_LABELS,
+            onApply: applyAgentParams,
+          }}
+          prompt={{ pkg: "liquid-gooey", docsPath: "/gooey.html", snippet }}
+        >
+          {children}
+        </ControlsPanel>
+      );
+
   return (
     <div className="pg">
       <div className="pg-stage">
@@ -726,20 +767,18 @@ export function GooeyStudio({ visible = true }: { visible?: boolean }) {
         {visible && effect === "melt" && <MeltDemo melt={melt} />}
       </div>
 
-      <ControlsPanel
-        library="Gooey"
-        agent={{
-          libraryId: "gooey",
-          params: agentParams,
-          labels: GOOEY_PARAM_LABELS,
-          onApply: applyAgentParams,
-        }}
-        prompt={{ pkg: "liquid-gooey", docsPath: "/gooey.html", snippet }}
-      >
-        <PanelTitle>Gooey</PanelTitle>
+      <Controls>
+        {!isPublic && <PanelTitle>Main</PanelTitle>}
         <PgTabs label="Effect" options={EFFECT_OPTIONS} value={effect} onChange={setEffect} />
 
-        {effect !== "melt" && (
+        {isPublic && effect !== "melt" && (
+          <>
+            <PgSlider label="Goo blur" value={group.blur} min={0} max={16} step={0.5} onChange={(v) => setGroupKey("blur", v)} />
+            <PgSlider label="Contrast" value={group.contrast} min={4} max={40} step={1} onChange={(v) => setGroupKey("contrast", v)} />
+          </>
+        )}
+
+        {!isPublic && effect !== "melt" && (
           <>
             <PanelSep />
             <PanelTitle>Surface</PanelTitle>
@@ -750,7 +789,7 @@ export function GooeyStudio({ visible = true }: { visible?: boolean }) {
           </>
         )}
 
-        {effect === "morph" && (
+        {!isPublic && effect === "morph" && (
           <>
             <PanelSep />
             <PanelTitle>Menu motion</PanelTitle>
@@ -762,7 +801,7 @@ export function GooeyStudio({ visible = true }: { visible?: boolean }) {
           </>
         )}
 
-        {effect === "move" && (
+        {!isPublic && effect === "move" && (
           <>
             <PanelSep />
             <PanelTitle>Move physics</PanelTitle>
@@ -773,7 +812,7 @@ export function GooeyStudio({ visible = true }: { visible?: boolean }) {
           </>
         )}
 
-        {effect === "bend" && (
+        {!isPublic && effect === "bend" && (
           <>
             <PanelSep />
             <PanelTitle>Bend physics</PanelTitle>
@@ -783,7 +822,7 @@ export function GooeyStudio({ visible = true }: { visible?: boolean }) {
           </>
         )}
 
-        {effect === "melt" && (
+        {!isPublic && effect === "melt" && (
           <>
             <PanelSep />
             <PanelTitle>Melt physics</PanelTitle>
@@ -796,7 +835,7 @@ export function GooeyStudio({ visible = true }: { visible?: boolean }) {
             <PgSlider label="Gravity" value={melt.gravity} min={0} max={4} step={0.1} onChange={(v) => setMelt((m) => ({ ...m, gravity: v }))} />
           </>
         )}
-      </ControlsPanel>
+      </Controls>
 
       <Snippet code={snippet} />
     </div>

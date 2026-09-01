@@ -108,7 +108,9 @@ export function PgTabs<T extends string>({
   );
 }
 
-/** Filled-track slider (visual track + invisible native range for a11y).
+/** Value slider + input (Figma 1418:38136): the fill grows inside a 32px
+    block, the label rides the fill, the value sits at the right. The
+    invisible native range stays on top for pointer + keyboard + readers.
     Values re-round after parse so float dust never reaches the label. */
 export function PgSlider({
   label,
@@ -137,24 +139,19 @@ export function PgSlider({
   );
   return (
     <div className="pg-field">
-      <span className="pg-label">{label}</span>
-      <div className="pg-slider-row">
-        <div className="pg-slider">
-          <div className="pg-slider-track">
-            {pct > 0 && <div className="pg-slider-fill" style={{ width: `${pct}%` }} />}
-            <div className="pg-slider-thumb" style={{ left: `${pct}%` }} />
-          </div>
-          <input
-            type="range"
-            value={value}
-            min={min}
-            max={max}
-            step={step}
-            onChange={(e) => handleChange(parseFloat(e.target.value))}
-            aria-label={label}
-          />
-        </div>
-        <span className="pg-slider-value">{display ?? value}</span>
+      <div className="pg-vslider">
+        <div className="pg-vslider-fill" style={{ width: `${pct}%` }} />
+        <span className="pg-vslider-label">{label}</span>
+        <span className="pg-vslider-value">{display ?? value}</span>
+        <input
+          type="range"
+          value={value}
+          min={min}
+          max={max}
+          step={step}
+          onChange={(e) => handleChange(parseFloat(e.target.value))}
+          aria-label={label}
+        />
       </div>
     </div>
   );
@@ -262,7 +259,7 @@ export interface AgentWiring {
    the transcript so the phrasing someone tried is not lost. */
 const AGENT_UNAVAILABLE =
   "The agent doesn't reach this library's controls yet. " +
-  "Your message is kept here — switch to Manual control to tune by hand, or use " +
+  "Your message is kept here. Switch to Manual control to tune by hand, or use " +
   "Copy prompt on the library page to hand the whole library to your own coding agent.";
 
 function AgentChat({ library, wiring }: { library: string; wiring?: AgentWiring }) {
@@ -403,7 +400,7 @@ function AgentChat({ library, wiring }: { library: string; wiring?: AgentWiring 
       <div className="st-chat-log" ref={logRef} role="log" aria-label="Agent conversation">
         {messages.length === 0 ? (
           <p className="st-chat-empty">
-            Describe the look you want and the agent tunes {library} for you — “make the
+            Describe the look you want and the agent tunes {library} for you: “make the
             glow slower and cooler”, “tighter corners”, “calmer motion”.
           </p>
         ) : (
@@ -654,41 +651,76 @@ export function ControlsPanel({
 }) {
   const [tab, setTab] = useState<PanelTab>("manual");
   const barRef = useRef<HTMLDivElement | null>(null);
-  const [pill, setPill] = useState({ left: 0, width: 0 });
+  const pillRef = useRef<HTMLSpanElement | null>(null);
+  /* move() reads the current tab from a ref so the measure effect does not
+     have to re-subscribe its observer every time the tab changes. */
+  const tabRef = useRef<PanelTab>("manual");
 
   /* Measure from the selected button rather than assuming equal widths —
-     "Manual control" is far wider than "Agent". Re-measured on tab change
-     and once webfonts land, which shifts both labels. */
+     "Manual controls" is far wider than "Agent".
+
+     Following the tabs-sliding recipe, the pill only tweens when a tab is
+     clicked. First paint and resize write the same values with the
+     transition suspended, so it snaps into place instead of animating out
+     of nothing. */
+  const move = useCallback((animate: boolean) => {
+    const bar = barRef.current;
+    const pill = pillRef.current;
+    if (!bar || !pill) return;
+    const btn = bar.querySelector<HTMLElement>(`[data-tab="${tabRef.current}"]`);
+    if (!btn || !btn.offsetWidth) return;
+    if (!animate) {
+      const prev = pill.style.transition;
+      pill.style.transition = "none";
+      pill.style.transform = `translateX(${btn.offsetLeft}px)`;
+      pill.style.width = `${btn.offsetWidth}px`;
+      void pill.offsetWidth; // flush, so restoring the transition cannot tween
+      pill.style.transition = prev;
+      return;
+    }
+    pill.style.transform = `translateX(${btn.offsetLeft}px)`;
+    pill.style.width = `${btn.offsetWidth}px`;
+  }, []);
+
+  const select = useCallback(
+    (next: PanelTab) => {
+      setTab(next);
+      tabRef.current = next;
+      move(true);
+    },
+    [move]
+  );
+
   useLayoutEffect(() => {
-    const measure = () => {
-      const bar = barRef.current;
-      if (!bar) return;
-      const btn = bar.querySelector<HTMLElement>(`[data-tab="${tab}"]`);
-      if (btn) setPill({ left: btn.offsetLeft, width: btn.offsetWidth });
+    const snap = () => move(false);
+    snap();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(snap);
+    window.addEventListener("resize", snap);
+    /* The Studio keeps every library's panel mounted and hides the ones it
+       is not showing, and a hidden element measures 0 — so without this the
+       indicator stays collapsed until the window happens to resize. The
+       observer fires when the bar gets its width on becoming visible. */
+    const ro = new ResizeObserver(snap);
+    if (barRef.current) ro.observe(barRef.current);
+    return () => {
+      window.removeEventListener("resize", snap);
+      ro.disconnect();
     };
-    measure();
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
-    window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
-  }, [tab]);
+  }, [move]);
 
   return (
     <div className="pg-controls">
       <div className="st-panel-tabs" ref={barRef} role="tablist" aria-label="Control mode">
-        <span
-          className="st-panel-tabs-indicator"
-          aria-hidden="true"
-          style={{ transform: `translateX(${pill.left}px)`, width: pill.width }}
-        />
+        <span className="st-panel-tabs-indicator" ref={pillRef} aria-hidden="true" />
         <button
           type="button"
           className="st-panel-tab"
           role="tab"
           data-tab="manual"
           aria-selected={tab === "manual"}
-          onClick={() => setTab("manual")}
+          onClick={() => select("manual")}
         >
-          Manual control
+          Manual controls
         </button>
         <button
           type="button"
@@ -696,7 +728,7 @@ export function ControlsPanel({
           role="tab"
           data-tab="agent"
           aria-selected={tab === "agent"}
-          onClick={() => setTab("agent")}
+          onClick={() => select("agent")}
         >
           Agent
         </button>

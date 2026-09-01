@@ -1,10 +1,11 @@
 import { StrictMode, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { CodeCopy } from "./examples/CodeCopy";
 import { ThinkingOrb, type OrbSize, type OrbState } from "thinking-orbs";
 
 /* Orb detail page — playground island (stage + controls + live snippet).
    Mirrors the live playground at sites/orbs/components/Playground.tsx:
-   nine state tabs, 64/20 size tabs, 25–300% speed slider, starts paused. */
+   nine state tabs, 64/20 size tabs, starts paused. */
 
 const STATES: OrbState[] = [
   "working",
@@ -17,14 +18,12 @@ const STATES: OrbState[] = [
   "breathing",
   "shaping",
 ];
+/* Two sizes here; 32px and the speed knob live in the Studio. */
 const SIZES: OrbSize[] = [64, 20];
 
-const SPEED_MIN = 25;
-const SPEED_MAX = 300;
 
-function buildSnippet(state: OrbState, size: OrbSize, speed: number): string {
+function buildSnippet(state: OrbState, size: OrbSize): string {
   const props = [`state="${state}"`, `size={${size}}`];
-  if (speed !== 100) props.push(`speed={${(speed / 100).toFixed(2)}}`);
   return `import { ThinkingOrb } from 'thinking-orbs';\n\n<ThinkingOrb ${props.join(" ")} />`;
 }
 
@@ -45,77 +44,57 @@ function CheckIcon() {
   );
 }
 
-function CopyButton({ getText, label }: { getText: () => string; label: string }) {
-  const [copied, setCopied] = useState(false);
-  const timerRef = useRef<number | undefined>(undefined);
-  const onClick = () => {
-    if (navigator.clipboard) void navigator.clipboard.writeText(getText()).catch(() => {});
-    setCopied(true);
-    window.clearTimeout(timerRef.current);
-    timerRef.current = window.setTimeout(() => setCopied(false), 1600);
-  };
-  return (
-    <button type="button" className="code-copy" data-copied={copied ? "true" : undefined} aria-label={label} onClick={onClick}>
-      <CopyIcon />
-      <CheckIcon />
-    </button>
-  );
-}
-
-function Slider({
-  min,
-  max,
-  step,
-  value,
-  onChange,
-  format,
-  ariaLabel,
-}: {
-  min: number;
-  max: number;
-  step: number;
-  value: number;
-  onChange: (value: number) => void;
-  format: (value: number) => string;
-  ariaLabel: string;
-}) {
-  const pct = ((value - min) / (max - min)) * 100;
-  return (
-    <div className="pg-slider-row">
-      <div className="pg-slider">
-        <div className="pg-slider-track">
-          <div className="pg-slider-fill" style={{ width: `${pct}%` }} />
-          <div className="pg-slider-thumb" style={{ left: `${pct}%` }} />
-        </div>
-        <input
-          type="range"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          aria-label={ariaLabel}
-        />
-      </div>
-      <span className="pg-slider-value">{format(value)}</span>
-    </div>
-  );
-}
-
 function OrbPlayground() {
   const [state, setState] = useState<OrbState>("listening");
   const [size, setSize] = useState<OrbSize>(64);
-  const [speed, setSpeed] = useState(100);
   // Starts paused so the page loads quietly (same as the live playground).
   const [paused, setPaused] = useState(true);
 
-  const snippet = buildSnippet(state, size, speed);
+  const snippet = buildSnippet(state, size);
 
   return (
     <>
+      {/* The demo page's own examples first: the orb doing its job inside
+          the status pills and chips it was drawn for, before any knobs. */}
+      <div className="detail-examples">
+        <div className="example-row-full">
+          <div className="ex-stack">
+            <span className="ex-pill">
+              <ThinkingOrb state="solving" size={64} theme="dark" paused={paused} />
+              Solving…
+            </span>
+          </div>
+        </div>
+        <div className="example-row-split">
+          <div className="example-cell">
+            <div className="ex-stack">
+              <span className="ex-chip">
+                <ThinkingOrb state="searching" size={20} theme="dark" paused={paused} />
+                Searching
+              </span>
+              <span className="ex-chip">
+                <ThinkingOrb state="weaving" size={20} theme="dark" paused={paused} />
+                Planning
+              </span>
+            </div>
+          </div>
+          <div className="example-cell">
+            <div className="ex-stack">
+              <span className="ex-pill">
+                <ThinkingOrb state="composing" size={64} theme="dark" paused={paused} />
+                Thinking…
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p className="detail-playground-label">Playground</p>
+
+      <div className="pg">
       <div className="pg-stage">
         {/* key remounts the canvas on state/size change, matching the live playground */}
-        <ThinkingOrb key={`${state}-${size}`} state={state} size={size} speed={speed / 100} paused={paused} theme="dark" />
+        <ThinkingOrb key={`${state}-${size}`} state={state} size={size} paused={paused} theme="dark" />
         <button
           type="button"
           className="btn-animate pg-play"
@@ -165,23 +144,13 @@ function OrbPlayground() {
           </div>
         </div>
 
-        <div className="pg-field">
-          <span className="pg-label">Speed</span>
-          <Slider
-            min={SPEED_MIN}
-            max={SPEED_MAX}
-            step={5}
-            value={speed}
-            onChange={setSpeed}
-            format={(v) => `${(v / 100).toFixed(2)}×`}
-            ariaLabel="Animation speed"
-          />
-        </div>
+      </div>
+
       </div>
 
       <div className="code-block pg-snippet">
         <pre>{snippet}</pre>
-        <CopyButton getText={() => snippet} label="Copy playground snippet" />
+        <CodeCopy text={snippet} label="Copy playground snippet" />
       </div>
     </>
   );

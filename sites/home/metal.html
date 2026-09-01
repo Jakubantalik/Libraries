@@ -61,6 +61,7 @@
   />
   <link rel="stylesheet" href="/assets/site.css" />
   <link rel="stylesheet" href="/assets/playground.css" />
+  <link rel="stylesheet" href="/assets/examples.css" />
   <style>
     /* Detail page: copy-button icon swap + full-width live snippet */
     .code-copy .icon-check { display: none; }
@@ -197,15 +198,16 @@
       <aside class="docs-sidebar">
         <div class="docs-group docs-group--links">
           <div class="docs-group-label">Getting started</div>
-          <a class="docs-link docs-link--muted" href="/#components">Introduction</a>
+          <a class="docs-link docs-link--muted" href="/how-it-works.html">How it works</a>
+          <a class="docs-link docs-link--muted" href="/accessibility.html">Accessibility</a>
           <a class="docs-link docs-link--muted" href="/studio.html">Studio</a>
           <a class="docs-link docs-link--muted" href="/pro.html">Get Pro</a>
         </div>
         <div class="docs-group">
           <div class="docs-group-label">Libraries</div>
           <nav class="docs-list" aria-label="Libraries">
-            <a class="docs-link" href="/beam.html"><img class="docs-link-icon" src="/assets/icons/tile-beam.png" alt="" width="18" height="18" loading="lazy" decoding="async" />Beam</a>
-            <a class="docs-link" href="/orbs.html"><img class="docs-link-icon" src="/assets/icons/tile-orbs.png" alt="" width="18" height="18" loading="lazy" decoding="async" />Orb</a>
+            <a class="docs-link" href="/beam.html"><img class="docs-link-icon" src="/assets/icons/tile-beam.png" alt="" width="18" height="18" loading="lazy" decoding="async" />Border beam</a>
+            <a class="docs-link" href="/orbs.html"><img class="docs-link-icon" src="/assets/icons/tile-orbs.png" alt="" width="18" height="18" loading="lazy" decoding="async" />Thinking orbs</a>
             <a class="docs-link" href="/gooey.html"><img class="docs-link-icon" src="/assets/icons/tile-gooey.png" alt="" width="18" height="18" loading="lazy" decoding="async" />Gooey</a>
             <a class="docs-link is-active" href="/metal.html" aria-current="page"><img class="docs-link-icon" src="/assets/icons/tile-metal.png" alt="" width="18" height="18" loading="lazy" decoding="async" />Metal</a>
             <a class="docs-link" href="/image.html"><img class="docs-link-icon" src="/assets/icons/tile-image.png" alt="" width="18" height="18" loading="lazy" decoding="async" />Image</a>
@@ -238,24 +240,23 @@
               <button type="button" class="proto-modal-tab" role="tab" data-detail-tab="usage" aria-selected="false">Usage</button>
             </div>
 
-            <button type="button" class="detail-prompt" data-prompt-target="#agent-prompt" aria-label="Copy agent prompt">
-              <span class="detail-prompt-icons" aria-hidden="true">
-                <svg class="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </svg>
-                <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              </span>
-              <span class="detail-prompt-label">Copy prompt</span>
-            </button>
+            <div class="detail-head-actions">
+              <a class="t-pro-btn detail-studio" href="/studio/app.html#metal">
+                <img src="/assets/icons/magic-wand.svg" alt="" width="16" height="16" decoding="async" />
+                <span class="detail-studio-sparks" aria-hidden="true"><i style="--ox: -1px; --oy: -3px; --sx: 0px; --sy: -11px; --sd: 900ms; --sdelay: 0ms;"></i><i style="--ox: 2px; --oy: -2px; --sx: 9px; --sy: -9px; --sd: 1000ms; --sdelay: 120ms;"></i><i style="--ox: 2px; --oy: 5px; --sx: 9px; --sy: 9px; --sd: 950ms; --sdelay: 240ms;"></i><i style="--ox: -5px; --oy: -2px; --sx: -9px; --sy: -9px; --sd: 1000ms; --sdelay: 360ms;"></i><i style="--ox: 3px; --oy: 1px; --sx: 12px; --sy: 1px; --sd: 920ms; --sdelay: 480ms;"></i><i style="--ox: -1px; --oy: -3px; --sx: 0px; --sy: -11px; --sd: 950ms; --sdelay: 520ms;"></i><i style="--ox: 2px; --oy: -2px; --sx: 9px; --sy: -9px; --sd: 900ms; --sdelay: 650ms;"></i><i style="--ox: 2px; --oy: 5px; --sx: 9px; --sy: 9px; --sd: 1000ms; --sdelay: 760ms;"></i><i style="--ox: -5px; --oy: -2px; --sx: -9px; --sy: -9px; --sd: 930ms; --sdelay: 180ms;"></i><i style="--ox: 3px; --oy: 1px; --sx: 12px; --sy: 1px; --sd: 980ms; --sdelay: 300ms;"></i></span>
+                <span class="t-pro-btn-label">Tune in Studio</span>
+              </a>
+
+              <button type="button" class="detail-prompt" data-prompt-target="#agent-prompt" aria-label="Copy agent prompt">
+                <span class="detail-prompt-label">Copy prompt</span>
+              </button>
+            </div>
           </div>
         </header>
 
         <div class="detail-body">
           <div class="detail-panel" id="playground" data-detail-panel="preview">
-            <div class="pg" id="playground-root"></div>
+            <div id="playground-root"></div>
           </div>
 
           <div class="detail-panel" data-detail-panel="install" hidden>
@@ -337,8 +338,8 @@ Docs: https://libraries.dev/metal.html
         <nav class="footer-cols" aria-label="Footer">
           <div class="footer-col">
             <p class="footer-col-title">Libraries</p>
-            <a href="/beam.html">Beam</a>
-            <a href="/orbs.html">Orb</a>
+            <a href="/beam.html">Border beam</a>
+            <a href="/orbs.html">Thinking orbs</a>
             <a href="/gooey.html">Gooey</a>
             <a href="/metal.html">Metal</a>
             <a href="/image.html">Image</a>

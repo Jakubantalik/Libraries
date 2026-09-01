@@ -1,11 +1,17 @@
 import { StrictMode, useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { createRoot } from "react-dom/client";
 import { BorderBeam, type BorderBeamSize, type BorderBeamColorVariant } from "border-beam";
+import {
+  MockChatInput,
+  MockIconButton,
+  MockSearchBar,
+} from "./examples/beam-mocks";
+import { CodeCopy } from "./examples/CodeCopy";
 
 /* Beam detail page — one React island rendering the whole playground grid
    (stage + controls) plus the live-updating snippet below it. Controls
    mirror the live beam site (sites/beam/src/App.tsx): family tabs, type,
-   color, strength, play/pause. The preview starts ACTIVE (beam convention). */
+   color, play/pause. The preview starts ACTIVE (beam convention). */
 
 function CopyIcon() {
   return (
@@ -27,32 +33,6 @@ function CheckIcon() {
 /* Same markup as the static blocks' copy buttons; wired in React because
    the page-level script only binds [data-copy-static] buttons that exist
    before the island mounts. */
-function CodeCopy({ text, label }: { text: string; label: string }) {
-  const [copied, setCopied] = useState(false);
-  const timer = useRef<number | undefined>(undefined);
-  useEffect(() => () => window.clearTimeout(timer.current), []);
-  const handleClick = useCallback(() => {
-    if (typeof navigator !== "undefined" && navigator.clipboard) {
-      navigator.clipboard.writeText(text).catch(() => {});
-    }
-    setCopied(true);
-    window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => setCopied(false), 1600);
-  }, [text]);
-  return (
-    <button
-      type="button"
-      className="code-copy"
-      onClick={handleClick}
-      data-copied={copied ? "true" : undefined}
-      aria-label={copied ? "Copied" : label}
-    >
-      <CopyIcon />
-      <CheckIcon />
-    </button>
-  );
-}
-
 function PgTabs<T extends string>({
   label,
   options,
@@ -86,51 +66,6 @@ function PgTabs<T extends string>({
   );
 }
 
-/* Filled-track slider from playground.css: visual track + invisible native
-   range on top for pointer + keyboard + screen readers. */
-function PgSlider({
-  label,
-  value,
-  min,
-  max,
-  step,
-  display,
-  onChange,
-}: {
-  label: string;
-  value: number;
-  min: number;
-  max: number;
-  step: number;
-  display: string;
-  onChange: (v: number) => void;
-}) {
-  const pct = ((value - min) / (max - min)) * 100;
-  return (
-    <div className="pg-field">
-      <span className="pg-label">{label}</span>
-      <div className="pg-slider-row">
-        <div className="pg-slider">
-          <div className="pg-slider-track">
-            {pct > 0 && <div className="pg-slider-fill" style={{ width: `${pct}%` }} />}
-            <div className="pg-slider-thumb" style={{ left: `${pct}%` }} />
-          </div>
-          <input
-            type="range"
-            value={value}
-            min={min}
-            max={max}
-            step={step}
-            onChange={(e) => onChange(parseFloat(e.target.value))}
-            aria-label={label}
-          />
-        </div>
-        <span className="pg-slider-value">{display}</span>
-      </div>
-    </div>
-  );
-}
-
 type BeamFamily = "rotate" | "pulse";
 
 const FAMILY_OPTIONS = [
@@ -155,11 +90,10 @@ const DEFAULT_SIZE_BY_FAMILY: Record<BeamFamily, BorderBeamSize> = {
   pulse: "pulse-inner",
 };
 
+/* Two palettes here; the rest of the set lives in the Studio. */
 const COLOR_OPTIONS = [
   { value: "colorful", label: "Colorful" },
   { value: "mono", label: "Mono" },
-  { value: "ocean", label: "Ocean" },
-  { value: "sunset", label: "Sunset" },
 ] as const;
 
 /* Tuned CSS vars for the pulse-outside preview — same values the live beam
@@ -193,7 +127,6 @@ function BeamPlayground() {
   const [family, setFamily] = useState<BeamFamily>("rotate");
   const [size, setSize] = useState<BorderBeamSize>("md");
   const [colorVariant, setColorVariant] = useState<BorderBeamColorVariant>("colorful");
-  const [strength, setStrength] = useState(70);
   const [active, setActive] = useState(true);
 
   const handleFamilyChange = useCallback((next: BeamFamily) => {
@@ -207,7 +140,6 @@ function BeamPlayground() {
   const props: string[] = [];
   if (size !== "md") props.push(` size="${size}"`);
   if (colorVariant !== "colorful") props.push(` colorVariant="${colorVariant}"`);
-  if (strength !== 100) props.push(` strength={${strength / 100}}`);
   if (!active) props.push(" active={false}");
   const snippet = `<BorderBeam${props.join("")}>
   <Card>Content</Card>
@@ -215,6 +147,39 @@ function BeamPlayground() {
 
   return (
     <>
+      {/* The demo page's own examples come first: real UI wearing the
+          effect, before any knobs. The playground below is for trying a
+          setting, not for meeting the library. */}
+      <div className="detail-examples">
+        <div className="example-row-full">
+          <BorderBeam className="beam-host" size="md" colorVariant="colorful" theme="dark" active={active}>
+            <MockChatInput />
+          </BorderBeam>
+        </div>
+        <div className="example-row-split">
+          <div className="example-cell">
+            <BorderBeam className="beam-host" size="sm" colorVariant="colorful" theme="dark" active={active}>
+              <MockIconButton />
+            </BorderBeam>
+          </div>
+          <div className="example-cell">
+            <BorderBeam
+              className="beam-host"
+              size="line"
+              colorVariant="colorful"
+              theme="dark"
+              active={active}
+              duration={3.1}
+              borderRadius={20}
+            >
+              <MockSearchBar />
+            </BorderBeam>
+          </div>
+        </div>
+      </div>
+
+      <p className="detail-playground-label">Playground</p>
+
       <div className="pg">
         <div className="pg-stage" id="playground-stage">
           <BorderBeam
@@ -222,7 +187,6 @@ function BeamPlayground() {
             colorVariant={colorVariant}
             theme="dark"
             active={active}
-            strength={strength / 100}
             style={isPulseOutside ? PULSE_OUTSIDE_TUNED_VARS : undefined}
           >
             <DemoCard size={size} />
@@ -241,15 +205,6 @@ function BeamPlayground() {
           <PgTabs label="Family" options={FAMILY_OPTIONS} value={family} onChange={handleFamilyChange} />
           <PgTabs label="Type" options={SIZE_OPTIONS_BY_FAMILY[family]} value={size} onChange={setSize} />
           <PgTabs label="Color" options={COLOR_OPTIONS} value={colorVariant} onChange={setColorVariant} />
-          <PgSlider
-            label="Strength"
-            value={strength}
-            min={0}
-            max={100}
-            step={1}
-            display={`${strength}%`}
-            onChange={setStrength}
-          />
         </div>
       </div>
 

@@ -24,12 +24,13 @@ export type OrbState =
   | 'shaping';
 
 /**
- * Rendered size in CSS pixels. Exactly two tuned presets ship:
- * 64 (chat-avatar scale) and 20 (inline-text scale). Each size carries
- * its own dot count, dot size and speed tuning — they are separate
- * designs, not a scale factor.
+ * Rendered size in CSS pixels. 64 (chat-avatar scale) and 20 (inline-text
+ * scale) are hand-tuned designs, not a scale factor — each carries its own
+ * dot count, dot size and speed. 32 (compact avatar scale) sits between
+ * them and is interpolated from the two, in log space because those knobs
+ * are ratios; it reads correctly but has not had a tuning pass of its own.
  */
-export type OrbSize = 64 | 20;
+export type OrbSize = 64 | 32 | 20;
 
 /**
  * Theme mode.

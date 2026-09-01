@@ -1,6 +1,8 @@
-import { StrictMode, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { MetalFx, type MetalFxPreset, type MetalFxVariant } from "metal-fx";
+import { CodeCopy } from "./examples/CodeCopy";
+import { MetalExamples } from "./examples/metal-examples";
+import { MetalFx, type MetalFxPreset, type MetalFxVariant } from "metal-fx-v1";
 
 /* Metal detail page — playground island (stage + controls + live snippet).
    Mirrors the live playground at packages/metal-fx/demo/components/Playground.tsx:
@@ -65,23 +67,6 @@ function SearchIcon() {
   );
 }
 
-function CopyButton({ getText, label }: { getText: () => string; label: string }) {
-  const [copied, setCopied] = useState(false);
-  const timerRef = useRef<number | undefined>(undefined);
-  const onClick = () => {
-    if (navigator.clipboard) void navigator.clipboard.writeText(getText()).catch(() => {});
-    setCopied(true);
-    window.clearTimeout(timerRef.current);
-    timerRef.current = window.setTimeout(() => setCopied(false), 1600);
-  };
-  return (
-    <button type="button" className="code-copy" data-copied={copied ? "true" : undefined} aria-label={label} onClick={onClick}>
-      <CopyIcon />
-      <CheckIcon />
-    </button>
-  );
-}
-
 function Slider({
   min,
   max,
@@ -101,23 +86,19 @@ function Slider({
 }) {
   const pct = ((value - min) / (max - min)) * 100;
   return (
-    <div className="pg-slider-row">
-      <div className="pg-slider">
-        <div className="pg-slider-track">
-          <div className="pg-slider-fill" style={{ width: `${pct}%` }} />
-          <div className="pg-slider-thumb" style={{ left: `${pct}%` }} />
-        </div>
-        <input
-          type="range"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          aria-label={ariaLabel}
-        />
-      </div>
-      <span className="pg-slider-value">{format(value)}</span>
+    <div className="pg-vslider">
+      <div className="pg-vslider-fill" style={{ width: `${pct}%` }} />
+      <span className="pg-vslider-label">{ariaLabel}</span>
+      <span className="pg-vslider-value">{format(value)}</span>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        aria-label={ariaLabel}
+      />
     </div>
   );
 }
@@ -138,6 +119,11 @@ function MetalPlayground() {
 
   return (
     <>
+      <MetalExamples strength={strength / 100} />
+
+      <p className="detail-playground-label">Playground</p>
+
+      <div className="pg">
       <div className="pg-stage">
         <div className="metal-stage-row">
           <label ref={searchRef} className="metal-search">
@@ -225,7 +211,6 @@ function MetalPlayground() {
         </div>
 
         <div className="pg-field">
-          <span className="pg-label">Strength</span>
           <Slider
             min={0}
             max={100}
@@ -233,7 +218,7 @@ function MetalPlayground() {
             value={strength}
             onChange={setStrength}
             format={(v) => `${v}%`}
-            ariaLabel="Effect strength"
+            ariaLabel="Strength"
           />
         </div>
 
@@ -262,9 +247,11 @@ function MetalPlayground() {
         </div>
       </div>
 
+      </div>
+
       <div className="code-block pg-snippet">
         <pre>{snippet}</pre>
-        <CopyButton getText={() => snippet} label="Copy playground snippet" />
+        <CodeCopy text={snippet} label="Copy playground snippet" />
       </div>
     </>
   );
@@ -273,8 +260,10 @@ function MetalPlayground() {
 const el = document.getElementById("playground-root");
 if (el) {
   createRoot(el).render(
-    <StrictMode>
-      <MetalPlayground />
-    </StrictMode>
+    /* No StrictMode: metal-fx v1 keeps one shared renderer, and the
+       simulated double-mount destroys it in a state its loop never
+       recovers from — everything paints one frame and freezes. The
+       library's own demo mounts without StrictMode too. */
+    <MetalPlayground />
   );
 }

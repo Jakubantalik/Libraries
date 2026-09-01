@@ -3,7 +3,11 @@ import { MetalFx, type MetalFxPreset, type MetalFxVariant } from "metal-fx";
 import { ControlsPanel, PgTabs, PgSlider, PgToggles, PanelTitle, PanelSep, Snippet, num } from "./controls";
 
 /* Studio — Metal workbench. Public playground: variant/preset/strength/
-   toggles. The Studio adds the engine surface: shader scale and ring width. */
+   toggles. The Studio adds the engine surface: shader scale and ring width.
+
+   Imports the workspace metal-fx (the Paper Shaders engine) rather than
+   the published v1 the detail page renders: glowStrength, disableGlow,
+   shaderScale and ringCssPx exist only there. */
 
 const PRESET_OPTIONS = [
   { value: "chromatic", label: "Chromatic" },
@@ -173,7 +177,7 @@ export function MetalStudio({ visible = true }: { visible?: boolean }) {
         }}
         prompt={{ pkg: "metal-fx", docsPath: "/metal.html", snippet }}
       >
-        <PanelTitle>Metal</PanelTitle>
+        <PanelTitle>Main</PanelTitle>
         <PgTabs label="Type" options={VARIANT_OPTIONS} value={variant} onChange={handleVariant} />
         <PgTabs label="Color" options={PRESET_OPTIONS} value={preset} onChange={setPreset} />
         <PgSlider label="Strength" value={strength} min={0} max={100} step={1} display={`${strength}%`} onChange={setStrength} />
