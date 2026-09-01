@@ -75,7 +75,7 @@
     .card-subtitle--mono { font-family: var(--font-mono); font-size: 12px; }
 
     /* ── Hero (Figma 1292-3184): installs badge + floating tiles ── */
-    .header { padding-top: 40px; padding-bottom: 96px; }
+    .header { padding-top: 40px; padding-bottom: 128px; }
     .hero-badge {
       position: relative; z-index: 6;
       display: inline-flex; align-items: center; height: 28px; padding: 0 12px;
@@ -107,7 +107,7 @@
       /* Clear the orb tile floating above the headline (Figma order:
          tile, badge, title). */
       .header { padding-top: 0; }
-      .hero-badge { margin-top: 178px; }
+      .hero-badge { margin-top: 210px; }
     }
     /* Floating preview tiles (Figma 1413-37491): 130px card chrome,
        108px inner stage, hover lightens + reveals a label pill. */
@@ -219,7 +219,7 @@
       .hero-tile--gooey { left: calc(50% - 330px); }
     }
     @media (max-width: 980px) {
-      .header { padding-top: 40px; padding-bottom: 72px; }
+      .header { padding-top: 72px; padding-bottom: 104px; }
       .hero-tile { position: static; flex: none; }
       .hero-tile-pill { display: none; }
       .hero-tiles-row {
@@ -230,13 +230,15 @@
     }
     @media (min-width: 981px) {
       .hero-tiles-row { display: contents; }
-      .header { min-height: 625px; }
+      .header { min-height: 689px; }
     }
 
     /* ── Library grid cards (Figma 1413-37519): icon + meta row ── */
     .lib-card-hit { position: absolute; inset: 0; z-index: 6; border-radius: 24px; }
     .lib-video { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .lib-card .card-stage { height: 245px; }
+    /* 254 leaves 16px between the stage and the icon — the same gap the
+       meta keeps below itself, so the card breathes evenly. */
+    .lib-card .card-stage { height: 254px; }
     .lib-meta {
       position: absolute; left: 16px; right: 16px; bottom: 16px;
       display: flex; align-items: center; gap: 12px;
@@ -246,6 +248,7 @@
     /* The image-generation export carries its drop shadow in the bitmap
        (52px canvas for a 46px tile) — render at natural size, recentered. */
     .lib-ico img.lib-ico-img--pad { width: 52px; height: 52px; max-width: none; margin: -3px; }
+    .lib-ico:has(.lib-ico-img--pad) { overflow: visible; }
     .lib-meta-text { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
     .lib-name { font-size: 14px; font-weight: 500; line-height: 13px; color: #ededed; }
     .lib-desc {
@@ -335,12 +338,6 @@
       .howto-steps { grid-template-columns: minmax(0, 1fr); gap: 12px; }
       .howto-step { padding: 24px; }
     }
-
-    .home-section-sub {
-      margin: -24px 0 32px; text-align: center;
-      font-size: 14px; line-height: 22px; color: var(--text-muted);
-    }
-    .home-section-sub a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
 
     /* ── FAQ accordion (styling from transitions.dev/pro) ───────── */
     .faq-list {
@@ -691,7 +688,6 @@
 
     <section class="home-section" aria-labelledby="how-to-use-title">
       <h2 class="home-section-title" id="how-to-use-title">How to use</h2>
-      <p class="home-section-sub"><a href="/how-to-use.html">Read the full guide</a></p>
       <ol class="howto-steps">
         <li class="howto-step">
           <span class="howto-step-num" aria-hidden="true">1</span>
