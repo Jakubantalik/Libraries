@@ -206,6 +206,9 @@ body {
 }
 
 html {
+  /* In-page anchors glide rather than jump. Honoured site-wide; the
+     reduced-motion block below puts the instant jump back. */
+  scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-smooth: always;
@@ -394,6 +397,10 @@ html {
   from { stroke-dashoffset: 0; }
   to   { stroke-dashoffset: -200; }
 }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .brand, .brand-mark { transition: none; }
   .brand:hover { transform: none; }
@@ -885,12 +892,22 @@ html[data-theme="dark"] .skill-btn--secondary:active {
 /* ─── Cards grid ──────────────────────────────────────────── */
 .cards {
   width: 100%;
+  max-width: 1008px;
+  margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(3, 320px);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   justify-content: center;
   gap: 24px;
   align-items: start;
 }
+/* Beam and Orb lead on a row of two; the other three follow at the old
+   width. The cards drop their fixed 320px so the tracks size them. */
+.cards > .lib-card { width: auto; }
+.cards > .lib-card:nth-child(-n + 2) { grid-column: span 3; }
+.cards > .lib-card:nth-child(n + 3) { grid-column: span 2; }
+/* The stage is absolutely placed, so it needs both insets to follow a
+   card that is no longer a fixed width. */
+.cards > .lib-card .card-stage { right: 12px; width: auto; max-width: none; }
 .card[hidden] { display: none; }
 
 /* ─── Card ────────────────────────────────────────────────── */
@@ -926,18 +943,55 @@ html[data-theme="dark"] .card:hover {
   background-color: color-mix(in srgb, #181818 99.5%, #fff 0.5%);
 }
 
-/* The testimonial and how-to-use cards take Figma 1411:37077: a #1a1a1a
-   fill under a single hairline ring with a brighter top edge, and no drop
-   shadow. Lighter than the gallery card's surface on purpose — these sit
-   in open page space rather than in a gallery of their own. Fill and
-   shadow only; unlike .card these size themselves and are laid out by
-   their own grids in index.html. */
-.pro-quote,
-.howto-step {
+/* The testimonial cards take Figma 1411:37077: a #1a1a1a fill under a
+   single hairline ring with a brighter top edge, and no drop shadow.
+   Fill and shadow only; unlike .card they size themselves and are laid
+   out by their own grid in index.html. */
+.pro-quote {
   background-color: #1a1a1a;
   box-shadow:
     inset 0 1px 0 0 rgba(255, 255, 255, 0.02),
     inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+/* The how-to-use steps wear the gallery card's surface instead, so the
+   two card families on the homepage read as one. Surface only — the
+   steps size themselves from their own grid. */
+.howto-step {
+  background-color: var(--card-bg);
+  box-shadow:
+    var(--card-shadow),
+    inset 0 0 0 1px var(--card-border),
+    inset 0 -1px 0 0 var(--card-border);
+  transition: box-shadow 0.15s ease, background-color 0.2s ease;
+}
+html[data-theme="dark"] .howto-step {
+  background-color: #181818;
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+    inset 0 0 0 1px rgba(196, 196, 196, 0.07);
+}
+/* The gallery card's inner panel: its stage sits 12px in on a darker fill
+   behind its own hairline, so the card reads as a panel within a panel.
+   The steps have no stage element, so the panel is drawn directly and the
+   content rides on top of it. */
+.howto-step { position: relative; }
+.howto-step::before {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border-radius: 14px;
+  background: var(--stage-bg);
+  box-shadow: inset 0 0 0 1px var(--stage-border);
+  pointer-events: none;
+  z-index: 0;
+}
+html[data-theme="dark"] .howto-step::before {
+  background: #131313;
+  box-shadow: inset 0 0 0 1px rgba(191, 192, 203, 0.08);
 }
 
 .card-stage {
@@ -1411,7 +1465,9 @@ html[data-theme="dark"] .footer-name:hover {
 
 /* ─── Responsive ──────────────────────────────────────────── */
 @media (max-width: 1100px) {
-  .cards { grid-template-columns: repeat(2, 320px); }
+  .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 664px; }
+  .cards > .lib-card:nth-child(-n + 2),
+  .cards > .lib-card:nth-child(n + 3) { grid-column: span 1; }
   .footer { max-width: 664px; }
 }
 @media (max-width: 900px) {
@@ -1424,7 +1480,7 @@ html[data-theme="dark"] .footer-name:hover {
   .cmdk-overlay { padding: 8vh 12px 12px; }
 }
 @media (max-width: 740px) {
-  .cards { grid-template-columns: 320px; gap: 16px; }
+  .cards { grid-template-columns: minmax(0, 1fr); gap: 16px; max-width: 320px; }
 }
 @media (max-width: 639px) {
   .app { padding: 0 12px 48px; }

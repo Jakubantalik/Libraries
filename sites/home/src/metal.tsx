@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { CodeCopy } from "./examples/CodeCopy";
 import { MetalExamples } from "./examples/metal-examples";
+import { StudioTeaser } from "./examples/StudioTeaser";
 import { MetalFx, type MetalFxPreset, type MetalFxVariant } from "metal-fx-v1";
 
 /* Metal detail page — playground island (stage + controls + live snippet).
@@ -179,6 +180,14 @@ function MetalPlayground() {
             </button>
           </div>
         </div>
+        <StudioTeaser
+          rows={[
+            { kind: "tabs", label: "Color", options: ["Chromatic", "Silver", "Gold"] },
+            { kind: "slider", label: "Strength", value: "90%", fill: 90 },
+            { kind: "slider", label: "Glow strength", value: "100%", fill: 100 },
+            { kind: "slider", label: "Shader scale", value: "1.6\u00d7", fill: 42 },
+          ]}
+        />
       </div>
 
       </div>
