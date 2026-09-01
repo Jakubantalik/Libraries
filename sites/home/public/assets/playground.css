@@ -431,18 +431,19 @@
 }
 @media (max-width: 860px) { .pg { grid-template-columns: 1fr; } }
 
-/* Detail pages stack: the options sit above a stage that runs the column's
-   full width. Only the Studio keeps the side-by-side grid, where the panel
-   is the workbench and deserves its own column. Ordering is done here
-   rather than in markup because the stage comes first in the DOM on every
-   page, and Gooey's playground puts its snippet inside .pg as well. */
+/* Detail playgrounds split in two: the stage on the left, the options
+   panel in the Studio's 348px column on the right, the pair sharing the
+   686px measure. Gooey keeps its snippet inside .pg, so it spans both
+   columns underneath. */
 .detail-body .pg {
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 348px;
   gap: 12px;
 }
-.detail-body .pg > .pg-controls { order: 1; }
-.detail-body .pg > .pg-stage { order: 2; }
-.detail-body .pg > .pg-snippet { order: 3; }
+.detail-body .pg > .pg-snippet { grid-column: 1 / -1; }
+@media (max-width: 860px) {
+  .detail-body .pg { grid-template-columns: minmax(0, 1fr); }
+  .detail-body .pg > .pg-snippet { grid-column: 1; }
+}
 
 .pg-stage {
   position: relative;
