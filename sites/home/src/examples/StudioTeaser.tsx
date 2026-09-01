@@ -48,7 +48,7 @@ export function StudioTeaser({ rows }: { rows: TeaserRow[] }) {
             options and AI agent assistance.
           </p>
         </div>
-        <a className="t-pro-btn pg-teaser-btn" href="/pro.html">
+        <a className="t-pro-btn detail-studio pg-teaser-btn" href="/pro.html">
           <span className="t-pro-btn-label">Get access</span>
         </a>
       </div>

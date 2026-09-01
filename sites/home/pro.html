@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark" />
 
   <title>Libraries Pro: Unlock the Studio for every library</title>
-  <meta name="description" content="Libraries Pro unlocks the Studio — deep customization of all five UI effect libraries (Beam, Orb, Gooey, Metal and Image) — plus Pro content and every future update." />
+  <meta name="description" content="Libraries Pro unlocks the Studio: deep customization of all five UI effect libraries (Beam, Orb, Gooey, Metal and Image), plus Pro content and every future update." />
   <meta name="keywords" content="Libraries Pro, Studio, UI effect libraries, React effects, WebGL, Beam, Orb, Gooey, Metal, Image" />
   <meta name="author" content="Libraries.dev" />
   <meta name="robots" content="index, follow, max-image-preview:large" />
@@ -29,11 +29,11 @@
   <meta property="og:url" content="https://libraries.dev/pro.html" />
   <meta property="og:locale" content="en_US" />
   <meta property="og:title" content="Libraries Pro: Unlock the Studio for every library" />
-  <meta property="og:description" content="Libraries Pro unlocks the Studio — deep customization of all five UI effect libraries (Beam, Orb, Gooey, Metal and Image) — plus Pro content and every future update." />
+  <meta property="og:description" content="Libraries Pro unlocks the Studio: deep customization of all five UI effect libraries (Beam, Orb, Gooey, Metal and Image), plus Pro content and every future update." />
 
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="Libraries Pro: Unlock the Studio for every library" />
-  <meta name="twitter:description" content="Libraries Pro unlocks the Studio — deep customization of all five UI effect libraries (Beam, Orb, Gooey, Metal and Image) — plus Pro content and every future update." />
+  <meta name="twitter:description" content="Libraries Pro unlocks the Studio: deep customization of all five UI effect libraries (Beam, Orb, Gooey, Metal and Image), plus Pro content and every future update." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -63,7 +63,7 @@
           "@id": "https://libraries.dev/#website",
           "url": "https://libraries.dev/",
           "name": "Libraries.dev",
-          "description": "Home of Jakub Antalik's UI effect libraries — Beam, Orb, Gooey, Metal and Image.",
+          "description": "Home of Jakub Antalik's UI effect libraries: Beam, Orb, Gooey, Metal and Image.",
           "inLanguage": "en"
         },
         {
@@ -3957,9 +3957,11 @@
        "Tabs sliding" / p16): JS measures the active tab and sets the
        indicator's transform + width inline; CSS owns the tween. The pill
        sits behind the labels so the text reads on top. */
+    /* The detail pages' tab component (.proto-modal-tabs), ported by
+       value since this page links no stylesheet. */
     .pro-billing {
       position: relative;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 3px;
       padding: 3px;
@@ -3968,37 +3970,40 @@
       width: fit-content;
       margin: 0 auto 20px;
     }
-    html[data-theme="dark"] .pro-billing { background: #202020; }
+    html[data-theme="dark"] .pro-billing { background: rgba(255, 255, 255, 0.05); }
     .pro-billing-opt {
       position: relative;
       z-index: 1;
       border: 0;
       background: transparent;
       height: 30px;
-      padding: 4px 14px;
+      padding: 4px 12px;
       border-radius: 48px;
       font-family: var(--font-sans);
       font-size: 13px;
       font-weight: 500;
       line-height: 1.4;
-      color: var(--text-muted);
+      color: rgba(15, 15, 15, 0.8);
       white-space: nowrap;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
       transition: color 250ms var(--ease-smooth-out);
     }
     .pro-billing-opt:not([data-active="true"]):hover { color: var(--text); }
-    .pro-billing-opt[data-active="true"] { color: var(--text); }
-    .pro-billing-opt:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+    .pro-billing-opt:hover,
+    .pro-billing-opt[data-active="true"] { color: #0f0f0f; }
+    .pro-billing-opt:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
+    html[data-theme="dark"] .pro-billing-opt { color: rgba(237, 237, 237, 0.55); }
+    html[data-theme="dark"] .pro-billing-opt:hover,
+    html[data-theme="dark"] .pro-billing-opt[data-active="true"] { color: #ffffff; }
     .pro-billing-indicator {
       position: absolute;
       top: 3px;
       left: 0;
-      height: 30px;
+      height: calc(100% - 6px);
       width: 0;
       background: #ffffff;
       border-radius: 48px;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
       transform: translateX(0);
       transition:
         transform 250ms var(--ease-smooth-out),
@@ -4007,7 +4012,7 @@
       z-index: 0;
       pointer-events: none;
     }
-    html[data-theme="dark"] .pro-billing-indicator { background: #454545; box-shadow: none; }
+    html[data-theme="dark"] .pro-billing-indicator { background: #2a2a2a; box-shadow: none; }
     .pro-annual-note {
       position: absolute;
       left: 100%;
@@ -4328,7 +4333,7 @@
       flex-direction: column;
       gap: 24px;
       min-width: 0;
-      min-height: 293px;
+      min-height: 205px;
       padding: 32px;
       border-radius: 24px;
       background: rgba(246, 246, 246, 0.7);
@@ -4971,27 +4976,13 @@
             href="https://github.com/Jakubantalik/Libraries"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="GitHub repository — star count"
+            aria-label="GitHub repository star count"
             data-loading="true"
           >
             <svg aria-hidden="true" viewBox="0 0 16 16" fill="currentColor">
               <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
             </svg>
             <span class="pill-label" id="gh-stars-count">—</span>
-          </a>
-          <a
-            class="icon-btn"
-            href="https://x.com/jakubantalik"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="X (Twitter)"
-          >
-            <svg class="icon-x" aria-hidden="true" viewBox="0 0 16 17" xmlns="http://www.w3.org/2000/svg">
-              <path
-                fill="currentColor"
-                d="M12.4041 1.39726H14.6953L9.69087 7.2591L15.5781 15.2368H10.9696L7.35741 10.3996L3.22921 15.2368H0.934687L6.28641 8.96575L0.642598 1.39726H5.36795L8.62962 5.81859L12.4041 1.39726ZM11.5992 13.8329H12.8682L4.67667 2.72798H3.31359L11.5992 13.8329Z"
-              />
-            </svg>
           </a>
           <div class="pm-anchor" id="more-anchor">
             <button type="button" class="icon-btn" id="more-btn" aria-label="More" aria-haspopup="menu" aria-expanded="false">
@@ -5117,11 +5108,10 @@
           </div>
           <div class="pro-price-seat" id="pro-price-seat">Single seat</div>
         </div>
-        <div class="pro-price-divider"></div>
         <ul class="pro-feature-list">
-          <li class="pro-feature"><span class="pro-feature-check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.2l2 2 4-4.4" /></svg></span>Studio access — deep customization of all five libraries</li>
-          <li class="pro-feature"><span class="pro-feature-check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.2l2 2 4-4.4" /></svg></span>Beam, Orb, Gooey, Metal and Image — every Pro preset and variant</li>
-          <li class="pro-feature"><span class="pro-feature-check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.2l2 2 4-4.4" /></svg></span>Pro content — recipes and guides for React, Next.js, TypeScript</li>
+          <li class="pro-feature"><span class="pro-feature-check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.2l2 2 4-4.4" /></svg></span>Studio access: deep customization of all five libraries, with an AI coding agent</li>
+          <li class="pro-feature"><span class="pro-feature-check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.2l2 2 4-4.4" /></svg></span>Pro presets and variants</li>
+          <li class="pro-feature"><span class="pro-feature-check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.2l2 2 4-4.4" /></svg></span>Priority support</li>
           <li class="pro-feature"><span class="pro-feature-check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.2l2 2 4-4.4" /></svg></span>Every future library and update, free</li>
           <li class="pro-feature"><span class="pro-feature-check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.2l2 2 4-4.4" /></svg></span>Commercial license, unlimited projects</li>
         </ul>
@@ -5131,6 +5121,42 @@
            filled by pro-client.js when the visitor's country qualifies. -->
       <div class="pro-ppp" id="pro-ppp" hidden></div>
     </div>
+    <!-- Testimonials: the homepage's first row, three across. -->
+    <section class="pro-section pro-block" aria-label="Kind words">
+      <ul class="pro-quotes">
+        <li class="pro-quote">
+          <p class="pro-quote-text">Generational cook!</p>
+          <div class="pro-quote-author">
+            <span class="pro-quote-avatar" aria-hidden="true">H</span>
+            <span class="pro-quote-id">
+              <span class="pro-quote-name">Harsh</span>
+              <span class="pro-quote-role">CEO, Vercel</span>
+            </span>
+          </div>
+        </li>
+        <li class="pro-quote">
+          <p class="pro-quote-text">Very cool</p>
+          <div class="pro-quote-author">
+            <span class="pro-quote-avatar" aria-hidden="true">D</span>
+            <span class="pro-quote-id">
+              <span class="pro-quote-name">Des</span>
+              <span class="pro-quote-role">Co-founder of Intercom</span>
+            </span>
+          </div>
+        </li>
+        <li class="pro-quote">
+          <p class="pro-quote-text">INSANELY AMAZING</p>
+          <div class="pro-quote-author">
+            <span class="pro-quote-avatar" aria-hidden="true">K</span>
+            <span class="pro-quote-id">
+              <span class="pro-quote-name">Kris Puckett</span>
+              <span class="pro-quote-role">Design manager at Stripe</span>
+            </span>
+          </div>
+        </li>
+      </ul>
+    </section>
+    </div>
 
     <!-- ─── What you will get ──────────────────────────────────── -->
     <section class="pro-section pro-block" aria-labelledby="pro-get-title">
@@ -5138,7 +5164,7 @@
       <div class="pro-bento">
         <div class="pro-bento-card pro-bento-card--tall">
           <h3 class="pro-bento-title">Full library access</h3>
-          <p class="pro-bento-desc">All five libraries <span class="dim">— Beam, Orb, Gooey, Metal and Image — with every Pro preset, React and TypeScript ready, plus each future drop.</span></p>
+          <p class="pro-bento-desc">All five libraries <span class="dim">(Beam, Orb, Gooey, Metal and Image) with every Pro preset, React and TypeScript ready, plus each future drop.</span></p>
           <div class="pro-lib-stage">
             <div class="lib-card" style="left:-148px; top:299px">
               <div class="card">
@@ -5200,9 +5226,9 @@
           </div>
         </div>
 
-        <div class="pro-bento-card pro-bento-card--sm">
-          <h3 class="pro-bento-title">The Studio</h3>
-          <p class="pro-bento-desc">Customize every library in detail — tune parameters live, preview the result, and export the exact configuration.</p>
+        <div class="pro-bento-card pro-bento-card--tall">
+          <h3 class="pro-bento-title">Pro content</h3>
+          <p class="pro-bento-desc">Customize every library in detail in the Studio: tune parameters live, preview the result, and export the exact configuration. Plus extended docs, presets and recipes, and the Pro skill for your AI coding agent.</p>
           <div class="pro-refine-frame" aria-hidden="true">
             <div class="rf-topbar">
               <span class="rf-tb-label">Selected library</span>
@@ -5228,19 +5254,6 @@
           </div>
         </div>
 
-        <div class="pro-bento-card pro-bento-card--sm">
-          <h3 class="pro-bento-title">Pro content</h3>
-          <p class="pro-bento-desc">Extended docs, presets and recipes for every library, plus the Pro skill for your AI coding agent.</p>
-          <div class="pro-bento-code" aria-hidden="true"><span class="k">---</span>
-name: libraries-pro
-description: Production-ready UI effect
-  libraries for React. Deep-customize
-  Beam, Orb, Gooey, Metal and Image
-  in the Studio, or let your agent
-  apply the Pro presets — border
-  beams, thinking orbs, gooey UI,
-  liquid metal, image loaders…</div>
-        </div>
       </div>
     </section>
 
@@ -5254,7 +5267,7 @@ description: Production-ready UI effect
             <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
           </button>
           <div class="t-acc-panel"><div class="t-acc-panel-inner">
-            <p>Libraries Pro is one plan across all five UI effect libraries — Beam, Orb, Gooey, Metal and Image. It unlocks the <a href="/studio.html">Studio</a>, where you customize every library in detail and export the exact configuration, plus the Pro content: extended presets, recipes and guides, with every future update included.</p>
+            <p>Libraries Pro is one plan across all five UI effect libraries: Beam, Orb, Gooey, Metal and Image. It unlocks the <a href="/studio.html">Studio</a>, where you customize every library in detail and export the exact configuration, plus the Pro content: extended presets, recipes and guides, with every future update included.</p>
           </div></div>
         </div>
 
@@ -5264,7 +5277,7 @@ description: Production-ready UI effect
             <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
           </button>
           <div class="t-acc-panel"><div class="t-acc-panel-inner">
-            <p>The free libraries are open source and stay free — install them from npm and use them anywhere. Pro adds the Studio (deep, per-library customization beyond the public playgrounds), the Pro presets and recipes for every library, and priority updates for the life of your plan.</p>
+            <p>The free libraries are open source and stay free. Install them from npm and use them anywhere. Pro adds the Studio (deep, per-library customization beyond the public playgrounds), the Pro presets and recipes for every library, and priority updates for the life of your plan.</p>
           </div></div>
         </div>
 
@@ -5274,7 +5287,7 @@ description: Production-ready UI effect
             <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
           </button>
           <div class="t-acc-panel"><div class="t-acc-panel-inner">
-            <p>No. The Studio runs in your browser and every library works as a plain npm package in any React project. The Pro skill is an optional accelerator for agent-driven workflows — it plugs into Cursor, Claude Code, Codex and similar tools.</p>
+            <p>No. The Studio runs in your browser and every library works as a plain npm package in any React project. The Pro skill is an optional accelerator for agent-driven workflows. It plugs into Cursor, Claude Code, Codex and similar tools.</p>
           </div></div>
         </div>
 
@@ -5284,7 +5297,7 @@ description: Production-ready UI effect
             <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
           </button>
           <div class="t-acc-panel"><div class="t-acc-panel-inner">
-            <p><strong>Solo</strong> is a single seat for one person across all of their projects. <strong>Team</strong> is $39/mo and includes 5 seats for people in the same organization; each seat beyond 5 is an extra $9/mo. Prefer to pay once? <strong>Lifetime</strong> is a one-time purchase — $149 for Solo, $499 for a 5-seat Team — with every future update included, forever. Switch the plan tab above to see team pricing.</p>
+            <p><strong>Solo</strong> is a single seat for one person across all of their projects. <strong>Team</strong> is $39/mo and includes 5 seats for people in the same organization; each seat beyond 5 is an extra $9/mo. Prefer to pay once? <strong>Lifetime</strong> is a one-time purchase ($149 for Solo, $499 for a 5-seat Team) with every future update included, forever. Switch the plan tab above to see team pricing.</p>
           </div></div>
         </div>
 
@@ -5331,7 +5344,7 @@ description: Production-ready UI effect
             </span>
             <span class="brand-word"><span class="brand-word-strong">Libraries</span><span class="brand-word-dim">.dev</span></span>
           </a>
-          <p class="footer-tagline">Production-ready UI effect libraries for React</p>
+          <p class="footer-tagline">High-crafted UI libraries for AI agents</p>
         </div>
         <nav class="footer-cols" aria-label="Footer">
           <div class="footer-col">

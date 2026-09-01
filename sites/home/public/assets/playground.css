@@ -59,7 +59,7 @@
   font-size: 13px;
   font-weight: 500;
   line-height: 13px;
-  color: #bbbbbb;
+  color: #ededed;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -86,7 +86,8 @@
   line-height: 16px;
 }
 .docs-group--links .docs-group-label { padding: 9px 12px; }
-.docs-link--muted { color: var(--text-muted); }
+/* Getting-started rows sit at the same near-white as the library rows. */
+.docs-link--muted { color: #ededed; }
 .docs-link:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
 /* Icon card: the Figma export used verbatim (fill, rim, glyph and its
    soft 0 1px 1.5px drop all baked in). The 24px slot just positions it;
@@ -430,57 +431,12 @@ html[data-theme="dark"] .detail-tabs.proto-modal-tabs { background: #272727; }
     0 1px 1px 0 rgba(0, 0, 0, 0.24),
     inset 0 0 0 1px rgba(255, 255, 255, 0.04),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
-  transition:
-    background 140ms,
-    margin-right var(--resize-dur) var(--resize-ease);
+  transition: background 140ms;
 }
 .detail-prompt:hover { background: rgba(255, 255, 255, 0.1); }
 .detail-prompt:active { background: rgba(255, 255, 255, 0.12); }
 .detail-prompt:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
-/* Only the changing tail swaps, so "Cop" holds its place while "y prompt"
-   cross-blurs to "ied" — the same swap the copy tooltip uses (.tt-swap in
-   site.css). The pill hugs the tail and tweens between the two measured
-   widths on the card-resize tokens (transitions.dev 01-card-resize).
-
-   The pill is the last item in a right-aligned actions group, so shrinking
-   it alone would drag its left edge across the row. A right margin of
-   exactly the width it gives up absorbs the difference, holding the group's
-   total width — so the left edge stays put and the pill closes from the
-   right. Both animate on the same tokens, so they move as one. */
-.detail-prompt { justify-content: flex-start; }
-.detail-prompt[data-copied="true"] { margin-right: calc(var(--dp-w-a, 0px) - var(--dp-w-b, 0px)); }
-.detail-prompt-label { display: inline-flex; align-items: baseline; text-align: left; }
-.dp-swap {
-  position: relative;
-  display: inline-block;
-  vertical-align: baseline;
-  width: var(--dp-w-a, auto);
-  transition: width var(--resize-dur) var(--resize-ease);
-  will-change: width;
-}
-.detail-prompt[data-copied="true"] .dp-swap { width: var(--dp-w-b, auto); }
-.dp-label {
-  white-space: pre;
-  transition:
-    opacity 180ms cubic-bezier(0.22, 1, 0.36, 1),
-    filter 180ms cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: opacity, filter;
-}
-.dp-a { display: inline-block; opacity: 1; filter: blur(0); }
-.dp-b { position: absolute; top: 0; left: 0; opacity: 0; filter: blur(2px); }
-.detail-prompt[data-copied="true"] .dp-a { opacity: 0; filter: blur(2px); }
-.detail-prompt[data-copied="true"] .dp-b { opacity: 1; filter: blur(0); }
-/* The word arriving waits for the pill to make room, while the one leaving
-   goes at once — otherwise the longer label paints at full width before the
-   pill has re-opened and spills past its edge. Each state delays only its
-   incoming label, so the rule holds in both directions. */
-.dp-a { transition-delay: 140ms; }
-.dp-b { transition-delay: 0ms; }
-.detail-prompt[data-copied="true"] .dp-a { transition-delay: 0ms; }
-.detail-prompt[data-copied="true"] .dp-b { transition-delay: 140ms; }
-@media (prefers-reduced-motion: reduce) {
-  .dp-swap, .dp-label, .detail-prompt { transition: none !important; }
-}
+.detail-prompt-label { display: inline-block; }
 /* Leading icon, swapping copy -> check on the same cross-blur the code
    snippets' copy button uses (.card-copy in site.css). The two glyphs
    stack in one 16px slot so the pill's width never shifts. */
@@ -611,13 +567,11 @@ html[data-theme="dark"] .detail-tabs.proto-modal-tabs { background: #272727; }
   line-height: 16px;
   color: #979797;
 }
-/* Get access wears the Tune-in-Studio rim wash at the panel's 32px
-   control height. */
+/* Get access IS the Tune in Studio button — same .detail-studio body and
+   rim wash; only the pointer-events opt-in and its wider padding differ. */
 .pg-teaser-btn {
   pointer-events: auto;
-  height: 32px;
   padding: 0 14px;
-  text-decoration: none;
 }
 
 /* Section headings — still used by the code panels */
@@ -659,17 +613,7 @@ html[data-theme="dark"] .detail-tabs.proto-modal-tabs { background: #272727; }
   justify-content: center;
   overflow: hidden;
 }
-.pg-stage::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  box-shadow: inset 0 0 0 1px var(--stage-border);
-  pointer-events: none;
-  z-index: 10;
-}
 html[data-theme="dark"] .pg-stage { background: #171717; }
-html[data-theme="dark"] .pg-stage::after { box-shadow: inset 0 0 0 1px rgba(191, 192, 203, 0.08); }
 
 /* Panel surface and rhythm from Figma 1418:38255: #1b1b1b at 16px radius,
    12px side padding, 14px between groups, hairline separators. */
@@ -1221,7 +1165,7 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
    carries prose instead of tabs and panels. */
 .docs-prose { max-width: 686px; }
 .docs-prose > * + * { margin-top: 16px; }
-.docs-prose p { font-size: 15px; line-height: 25px; color: var(--text-muted); }
+.docs-prose p { font-size: 14px; line-height: 23px; color: var(--text-muted); }
 .docs-prose h2 {
   margin-top: 40px;
   font-family: "Saans", var(--font-sans);
@@ -1236,7 +1180,7 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   background: var(--chip-bg); color: var(--text);
 }
 .docs-prose ol, .docs-prose ul { padding-left: 20px; }
-.docs-prose li { font-size: 15px; line-height: 25px; color: var(--text-muted); }
+.docs-prose li { font-size: 14px; line-height: 23px; color: var(--text-muted); }
 .docs-prose li + li { margin-top: 6px; }
 .docs-prose li strong { color: var(--text); font-weight: 500; }
 

@@ -206,6 +206,9 @@ body {
 }
 
 html {
+  /* In-page anchors glide rather than jump. Honoured site-wide; the
+     reduced-motion block below puts the instant jump back. */
+  scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-smooth: always;
@@ -394,6 +397,10 @@ html {
   from { stroke-dashoffset: 0; }
   to   { stroke-dashoffset: -200; }
 }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .brand, .brand-mark { transition: none; }
   .brand:hover { transform: none; }

@@ -79,6 +79,8 @@ function OrbPlayground() {
   const [state, setState] = useState<OrbState>("listening");
   const [size, setSize] = useState<OrbSize>(64);
   // Starts paused so the page loads quietly (same as the live playground).
+  /* The stage starts paused — Play opts in. The examples above run on
+     their own: they are the library introducing itself. */
   const [paused, setPaused] = useState(true);
 
   const snippet = buildSnippet(state, size);
@@ -94,7 +96,7 @@ function OrbPlayground() {
           {HERO_PILLS.map(({ state, label }) => (
             <div className="ex-orb-cell ex-orb-cell--hero" key={state}>
               <span className="ex-pill">
-                <ThinkingOrb state={state} size={64} theme="dark" paused={paused} style={{ width: 56, height: 56 }} />
+                <ThinkingOrb state={state} size={64} theme="dark" style={{ width: 56, height: 56 }} />
                 {label}
               </span>
             </div>
@@ -114,12 +116,12 @@ function OrbPlayground() {
               >
                 {large ? (
                   <span className="ex-pill">
-                    <ThinkingOrb state={state} size={64} theme="dark" paused={paused} style={{ width: 56, height: 56 }} />
+                    <ThinkingOrb state={state} size={64} theme="dark" style={{ width: 56, height: 56 }} />
                     {cap(copy)}….
                   </span>
                 ) : (
                   <span className="ex-chip">
-                    <ThinkingOrb state={state} size={20} theme="dark" paused={paused} />
+                    <ThinkingOrb state={state} size={20} theme="dark" />
                     Agent {copy}…
                   </span>
                 )}

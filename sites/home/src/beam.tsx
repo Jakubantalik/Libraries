@@ -128,7 +128,10 @@ function BeamPlayground() {
   const [family, setFamily] = useState<BeamFamily>("rotate");
   const [size, setSize] = useState<BorderBeamSize>("md");
   const [colorVariant, setColorVariant] = useState<BorderBeamColorVariant>("colorful");
-  const [active, setActive] = useState(true);
+  /* The playground stage is paused on arrival, like every other library's:
+     it only animates once you press Play. The examples above run on their
+     own — they are the library introducing itself, not a control. */
+  const [active, setActive] = useState(false);
 
   const handleFamilyChange = useCallback((next: BeamFamily) => {
     setFamily(next);
@@ -153,13 +156,13 @@ function BeamPlayground() {
           setting, not for meeting the library. */}
       <div className="detail-examples">
         <div className="example-row-full">
-          <BorderBeam className="beam-host" size="md" colorVariant="colorful" theme="dark" active={active}>
+          <BorderBeam className="beam-host" size="md" colorVariant="colorful" theme="dark">
             <MockChatInput />
           </BorderBeam>
         </div>
         <div className="example-row-split">
           <div className="example-cell">
-            <BorderBeam className="beam-host" size="sm" colorVariant="colorful" theme="dark" active={active}>
+            <BorderBeam className="beam-host" size="sm" colorVariant="colorful" theme="dark">
               <MockIconButton />
             </BorderBeam>
           </div>
@@ -169,7 +172,6 @@ function BeamPlayground() {
               size="line"
               colorVariant="colorful"
               theme="dark"
-              active={active}
               duration={3.1}
               borderRadius={20}
             >
