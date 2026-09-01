@@ -423,6 +423,11 @@
       min-height: 100dvh;
     }
 
+    /* Headings balance their lines so a short last line never dangles; body
+       text uses `pretty`, which guards the orphan without equalising lengths
+       (ported by value: this page links no shared stylesheet). */
+    h1, h2, h3, h4 { text-wrap: balance; }
+    p, li, figcaption, blockquote { text-wrap: pretty; }
     body {
       background: var(--bg);
       color: var(--text);
@@ -661,7 +666,7 @@
       align-items: center;
       justify-content: center;
       height: 36px;
-      padding: 0 13px;
+      padding: 0 12px;
       border-radius: 50px;
       font-family: var(--font-sans);
       font-size: 13px;
@@ -672,6 +677,27 @@
       white-space: nowrap;
       transition: background-color 0.15s ease, color 0.15s ease;
       -webkit-tap-highlight-color: transparent;
+    }
+    /* Small Pro tag riding the Studio pill (ported by value: this page links
+       no shared stylesheet). Matches site.css .nav-pill-pro. */
+    .nav-pill-pro {
+      display: inline-flex;
+      align-items: center;
+      height: 18px;
+      margin-left: 6px;
+      padding: 0 6px;
+      border-radius: 50px;
+      background: rgba(85, 207, 255, 0.14);
+      color: #7cd4ff;
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 14px;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
     }
     .nav-pill:hover { color: var(--text); background: rgba(0, 0, 0, 0.03); }
     html[data-theme="dark"] .nav-pill:hover { background: rgba(255, 255, 255, 0.06); }
@@ -4970,7 +4996,7 @@
           <nav class="site-nav-menu" aria-label="Primary">
             <a class="nav-pill" href="/#components">Libraries</a>
             <a class="nav-pill" href="/how-to-use.html">How to use</a>
-            <a class="nav-pill" href="/studio.html">Studio</a>
+            <a class="nav-pill" href="/studio.html">Studio <span class="nav-pill-pro">Pro</span></a>
           </nav>
         </div>
         <div class="site-nav-right">
