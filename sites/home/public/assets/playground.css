@@ -538,6 +538,88 @@ html[data-theme="dark"] .detail-tabs.proto-modal-tabs { background: #272727; }
   .detail-topbar { display: none; }
 }
 
+/* ── Studio teaser (Figma 1425:38896) ──────────────────────────
+   The paywall foot of the options panel: a locked replica of the
+   library's Studio controls at 20% opacity, dissolved by a scrim that
+   fades the panel surface back in over a progressive 4px blur, with the
+   pitch and a Get access pill riding on top. */
+.pg-teaser {
+  position: relative;
+  /* Reach the panel's edges so the scrim resolves into the surface with
+     no seam; the panel's 16px padding comes back as our own. */
+  margin: 0 -16px -16px;
+  padding: 0 16px 16px;
+  min-height: 196px;
+}
+.pg-teaser-locked {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  opacity: 0.2;
+  pointer-events: none;
+  user-select: none;
+}
+.pg-teaser-group { display: flex; flex-direction: column; gap: 14px; }
+.pg-teaser-sep { height: 1px; background: rgba(255, 255, 255, 0.04); }
+/* The locked rows never react — freeze the vslider's hover chrome. */
+.pg-teaser-locked .pg-vslider:hover { background: rgba(255, 255, 255, 0.06); }
+.pg-teaser-locked .pg-vslider-fill::after { display: none; }
+
+/* Scrim: transparent over the tail of the real controls, solid panel by
+   two-thirds down (Figma stops 5% -> 69%). The mask ramps the whole
+   layer in from nothing, so the 4px backdrop blur arrives progressively
+   instead of starting at a hard line. */
+.pg-teaser-scrim {
+  position: absolute;
+  inset: -14px 0 0;
+  border-radius: 0 0 16px 16px;
+  background: linear-gradient(to bottom, rgba(27, 27, 27, 0) 5%, #1b1b1b 69%);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 30%);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 30%);
+  pointer-events: none;
+}
+
+/* The pitch, centred a third of the way into the scrim. Only the button
+   takes the pointer; everything else lets clicks fall through. */
+.pg-teaser-cta {
+  position: absolute;
+  left: 50%;
+  top: 36px;
+  transform: translateX(-50%);
+  width: 210px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
+  text-align: center;
+  pointer-events: none;
+}
+.pg-teaser-copy { display: flex; flex-direction: column; gap: 5px; }
+.pg-teaser-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 14px;
+  color: #e4e4e4;
+}
+.pg-teaser-sub {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 16px;
+  color: #979797;
+}
+/* Get access wears the Tune-in-Studio rim wash at the panel's 32px
+   control height. */
+.pg-teaser-btn {
+  pointer-events: auto;
+  height: 32px;
+  padding: 0 14px;
+  text-decoration: none;
+}
+
 /* Section headings — still used by the code panels */
 .detail-section { margin-top: 0; width: 100%; }
 .detail-section-title { font-size: 15px; font-weight: 500; margin-bottom: 16px; color: var(--text); }

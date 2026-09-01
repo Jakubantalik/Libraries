@@ -7,6 +7,7 @@ import {
   MockSearchBar,
 } from "./examples/beam-mocks";
 import { CodeCopy } from "./examples/CodeCopy";
+import { StudioTeaser } from "./examples/StudioTeaser";
 
 /* Beam detail page — one React island rendering the whole playground grid
    (stage + controls) plus the live-updating snippet below it. Controls
@@ -205,6 +206,14 @@ function BeamPlayground() {
           <PgTabs label="Family" options={FAMILY_OPTIONS} value={family} onChange={handleFamilyChange} />
           <PgTabs label="Type" options={SIZE_OPTIONS_BY_FAMILY[family]} value={size} onChange={setSize} />
           <PgTabs label="Color" options={COLOR_OPTIONS} value={colorVariant} onChange={setColorVariant} />
+          <StudioTeaser
+            rows={[
+              { kind: "slider", label: "Duration", value: "1.96s", fill: 27 },
+              { kind: "slider", label: "Corner radius", value: "16px", fill: 50 },
+              { kind: "slider", label: "Brightness", value: "1.3\u00d7", fill: 47 },
+              { kind: "slider", label: "Hue shift", value: "0\u00b0", fill: 50 },
+            ]}
+          />
         </div>
       </div>
 

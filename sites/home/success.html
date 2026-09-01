@@ -559,9 +559,27 @@
       height: 24px;
       color: var(--icon-color);
     }
-    /* Natural 18×20.295 ratio centered in the 24px box (Figma vector
-       inset 7.72%/12.5%), not stretched edge-to-edge. */
-    .brand-mark svg { width: 18px; height: 20.295px; display: block; }
+    /* Libraries scribble mark: natural 22.67×14.67 ratio in the 24px box.
+       Ported from site.css, which this page does not link. */
+    .brand-mark svg { width: 22px; height: 15px; display: block; }
+    /* Hand-drawn redraw on hover: the scribble erases itself stroke-first
+       and immediately redraws from the start, like a quick pencil pass.
+       One continuous dash slide (period 200 on a 100-length path) does
+       both halves in a single animation. */
+    .brand-draw {
+      stroke-dasharray: 100 100;
+      stroke-dashoffset: 0;
+    }
+    .brand:hover .brand-draw,
+    .footer-brand-logo:hover .brand-draw { animation: brand-redraw 1.15s ease-in-out; }
+    @keyframes brand-redraw {
+      from { stroke-dashoffset: 0; }
+      to   { stroke-dashoffset: -200; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .brand:hover .brand-draw,
+      .footer-brand-logo:hover .brand-draw { animation: none; }
+    }
     .brand-word {
       font-size: 15px;
       font-weight: 500;
@@ -1439,7 +1457,6 @@
       transform-origin: center;
     }
     .footer-brand-logo:hover { opacity: 1; transform: scale(1.02); }
-    .footer-brand-logo:hover .brand-mark { transform: rotate(60deg); }
     @media (prefers-reduced-motion: reduce) {
       .footer-brand-logo { transition: opacity 150ms ease; }
       .footer-brand-logo:hover { transform: none; }
@@ -3497,7 +3514,6 @@
       transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
       transform-origin: center;
     }
-    .brand:hover .brand-mark { transform: rotate(60deg); }
     @media (prefers-reduced-motion: reduce) {
       .brand, .brand-mark { transition: none; }
       .brand:hover, .brand:hover .brand-mark { transform: none; }

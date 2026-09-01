@@ -1,6 +1,7 @@
 import { StrictMode, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { CodeCopy } from "./examples/CodeCopy";
+import { StudioTeaser } from "./examples/StudioTeaser";
 import { ThinkingOrb, type OrbSize, type OrbState } from "thinking-orbs";
 
 /* Orb detail page — playground island (stage + controls + live snippet).
@@ -183,6 +184,13 @@ function OrbPlayground() {
           </div>
         </div>
 
+        <StudioTeaser
+          rows={[
+            { kind: "tabs", label: "Color", options: ["Ink", "Sky", "Mint"] },
+            { kind: "slider", label: "Dots", value: "1\u00d7", fill: 43 },
+            { kind: "slider", label: "Speed", value: "1\u00d7", fill: 31 },
+          ]}
+        />
       </div>
 
       </div>
