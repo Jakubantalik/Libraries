@@ -7,8 +7,7 @@
    column carries prev/next arrows, the head, and the tab panels. */
 /* Fills the .app container like transitions.dev's — no cap of its own, so
    the sidebar's left edge lands on the same 24px app padding as the nav
-   brand, and the content column starts right of it instead of centring.
-   The 686px cap on the panels is what bounds the content. */
+   brand, and the content column starts right of it instead of centring. */
 .docs {
   width: 100%;
   padding: 32px 0 96px;
@@ -75,12 +74,15 @@
     inset 0 0 0 1px rgba(255, 255, 255, 0.02),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
 }
-.docs-link--muted {
+/* The "Getting started" group takes transitions.dev's plain 32px row
+   whatever its state — active changes the colour and fill, never the
+   height, so the list does not jump as you move between pages. */
+.docs-group--links .docs-link {
   height: 32px;
   font-weight: 400;
   line-height: 16px;
-  color: var(--text-muted);
 }
+.docs-link--muted { color: var(--text-muted); }
 .docs-link:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
 /* Icon card: the Figma export used verbatim (fill, rim, glyph and its
    soft 0 1px 1.5px drop all baked in). The 24px slot just positions it;
@@ -433,15 +435,12 @@ html[data-theme="dark"] .detail-tabs.proto-modal-tabs { background: #272727; }
 .detail-prompt-label { display: inline-block; min-width: 82px; text-align: center; }
 
 .detail-body { margin-top: 24px; }
-/* transitions.dev caps every detail panel at 686px — the column can be
-   wider, but the content holds this measure. The head row takes the same
-   cap so the tabs and actions align with the panels' right edge. */
-.detail-panel { position: relative; min-width: 0; max-width: 686px; }
-.detail-head-row { max-width: 686px; }
+/* The cards and content run the full docs-main column — no measure cap. */
+.detail-panel { position: relative; min-width: 0; }
 .detail-examples,
 .detail-playground-label,
 .detail-body .pg,
-.detail-body .pg-snippet { max-width: 686px; margin-top: 12px; }
+.detail-body .pg-snippet { margin-top: 12px; }
 .detail-panel[hidden] { display: none; }
 
 @media (max-width: 900px) {
@@ -475,8 +474,8 @@ html[data-theme="dark"] .detail-tabs.proto-modal-tabs { background: #272727; }
 @media (max-width: 860px) { .pg { grid-template-columns: 1fr; } }
 
 /* Detail playgrounds split in two: the stage on the left, the options
-   panel in the Studio's 348px column on the right, the pair sharing the
-   686px measure. Gooey keeps its snippet inside .pg, so it spans both
+   panel in the Studio's 348px column on the right, spanning the full
+   column. Gooey keeps its snippet inside .pg, so it spans both
    columns underneath. */
 .detail-body .pg {
   grid-template-columns: minmax(0, 1fr) 348px;
