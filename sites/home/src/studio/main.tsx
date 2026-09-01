@@ -119,7 +119,7 @@ function TopBar({ email, pro }: { email: string | null; pro: boolean }) {
 }
 
 const LIBS = [
-  { id: "beam", label: "Border beam", icon: "/assets/icons/figma-beam.svg" },
+  { id: "beam", label: "Border beam", icon: "/assets/icons/figma-beam.png" },
   { id: "orb", label: "Thinking orbs", icon: "/assets/icons/figma-orbs.svg" },
   { id: "gooey", label: "Gooey", icon: "/assets/icons/figma-gooey.svg" },
   { id: "metal", label: "Metal", icon: "/assets/icons/figma-metal.svg" },
