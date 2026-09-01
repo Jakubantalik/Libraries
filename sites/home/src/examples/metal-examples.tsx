@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { MetalFx } from "metal-fx";
+import { MetalFx } from "metal-fx-v1";
 
 /* The metal-fx demo page's own examples (demo/components/Examples.tsx),
    ported from its Tailwind to the mx-* classes in assets/examples.css.

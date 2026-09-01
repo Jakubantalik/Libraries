@@ -2,7 +2,7 @@ import { StrictMode, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { CodeCopy } from "./examples/CodeCopy";
 import { MetalExamples } from "./examples/metal-examples";
-import { MetalFx, type MetalFxPreset, type MetalFxVariant } from "metal-fx";
+import { MetalFx, type MetalFxPreset, type MetalFxVariant } from "metal-fx-v1";
 
 /* Metal detail page — playground island (stage + controls + live snippet).
    Mirrors the live playground at packages/metal-fx/demo/components/Playground.tsx:
