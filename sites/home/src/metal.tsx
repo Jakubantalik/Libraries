@@ -5,13 +5,16 @@ import { MetalExamples } from "./examples/metal-examples";
 import { MetalFx, type MetalFxPreset, type MetalFxVariant } from "metal-fx-v1";
 
 /* Metal detail page — playground island (stage + controls + live snippet).
-   Mirrors the live playground at packages/metal-fx/demo/components/Playground.tsx:
-   button/circle type tabs, chromatic/silver/gold color tabs, 0–100 strength
-   slider (default 90), No Glow / No Reflection toggles, starts paused.
+   Button/circle type tabs and the No Glow / No Reflection toggles; the
+   preset and strength stay at the demo's own baseline (chromatic at 90%)
+   rather than being exposed here, since the Studio tunes them in full.
    The preview pairs a search-input pill (reflection target) with the
    MetalFx-wrapped button, like the live demo. */
 
-const PRESETS: MetalFxPreset[] = ["chromatic", "silver", "gold"];
+/* The demo's baseline, fixed for this page. */
+const PRESET: MetalFxPreset = "chromatic";
+const STRENGTH = 90;
+
 const VARIANTS: MetalFxVariant[] = ["button", "circle"];
 
 function buildSnippet(
@@ -67,46 +70,8 @@ function SearchIcon() {
   );
 }
 
-function Slider({
-  min,
-  max,
-  step,
-  value,
-  onChange,
-  format,
-  ariaLabel,
-}: {
-  min: number;
-  max: number;
-  step: number;
-  value: number;
-  onChange: (value: number) => void;
-  format: (value: number) => string;
-  ariaLabel: string;
-}) {
-  const pct = ((value - min) / (max - min)) * 100;
-  return (
-    <div className="pg-vslider">
-      <div className="pg-vslider-fill" style={{ width: `${pct}%` }} />
-      <span className="pg-vslider-label">{ariaLabel}</span>
-      <span className="pg-vslider-value">{format(value)}</span>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        aria-label={ariaLabel}
-      />
-    </div>
-  );
-}
-
 function MetalPlayground() {
   const [variant, setVariant] = useState<MetalFxVariant>("button");
-  const [preset, setPreset] = useState<MetalFxPreset>("chromatic");
-  const [strength, setStrength] = useState(90);
   // Starts paused so the page loads quietly (same as the live playground).
   const [paused, setPaused] = useState(true);
   const [disableGlow, setDisableGlow] = useState(false);
@@ -114,12 +79,12 @@ function MetalPlayground() {
   const playPauseRef = useRef<HTMLButtonElement>(null);
   const searchRef = useRef<HTMLLabelElement>(null);
 
-  const snippet = buildSnippet(variant, preset, strength / 100, disableGlow, disableReflection);
+  const snippet = buildSnippet(variant, PRESET, STRENGTH / 100, disableGlow, disableReflection);
   const reflectionTargets = disableReflection ? undefined : [searchRef, playPauseRef];
 
   return (
     <>
-      <MetalExamples strength={strength / 100} />
+      <MetalExamples strength={STRENGTH / 100} />
 
       <p className="detail-playground-label">Playground</p>
 
@@ -137,13 +102,13 @@ function MetalPlayground() {
             />
           </label>
 
-          {/* key remounts the WebGL instance on variant/preset change, matching the live demo */}
+          {/* key remounts the WebGL instance on variant change, matching the live demo */}
           <MetalFx
-            key={`${variant}-${preset}`}
-            preset={preset}
+            key={variant}
+            preset={PRESET}
             variant={variant}
             theme="dark"
-            strength={strength / 100}
+            strength={STRENGTH / 100}
             paused={paused}
             disableGlow={disableGlow}
             reflectionTargets={reflectionTargets}
@@ -189,37 +154,6 @@ function MetalPlayground() {
               </button>
             ))}
           </div>
-        </div>
-
-        <div className="pg-field" role="radiogroup" aria-label="Color preset">
-          <span className="pg-label">Color</span>
-          <div className="pg-tabs">
-            {PRESETS.map((p) => (
-              <button
-                key={p}
-                type="button"
-                className="pg-tab"
-                role="radio"
-                aria-checked={preset === p}
-                data-active={preset === p}
-                onClick={() => setPreset(p)}
-              >
-                {p.charAt(0).toUpperCase() + p.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="pg-field">
-          <Slider
-            min={0}
-            max={100}
-            step={1}
-            value={strength}
-            onChange={setStrength}
-            format={(v) => `${v}%`}
-            ariaLabel="Strength"
-          />
         </div>
 
         <div className="pg-field">

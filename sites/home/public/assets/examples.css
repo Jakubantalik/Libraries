@@ -45,8 +45,8 @@
 .example-row-full {
   width: 100%;
   height: 370px;
-  border-radius: 30px;
-  background: rgba(217, 217, 217, 0.05);
+  border-radius: 16px;
+  background: #171717;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -64,8 +64,8 @@
 }
 
 .example-cell {
-  border-radius: 30px;
-  background: rgba(217, 217, 217, 0.05);
+  border-radius: 16px;
+  background: #171717;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -393,6 +393,38 @@
   line-height: 14px;
 }
 .ex-stack { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: center; }
+
+/* Orb showcase: the demo page's full nine-state layout (sites/orbs/
+   components/Examples.tsx). Two hero pills on top, then a grid whose
+   151px auto-rows let the large states span two rows and the compact
+   chips one, so the mixed heights tile with no gaps. Row spans rather
+   than CSS multi-column: Safari mishandles break-inside on fixed-height
+   multicol items. */
+.ex-orb-heroes,
+.ex-orb-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+.ex-orb-grid { grid-auto-rows: 151px; }
+.ex-orb-cell {
+  border-radius: 16px;
+  background: #171717;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  overflow: hidden;
+}
+.ex-orb-cell--hero { height: 314px; padding: 48px 40px; }
+.ex-orb-cell--lg { grid-row: span 2; }
+@media (max-width: 860px) {
+  .ex-orb-heroes,
+  .ex-orb-grid { grid-template-columns: minmax(0, 1fr); grid-auto-rows: auto; }
+  .ex-orb-cell,
+  .ex-orb-cell--lg { grid-row: auto; min-height: 200px; height: auto; }
+}
 
 /* Metal: the demo page's pill and circle controls. */
 .ex-metal-pill {

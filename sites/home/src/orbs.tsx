@@ -7,6 +7,36 @@ import { ThinkingOrb, type OrbSize, type OrbState } from "thinking-orbs";
    Mirrors the live playground at sites/orbs/components/Playground.tsx:
    nine state tabs, 64/20 size tabs, starts paused. */
 
+/* Examples data, mirroring sites/orbs/components/Examples.tsx. */
+const HERO_PILLS: Array<{ state: OrbState; label: string }> = [
+  { state: "solving", label: "Solving…." },
+  { state: "composing", label: "Thinking…." },
+];
+
+/* Order matters: with row-major auto-placement over 151px rows, this
+   sequence of 1- and 2-row spans tiles five rows with no leftover gaps. */
+const CHIP_STATES: OrbState[] = [
+  "listening",
+  "working",
+  "searching",
+  "connecting",
+  "weaving",
+  "breathing",
+  "shaping",
+];
+
+/* Chip states that render as full large pills (the rest stay compact). */
+const LARGE_CHIPS = new Set<OrbState>(["working", "searching", "connecting"]);
+
+/* Small-chip copy that reads better than the literal state name. */
+const LABEL_OVERRIDES: Partial<Record<OrbState, string>> = {
+  weaving: "planning",
+  breathing: "thinking",
+  connecting: "solving",
+};
+
+const cap = (v: string) => v.charAt(0).toUpperCase() + v.slice(1);
+
 const STATES: OrbState[] = [
   "working",
   "searching",
@@ -54,38 +84,47 @@ function OrbPlayground() {
 
   return (
     <>
-      {/* The demo page's own examples first: the orb doing its job inside
-          the status pills and chips it was drawn for, before any knobs. */}
+      {/* The demo page's own examples first (sites/orbs/components/
+          Examples.tsx), showing all nine states: two hero pills, then the
+          seven-state grid where working / searching / connecting take the
+          large pill and the rest stay compact chips. */}
       <div className="detail-examples">
-        <div className="example-row-full">
-          <div className="ex-stack">
-            <span className="ex-pill">
-              <ThinkingOrb state="solving" size={64} theme="dark" paused={paused} />
-              Solving…
-            </span>
-          </div>
-        </div>
-        <div className="example-row-split">
-          <div className="example-cell">
-            <div className="ex-stack">
-              <span className="ex-chip">
-                <ThinkingOrb state="searching" size={20} theme="dark" paused={paused} />
-                Searching
-              </span>
-              <span className="ex-chip">
-                <ThinkingOrb state="weaving" size={20} theme="dark" paused={paused} />
-                Planning
-              </span>
-            </div>
-          </div>
-          <div className="example-cell">
-            <div className="ex-stack">
+        <div className="ex-orb-heroes">
+          {HERO_PILLS.map(({ state, label }) => (
+            <div className="ex-orb-cell ex-orb-cell--hero" key={state}>
               <span className="ex-pill">
-                <ThinkingOrb state="composing" size={64} theme="dark" paused={paused} />
-                Thinking…
+                <ThinkingOrb state={state} size={64} theme="dark" paused={paused} style={{ width: 56, height: 56 }} />
+                {label}
               </span>
             </div>
-          </div>
+          ))}
+        </div>
+
+        {/* Row-major auto-placement over 151px rows: this order of 1- and
+            2-row spans tiles without leaving gaps. */}
+        <div className="ex-orb-grid">
+          {CHIP_STATES.map((state) => {
+            const large = LARGE_CHIPS.has(state);
+            const copy = LABEL_OVERRIDES[state] ?? state;
+            return (
+              <div
+                className={`ex-orb-cell${large ? " ex-orb-cell--lg" : ""}`}
+                key={state}
+              >
+                {large ? (
+                  <span className="ex-pill">
+                    <ThinkingOrb state={state} size={64} theme="dark" paused={paused} style={{ width: 56, height: 56 }} />
+                    {cap(copy)}….
+                  </span>
+                ) : (
+                  <span className="ex-chip">
+                    <ThinkingOrb state={state} size={20} theme="dark" paused={paused} />
+                    Agent {copy}…
+                  </span>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 

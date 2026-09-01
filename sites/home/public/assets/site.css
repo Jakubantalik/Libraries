@@ -83,6 +83,10 @@
   --blur-medium: 3px;
   --blur-large:  8px;
 
+  /* Card resize (transitions.dev 01-card-resize). */
+  --resize-dur: 300ms;
+  --resize-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
   /* Modal timing (used by the command palette). */
   --p7-open-dur: var(--duration-fast);
   --p7-close-dur: var(--duration-quick);
