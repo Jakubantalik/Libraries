@@ -174,6 +174,7 @@
     .st-lib {
       display: flex;
       align-items: center;
+      overflow: hidden;
       gap: 8px;
       height: 40px;
       padding: 0 8px;
@@ -200,37 +201,24 @@
         inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
     }
     .st-lib:focus-visible { outline: 2px solid var(--icon-color); outline-offset: 2px; }
-    /* Icon card per Figma 1419:38618 — same treatment as the docs sidebar:
-       the box owns the fill and the rim (in ::after, above the bitmap),
-       and the bitmap's baked #222 ground blends `lighten` up to the fill. */
+    /* Icon card: the Figma export verbatim; see .docs-link-ico. The row
+       clips the oversize canvas (beam's glow) like the design's row. */
     .st-lib-ico {
       position: relative;
       flex: none;
       width: 24px;
       height: 24px;
-      border-radius: 7px;
-      overflow: hidden;
-      background: rgba(59, 59, 59, 0.7);
-      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
-      filter: drop-shadow(0 1px 0.5px rgba(0, 0, 0, 0.24));
     }
-    .st-lib-ico::after {
-      content: "";
+    .st-lib-ico img {
       position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      pointer-events: none;
-      box-shadow:
-        inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
-        inset 0 0 0 1px rgba(196, 196, 196, 0.1),
-        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
-        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06);
+      display: block;
+      max-width: none;
+      width: 30px;
+      height: 30px;
+      left: -3px;
+      top: -2px;
     }
-    .st-lib-ico img { width: 100%; height: 100%; display: block; object-fit: cover; mix-blend-mode: lighten; }
-    /* The image-generation export sits on a larger canvas (104px against
-       the 92px the others use), so scale it up to crop that padding away
-       and let its art fill the slot like every other tile. */
-    .st-lib-ico img[data-pad] { width: 27px; height: 27px; max-width: none; margin: -1.5px; }
+    .st-lib-ico img[src*="figma-beam"] { width: 98px; height: 98px; left: -37px; top: -33px; }
 
     .st-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
     .st-main .pg { grid-template-columns: minmax(0, 1fr) 348px; grid-template-rows: auto 1fr; row-gap: 16px; align-items: start; }
