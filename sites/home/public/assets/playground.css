@@ -181,27 +181,35 @@
   .proto-modal-tabs-indicator { transition: none; }
 }
 
-/* On the detail pages the bar wears the Studio's Manual controls / Agent
-   pill: darker bar, lit indicator, brighter active label. */
-.detail-tabs.proto-modal-tabs { height: 36px; overflow: hidden; }
+/* Preview / Install / Usage bar — Figma 1425:39008: no bar fill, only the
+   selected tab carries one (white-12% pill at 36px radius with the drop +
+   top-highlight shadow), #fbfbfb active / #979797 muted labels, 3px
+   padding at 48px radius. Every instance reads it from the --pg-tabs
+   tokens, so the detail pages and the Studio can never drift. */
+.detail-tabs.proto-modal-tabs,
+html[data-theme="dark"] .detail-tabs.proto-modal-tabs {
+  height: 36px;
+  padding: 3px;
+  border-radius: 48px;
+  overflow: hidden;
+  background: var(--pg-tabs-bg);
+  box-shadow: var(--pg-tabs-ring);
+}
 .detail-tabs .proto-modal-tabs-indicator {
   top: 3px;
   height: 30px;
-  background: rgba(255, 255, 255, 0.12);
   border-radius: 36px;
-  box-shadow:
-    0 1px 1px 0 rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  background: var(--pg-tabs-pill-bg);
+  box-shadow: var(--pg-tabs-pill-shadow);
 }
 .detail-tabs .proto-modal-tab {
   height: 30px;
   padding: 0 12px;
   border-radius: 36px;
-  color: #979797;
+  color: var(--pg-label);
 }
 .detail-tabs .proto-modal-tab:hover,
-.detail-tabs .proto-modal-tab[aria-selected="true"] { color: #fbfbfb; }
-html[data-theme="dark"] .detail-tabs.proto-modal-tabs { background: #272727; }
+.detail-tabs .proto-modal-tab[aria-selected="true"] { color: var(--pg-title); }
 
 /* The two head actions sit together, opposite the tabs. */
 .detail-head-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -437,6 +445,18 @@ html[data-theme="dark"] .detail-tabs.proto-modal-tabs { background: #272727; }
 .detail-prompt:hover { background: rgba(255, 255, 255, 0.1); }
 .detail-prompt:active { background: rgba(255, 255, 255, 0.12); }
 .detail-prompt:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
+/* Studio stage bar: the label is static and the pill never resizes — only
+   the leading icon swaps copy -> check. */
+.st-stage-bar .detail-prompt { justify-content: center; transition: background 140ms; }
+.st-stage-bar .detail-prompt[data-copied="true"] { margin-right: 0; }
+
+html[data-theme="light"] .detail-prompt {
+  background: var(--pg-control-active-bg);
+  color: var(--pg-control-active-text);
+  box-shadow: var(--pg-control-active-shadow);
+}
+html[data-theme="light"] .detail-prompt:hover { background: #fafafa; }
+html[data-theme="light"] .detail-prompt:active { background: #f1f1f1; }
 /* Only the changing tail swaps, so "Cop" holds its place while "y prompt"
    cross-blurs to "ied" — the same swap the copy tooltip uses (.tt-swap in
    site.css). The pill hugs the tail and tweens between the two measured
@@ -589,24 +609,99 @@ html[data-theme="dark"] .detail-tabs.proto-modal-tabs { background: #272727; }
 html[data-theme="dark"] .pg-stage { background: #171717; }
 html[data-theme="dark"] .pg-stage::after { box-shadow: inset 0 0 0 1px rgba(191, 192, 203, 0.08); }
 
-/* Panel surface and rhythm from Figma 1418:38255: #1b1b1b at 16px radius,
-   12px side padding, 14px between groups, hairline separators. */
-.pg-controls {
-  border-radius: 16px;
-  background: #1b1b1b;
-  box-shadow:
+/* ── Studio control tokens ────────────────────────────────────
+   Light values follow transitions.dev's page palette (--bg / --card-bg
+   / --chip-bg) and refine's card + pill button: a white surface on a
+   1px black-6% ring, muted #6d6d6d labels, #17181c active text. The
+   dark block below restores the values the detail pages ship, so those
+   (pinned to data-theme="dark") are untouched. */
+:root {
+  --pg-panel-bg: #ffffff;
+  --pg-panel-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.04),
+    0 4px 42px 0 rgba(0, 0, 0, 0.04),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+
+  --pg-title: #171717;
+  --pg-label: #6d6d6d;
+  --pg-rule: rgba(0, 0, 0, 0.06);
+
+  --pg-control-bg: rgba(0, 0, 0, 0.04);
+  --pg-control-bg-hover: rgba(0, 0, 0, 0.06);
+  --pg-control-text: #6d6d6d;
+  --pg-control-text-hover: #2b2b2b;
+
+  /* Raised state — refine's white pill button. */
+  --pg-control-active-bg: #ffffff;
+  --pg-control-active-text: #17181c;
+  --pg-control-active-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.04),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.1),
+    inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+
+  --pg-grab: #b3b3b3;
+  --pg-swatch-ring: rgba(0, 0, 0, 0.12);
+
+  --pg-tabs-bg: transparent;
+  --pg-tabs-ring: none;
+  --pg-tabs-pill-bg: #ffffff;
+  --pg-tabs-pill-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.06),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+html[data-theme="dark"] {
+  --pg-panel-bg: #1b1b1b;
+  --pg-panel-shadow:
     0 2px 6px 0 rgba(0, 0, 0, 0.05),
     0 4px 42px 0 rgba(0, 0, 0, 0.24),
     inset 0 0 0 1px rgba(255, 255, 255, 0.04),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.02);
+
+  --pg-title: #fbfbfb;
+  --pg-label: #979797;
+  --pg-rule: rgba(255, 255, 255, 0.04);
+
+  --pg-control-bg: rgba(255, 255, 255, 0.04);
+  --pg-control-bg-hover: rgba(255, 255, 255, 0.08);
+  --pg-control-text: #b1b1b1;
+  --pg-control-text-hover: #e0e0e0;
+
+  --pg-control-active-bg: rgba(255, 255, 255, 0.08);
+  --pg-control-active-text: #fbfbfb;
+  --pg-control-active-shadow:
+    0 1px 1px 0 rgba(0, 0, 0, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+
+  --pg-grab: #767676;
+  --pg-swatch-ring: rgba(255, 255, 255, 0.14);
+
+  --pg-tabs-bg: transparent;
+  --pg-tabs-ring: none;
+  --pg-tabs-pill-bg: rgba(255, 255, 255, 0.12);
+  --pg-tabs-pill-shadow:
+    0 1px 1px 0 rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Panel surface and rhythm from Figma 1418:38255: #1b1b1b at 16px radius,
+   12px side padding, 14px between groups, hairline separators. */
+.pg-controls {
+  border-radius: 16px;
+  background: var(--pg-panel-bg);
+  box-shadow: var(--pg-panel-shadow);
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  /* 16px on both sides of every rule: this gap + the head's margin put the
+     body rule 16px under the tabs, and the ::before offsets below place it
+     16px above the content it heads. */
+  gap: 16px;
 }
 
 .pg-field { display: flex; flex-direction: column; gap: 8px; }
-.pg-label { font-size: 13px; font-weight: 400; line-height: 14px; color: #979797; }
+.pg-label { font-size: 13px; font-weight: 400; line-height: 14px; color: var(--pg-label); }
 
 /* Pill radio tabs (Figma 1418:38136): the selected pill lifts on the
    material ring, the rest sit flat and only brighten their label. */
@@ -617,8 +712,8 @@ html[data-theme="dark"] .pg-stage::after { box-shadow: inset 0 0 0 1px rgba(191,
   height: 32px;
   padding: 0 12px;
   border-radius: 36px;
-  background: rgba(255, 255, 255, 0.04);
-  color: #b1b1b1;
+  background: var(--pg-control-bg);
+  color: var(--pg-control-text);
   font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 500;
@@ -628,14 +723,11 @@ html[data-theme="dark"] .pg-stage::after { box-shadow: inset 0 0 0 1px rgba(191,
   transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
   -webkit-tap-highlight-color: transparent;
 }
-.pg-tab:hover { color: #e0e0e0; }
+.pg-tab:hover { color: var(--pg-control-text-hover); }
 .pg-tab[data-active="true"] {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fbfbfb;
-  box-shadow:
-    0 1px 1px 0 rgba(0, 0, 0, 0.24),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  background: var(--pg-control-active-bg);
+  color: var(--pg-control-active-text);
+  box-shadow: var(--pg-control-active-shadow);
 }
 
 /* Value slider + input (Figma 1418:38136): a 32px block the fill grows
@@ -647,10 +739,10 @@ html[data-theme="dark"] .pg-stage::after { box-shadow: inset 0 0 0 1px rgba(191,
   align-items: center;
   height: 32px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--pg-control-bg);
   transition: background-color 0.15s ease;
 }
-.pg-vslider:hover { background: rgba(255, 255, 255, 0.08); }
+.pg-vslider:hover { background: var(--pg-control-bg-hover); }
 .pg-vslider-fill {
   position: absolute;
   left: 0;
@@ -658,15 +750,12 @@ html[data-theme="dark"] .pg-stage::after { box-shadow: inset 0 0 0 1px rgba(191,
   bottom: 0;
   min-width: 32px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  box-shadow:
-    0 1px 1px 0 rgba(0, 0, 0, 0.24),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  background: var(--pg-control-active-bg);
+  box-shadow: var(--pg-control-active-shadow);
   transition: background-color 0.15s ease;
 }
 .pg-vslider:hover .pg-vslider-fill,
-.pg-vslider:active .pg-vslider-fill { background: rgba(255, 255, 255, 0.12); }
+.pg-vslider:active .pg-vslider-fill { background: var(--pg-control-active-bg); }
 /* Grab bar at the fill's edge — hinted on hover, solid while dragging. */
 .pg-vslider-fill::after {
   content: "";
@@ -676,7 +765,7 @@ html[data-theme="dark"] .pg-stage::after { box-shadow: inset 0 0 0 1px rgba(191,
   bottom: 6px;
   width: 2px;
   border-radius: 2px;
-  background: #767676;
+  background: var(--pg-grab);
   opacity: 0;
   transition: opacity 0.15s ease;
 }
@@ -691,7 +780,7 @@ html[data-theme="dark"] .pg-stage::after { box-shadow: inset 0 0 0 1px rgba(191,
   font-size: 13px;
   font-weight: 500;
   line-height: 14px;
-  color: #fbfbfb;
+  color: var(--pg-control-active-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -704,7 +793,7 @@ html[data-theme="dark"] .pg-stage::after { box-shadow: inset 0 0 0 1px rgba(191,
   font-size: 13px;
   font-weight: 500;
   line-height: 14px;
-  color: #fbfbfb;
+  color: var(--pg-control-active-text);
   white-space: nowrap;
   pointer-events: none;
 }
@@ -726,8 +815,8 @@ html[data-theme="dark"] .pg-stage::after { box-shadow: inset 0 0 0 1px rgba(191,
   height: 32px;
   padding: 0 12px;
   border-radius: 36px;
-  background: rgba(255, 255, 255, 0.04);
-  color: #b1b1b1;
+  background: var(--pg-control-bg);
+  color: var(--pg-control-text);
   font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 500;
@@ -737,14 +826,19 @@ html[data-theme="dark"] .pg-stage::after { box-shadow: inset 0 0 0 1px rgba(191,
   transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
   -webkit-tap-highlight-color: transparent;
 }
-.pg-toggle:hover { color: #e0e0e0; }
+.pg-toggle:hover { color: var(--pg-control-text-hover); }
 .pg-toggle[data-active="true"] {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fbfbfb;
-  box-shadow:
-    0 1px 1px 0 rgba(0, 0, 0, 0.24),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  background: var(--pg-control-active-bg);
+  color: var(--pg-control-active-text);
+  box-shadow: var(--pg-control-active-shadow);
+}
+
+/* Stage buttons run one size smaller than the site-wide 36px animate
+   button — 32px across every playground and Studio stage. */
+.pg-stage .btn-animate,
+.pg-toolbar .btn-animate {
+  height: 32px;
+  padding: 4px 12px;
 }
 
 /* Play / pause pill on the stage */
@@ -792,6 +886,19 @@ html[data-theme="dark"] .code-block {
   scrollbar-width: thin;
   scrollbar-color: var(--chip-bg-pressed) transparent;
 }
+/* Right-edge fade while the snippet scrolls horizontally: a mask on the
+   scroll container, fixed to its right edge (background-attachment: local
+   keeps the opaque half scrolling with the content, so the fade only shows
+   while there is more to the right and clears once the end is reached). */
+.code-block pre {
+  --code-fade: 40px;
+  mask-image: linear-gradient(to right, #000 calc(100% - var(--code-fade)), transparent 100%);
+  mask-repeat: no-repeat;
+  mask-position: right center;
+  mask-size: 100% 100%;
+}
+.code-block pre[data-scroll-end="true"] { mask-image: none; }
+
 .code-block pre::-webkit-scrollbar { width: 8px; height: 8px; }
 .code-block pre::-webkit-scrollbar-track { background: transparent; }
 .code-block pre::-webkit-scrollbar-thumb {
@@ -866,7 +973,7 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   font-size: 13px;
   font-weight: 500;
   line-height: 14px;
-  color: #fbfbfb;
+  color: var(--pg-title);
   margin: 4px 0 -8px;
 }
 .pg-controls-title:first-child { margin-top: 0; }
@@ -883,14 +990,50 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   position: absolute;
   left: -16px;
   right: -16px;
-  top: -12px;
+  top: -16px;
   height: 1px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--pg-rule);
   pointer-events: none;
 }
 .pg-controls .st-panel-body > .pg-controls-title:not(:first-child) { margin-top: 12px; }
 /* The hand-placed separator element is redundant now. */
 .pg-controls-sep { display: none; }
+
+/* One level of titles: with the section headings gone, each labeled group's
+   own label IS the title, and every title carries a full-bleed hairline
+   above it (skipping the first — the body rule already divides it from the
+   mode tabs). Scoped to .st-panel-body so the detail pages' public
+   playground keeps its muted labels. */
+.st-panel-body > .pg-field > .pg-label {
+  font-weight: 400;
+  color: var(--pg-title);
+  /* 16px under every title — the field's own 8px gap plus this. */
+  margin-bottom: 8px;
+}
+.st-panel-body > .pg-field:has(> .pg-label),
+.st-panel-body > .pg-field:has(> .pg-controls-title) { position: relative; }
+.st-panel-body > .pg-field:has(> .pg-label):not(:first-child)::before,
+.st-panel-body > .pg-field:has(> .pg-controls-title):not(:first-child)::before {
+  content: "";
+  position: absolute;
+  left: -16px;
+  right: -16px;
+  top: -16px;
+  height: 1px;
+  background: var(--pg-rule);
+  pointer-events: none;
+}
+
+/* A titled group holds its children at the field rhythm, and their own
+   .pg-field wrappers must not draw a second rule inside it. The title gets
+   16px of air under it; the controls below keep the 12px rhythm. */
+.pg-group { gap: 12px; }
+/* Same 16px under a group title — its own 12px gap plus this. */
+.st-panel-body > .pg-group > .pg-label { margin-bottom: 4px; }
+/* A labeled row inside a group (a swatch row, say) gets the same 16px of
+   air under its label as the group title above it. */
+.pg-group .pg-field > .pg-label { margin-bottom: 8px; }
+.pg-group .pg-field::before { content: none; }
 
 /* Color swatch row */
 .pg-swatches { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -901,7 +1044,7 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   border: 0;
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 0 0 1px var(--pg-swatch-ring);
   transition: transform 150ms var(--ease-smooth-out), box-shadow 150ms ease;
   -webkit-tap-highlight-color: transparent;
 }
@@ -913,10 +1056,116 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
     0 0 0 3.5px #ededed;
 }
 .pg-swatch:focus-visible { outline: 2px solid var(--icon-color); outline-offset: 3px; }
+/* Custom-color swatch: a rainbow disc that opens the panel picker. */
+.pg-swatch--custom {
+  background: conic-gradient(#f66, #fc6, #ce6, #6d8, #6cd, #86e, #e6c, #f66);
+}
+
+/* ── Color picker panel ─────────────────────────────────────────
+   jakubantalik.com's picker (spectrum + hue + hex), on the Studio panel
+   surface: --pg-panel tokens, 12px radius, same elevation as the panel. */
+.cp-panel {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px);
+  width: 220px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-radius: 12px;
+  background: var(--pg-panel-bg);
+  box-shadow: var(--pg-panel-shadow), 0 12px 32px rgba(0, 0, 0, 0.24);
+  z-index: 30;
+}
+.cp-spectrum-wrap {
+  position: relative;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: crosshair;
+  touch-action: none;
+}
+.cp-spectrum { display: block; width: 100%; height: 140px; }
+.cp-cursor {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.2);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.cp-hue-wrap {
+  position: relative;
+  width: 100%;
+  border-radius: 7px;
+  overflow: hidden;
+  cursor: pointer;
+  touch-action: none;
+}
+.cp-hue { display: block; width: 100%; height: 14px; }
+.cp-hue-cursor {
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 16px;
+  border-radius: 3px;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.2);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.cp-hex-row {
+  display: flex;
+  align-items: center;
+  height: 28px;
+  border-radius: 6px;
+  padding: 0 8px;
+  gap: 2px;
+  background: var(--pg-control-bg);
+}
+.cp-hex-label {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--pg-label);
+}
+.cp-hex-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  outline: none;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--pg-title);
+}
 
 /* ── Studio panel: Manual control / Agent ─────────────────────
    Same pill-and-indicator idiom as the detail-page tabs, sized to
    the panel column. */
+/* Head row: mode tabs on the left, the theme toggle in the top-right
+   corner. Carries the 16px gap the tabs used to own. */
+.st-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.st-panel-head .st-theme-btn--panel {
+  width: 30px;
+  height: 30px;
+  background: transparent;
+}
+.st-panel-head .st-theme-btn--panel:hover { background: var(--pg-control-bg); }
+.st-panel-head .st-theme-btn--panel svg { width: 16px; height: 16px; fill: none; stroke: currentColor; }
 .st-panel-tabs {
   position: relative;
   display: inline-flex;
@@ -925,18 +1174,17 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   gap: 3px;
   height: 36px;
   padding: 3px;
-  background: #272727;
+  background: var(--pg-tabs-bg);
+  box-shadow: var(--pg-tabs-ring);
   border-radius: 48px;
   overflow: hidden;
 }
 .st-panel-tabs-indicator {
   position: absolute; top: 3px; left: 0;
   height: 30px; width: 0;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--pg-tabs-pill-bg);
   border-radius: 36px;
-  box-shadow:
-    0 1px 1px 0 rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  box-shadow: var(--pg-tabs-pill-shadow);
   transition:
     transform var(--tabs-dur) var(--tabs-ease),
     width var(--tabs-dur) var(--tabs-ease);
@@ -947,7 +1195,7 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
 .st-panel-tab {
   position: relative; z-index: 1;
   font-family: var(--font-sans); font-size: 13px; font-weight: 500;
-  color: #979797;
+  color: var(--pg-label);
   background: transparent; border: 0;
   height: 30px; padding: 0 12px;
   border-radius: 36px;
@@ -957,14 +1205,14 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   -webkit-tap-highlight-color: transparent;
 }
 .st-panel-tab:hover,
-.st-panel-tab[aria-selected="true"] { color: #fbfbfb; }
+.st-panel-tab[aria-selected="true"] { color: var(--pg-title); }
 .st-panel-tab:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
 
 @media (prefers-reduced-motion: reduce) {
   .st-panel-tabs-indicator, .st-panel-tab { transition: none !important; }
 }
 
-.st-panel-body { display: flex; flex-direction: column; gap: 20px; }
+.st-panel-body { display: flex; flex-direction: column; gap: 32px; }
 .st-panel-body[hidden] { display: none; }
 
 /* Agent chat: transcript above, composer pinned under it */
@@ -977,7 +1225,7 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   max-height: 340px;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+  scrollbar-color: var(--pg-swatch-ring) transparent;
 }
 .st-chat-empty { margin: 0; font-size: 13px; line-height: 20px; color: var(--text-subtle); }
 .st-chat-msg {
@@ -1022,9 +1270,8 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding-top: 14px;
-  margin-top: 4px;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding-top: 16px;
+  border-top: 1px solid var(--pg-rule);
 }
 .st-actions-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .st-actions-btn {
@@ -1038,7 +1285,7 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   cursor: pointer;
   transition: background 120ms ease, color 120ms ease;
 }
-.st-actions-btn:hover { color: var(--text); background: rgba(255, 255, 255, 0.1); }
+.st-actions-btn:hover { color: var(--text); background: var(--pg-control-bg-hover); }
 .st-actions-btn[data-copied="true"] { color: var(--text); }
 .st-actions-btn:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
 .st-actions-name {
@@ -1057,7 +1304,7 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--pg-control-bg);
 }
 .st-preset-apply {
   border: 0;
@@ -1164,7 +1411,7 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   padding: 20px 24px;
   border-radius: 18px;
   background: var(--card-bg);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 -1px 0 0 rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 0 0 1px var(--pg-rule), inset 0 -1px 0 0 var(--pg-rule);
 }
 .docs-card h3 { margin: 0 0 6px; font-size: 15px; font-weight: 500; line-height: 22px; color: var(--text); }
 .docs-card p { margin: 0; font-size: 14px; line-height: 22px; }

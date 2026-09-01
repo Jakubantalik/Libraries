@@ -5,7 +5,7 @@
 /* blocks below always apply.                                   */
 /* ============================================================ */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
   --bg: #fdfdfd;
   --text: #0d0d0d;
@@ -278,6 +278,39 @@ html {
   color: var(--icon-color-muted);
   transition: color 0.15s ease;
 }
+/* Signed-in avatar — the 3-dot "More" button swaps to the user's initial
+   (Figma 1425:38996: #2a2a2a chip, 12px Inter Medium initial, material ring).
+   The dots stay in the DOM; the class just hides them and shows the letter. */
+.icon-btn--avatar {
+  background: #17181c;
+  color: #ffffff;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
+}
+.icon-btn--avatar:hover { background: #2a2a2a; }
+.icon-btn--avatar:active { background: #000000; }
+html[data-theme="dark"] .icon-btn--avatar {
+  background: #2a2a2a;
+  color: #e8e8e8;
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+    inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+}
+html[data-theme="dark"] .icon-btn--avatar:hover { background: #323232; }
+html[data-theme="dark"] .icon-btn--avatar:active { background: #262626; }
+.icon-btn--avatar svg { display: none !important; }
+.nav-avatar-initial {
+  display: none;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 13px;
+  text-transform: uppercase;
+}
+.icon-btn--avatar .nav-avatar-initial { display: block; }
+
 .icon-btn svg.icon-x {
   width: 16px;
   height: 17px;
@@ -1203,6 +1236,121 @@ html[data-theme="dark"] .card-copy-tooltip {
   filter: blur(2px);
 }
 .card-copy-tooltip .tt-swap[data-state="copied"] .tt-b {
+  opacity: 1;
+  filter: blur(0);
+}
+
+/* Same tooltip on the Studio's snippet copy button. */
+/* ─── Copy-button tooltip ─────────────────────────────────── */
+.code-copy-tooltip {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(100% + 8px);
+  box-sizing: border-box;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 40px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: 0;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+  visibility: hidden;
+  /* Opens and closes on a 3px cross blur, not a plain fade. */
+  filter: blur(var(--blur-medium));
+  transition:
+    opacity 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear 150ms;
+  background: #ffffff;
+  color: #17181c;
+  box-shadow:
+    0 2px 8px 0 rgba(0, 0, 0, 0.04),
+    0 0 0 1px rgba(0, 0, 0, 0.06),
+    0 1px 1px 0 rgba(0, 0, 0, 0.04);
+}
+
+html[data-theme="dark"] .code-copy-tooltip {
+  background: #181818;
+  color: #e3e3e3;
+  box-shadow:
+    0 1px 16px 0 rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+    inset 0 0 0 1px rgba(196, 196, 196, 0.08);
+}
+
+@media (hover: hover) {
+  .code-copy:hover .code-copy-tooltip,
+  .code-copy:focus-visible .code-copy-tooltip,
+  .code-copy[data-copied="true"] .code-copy-tooltip {
+    opacity: 1;
+    visibility: visible;
+    filter: blur(0);
+    transition:
+      opacity 150ms cubic-bezier(0.22, 1, 0.36, 1) 50ms,
+      filter 150ms cubic-bezier(0.22, 1, 0.36, 1) 50ms,
+      visibility 0s linear 50ms;
+  }
+  .code-copy[data-copied="true"] .code-copy-tooltip {
+    transition:
+      opacity 150ms cubic-bezier(0.22, 1, 0.36, 1),
+      filter 150ms cubic-bezier(0.22, 1, 0.36, 1),
+      visibility 0s linear;
+  }
+}
+.code-copy-tooltip .tt-text {
+  display: inline-flex;
+  align-items: baseline;
+  line-height: 16px;
+}
+
+.code-copy-tooltip .tt-swap {
+  position: relative;
+  display: inline-block;
+  vertical-align: baseline;
+  line-height: 16px;
+  width: var(--tt-w-a, auto);
+  transition: width 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.code-copy-tooltip .tt-swap[data-state="copied"] {
+  width: var(--tt-w-b, auto);
+}
+
+.code-copy-tooltip .tt-label {
+  white-space: pre;
+  transition:
+    opacity 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, filter;
+}
+
+.code-copy-tooltip .tt-a {
+  display: inline-block;
+}
+
+.code-copy-tooltip .tt-b {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.code-copy-tooltip .tt-swap .tt-a { opacity: 1; filter: blur(0); }
+.code-copy-tooltip .tt-swap .tt-b { opacity: 0; filter: blur(2px); }
+.code-copy-tooltip .tt-swap[data-state="copied"] .tt-a {
+  opacity: 0;
+  filter: blur(2px);
+}
+.code-copy-tooltip .tt-swap[data-state="copied"] .tt-b {
   opacity: 1;
   filter: blur(0);
 }

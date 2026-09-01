@@ -1,6 +1,6 @@
 import { useCallback, useState, type CSSProperties } from "react";
 import { BorderBeam, type BorderBeamSize, type BorderBeamColorVariant } from "border-beam";
-import { ControlsPanel, PgTabs, PgSlider, PgToggles, PanelTitle, PanelSep, Snippet, num } from "./controls";
+import { ControlsPanel, PgTabs, PgSlider, PanelSep, Snippet, num, StageBar, PgGroup } from "./controls";
 
 /* Studio — Beam workbench. The public playground exposes family/type/color/
    strength; the Studio adds the rest of the prop surface (duration,
@@ -60,7 +60,7 @@ const DEFAULT_DURATION: Record<string, number> = { line: 2.4 };
    "Duration 1.96 → 3.2" in the transcript rather than naming the prop. */
 const BEAM_PARAM_LABELS: Record<string, string> = {
   size: "Type",
-  colorVariant: "Color",
+  colorVariant: "Color theme",
   strength: "Strength",
   duration: "Duration",
   brightness: "Brightness",
@@ -73,28 +73,19 @@ const BEAM_PARAM_LABELS: Record<string, string> = {
   glowSx: "Glow spread X",
   glowSy: "Glow spread Y",
   glowBoost: "Glow boost",
-  cardScale: "Card size",
   active: "Playing",
 };
 
-type CardScale = "s" | "m" | "l";
-const CARD_SCALE_OPTIONS = [
-  { value: "s", label: "Small" },
-  { value: "m", label: "Medium" },
-  { value: "l", label: "Large" },
-] as const;
-const CARD_WIDTH: Record<CardScale, number> = { s: 180, m: 250, l: 330 };
-
-function DemoCard({ size, width }: { size: BorderBeamSize; width: number }) {
+/* The card follows the beam type, exactly like the live demo page: sm gets
+   the 80x36 button pill (.card-sm), everything else the 348px text card
+   (.card-md) — each beam's glow geometry is tuned for that one card, and
+   any other pairing smears. */
+function DemoCard({ size }: { size: BorderBeamSize }) {
   if (size === "sm") {
-    return (
-      <div className="beam-card beam-card--sm">
-        <div className="beam-card-dot" />
-      </div>
-    );
+    return <div className="beam-card beam-card--btn" />;
   }
   return (
-    <div className="beam-card" style={{ width }}>
+    <div className="beam-card" style={{ width: 348 }}>
       <div className="beam-card-line beam-card-line--title" />
       <div className="beam-card-line" />
       <div className="beam-card-line beam-card-line--short" />
@@ -102,7 +93,7 @@ function DemoCard({ size, width }: { size: BorderBeamSize; width: number }) {
   );
 }
 
-export function BeamStudio({ visible = true }: { visible?: boolean }) {
+export function BeamStudio({ visible = true, theme = "dark" }: { visible?: boolean; theme?: "dark" | "light" }) {
   const [family, setFamily] = useState<BeamFamily>("rotate");
   const [size, setSize] = useState<BorderBeamSize>("md");
   const [colorVariant, setColorVariant] = useState<BorderBeamColorVariant>("colorful");
@@ -119,7 +110,6 @@ export function BeamStudio({ visible = true }: { visible?: boolean }) {
   const [glowSx, setGlowSx] = useState(1);
   const [glowSy, setGlowSy] = useState(1);
   const [glowBoost, setGlowBoost] = useState(1);
-  const [cardScale, setCardScale] = useState<CardScale>("m");
   const [active, setActive] = useState(true);
 
   /* An untouched duration follows the type's own default across switches
@@ -150,7 +140,7 @@ export function BeamStudio({ visible = true }: { visible?: boolean }) {
   const agentParams: Record<string, unknown> = {
     size, colorVariant, strength, duration, brightness, saturation,
     hueRange, hueShift, staticColors, radius, spikes,
-    glowSx, glowSy, glowBoost, cardScale, active,
+    glowSx, glowSy, glowBoost, active,
   };
 
   const applyAgentParams = useCallback(
@@ -177,7 +167,6 @@ export function BeamStudio({ visible = true }: { visible?: boolean }) {
       if (typeof patch.glowSx === "number") setGlowSx(patch.glowSx);
       if (typeof patch.glowSy === "number") setGlowSy(patch.glowSy);
       if (typeof patch.glowBoost === "number") setGlowBoost(patch.glowBoost);
-      if (typeof patch.cardScale === "string") setCardScale(patch.cardScale as CardScale);
       if (typeof patch.active === "boolean") setActive(patch.active);
     },
     [handleSizeChange]
@@ -227,12 +216,13 @@ export function BeamStudio({ visible = true }: { visible?: boolean }) {
   return (
     <>
       <div className="pg">
+        <StageBar library="Border beam" prompt={{ pkg: "border-beam", docsPath: "/beam.html", snippet }} />
         <div className="pg-stage">
           {visible && (
           <BorderBeam
             size={size}
             colorVariant={colorVariant}
-            theme="dark"
+            theme={theme}
             active={active}
             strength={strength / 100}
             duration={duration}
@@ -244,7 +234,7 @@ export function BeamStudio({ visible = true }: { visible?: boolean }) {
             staticColors={staticColors}
             style={beamStyle}
           >
-            <DemoCard size={size} width={CARD_WIDTH[cardScale]} />
+            <DemoCard size={size} />
           </BorderBeam>
           )}
           <button
@@ -267,45 +257,38 @@ export function BeamStudio({ visible = true }: { visible?: boolean }) {
           }}
           prompt={{ pkg: "border-beam", docsPath: "/beam.html", snippet }}
         >
-          <PanelTitle>Main</PanelTitle>
           <PgTabs label="Family" options={FAMILY_OPTIONS} value={family} onChange={handleFamilyChange} />
           <PgTabs label="Type" options={SIZE_OPTIONS_BY_FAMILY[family]} value={size} onChange={handleSizeChange} />
-          <PgTabs label="Color" options={COLOR_OPTIONS} value={colorVariant} onChange={setColorVariant} />
-          <PgSlider label="Strength" value={strength} min={0} max={100} step={1} display={`${strength}%`} onChange={setStrength} />
+          <PgTabs label="Color theme" options={COLOR_OPTIONS} value={colorVariant} onChange={setColorVariant} />
           <PanelSep />
-          <PanelTitle>Size</PanelTitle>
-          {size !== "sm" && (
-            <PgTabs label="Card size" options={CARD_SCALE_OPTIONS} value={cardScale} onChange={setCardScale} />
-          )}
-          <PgSlider label="Corner radius" value={radius} min={0} max={32} step={1} display={`${radius}px`} onChange={setRadius} />
+          <PgGroup label="Motion">
+            <PgSlider label="Duration" value={duration} min={0.5} max={6} step={0.02} display={`${num(duration)}s`} onChange={setDuration} />
+          </PgGroup>
           <PanelSep />
-          <PanelTitle>Motion</PanelTitle>
-          <PgSlider label="Duration" value={duration} min={0.5} max={6} step={0.02} display={`${num(duration)}s`} onChange={setDuration} />
-          <PgToggles
-            label="Colors"
-            options={[{ label: "Static colors", active: staticColors, onToggle: () => setStaticColors((v) => !v) }]}
-          />
-          <PanelSep />
-          <PanelTitle>Glow</PanelTitle>
-          <PgSlider label="Size" value={glowSize} min={0.25} max={3} step={0.05} display={`${num(glowSize)}×`} onChange={setGlowSize} />
-          <PgSlider label="Brightness" value={brightness} min={0.5} max={2.2} step={0.05} display={`${num(brightness)}×`} onChange={setBrightness} />
-          <PgSlider label="Saturation" value={saturation} min={0.4} max={2.2} step={0.05} display={`${num(saturation)}×`} onChange={setSaturation} />
-          {!staticColors && (
-            <>
-              <PgSlider label="Hue range" value={hueRange} min={0} max={120} step={1} display={`${hueRange}°`} onChange={setHueRange} />
-              <PgSlider label="Hue shift" value={hueShift} min={-180} max={180} step={5} display={`${hueShift}°`} onChange={setHueShift} />
-            </>
-          )}
-          {isLine && (
-            <PgSlider label="Spikes" value={spikes} min={0} max={2} step={0.05} display={`${num(spikes)}×`} onChange={setSpikes} />
-          )}
-          {isPulse && (
-            <>
-              <PgSlider label="Glow spread X" value={glowSx} min={0.5} max={2} step={0.05} display={`${num(glowSx)}×`} onChange={setGlowSx} />
-              <PgSlider label="Glow spread Y" value={glowSy} min={0.5} max={2} step={0.05} display={`${num(glowSy)}×`} onChange={setGlowSy} />
-              <PgSlider label="Glow boost" value={glowBoost} min={0.5} max={2} step={0.05} display={`${num(glowBoost)}×`} onChange={setGlowBoost} />
-            </>
-          )}
+          {/* Everything else that shapes the glow lives in one section. */}
+          <PgGroup label="Glow styling">
+            <PgSlider label="Strength" value={strength} min={0} max={100} step={1} display={`${strength}%`} onChange={setStrength} />
+            <PgSlider label="Corner radius" value={radius} min={0} max={32} step={1} display={`${radius}px`} onChange={setRadius} />
+            <PgSlider label="Size" value={glowSize} min={0.25} max={3} step={0.05} display={`${num(glowSize)}×`} onChange={setGlowSize} />
+            <PgSlider label="Brightness" value={brightness} min={0.5} max={2.2} step={0.05} display={`${num(brightness)}×`} onChange={setBrightness} />
+            <PgSlider label="Saturation" value={saturation} min={0.4} max={2.2} step={0.05} display={`${num(saturation)}×`} onChange={setSaturation} />
+            {!staticColors && (
+              <>
+                <PgSlider label="Hue range" value={hueRange} min={0} max={120} step={1} display={`${hueRange}°`} onChange={setHueRange} />
+                <PgSlider label="Hue shift" value={hueShift} min={-180} max={180} step={5} display={`${hueShift}°`} onChange={setHueShift} />
+              </>
+            )}
+            {isLine && (
+              <PgSlider label="Spikes" value={spikes} min={0} max={2} step={0.05} display={`${num(spikes)}×`} onChange={setSpikes} />
+            )}
+            {isPulse && (
+              <>
+                <PgSlider label="Glow spread X" value={glowSx} min={0.5} max={2} step={0.05} display={`${num(glowSx)}×`} onChange={setGlowSx} />
+                <PgSlider label="Glow spread Y" value={glowSy} min={0.5} max={2} step={0.05} display={`${num(glowSy)}×`} onChange={setGlowSy} />
+                <PgSlider label="Glow boost" value={glowBoost} min={0.5} max={2} step={0.05} display={`${num(glowBoost)}×`} onChange={setGlowBoost} />
+              </>
+            )}
+          </PgGroup>
         </ControlsPanel>
 
         <Snippet code={snippet} />

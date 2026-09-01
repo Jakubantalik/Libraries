@@ -7,7 +7,7 @@ import {
   type OrbSize,
   type OrbState,
 } from "thinking-orbs";
-import { ControlsPanel, PgTabs, PgSlider, PgSwatches, PanelTitle, PanelSep, Snippet, num } from "./controls";
+import { ControlsPanel, PgTabs, PgSlider, PgSwatches, PanelSep, Snippet, num, StageBar, PgGroup } from "./controls";
 
 /* Studio — Orb workbench: all nine states, both tuned sizes, speed, plus
    the ink tint and dot-density knobs. The orb ships exactly two hand-tuned
@@ -47,11 +47,11 @@ const ORB_PARAM_LABELS: Record<string, string> = {
   size: "Size",
   speed: "Speed",
   ink: "Color",
-  dots: "Dots",
+  dots: "Dots amount",
   paused: "Paused",
 };
 
-export function OrbStudio({ visible = true }: { visible?: boolean }) {
+export function OrbStudio({ visible = true, theme = "dark" }: { visible?: boolean; theme?: "dark" | "light" }) {
   const [state, setState] = useState<OrbState>("listening");
   const [size, setSize] = useState<OrbSize>(64);
   const [speed, setSpeed] = useState(100);
@@ -87,6 +87,7 @@ export function OrbStudio({ visible = true }: { visible?: boolean }) {
 
   return (
     <div className="pg">
+      <StageBar library="Thinking orbs" prompt={{ pkg: "thinking-orbs", docsPath: "/orbs.html", snippet }} />
       <div className="pg-stage">
         {/* key remounts the canvas on state/size change, matching the live playground */}
         {visible && (
@@ -98,7 +99,7 @@ export function OrbStudio({ visible = true }: { visible?: boolean }) {
             color={tinted ? ink : undefined}
             dots={dots}
             paused={paused}
-            theme="dark"
+            theme={theme}
           />
         )}
         <button
@@ -121,7 +122,6 @@ export function OrbStudio({ visible = true }: { visible?: boolean }) {
         }}
         prompt={{ pkg: "thinking-orbs", docsPath: "/orbs.html", snippet }}
       >
-        <PanelTitle>Main</PanelTitle>
         <PgTabs label="State" options={STATE_OPTIONS} value={state} onChange={setState} />
         <PgTabs
           label="Size"
@@ -129,31 +129,34 @@ export function OrbStudio({ visible = true }: { visible?: boolean }) {
           value={String(size) as "64" | "32" | "20"}
           onChange={(v) => setSize(Number(v) as OrbSize)}
         />
-        <PgSlider
-          label="Speed"
-          value={speed}
-          min={25}
-          max={300}
-          step={5}
-          display={`${num(speed / 100)}×`}
-          onChange={setSpeed}
-        />
+        <PgGroup label="Motion">
+          <PgSlider
+            label="Speed"
+            value={speed}
+            min={25}
+            max={300}
+            step={5}
+            display={`${num(speed / 100)}×`}
+            onChange={setSpeed}
+          />
+        </PgGroup>
         <PanelSep />
-        <PanelTitle>Ink</PanelTitle>
-        <PgSwatches label="Color" options={INK_OPTIONS} value={ink} onChange={setInk} />
+        <PgGroup label="Dots">
+          <PgSwatches label="Color" options={INK_OPTIONS} value={ink} onChange={setInk} allowCustom hideLabel />
         {/* The library scales every count knob of a state together, so the
             prop is a multiplier — but a multiplier is a poor thing to aim
             with. The slider reads out the dots the current state and size
             will actually draw, recomputed as either of those changes. */}
-        <PgSlider
-          label="Dots"
-          value={dots}
-          min={0.4}
-          max={2}
-          step={0.05}
-          display={`${dotTotal}`}
-          onChange={setDots}
-        />
+          <PgSlider
+            label="Dots amount"
+            value={dots}
+            min={0.4}
+            max={2}
+            step={0.05}
+            display={`${dotTotal}`}
+            onChange={setDots}
+          />
+        </PgGroup>
       </ControlsPanel>
 
       <Snippet code={snippet} />

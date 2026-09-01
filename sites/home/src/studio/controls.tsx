@@ -1,13 +1,51 @@
 import {
+  createContext,
   useCallback,
+  useContext,
   useEffect,
   useLayoutEffect,
   useRef,
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
 import { describePatch, streamAgentTurn, type ChatTurn } from "./agent";
+
+/* App-level theme plumbing: the Studio shell provides it, and every
+   ControlsPanel renders the dark/light toggle in its own top-right corner.
+   Null (detail pages, tests) simply renders no toggle. */
+export const StudioThemeContext = createContext<{
+  theme: "dark" | "light";
+  toggle: () => void;
+} | null>(null);
+
+function PanelThemeToggle() {
+  const ctx = useContext(StudioThemeContext);
+  if (!ctx) return null;
+  const dark = ctx.theme === "dark";
+  return (
+    <button
+      type="button"
+      className="icon-btn st-theme-btn st-theme-btn--panel"
+      onClick={ctx.toggle}
+      aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
+      aria-pressed={!dark}
+      title={dark ? "Light theme" : "Dark theme"}
+    >
+      {dark ? (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4.2" />
+          <path d="M12 2.6v2.2M12 19.2v2.2M4.2 12H2M22 12h-2.2M6.1 6.1 4.6 4.6M19.4 19.4l-1.5-1.5M17.9 6.1l1.5-1.5M4.6 19.4l1.5-1.5" />
+        </svg>
+      ) : (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1Z" />
+        </svg>
+      )}
+    </button>
+  );
+}
 
 /* Studio — shared control components. Same pg-* conventions the detail-page
    playgrounds use (playground.css), plus Studio-only pieces: section titles,
@@ -33,7 +71,41 @@ export function CheckIcon() {
 export function CodeCopy({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false);
   const timer = useRef<number | undefined>(undefined);
+  const swapRef = useRef<HTMLSpanElement | null>(null);
   useEffect(() => () => window.clearTimeout(timer.current), []);
+
+  /* The detail pages' copy tooltip (site.js .card-copy wiring): the label
+     tail cross-blurs "y code" -> "ied" and the pill tweens between the two
+     measured widths. Hidden libraries measure 0, so re-measure when the
+     button becomes visible and never write a 0. */
+  useLayoutEffect(() => {
+    const swap = swapRef.current;
+    if (!swap) return;
+    const a = swap.querySelector<HTMLElement>(".tt-a");
+    const b = swap.querySelector<HTMLElement>(".tt-b");
+    if (!a || !b) return;
+    const measure = () => {
+      const wa = a.getBoundingClientRect().width;
+      if (!wa) return;
+      const prevPos = b.style.position;
+      b.style.position = "static";
+      a.style.display = "none";
+      const wb = b.getBoundingClientRect().width;
+      a.style.display = "";
+      b.style.position = prevPos;
+      swap.style.setProperty("--tt-w-a", `${wa}px`);
+      swap.style.setProperty("--tt-w-b", `${wb}px`);
+    };
+    const raf = requestAnimationFrame(measure);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+    const ro = new ResizeObserver(measure);
+    ro.observe(swap);
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+    };
+  }, []);
+
   const handleClick = useCallback(() => {
     if (typeof navigator !== "undefined" && navigator.clipboard) {
       navigator.clipboard.writeText(text).catch(() => {});
@@ -42,6 +114,7 @@ export function CodeCopy({ text, label }: { text: string; label: string }) {
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => setCopied(false), 1600);
   }, [text]);
+
   return (
     <button
       type="button"
@@ -52,15 +125,47 @@ export function CodeCopy({ text, label }: { text: string; label: string }) {
     >
       <CopyIcon />
       <CheckIcon />
+      <span className="card-copy-tooltip" aria-hidden="true">
+        <span className="tt-text">
+          Cop
+          <span className="tt-swap" ref={swapRef} data-state={copied ? "copied" : undefined}>
+            <span className="tt-label tt-a">y code</span>
+            <span className="tt-label tt-b">ied</span>
+          </span>
+        </span>
+      </span>
     </button>
   );
 }
 
 /** Live-updating snippet block, full playground width. */
 export function Snippet({ code }: { code: string }) {
+  const preRef = useRef<HTMLPreElement | null>(null);
+
+  /* The right-edge fade (playground.css) is masked off once the snippet is
+     scrolled to its end, or when it doesn't overflow at all — so the hint
+     only shows while there IS more code to the right. */
+  useEffect(() => {
+    const pre = preRef.current;
+    if (!pre) return;
+    const update = () => {
+      const atEnd = pre.scrollLeft + pre.clientWidth >= pre.scrollWidth - 1;
+      if (atEnd) pre.setAttribute("data-scroll-end", "true");
+      else pre.removeAttribute("data-scroll-end");
+    };
+    update();
+    pre.addEventListener("scroll", update, { passive: true });
+    const ro = new ResizeObserver(update);
+    ro.observe(pre);
+    return () => {
+      pre.removeEventListener("scroll", update);
+      ro.disconnect();
+    };
+  }, [code]);
+
   return (
     <div className="code-block pg-snippet">
-      <pre>{code}</pre>
+      <pre ref={preRef}>{code}</pre>
       <CodeCopy text={code} label="Copy Studio code" />
     </div>
   );
@@ -73,6 +178,18 @@ export function PanelTitle({ children }: { children: string }) {
 
 export function PanelSep() {
   return <div className="pg-controls-sep" aria-hidden="true" />;
+}
+
+/** Titled group: gives a section its own label (and so the hairline above
+    it) when the controls inside carry their own inline labels — e.g. a lone
+    slider that would otherwise sit under the previous section's title. */
+export function PgGroup({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="pg-field pg-group" role="group" aria-label={label}>
+      <span className="pg-label">{label}</span>
+      {children}
+    </div>
+  );
 }
 
 export function PgTabs<T extends string>({
@@ -188,20 +305,215 @@ export function PgToggles({
 
 /** Round color swatch picker. `swatch` overrides the painted color when the
     option's value is a sentinel rather than a CSS color. */
+/* ── Custom color picker ───────────────────────────────────────
+   Ported from jakubantalik.com's text-color picker (spectrum canvas +
+   hue strip + hex field), restyled onto the Studio panel tokens. */
+
+function cpHsvToRgb(h: number, sat: number, v: number): [number, number, number] {
+  const i = Math.floor(h / 60) % 6;
+  const f = h / 60 - Math.floor(h / 60);
+  const pC = v * (1 - sat);
+  const q = v * (1 - f * sat);
+  const t = v * (1 - (1 - f) * sat);
+  const pick: Array<[number, number, number]> = [
+    [v, t, pC], [q, v, pC], [pC, v, t], [pC, q, v], [t, pC, v], [v, pC, q],
+  ];
+  const [r, g, b] = pick[i];
+  return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+}
+
+function cpRgbToHsv(r: number, g: number, b: number): { h: number; s: number; v: number } {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const d = max - min;
+  let h = 0;
+  const sat = max === 0 ? 0 : d / max;
+  if (d !== 0) {
+    if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) * 60;
+    else if (max === g) h = ((b - r) / d + 2) * 60;
+    else h = ((r - g) / d + 4) * 60;
+  }
+  return { h, s: sat, v: max };
+}
+
+function cpHex(h: number, sat: number, v: number): string {
+  const [r, g, b] = cpHsvToRgb(h, sat, v);
+  return "#" + [r, g, b].map((n) => n.toString(16).padStart(2, "0")).join("");
+}
+
+function cpParseHex(raw: string): { h: number; s: number; v: number } | null {
+  const m = raw.trim().replace(/^#/, "");
+  if (!/^[0-9a-f]{6}$/i.test(m)) return null;
+  const n = parseInt(m, 16);
+  return cpRgbToHsv((n >> 16) & 255, (n >> 8) & 255, n & 255);
+}
+
+function ColorPickerPanel({
+  value,
+  onChange,
+  onClose,
+}: {
+  value: string;
+  onChange: (hex: string) => void;
+  onClose: () => void;
+}) {
+  const init = cpParseHex(value) ?? { h: 0, s: 1, v: 1 };
+  const hsvRef = useRef(init);
+  const [, force] = useState(0);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const specRef = useRef<HTMLCanvasElement | null>(null);
+  const hueRef = useRef<HTMLCanvasElement | null>(null);
+  const [hexText, setHexText] = useState(value.replace("#", "").toUpperCase());
+
+  const drawSpectrum = useCallback(() => {
+    const c = specRef.current;
+    if (!c) return;
+    const ctx = c.getContext("2d");
+    if (!ctx) return;
+    const { width: w, height: hh } = c;
+    ctx.fillStyle = `hsl(${hsvRef.current.h}, 100%, 50%)`;
+    ctx.fillRect(0, 0, w, hh);
+    const white = ctx.createLinearGradient(0, 0, w, 0);
+    white.addColorStop(0, "rgba(255,255,255,1)");
+    white.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = white;
+    ctx.fillRect(0, 0, w, hh);
+    const black = ctx.createLinearGradient(0, 0, 0, hh);
+    black.addColorStop(0, "rgba(0,0,0,0)");
+    black.addColorStop(1, "rgba(0,0,0,1)");
+    ctx.fillStyle = black;
+    ctx.fillRect(0, 0, w, hh);
+  }, []);
+
+  useLayoutEffect(() => {
+    drawSpectrum();
+    const c = hueRef.current;
+    const ctx = c?.getContext("2d");
+    if (!c || !ctx) return;
+    const grad = ctx.createLinearGradient(0, 0, c.width, 0);
+    for (let i = 0; i <= 6; i++) grad.addColorStop(i / 6, `hsl(${i * 60}, 100%, 50%)`);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, c.width, c.height);
+  }, [drawSpectrum]);
+
+  /* Outside click + Esc close, same contract as the site's panel. */
+  useEffect(() => {
+    const onDoc = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) onClose();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [onClose]);
+
+  const apply = useCallback(() => {
+    const hex = cpHex(hsvRef.current.h, hsvRef.current.s, hsvRef.current.v);
+    setHexText(hex.replace("#", "").toUpperCase());
+    onChange(hex);
+    force((n) => n + 1);
+  }, [onChange]);
+
+  const dragTrack = (
+    pick: (e: PointerEvent | ReactPointerEvent) => void
+  ) => (e: ReactPointerEvent) => {
+    e.preventDefault();
+    pick(e);
+    const move = (ev: PointerEvent) => pick(ev);
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  };
+
+  const pickSpectrum = (e: PointerEvent | ReactPointerEvent) => {
+    const wrap = specRef.current?.parentElement;
+    if (!wrap) return;
+    const r = wrap.getBoundingClientRect();
+    hsvRef.current.s = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+    hsvRef.current.v = Math.max(0, Math.min(1, 1 - (e.clientY - r.top) / r.height));
+    apply();
+  };
+
+  const pickHue = (e: PointerEvent | ReactPointerEvent) => {
+    const wrap = hueRef.current?.parentElement;
+    if (!wrap) return;
+    const r = wrap.getBoundingClientRect();
+    hsvRef.current.h = Math.max(0, Math.min(359.9, ((e.clientX - r.left) / r.width) * 360));
+    drawSpectrum();
+    apply();
+  };
+
+  const commitHex = () => {
+    const parsed = cpParseHex(hexText);
+    if (!parsed) return;
+    hsvRef.current = parsed;
+    drawSpectrum();
+    apply();
+  };
+
+  const { h, s: sat, v } = hsvRef.current;
+  return (
+    <div className="cp-panel" ref={rootRef}>
+      <div className="cp-spectrum-wrap" onPointerDown={dragTrack(pickSpectrum)}>
+        <canvas ref={specRef} className="cp-spectrum" width={196} height={140} />
+        <div className="cp-cursor" style={{ left: `${sat * 100}%`, top: `${(1 - v) * 100}%` }} />
+      </div>
+      <div className="cp-hue-wrap" onPointerDown={dragTrack(pickHue)}>
+        <canvas ref={hueRef} className="cp-hue" width={196} height={14} />
+        <div className="cp-hue-cursor" style={{ left: `${(h / 360) * 100}%` }} />
+      </div>
+      <div className="cp-hex-row">
+        <span className="cp-hex-label" aria-hidden="true">#</span>
+        <input
+          className="cp-hex-input"
+          value={hexText}
+          maxLength={6}
+          spellCheck={false}
+          aria-label="Hex color"
+          onChange={(e) => setHexText(e.target.value)}
+          onBlur={commitHex}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") { commitHex(); onClose(); }
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function PgSwatches({
   label,
   options,
   value,
   onChange,
+  allowCustom,
+  hideLabel,
 }: {
   label: string;
   options: ReadonlyArray<{ value: string; label: string; swatch?: string }>;
   value: string;
   onChange: (v: string) => void;
+  /** Append a rainbow swatch that opens the picker, so any value outside
+      the presets can be chosen; it shows (and stays selected on) the
+      current custom color. */
+  allowCustom?: boolean;
+  /** Drop the visible label — for a row inside a titled PgGroup, where the
+      group's title already names it. The aria-label stays either way. */
+  hideLabel?: boolean;
 }) {
+  const isCustom = allowCustom && !options.some((o) => o.value === value);
+  const [pickerOpen, setPickerOpen] = useState(false);
   return (
-    <div className="pg-field" role="radiogroup" aria-label={label}>
-      <span className="pg-label">{label}</span>
+    <div className="pg-field" role="radiogroup" aria-label={label} style={{ position: "relative" }}>
+      {!hideLabel && <span className="pg-label">{label}</span>}
       <div className="pg-swatches">
         {options.map((o) => (
           <button
@@ -216,7 +528,26 @@ export function PgSwatches({
             onClick={() => onChange(o.value)}
           />
         ))}
+        {allowCustom && (
+          <button
+            type="button"
+            className="pg-swatch pg-swatch--custom"
+            data-active={isCustom ? "true" : undefined}
+            style={isCustom ? { background: value } : undefined}
+            title="Custom color"
+            aria-label="Custom color"
+            aria-expanded={pickerOpen}
+            onClick={() => setPickerOpen((o) => !o)}
+          />
+        )}
       </div>
+      {allowCustom && pickerOpen && (
+        <ColorPickerPanel
+          value={isCustom ? value : "#ededed"}
+          onChange={onChange}
+          onClose={() => setPickerOpen(false)}
+        />
+      )}
     </div>
   );
 }
@@ -510,6 +841,133 @@ function buildAgentPrompt(library: string, meta: PromptMeta): string {
   ].join("\n");
 }
 
+type StageView = "preview" | "install" | "usage";
+
+/** Bar above the stage: the detail pages' Preview / Install / Usage tabs
+    (same .detail-tabs / .proto-modal-tabs pill bar) on the left, and their
+    .detail-prompt Copy-prompt pill on the right. Install and Usage swap the
+    stage + live snippet for the matching code block, exactly like the
+    detail pages' data-detail-panel switch. */
+export function StageBar({ library, prompt }: { library: string; prompt?: PromptMeta }) {
+  const [view, setView] = useState<StageView>("preview");
+  const barRef2 = useRef<HTMLDivElement | null>(null);
+  const indRef = useRef<HTMLSpanElement | null>(null);
+  const viewRef = useRef<StageView>("preview");
+
+  /* Indicator measured off the selected button, same as site.js's
+     detail-tabs wiring and the panel-tabs pill above. */
+  const moveInd = useCallback((animate: boolean) => {
+    const bar = barRef2.current;
+    const ind = indRef.current;
+    if (!bar || !ind) return;
+    const btn = bar.querySelector<HTMLElement>(`[data-detail-tab="${viewRef.current}"]`);
+    if (!btn || !btn.offsetWidth) return;
+    if (!animate) {
+      const prev = ind.style.transition;
+      ind.style.transition = "none";
+      ind.style.width = `${btn.offsetWidth}px`;
+      ind.style.transform = `translateX(${btn.offsetLeft}px)`;
+      void ind.offsetWidth;
+      ind.style.transition = prev;
+      return;
+    }
+    ind.style.width = `${btn.offsetWidth}px`;
+    ind.style.transform = `translateX(${btn.offsetLeft}px)`;
+  }, []);
+
+  const selectView = useCallback(
+    (next: StageView) => {
+      setView(next);
+      viewRef.current = next;
+      moveInd(true);
+    },
+    [moveInd]
+  );
+
+  useLayoutEffect(() => {
+    const snap = () => moveInd(false);
+    snap();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(snap);
+    window.addEventListener("resize", snap);
+    const ro = new ResizeObserver(snap);
+    if (barRef2.current) ro.observe(barRef2.current);
+    return () => {
+      window.removeEventListener("resize", snap);
+      ro.disconnect();
+    };
+  }, [moveInd]);
+
+  const [copied, setCopied] = useState(false);
+  const timer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+
+  const copy = useCallback(() => {
+    if (!prompt) return;
+    const text = buildAgentPrompt(library, prompt);
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
+    setCopied(true);
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setCopied(false), 1600);
+  }, [library, prompt]);
+
+  return (
+    <>
+    <div className="st-stage-bar" data-view={view}>
+      <div className="detail-tabs proto-modal-tabs" ref={barRef2} role="tablist" aria-label="View">
+        <span className="proto-modal-tabs-indicator" ref={indRef} aria-hidden="true" />
+        {(["preview", "install", "usage"] as const).map((v) => (
+          <button
+            key={v}
+            type="button"
+            className="proto-modal-tab"
+            role="tab"
+            data-detail-tab={v}
+            aria-selected={view === v}
+            onClick={() => selectView(v)}
+          >
+            {v === "preview" ? "Preview" : v === "install" ? "Install" : "Usage"}
+          </button>
+        ))}
+      </div>
+      {prompt && (
+        <button
+          type="button"
+          className="detail-prompt"
+          onClick={copy}
+          data-copied={copied ? "true" : undefined}
+          aria-label="Copy agent prompt"
+        >
+          <span className="detail-prompt-ico" aria-hidden="true">
+            <svg className="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            </svg>
+            <svg className="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </span>
+          <span className="detail-prompt-label">Copy prompt</span>
+        </button>
+      )}
+    </div>
+    {prompt && view === "install" && (
+      <div className="code-block st-stage-panel">
+        <pre>{`npm install ${prompt.pkg}`}</pre>
+        <CodeCopy text={`npm install ${prompt.pkg}`} label="Copy install command" />
+      </div>
+    )}
+    {prompt && view === "usage" && (
+      <div className="code-block st-stage-panel">
+        <pre>{prompt.snippet}</pre>
+        <CodeCopy text={prompt.snippet} label="Copy usage example" />
+      </div>
+    )}
+    </>
+  );
+}
+
 function StudioActions({
   library,
   libraryId,
@@ -710,6 +1168,7 @@ export function ControlsPanel({
 
   return (
     <div className="pg-controls">
+      <div className="st-panel-head">
       <div className="st-panel-tabs" ref={barRef} role="tablist" aria-label="Control mode">
         <span className="st-panel-tabs-indicator" ref={pillRef} aria-hidden="true" />
         <button
@@ -732,6 +1191,8 @@ export function ControlsPanel({
         >
           Agent
         </button>
+      </div>
+      <PanelThemeToggle />
       </div>
 
       {/* Both halves stay mounted whichever tab is open, so switching back

@@ -1,10 +1,11 @@
-import { StrictMode, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { BeamStudio } from "./beam";
 import { OrbStudio } from "./orb";
 import { GooeyStudio } from "./gooey";
 import { MetalStudio } from "./metal";
 import { ImageStudio } from "./image";
+import { StudioThemeContext } from "./controls";
 
 /* Studio app — Pro-gated workbench for all five libraries.
 
@@ -39,6 +40,7 @@ declare global {
       apiBase?: string;
       signIn?: () => void;
       refresh?: () => void;
+      logout?: (allDevices?: boolean) => Promise<unknown>;
     };
   }
 }
@@ -92,6 +94,123 @@ function useProGate(): { gate: GateState; email: string | null; entitled: boolea
 
 /* ── Chrome pieces ─────────────────────────────────────────────── */
 
+/* Signed-in avatar + dropdown, in the 3-dot button's nav position
+   (Figma 1425:38996). The Studio is Pro-gated, so whenever the workbench
+   shows there is a signed-in user — the avatar renders whenever an email
+   is known. Same tl-menu / t-dropdown classes as the site nav menu. */
+function AvatarMenu({ email }: { email: string }) {
+  const [open, setOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const anchorRef = useRef<HTMLDivElement | null>(null);
+  const closeTimer = useRef<number | undefined>(undefined);
+
+  const close = () => {
+    setOpen(false);
+    setClosing(true);
+    window.clearTimeout(closeTimer.current);
+    closeTimer.current = window.setTimeout(() => setClosing(false), 150);
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (anchorRef.current && !anchorRef.current.contains(e.target as Node)) close();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+    document.addEventListener("click", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("click", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  useEffect(() => () => window.clearTimeout(closeTimer.current), []);
+
+  const onSignOut = () => {
+    close();
+    const LP = window.LibrariesPro;
+    if (LP && typeof LP.logout === "function") {
+      LP.logout().then(() => {
+        window.location.href = "/studio.html";
+      });
+    } else {
+      window.location.href = "/studio.html";
+    }
+  };
+
+  return (
+    <div className="pm-anchor" ref={anchorRef}>
+      <button
+        type="button"
+        className="icon-btn icon-btn--avatar"
+        aria-label="Account menu"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={(e) => {
+          e.stopPropagation();
+          open ? close() : setOpen(true);
+        }}
+      >
+        <span className="nav-avatar-initial" aria-hidden="true">{email.charAt(0)}</span>
+      </button>
+      <div
+        className={`tl-menu t-dropdown${open ? " is-open" : ""}${closing ? " is-closing" : ""}`}
+        data-origin="top-right"
+        role="menu"
+        aria-label="Account"
+      >
+        <a className="tl-menu-item" href="/account.html" role="menuitem">
+          <span className="tl-menu-item-label">Account</span>
+        </a>
+        <div className="tl-menu-item" role="menuitem" tabIndex={0} onClick={onSignOut} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onSignOut(); }}>
+          <span className="tl-menu-item-label">Sign out</span>
+        </div>
+        <div className="tl-menu-divider" />
+        <a className="tl-menu-item" href="mailto:jakubja@gmail.com" role="menuitem">
+          <span className="tl-menu-item-label">Support</span>
+        </a>
+      </div>
+    </div>
+  );
+}
+
+/* Studio theme. The rest of the site is dark-only; this app lets the user
+   flip to light so a preview can be judged on the surface it will ship on.
+   The choice is stored under ldev:studio-theme and re-applied before first
+   paint by the inline script in app.html. */
+type StudioTheme = "dark" | "light";
+const THEME_KEY = "ldev:studio-theme";
+
+function readTheme(): StudioTheme {
+  try {
+    const saved = localStorage.getItem(THEME_KEY);
+    if (saved === "light" || saved === "dark") return saved;
+  } catch (e) {
+    /* private mode — fall through to the document's own attribute */
+  }
+  return document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+}
+
+function useStudioTheme(): [StudioTheme, () => void] {
+  const [theme, setTheme] = useState<StudioTheme>(readTheme);
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    document.documentElement.style.colorScheme = theme;
+    try {
+      localStorage.setItem(THEME_KEY, theme);
+    } catch (e) {
+      /* nothing to persist to — the in-page state still holds */
+    }
+  }, [theme]);
+
+  const toggle = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
+  return [theme, toggle];
+}
+
 function TopBar({ email, pro }: { email: string | null; pro: boolean }) {
   return (
     <div className="st-top">
@@ -113,6 +232,9 @@ function TopBar({ email, pro }: { email: string | null; pro: boolean }) {
       </div>
       <div className="st-top-right">
         {email && <span className="st-top-email">{email}</span>}
+        {/* TEMP: signed-out fallback initial so the avatar is visible for
+            testing before the auth Worker is deployed. */}
+        <AvatarMenu email={email ?? "j"} />
       </div>
     </div>
   );
@@ -128,7 +250,7 @@ const LIBS = [
 
 type LibId = (typeof LIBS)[number]["id"];
 
-function Workbench() {
+function Workbench({ theme }: { theme: StudioTheme }) {
   const [lib, setLib] = useState<LibId>(() => {
     const wanted = window.location.hash.replace("#", "");
     return (LIBS.some((l) => l.id === wanted) ? wanted : "gooey") as LibId;
@@ -173,11 +295,11 @@ function Workbench() {
       {/* All five stay mounted so tuning survives switching; the hidden
           ones render no stage content (WebGL / canvas / rAF all stop). */}
       <div className="st-main">
-        <div hidden={lib !== "beam"}><BeamStudio visible={lib === "beam"} /></div>
-        <div hidden={lib !== "orb"}><OrbStudio visible={lib === "orb"} /></div>
-        <div hidden={lib !== "gooey"}><GooeyStudio visible={lib === "gooey"} /></div>
-        <div hidden={lib !== "metal"}><MetalStudio visible={lib === "metal"} /></div>
-        <div hidden={lib !== "image"}><ImageStudio visible={lib === "image"} /></div>
+        <div hidden={lib !== "beam"}><BeamStudio visible={lib === "beam"} theme={theme} /></div>
+        <div hidden={lib !== "orb"}><OrbStudio visible={lib === "orb"} theme={theme} /></div>
+        <div hidden={lib !== "gooey"}><GooeyStudio visible={lib === "gooey"} theme={theme} /></div>
+        <div hidden={lib !== "metal"}><MetalStudio visible={lib === "metal"} theme={theme} /></div>
+        <div hidden={lib !== "image"}><ImageStudio visible={lib === "image"} theme={theme} /></div>
       </div>
     </div>
   );
@@ -231,21 +353,26 @@ function Locked() {
 
 function StudioApp() {
   const { gate, email, entitled } = useProGate();
+  const [theme, toggleTheme] = useStudioTheme();
   return (
-    <div className="st-app">
-      <TopBar email={email} pro={entitled} />
-      {gate === "pending" && <Skeleton />}
-      {gate === "locked" && <Locked />}
-      {gate === "open" && <Workbench />}
-    </div>
+    <StudioThemeContext.Provider value={{ theme, toggle: toggleTheme }}>
+      <div className="st-app">
+        <TopBar email={email} pro={entitled} />
+        {gate === "pending" && <Skeleton />}
+        {gate === "locked" && <Locked />}
+        {gate === "open" && <Workbench theme={theme} />}
+      </div>
+    </StudioThemeContext.Provider>
   );
 }
 
 const rootEl = document.getElementById("studio-root");
 if (rootEl) {
   createRoot(rootEl).render(
-    <StrictMode>
-      <StudioApp />
-    </StrictMode>
+    /* No StrictMode: metal-fx v1 keeps one shared renderer, and the
+       simulated double-mount destroys it in a state its loop never
+       recovers from — everything paints one frame and freezes. The
+       detail page mounts without StrictMode for the same reason. */
+    <StudioApp />
   );
 }

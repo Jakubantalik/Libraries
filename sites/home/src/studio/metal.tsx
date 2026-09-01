@@ -1,13 +1,13 @@
 import { useCallback, useRef, useState } from "react";
-import { MetalFx, type MetalFxPreset, type MetalFxVariant } from "metal-fx";
-import { ControlsPanel, PgTabs, PgSlider, PgToggles, PanelTitle, PanelSep, Snippet, num } from "./controls";
+import { MetalFx, type MetalFxPreset, type MetalFxVariant } from "metal-fx-v1";
+import { ControlsPanel, PgTabs, PgSlider, PgToggles, PanelSep, Snippet, num, StageBar, PgGroup } from "./controls";
 
 /* Studio — Metal workbench. Public playground: variant/preset/strength/
    toggles. The Studio adds the engine surface: shader scale and ring width.
 
-   Imports the workspace metal-fx (the Paper Shaders engine) rather than
-   the published v1 the detail page renders: glowStrength, disableGlow,
-   shaderScale and ringCssPx exist only there. */
+   Renders the published metal-fx v1 — the same package the detail page
+   ships — so the Studio preview matches what users install. v1 has no
+   glowStrength knob, so glow is only the on/off toggle. */
 
 const PRESET_OPTIONS = [
   { value: "chromatic", label: "Chromatic" },
@@ -29,7 +29,6 @@ const METAL_PARAM_LABELS: Record<string, string> = {
   variant: "Type",
   preset: "Color",
   strength: "Strength",
-  glow: "Glow strength",
   shaderScale: "Shader scale",
   ring: "Ring width",
   disableGlow: "No Glow",
@@ -55,11 +54,10 @@ function SearchIcon() {
   );
 }
 
-export function MetalStudio({ visible = true }: { visible?: boolean }) {
+export function MetalStudio({ visible = true, theme = "dark" }: { visible?: boolean; theme?: "dark" | "light" }) {
   const [variant, setVariant] = useState<MetalFxVariant>("button");
   const [preset, setPreset] = useState<MetalFxPreset>("chromatic");
   const [strength, setStrength] = useState(90);
-  const [glow, setGlow] = useState(100);
   const [shaderScale, setShaderScale] = useState(BASE_SHADER_SCALE.button);
   const [ring, setRing] = useState(BASE_RING.button);
   const [paused, setPaused] = useState(false);
@@ -76,7 +74,7 @@ export function MetalStudio({ visible = true }: { visible?: boolean }) {
 
   /* Agent wiring — keys match the Worker's spec, which owns the ranges. */
   const agentParams: Record<string, unknown> = {
-    variant, preset, strength, glow, shaderScale, ring,
+    variant, preset, strength, shaderScale, ring,
     disableGlow, disableReflection, paused,
   };
 
@@ -87,7 +85,6 @@ export function MetalStudio({ visible = true }: { visible?: boolean }) {
     if (typeof patch.variant === "string") handleVariant(patch.variant as MetalFxVariant);
     if (typeof patch.preset === "string") setPreset(patch.preset as MetalFxPreset);
     if (typeof patch.strength === "number") setStrength(patch.strength);
-    if (typeof patch.glow === "number") setGlow(patch.glow);
     if (typeof patch.shaderScale === "number") setShaderScale(patch.shaderScale);
     if (typeof patch.ring === "number") setRing(patch.ring);
     if (typeof patch.disableGlow === "boolean") setDisableGlow(patch.disableGlow);
@@ -102,7 +99,6 @@ export function MetalStudio({ visible = true }: { visible?: boolean }) {
   const props = [`preset="${preset}"`];
   if (variant !== "button") props.push(`variant="${variant}"`);
   if (strength !== 100) props.push(`strength={${num(strength / 100)}}`);
-  if (glow !== 100 && !disableGlow) props.push(`glowStrength={${num(glow / 100)}}`);
   if (scaleTouched) props.push(`shaderScale={${num(shaderScale)}}`);
   if (ringTouched) props.push(`ringCssPx={${num(ring)}}`);
   if (disableGlow) props.push("disableGlow");
@@ -115,6 +111,7 @@ export function MetalStudio({ visible = true }: { visible?: boolean }) {
 
   return (
     <div className="pg">
+      <StageBar library="Metal" prompt={{ pkg: "metal-fx", docsPath: "/metal.html", snippet }} />
       <div className="pg-stage">
         <div className="metal-stage-row">
           <label ref={searchRef} className="metal-search">
@@ -134,9 +131,8 @@ export function MetalStudio({ visible = true }: { visible?: boolean }) {
             key={`${variant}-${preset}`}
             preset={preset}
             variant={variant}
-            theme="dark"
+            theme={theme}
             strength={strength / 100}
-            glowStrength={glow / 100}
             paused={paused}
             disableGlow={disableGlow}
             shaderScale={scaleTouched ? shaderScale : undefined}
@@ -177,17 +173,14 @@ export function MetalStudio({ visible = true }: { visible?: boolean }) {
         }}
         prompt={{ pkg: "metal-fx", docsPath: "/metal.html", snippet }}
       >
-        <PanelTitle>Main</PanelTitle>
         <PgTabs label="Type" options={VARIANT_OPTIONS} value={variant} onChange={handleVariant} />
         <PgTabs label="Color" options={PRESET_OPTIONS} value={preset} onChange={setPreset} />
-        <PgSlider label="Strength" value={strength} min={0} max={100} step={1} display={`${strength}%`} onChange={setStrength} />
-        {!disableGlow && (
-          <PgSlider label="Glow strength" value={glow} min={0} max={100} step={1} display={`${glow}%`} onChange={setGlow} />
-        )}
         <PanelSep />
-        <PanelTitle>Engine</PanelTitle>
-        <PgSlider label="Shader scale" value={shaderScale} min={0.6} max={3} step={0.05} display={`${num(shaderScale)}×`} onChange={setShaderScale} />
-        <PgSlider label="Ring width" value={ring} min={0.5} max={4} step={0.25} display={`${num(ring)}px`} onChange={setRing} />
+        <PgGroup label="Metal effect styling">
+          <PgSlider label="Strength" value={strength} min={0} max={100} step={1} display={`${strength}%`} onChange={setStrength} />
+          <PgSlider label="Shader scale" value={shaderScale} min={0.6} max={3} step={0.05} display={`${num(shaderScale)}×`} onChange={setShaderScale} />
+          <PgSlider label="Ring width" value={ring} min={0.5} max={4} step={0.25} display={`${num(ring)}px`} onChange={setRing} />
+        </PgGroup>
         <PgToggles
           label="Options"
           options={[

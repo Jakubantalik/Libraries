@@ -193,6 +193,28 @@
         signout.remove();
       }
     }
+    // 3-dot "More" button becomes the user's avatar while signed in
+    // (Figma 1425:38996) — the menu behind it stays the same and already
+    // reads Account / Sign out / Support in this state.
+    var moreBtn = document.getElementById("more-btn");
+    if (moreBtn) {
+      var initial = moreBtn.querySelector(".nav-avatar-initial");
+      if (state.authenticated && state.email) {
+        if (!initial) {
+          initial = document.createElement("span");
+          initial.className = "nav-avatar-initial";
+          initial.setAttribute("aria-hidden", "true");
+          moreBtn.appendChild(initial);
+        }
+        initial.textContent = state.email.charAt(0);
+        moreBtn.classList.add("icon-btn--avatar");
+        moreBtn.setAttribute("aria-label", "Account menu");
+      } else {
+        moreBtn.classList.remove("icon-btn--avatar");
+        moreBtn.setAttribute("aria-label", "More");
+        if (initial) initial.remove();
+      }
+    }
     // Pro-page nav pill (replaces "Get Pro" there): Sign in -> Account.
     var navSigninLabel = document.querySelector("#nav-signin-btn .pill-label");
     if (navSigninLabel) {

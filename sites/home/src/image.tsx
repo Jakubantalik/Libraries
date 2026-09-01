@@ -16,8 +16,8 @@ import {
    labels to match visual character), labels here map directly to values. */
 
 const PRESET_OPTIONS: Array<{ value: ImageGenerationPreset; label: string }> = [
-  { value: "pixels-organic", label: "Pixel Organic" },
-  { value: "pixels-mechanic", label: "Pixel Mechanic" },
+  { value: "pixels-organic", label: "Organic" },
+  { value: "pixels-mechanic", label: "Mechanic" },
   { value: "sweep-gradient", label: "Gradient Sweep" },
 ];
 
