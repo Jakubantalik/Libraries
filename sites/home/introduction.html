@@ -5,25 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="color-scheme" content="dark" />
 
-  <title>Accessibility | Libraries.dev</title>
-  <meta name="description" content="How the Libraries.dev effect libraries handle reduced motion, semantics, keyboard use and performance." />
+  <title>Introduction | Libraries.dev</title>
+  <meta name="description" content="Five React libraries for the visual effects that make an interface feel alive, each one a drop-in component you can tune and copy." />
   <meta name="author" content="Libraries.dev" />
   <meta name="robots" content="index, follow, max-image-preview:large" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <meta name="theme-color" content="#121212" />
 
-  <link rel="canonical" href="https://libraries.dev/accessibility.html" />
+  <link rel="canonical" href="https://libraries.dev/introduction.html" />
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="/assets/favicon.svg" />
 
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Libraries.dev" />
-  <meta property="og:url" content="https://libraries.dev/accessibility.html" />
-  <meta property="og:title" content="Accessibility · Libraries.dev" />
-  <meta property="og:description" content="How the Libraries.dev effect libraries handle reduced motion, semantics, keyboard use and performance." />
+  <meta property="og:url" content="https://libraries.dev/introduction.html" />
+  <meta property="og:title" content="Introduction · Libraries.dev" />
+  <meta property="og:description" content="Five React libraries for the visual effects that make an interface feel alive, each one a drop-in component you can tune and copy." />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Accessibility · Libraries.dev" />
-  <meta name="twitter:description" content="How the Libraries.dev effect libraries handle reduced motion, semantics, keyboard use and performance." />
+  <meta name="twitter:title" content="Introduction · Libraries.dev" />
+  <meta name="twitter:description" content="Five React libraries for the visual effects that make an interface feel alive, each one a drop-in component you can tune and copy." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -135,8 +135,8 @@
       <aside class="docs-sidebar">
         <div class="docs-group docs-group--links">
           <div class="docs-group-label">Getting started</div>
-          <a class="docs-link docs-link--muted" href="/introduction.html">Introduction</a>
-          <a class="docs-link is-active" href="/accessibility.html" aria-current="page">Accessibility</a>
+          <a class="docs-link is-active" href="/introduction.html" aria-current="page">Introduction</a>
+          <a class="docs-link docs-link--muted" href="/accessibility.html">Accessibility</a>
         </div>
         <div class="docs-group">
           <div class="docs-group-label">Libraries</div>
@@ -153,68 +153,32 @@
       <div class="docs-main">
         <header class="detail-head">
           <div class="detail-titles">
-            <h1 class="detail-title">Accessibility</h1>
-            <p class="detail-sub">Effects that respect the people using them</p>
+            <h1 class="detail-title">Introduction</h1>
+            <p class="detail-sub">Five React libraries for the effects that make an interface feel alive</p>
           </div>
         </header>
 
         <div class="detail-body docs-prose">
           <p>
-            An effect should never get in the way of the interface underneath it. Every
-            library here stays accessible by default, with no configuration required.
+            Libraries.dev is a small collection of React libraries for the visual effects that
+            usually take a shader specialist to build: a beam of light travelling a card's
+            border, orbs that think while a model works, shapes that merge like liquid, brushed
+            metal that catches the light, and an image loader that dissolves a pixel mosaic into
+            a real photo.
           </p>
-
-          <div class="docs-cards">
-            <div class="docs-card">
-              <h3>Respects reduced motion</h3>
-              <p>
-                Every library honours <code>@media (prefers-reduced-motion: reduce)</code>. When
-                someone has asked their system to minimise motion, animation is switched off or
-                collapsed to an instant state change, with no movement, blur or scale, while
-                the functional result still happens.
-              </p>
-            </div>
-            <div class="docs-card">
-              <h3>Nothing depends on motion alone</h3>
-              <p>
-                The effects are decorative. State always lives in the DOM and in text, never only
-                in movement, so screen-reader users and reduced-motion users get the same
-                information as everyone else.
-              </p>
-            </div>
-            <div class="docs-card">
-              <h3>Your markup keeps its semantics</h3>
-              <p>
-                The libraries wrap your element rather than replacing it. Your buttons stay
-                buttons, your headings stay headings, and roles, labels and tab order are
-                untouched. Decorative layers are marked <code>aria-hidden</code> so assistive
-                technology skips them.
-              </p>
-            </div>
-            <div class="docs-card">
-              <h3>Keyboard and focus</h3>
-              <p>
-                Every interactive control on this site, playgrounds and Studio included, uses
-                real <code>&lt;button&gt;</code> elements with correct ARIA state, keeps native
-                focus outlines, and is fully operable from the keyboard.
-              </p>
-            </div>
-            <div class="docs-card">
-              <h3>Smooth by design</h3>
-              <p>
-                Animation sticks to the compositor-friendly properties <code>transform</code>,
-                <code>opacity</code> and <code>filter</code>, and uses <code>will-change</code>
-                sparingly. The WebGL libraries pause their render loop when off-screen, so they
-                do not tax lower-end devices or drain battery in a background tab.
-              </p>
-            </div>
-          </div>
-
-          <h2>Found something we missed?</h2>
           <p>
-            Accessibility work is never finished. If an effect causes a problem for you, please
-            <a href="mailto:jakubja@gmail.com">tell us</a> or open an issue on
-            <a href="https://github.com/Jakubantalik/Libraries" target="_blank" rel="noopener noreferrer">GitHub</a>.
+            Each one installs from npm and drops into your app as a single component that wraps
+            the element you already have. Your markup keeps its semantics, the effect renders
+            around or behind it, and the whole thing is tuned by props rather than by
+            hand-written WebGL. Four of the five run on the GPU and pause themselves when
+            off-screen, so they stay cheap even when several sit on one page.
+          </p>
+          <p>
+            Pick a library from the sidebar to see it three ways: a live Preview you can play
+            with, the Install command, and the Usage code. Every detail page carries a
+            playground where you can tune the effect and copy the exact configuration, and a
+            Tune in Studio button that opens the same controls in the full workbench with an
+            AI agent alongside them.
           </p>
         </div>
       </div>
