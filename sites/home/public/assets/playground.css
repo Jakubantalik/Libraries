@@ -32,8 +32,16 @@
 }
 .docs-sidebar::-webkit-scrollbar { display: none; }
 .docs-group { display: flex; flex-direction: column; min-width: 0; }
-.docs-list { display: flex; flex-direction: column; min-width: 0; }
-.docs-group-label { font-size: 13px; line-height: 14px; color: #979797; padding: 4px 8px 8px; }
+/* 4px between rows, per the Studio nav in Figma. */
+.docs-list { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+/* Group label follows transitions.dev's sidebar: 11px and subtle, so it
+   reads as a label rather than as another link. */
+.docs-group-label {
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--text-subtle);
+  padding: 9px 8px;
+}
 
 /* Rows follow the Studio nav (.st-lib): 40px on a 12px radius, the active
    one lifted on the material ring. */
@@ -67,11 +75,16 @@
     inset 0 0 0 1px rgba(255, 255, 255, 0.02),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
 }
-.docs-link--muted { color: #979797; }
+.docs-link--muted {
+  height: 32px;
+  font-weight: 400;
+  line-height: 16px;
+  color: var(--text-muted);
+}
 .docs-link:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
-/* Same 24px tile the Studio nav uses, on the homepage card's treatment
-   (.lib-ico): a clipped box with no CSS shadow of its own — the depth is
-   in the tile bitmap. */
+/* Same 24px tile the Studio nav uses, carrying the icon-card material
+   from Figma 1419:38618: a hairline rim, a lit top edge, and the 1px
+   drop under the box. */
 .docs-link-icon {
   flex: none;
   width: 24px;
@@ -79,6 +92,12 @@
   border-radius: 7px;
   object-fit: cover;
   display: block;
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.04),
+    inset 0 0 0 1px rgba(196, 196, 196, 0.1),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.06);
+  filter: drop-shadow(0 1px 0.5px rgba(0, 0, 0, 0.24));
 }
 /* The image-generation export sits on a larger canvas than the rest, so
    scale it up to crop that padding away. */
@@ -153,6 +172,28 @@
 @media (prefers-reduced-motion: reduce) {
   .proto-modal-tabs-indicator { transition: none; }
 }
+
+/* On the detail pages the bar wears the Studio's Manual controls / Agent
+   pill: darker bar, lit indicator, brighter active label. */
+.detail-tabs.proto-modal-tabs { height: 36px; overflow: hidden; }
+.detail-tabs .proto-modal-tabs-indicator {
+  top: 3px;
+  height: 30px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 36px;
+  box-shadow:
+    0 1px 1px 0 rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+}
+.detail-tabs .proto-modal-tab {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 36px;
+  color: #979797;
+}
+.detail-tabs .proto-modal-tab:hover,
+.detail-tabs .proto-modal-tab[aria-selected="true"] { color: #fbfbfb; }
+html[data-theme="dark"] .detail-tabs.proto-modal-tabs { background: #272727; }
 
 /* The two head actions sit together, opposite the tabs. */
 .detail-head-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -398,7 +439,7 @@
 .detail-examples,
 .detail-playground-label,
 .detail-body .pg,
-.detail-body .pg-snippet { max-width: 686px; }
+.detail-body .pg-snippet { max-width: 686px; margin-top: 12px; }
 .detail-panel[hidden] { display: none; }
 
 @media (max-width: 900px) {
@@ -645,7 +686,10 @@ html[data-theme="dark"] .pg-stage::after { box-shadow: inset 0 0 0 1px rgba(191,
   border-radius: 24px;
   background: var(--card-bg);
   box-shadow: var(--card-shadow), inset 0 0 0 1px var(--card-border);
-  overflow: hidden;
+  /* Not clipped: the copy button's tooltip sits ABOVE the button and so
+     outside the card. transitions.dev keeps the button out of the clipping
+     card entirely; here the <pre> does the rounding instead, which it can
+     because it is the thing that scrolls. */
 }
 html[data-theme="dark"] .code-block {
   background: #181818;
@@ -655,6 +699,7 @@ html[data-theme="dark"] .code-block {
 }
 .code-block pre {
   margin: 0;
+  border-radius: inherit;
   max-height: 520px;
   overflow: auto;
   padding: 24px 26px;
@@ -709,14 +754,17 @@ html[data-theme="dark"] .code-block {
   justify-content: center;
   border: none;
   border-radius: 9px;
-  background: var(--chip-bg);
+  background: transparent;
   background-image: none;
   box-shadow: none;
   color: var(--text-muted);
   cursor: pointer;
   transition: background 140ms ease, color 140ms ease;
 }
-.detail-code-copy:hover { background: var(--chip-bg-hover); color: var(--text); }
+/* No fill at rest: the button only takes a surface on hover. */
+html[data-theme="dark"] .detail-code-copy { background: transparent; background-image: none; }
+.detail-code-copy:hover,
+html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hover); color: var(--text); }
 .detail-code-copy svg { width: 15px; height: 15px; }
 /* Right-align the tooltip to the button so the pill grows leftward and
    never overhangs the card's right edge. */
