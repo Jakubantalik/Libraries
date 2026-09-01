@@ -388,7 +388,15 @@
 .detail-prompt-label { display: inline-block; min-width: 82px; text-align: center; }
 
 .detail-body { margin-top: 24px; }
-.detail-panel { position: relative; min-width: 0; }
+/* transitions.dev caps every detail panel at 686px — the column can be
+   wider, but the content holds this measure. The head row takes the same
+   cap so the tabs and actions align with the panels' right edge. */
+.detail-panel { position: relative; min-width: 0; max-width: 686px; }
+.detail-head-row { max-width: 686px; }
+.detail-examples,
+.detail-playground-label,
+.detail-body .pg,
+.detail-body .pg-snippet { max-width: 686px; }
 .detail-panel[hidden] { display: none; }
 
 @media (max-width: 900px) {

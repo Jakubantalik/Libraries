@@ -604,3 +604,115 @@
     animation: none !important;
   }
 }
+
+/* ── Metal examples: the metal-fx demo page's rows (mx-*) ─────
+   Translated from that demo's Tailwind; values are its dark tokens. */
+.mx-row { height: 314px; position: relative; }
+.mx-row--toolbar { height: 370px; padding-left: 40px; padding-right: 80px; }
+.mx-chat {
+  width: 448px;
+  max-width: 100%;
+  border-radius: 20px;
+  background: rgba(29, 29, 29, 0.7);
+  padding: 20px 16px 16px;
+  display: flex;
+  flex-direction: column;
+}
+.mx-chat-input {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 16px;
+  outline: none;
+  width: 100%;
+  padding: 0;
+  margin-bottom: 16px;
+  resize: none;
+  overflow: hidden;
+}
+.mx-chat-input::placeholder { color: #4e4e4e; }
+.mx-chat-bottom { display: flex; align-items: center; gap: 12px; margin-top: auto; }
+.mx-spacer { flex: 1; }
+.mx-plus {
+  width: 36px; height: 36px; min-width: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+  color: #caccd2;
+  display: flex; align-items: center; justify-content: center;
+  cursor: default;
+}
+.mx-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 36px; padding: 0 10px 0 14px;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+  color: #caccd2;
+  font-size: 12px; line-height: 14px;
+  cursor: default;
+}
+.mx-chip svg { width: 16px; height: 16px; color: #8e8e8e; transform: rotate(90deg); }
+.mx-circle,
+.mx-dots {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px;
+  border: 1px solid rgba(44, 47, 54, 0.52);
+  border-radius: 50%;
+  background: #1d1d1d;
+  box-shadow: inset 0 0 50px 0 rgba(255, 255, 255, 0.02);
+  color: #f8f8f8;
+  cursor: pointer;
+  padding: 0;
+}
+.mx-dots svg { width: 20px; height: 20px; opacity: 0.7; transition: opacity 200ms; }
+.mx-dots:hover svg { opacity: 1; }
+.mx-toolbar-backdrop {
+  position: absolute;
+  left: -22px;
+  top: 144px;
+  width: 663px;
+  height: 234px;
+  border-radius: 20px;
+  background: rgba(29, 29, 29, 0.7);
+  border: 1px solid rgba(44, 47, 54, 0.52);
+  pointer-events: none;
+}
+.mx-toolbar { position: relative; z-index: 10; display: flex; align-items: center; gap: 12px; }
+.mx-search {
+  position: relative;
+  display: flex; align-items: center; gap: 6px;
+  width: 235px; height: 40px;
+  border-radius: 999px;
+  padding: 10px 2px 10px 12px;
+  background: #1d1d1d;
+  border: 1px solid rgba(44, 47, 54, 0.52);
+  box-shadow: inset 0 0 50px 0 rgba(255, 255, 255, 0.02);
+  color: #f8f8f8;
+  font-size: 14px; font-weight: 500; line-height: 17.938px;
+  cursor: text;
+}
+.mx-search svg { width: 18px; height: 18px; flex-shrink: 0; stroke: #8b8b8b; fill: none; }
+.mx-search-input {
+  flex: 1; min-width: 0;
+  border: none; background: transparent;
+  font: inherit; color: inherit;
+  outline: none;
+}
+.mx-search-input::placeholder { color: currentColor; opacity: 0.3; }
+.mx-pill {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 140px; height: 40px;
+  border: 1px solid rgba(44, 47, 54, 0.52);
+  border-radius: 20px;
+  background: #1d1d1d;
+  box-shadow: inset 0 0 50px 0 rgba(255, 255, 255, 0.02);
+  color: #f8f8f8;
+  font-family: var(--font-sans);
+  font-size: 14px; font-weight: 500; line-height: 17.938px;
+  white-space: nowrap;
+  cursor: pointer;
+  padding: 0;
+}
