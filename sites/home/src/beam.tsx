@@ -77,7 +77,6 @@ const FAMILY_OPTIONS = [
 const SIZE_OPTIONS_BY_FAMILY: Record<BeamFamily, ReadonlyArray<{ value: BorderBeamSize; label: string }>> = {
   rotate: [
     { value: "md", label: "Large" },
-    { value: "sm", label: "Small" },
     { value: "line", label: "Line" },
   ],
   pulse: [
@@ -107,14 +106,7 @@ const PULSE_OUTSIDE_TUNED_VARS = {
   "--sub-glow-opacity-mul": 1.71,
 } as CSSProperties;
 
-function DemoCard({ size }: { size: BorderBeamSize }) {
-  if (size === "sm") {
-    return (
-      <div className="beam-card beam-card--sm">
-        <div className="beam-card-dot" />
-      </div>
-    );
-  }
+function DemoCard() {
   return (
     <div className="beam-card">
       <div className="beam-card-line beam-card-line--title" />
@@ -192,7 +184,7 @@ function BeamPlayground() {
             active={active}
             style={isPulseOutside ? PULSE_OUTSIDE_TUNED_VARS : undefined}
           >
-            <DemoCard size={size} />
+            <DemoCard />
           </BorderBeam>
           <button
             type="button"

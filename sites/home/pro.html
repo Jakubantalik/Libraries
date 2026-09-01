@@ -1438,19 +1438,16 @@
       line-height: 1.4;
       color: var(--text);
     }
+    /* No underline at rest; it appears on hover, like every other link. */
     .course-cta-headline a {
       color: inherit;
-      text-decoration: underline;
+      text-decoration: none;
       text-underline-offset: 2px;
-      /* 50% of the text color at rest, 100% on hover. Using
-         color-mix with currentColor keeps it theme-agnostic — the
-         underline tracks light/dark text without an explicit
-         dark-mode override. */
-      text-decoration-color: color-mix(in srgb, currentColor 50%, transparent);
+      text-decoration-color: currentColor;
       transition: text-decoration-color 180ms ease;
     }
     .course-cta-headline a:hover {
-      text-decoration-color: currentColor;
+      text-decoration: underline;
     }
     .course-cta-byline {
       margin: 0;
@@ -4383,6 +4380,13 @@
       overflow: hidden;
     }
     html[data-theme="dark"] .pro-quote-avatar { background: rgba(255, 255, 255, 0.06); }
+    /* Real photo when one is installed; the initial stays underneath as the
+       fallback, and a missing file drops the img so the initial shows. */
+    .pro-quote-avatar { position: relative; }
+    .pro-quote-avatar-img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; border-radius: inherit; display: block;
+    }
     .pro-quote-id { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
     /* Name links through to the person's X profile — same "text colour,
        underline on hover" treatment the docs links use. */
@@ -4886,7 +4890,8 @@
     .t-acc-panel-inner p { margin: 0 0 16px; padding-right: 28px; font-size: 14px; line-height: 22px; color: var(--text-muted); }
     .t-acc-panel-inner code { font-family: var(--font-mono); font-size: 12px; line-height: 18px; padding: 1px 6px; border-radius: 6px; background: rgba(0, 0, 0, 0.04); color: var(--text); }
     html[data-theme="dark"] .t-acc-panel-inner code { background: rgba(255, 255, 255, 0.06); }
-    .t-acc-panel-inner a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
+    .t-acc-panel-inner a { color: var(--text); text-decoration: none; }
+    .t-acc-panel-inner a:hover { text-decoration: underline; text-underline-offset: 2px; }
     @media (prefers-reduced-motion: reduce) {
       .t-acc-panel, .t-acc-panel-inner, .t-acc-chevron { transition: none !important; }
     }
@@ -5127,9 +5132,9 @@
         <li class="pro-quote">
           <p class="pro-quote-text">Generational cook!</p>
           <div class="pro-quote-author">
-            <span class="pro-quote-avatar" aria-hidden="true">H</span>
+            <span class="pro-quote-avatar" aria-hidden="true">G<img class="pro-quote-avatar-img" src="/assets/avatars/rauchg.jpg" alt="" onerror="this.remove()" /></span>
             <span class="pro-quote-id">
-              <span class="pro-quote-name">Harsh</span>
+              <span class="pro-quote-name">Guillermo Rauch</span>
               <span class="pro-quote-role">CEO, Vercel</span>
             </span>
           </div>
@@ -5137,9 +5142,9 @@
         <li class="pro-quote">
           <p class="pro-quote-text">Very cool</p>
           <div class="pro-quote-author">
-            <span class="pro-quote-avatar" aria-hidden="true">D</span>
+            <span class="pro-quote-avatar" aria-hidden="true">D<img class="pro-quote-avatar-img" src="/assets/avatars/destraynor.jpg" alt="" onerror="this.remove()" /></span>
             <span class="pro-quote-id">
-              <span class="pro-quote-name">Des</span>
+              <span class="pro-quote-name">Des Traynor</span>
               <span class="pro-quote-role">Co-founder of Intercom</span>
             </span>
           </div>
@@ -5147,7 +5152,7 @@
         <li class="pro-quote">
           <p class="pro-quote-text">INSANELY AMAZING</p>
           <div class="pro-quote-author">
-            <span class="pro-quote-avatar" aria-hidden="true">K</span>
+            <span class="pro-quote-avatar" aria-hidden="true">K<img class="pro-quote-avatar-img" src="/assets/avatars/krispuckett.jpg" alt="" onerror="this.remove()" /></span>
             <span class="pro-quote-id">
               <span class="pro-quote-name">Kris Puckett</span>
               <span class="pro-quote-role">Design manager at Stripe</span>

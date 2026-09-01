@@ -110,6 +110,16 @@
   left: -3px;
   top: -2px;
 }
+/* Metal's export is the 46px card alone (no canvas padding) and carries a
+   baked background, so it fills the slot squarely and takes the card's own
+   radius to cut the corners the export left opaque. */
+.docs-link-icon[src*="figma-metal"] {
+  width: 24px;
+  height: 24px;
+  left: 0;
+  top: 0;
+  border-radius: 6px;
+}
 
 
 .docs-main { position: relative; min-width: 0; }
@@ -132,7 +142,7 @@
 .detail-titles { display: flex; flex-direction: column; gap: 12px; }
 /* Effect icon sits above the name, at the tile art's natural 46px. */
 .detail-icon { width: 46px; height: 46px; display: block; }
-.detail-icon img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.detail-icon img { width: 100%; height: 100%; object-fit: contain; display: block; border-radius: 12px; }
 .detail-title { margin: 0; font-family: "Saans", var(--font-sans); font-size: 36px; font-weight: 500; line-height: 42px; letter-spacing: -0.18px; color: var(--text); }
 .detail-sub { margin: 0; font-size: 16px; line-height: 24.2px; color: var(--text-muted); }
 
@@ -1173,7 +1183,8 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   color: var(--text);
 }
 .docs-prose h3 { margin-top: 24px; font-size: 15px; font-weight: 500; line-height: 22px; color: var(--text); }
-.docs-prose a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
+.docs-prose a { color: var(--text); text-decoration: none; }
+.docs-prose a:hover { text-decoration: underline; text-underline-offset: 2px; }
 .docs-prose code {
   font-family: var(--font-mono); font-size: 13px;
   padding: 1px 6px; border-radius: 6px;

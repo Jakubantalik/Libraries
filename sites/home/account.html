@@ -1406,19 +1406,16 @@
       line-height: 1.4;
       color: var(--text);
     }
+    /* No underline at rest; it appears on hover, like every other link. */
     .course-cta-headline a {
       color: inherit;
-      text-decoration: underline;
+      text-decoration: none;
       text-underline-offset: 2px;
-      /* 50% of the text color at rest, 100% on hover. Using
-         color-mix with currentColor keeps it theme-agnostic — the
-         underline tracks light/dark text without an explicit
-         dark-mode override. */
-      text-decoration-color: color-mix(in srgb, currentColor 50%, transparent);
+      text-decoration-color: currentColor;
       transition: text-decoration-color 180ms ease;
     }
     .course-cta-headline a:hover {
-      text-decoration-color: currentColor;
+      text-decoration: underline;
     }
     .course-cta-byline {
       margin: 0;
@@ -4358,7 +4355,8 @@
     .t-acc-panel-inner p { margin: 0 0 16px; padding-right: 28px; font-size: 14px; line-height: 22px; color: var(--text-muted); }
     .t-acc-panel-inner code { font-family: var(--font-mono); font-size: 12px; line-height: 18px; padding: 1px 6px; border-radius: 6px; background: rgba(0, 0, 0, 0.04); color: var(--text); }
     html[data-theme="dark"] .t-acc-panel-inner code { background: rgba(255, 255, 255, 0.06); }
-    .t-acc-panel-inner a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
+    .t-acc-panel-inner a { color: var(--text); text-decoration: none; }
+    .t-acc-panel-inner a:hover { text-decoration: underline; text-underline-offset: 2px; }
     @media (prefers-reduced-motion: reduce) {
       .t-acc-panel, .t-acc-panel-inner, .t-acc-chevron { transition: none !important; }
     }

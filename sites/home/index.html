@@ -284,6 +284,13 @@
       background: rgba(255, 255, 255, 0.06); color: var(--text-muted);
       font-size: 13px; font-weight: 500; overflow: hidden;
     }
+    /* Real photo when one is installed; the initial stays underneath as the
+       fallback, and a missing file drops the img so the initial shows. */
+    .pro-quote-avatar { position: relative; }
+    .pro-quote-avatar-img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; border-radius: inherit; display: block;
+    }
     .pro-quote-id { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
     .pro-quote-name { align-self: flex-start; font-size: 13px; line-height: 16px; font-weight: 500; color: #ededed; text-decoration: none; }
     a.pro-quote-name:hover { text-decoration: underline; text-underline-offset: 2px; }
@@ -300,20 +307,33 @@
       .pro-quote-text { font-size: 15px; line-height: 23px; }
     }
 
-    /* ── How to use (same card material as the pro quotes) ──────── */
+    /* ── How to use: tall showcase cards under a left-aligned lede.
+       Each step carries a mock of the moment itself (terminal, diff,
+       Studio panel) with the copy at the foot of the card. ── */
+    .howto-head { max-width: 640px; margin-bottom: 40px; }
+    .howto-title {
+      margin: 0;
+      font-family: "Saans", var(--font-sans);
+      font-size: 38px; font-weight: 500; line-height: 1.16;
+      letter-spacing: -0.01em; color: var(--text);
+    }
+    .howto-title-dim { opacity: 0.6; }
+    .howto-lede { margin: 14px 0 0; font-size: 16px; line-height: 24px; color: var(--text-muted); max-width: 46ch; }
     .howto-steps {
-      list-style: none; margin: 0; padding: 0; counter-reset: none;
+      list-style: none; margin: 0; padding: 0;
       display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 18px; align-items: stretch;
     }
+    /* Fill and shadow come from the gallery card surface in site.css. */
     .howto-step {
-      display: flex; flex-direction: column; gap: 12px; min-width: 0;
+      display: flex; flex-direction: column; gap: 24px; min-width: 0;
       padding: 32px; border-radius: 24px;
     }
+    .howto-step > * { position: relative; z-index: 2; }
+    .howto-step-meta { display: flex; align-items: center; gap: 10px; }
     .howto-step-num {
-      width: 28px; height: 28px; border-radius: 50px;
+      flex: none; width: 28px; height: 28px; border-radius: 50px;
       display: inline-flex; align-items: center; justify-content: center;
-      margin-bottom: 8px;
       background: #3e3e3e;
       box-shadow:
         0 1px 3px 0 rgba(0, 0, 0, 0.04),
@@ -322,9 +342,7 @@
         inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
         inset 0 0 0 1px rgba(196, 196, 196, 0.1);
       color: rgba(237, 237, 237, 0.8);
-      font-size: 12px;
-      line-height: 13px;
-      font-weight: 500;
+      font-size: 12px; line-height: 13px; font-weight: 500;
     }
     .howto-step-title { margin: 0; font-size: 15px; font-weight: 500; line-height: 20px; color: #ededed; }
     .howto-step-text { margin: 0; font-size: 14px; line-height: 22px; color: var(--text-muted); overflow-wrap: anywhere; }
@@ -333,10 +351,12 @@
       padding: 1px 6px; border-radius: 6px;
       background: rgba(255, 255, 255, 0.06); color: var(--text); white-space: nowrap;
     }
-    .howto-step-text a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
+    .howto-step-text a { color: var(--text); text-decoration: none; }
+    .howto-step-text a:hover { text-decoration: underline; text-underline-offset: 2px; }
     @media (max-width: 900px) {
+      .howto-title { font-size: 30px; }
       .howto-steps { grid-template-columns: minmax(0, 1fr); gap: 12px; }
-      .howto-step { padding: 24px; }
+      .howto-step { padding: 24px; gap: 20px; }
     }
 
     /* ── FAQ accordion (styling from transitions.dev/pro) ───────── */
@@ -374,7 +394,8 @@
     }
     .t-acc-panel-inner p { margin: 0 0 16px; padding-right: 28px; font-size: 14px; line-height: 22px; color: var(--text-muted); }
     .t-acc-panel-inner code { font-family: var(--font-mono); font-size: 12px; line-height: 18px; padding: 1px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.06); color: var(--text); }
-    .t-acc-panel-inner a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
+    .t-acc-panel-inner a { color: var(--text); text-decoration: none; }
+    .t-acc-panel-inner a:hover { text-decoration: underline; text-underline-offset: 2px; }
     @media (prefers-reduced-motion: reduce) {
       .t-acc-panel, .t-acc-panel-inner, .t-acc-chevron, .hero-tile { transition: none !important; }
     }
@@ -606,9 +627,9 @@
         <li class="pro-quote">
           <p class="pro-quote-text">Generational cook!</p>
           <div class="pro-quote-author">
-            <span class="pro-quote-avatar" aria-hidden="true">H</span>
+            <span class="pro-quote-avatar" aria-hidden="true">G<img class="pro-quote-avatar-img" src="/assets/avatars/rauchg.jpg" alt="" onerror="this.remove()" /></span>
             <span class="pro-quote-id">
-              <span class="pro-quote-name">Harsh</span>
+              <span class="pro-quote-name">Guillermo Rauch</span>
               <span class="pro-quote-role">CEO, Vercel</span>
             </span>
           </div>
@@ -616,9 +637,9 @@
         <li class="pro-quote">
           <p class="pro-quote-text">Very cool</p>
           <div class="pro-quote-author">
-            <span class="pro-quote-avatar" aria-hidden="true">D</span>
+            <span class="pro-quote-avatar" aria-hidden="true">D<img class="pro-quote-avatar-img" src="/assets/avatars/destraynor.jpg" alt="" onerror="this.remove()" /></span>
             <span class="pro-quote-id">
-              <span class="pro-quote-name">Des</span>
+              <span class="pro-quote-name">Des Traynor</span>
               <span class="pro-quote-role">Co-founder of Intercom</span>
             </span>
           </div>
@@ -626,7 +647,7 @@
         <li class="pro-quote">
           <p class="pro-quote-text">INSANELY AMAZING</p>
           <div class="pro-quote-author">
-            <span class="pro-quote-avatar" aria-hidden="true">K</span>
+            <span class="pro-quote-avatar" aria-hidden="true">K<img class="pro-quote-avatar-img" src="/assets/avatars/krispuckett.jpg" alt="" onerror="this.remove()" /></span>
             <span class="pro-quote-id">
               <span class="pro-quote-name">Kris Puckett</span>
               <span class="pro-quote-role">Design manager at Stripe</span>
@@ -673,22 +694,31 @@
     </section>
 
     <section class="home-section" aria-labelledby="how-to-use-title">
-      <h2 class="home-section-title" id="how-to-use-title">How to use</h2>
+      <div class="howto-head">
+        <h2 class="howto-title" id="how-to-use-title">Copy the prompt.<br /><span class="howto-title-dim">Paste it to coding agent</span></h2>
+        <p class="howto-lede">Every library ships as a prompt. One copy, and your coding agent builds it in: Claude Code, Cursor or Codex.</p>
+      </div>
       <ol class="howto-steps">
         <li class="howto-step">
-          <span class="howto-step-num" aria-hidden="true">1</span>
-          <h3 class="howto-step-title">Install</h3>
-          <p class="howto-step-text">Every library is a standalone npm package, so grab only what you need: <code>npm install border-beam</code>, <code>thinking-orbs</code>, <code>liquid-gooey</code>, <code>metal-fx</code> or <code>img-fx</code>.</p>
+          <div class="howto-step-meta">
+            <span class="howto-step-num" aria-hidden="true">1</span>
+            <h3 class="howto-step-title">Copy the prompt</h3>
+          </div>
+          <p class="howto-step-text">One button packs the install line, usage and every prop into a single paste.</p>
         </li>
         <li class="howto-step">
-          <span class="howto-step-num" aria-hidden="true">2</span>
-          <h3 class="howto-step-title">Drop it in</h3>
-          <p class="howto-step-text">Import the component and wrap your UI. React 18+, zero runtime dependencies, light and dark mode built in. Works from Cursor, Claude Code and Codex out of the box.</p>
+          <div class="howto-step-meta">
+            <span class="howto-step-num" aria-hidden="true">2</span>
+            <h3 class="howto-step-title">Paste it in your agent</h3>
+          </div>
+          <p class="howto-step-text">Claude Code, Cursor or Codex installs it and wires it into your app.</p>
         </li>
         <li class="howto-step">
-          <span class="howto-step-num" aria-hidden="true">3</span>
-          <h3 class="howto-step-title">Make it yours</h3>
-          <p class="howto-step-text">Tune the effect in each library&rsquo;s playground, or go deeper in the <a href="/studio.html">Studio</a> with Pro and export the exact configuration as props.</p>
+          <div class="howto-step-meta">
+            <span class="howto-step-num" aria-hidden="true">3</span>
+            <h3 class="howto-step-title">Make it yours</h3>
+          </div>
+          <p class="howto-step-text">Tune it in the playground, or go deeper in the <a href="/studio.html">Studio</a> with Pro.</p>
         </li>
       </ol>
     </section>
@@ -733,16 +763,6 @@
           </button>
           <div class="t-acc-panel"><div class="t-acc-panel-inner">
             <p>Yes, that is the point. Every library installs and configures cleanly from Cursor, Claude Code, Codex and similar tools, and the effects are designed so agent-built apps stop looking generic. Pro adds skills that teach your agent each library&rsquo;s full parameter vocabulary.</p>
-          </div></div>
-        </div>
-
-        <div class="t-acc" data-open="false">
-          <button class="t-acc-head" type="button" aria-expanded="false">
-            <span>Can I use them in commercial projects?</span>
-            <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
-          </button>
-          <div class="t-acc-panel"><div class="t-acc-panel-inner">
-            <p>The free libraries are MIT, so use them anywhere, including commercial work. Pro content (Studio exports, Pro presets and recipes) is licensed to you or your team under the plan you buy, for unlimited projects.</p>
           </div></div>
         </div>
 

@@ -1329,19 +1329,16 @@
       line-height: 1.4;
       color: var(--text);
     }
+    /* No underline at rest; it appears on hover, like every other link. */
     .course-cta-headline a {
       color: inherit;
-      text-decoration: underline;
+      text-decoration: none;
       text-underline-offset: 2px;
-      /* 50% of the text color at rest, 100% on hover. Using
-         color-mix with currentColor keeps it theme-agnostic — the
-         underline tracks light/dark text without an explicit
-         dark-mode override. */
-      text-decoration-color: color-mix(in srgb, currentColor 50%, transparent);
+      text-decoration-color: currentColor;
       transition: text-decoration-color 180ms ease;
     }
     .course-cta-headline a:hover {
-      text-decoration-color: currentColor;
+      text-decoration: underline;
     }
     .course-cta-byline {
       margin: 0;
