@@ -119,11 +119,11 @@ function TopBar({ email, pro }: { email: string | null; pro: boolean }) {
 }
 
 const LIBS = [
-  { id: "beam", label: "Border beam", icon: "/assets/icons/tile-beam.png" },
-  { id: "orb", label: "Thinking orbs", icon: "/assets/icons/tile-orbs.png" },
-  { id: "gooey", label: "Gooey", icon: "/assets/icons/tile-gooey.png" },
-  { id: "metal", label: "Metal", icon: "/assets/icons/tile-metal.png" },
-  { id: "image", label: "Image", icon: "/assets/icons/tile-image.png" },
+  { id: "beam", label: "Border beam", icon: "/assets/icons/figma-beam.png" },
+  { id: "orb", label: "Thinking orbs", icon: "/assets/icons/figma-orbs.svg" },
+  { id: "gooey", label: "Gooey", icon: "/assets/icons/figma-gooey.svg" },
+  { id: "metal", label: "Metal", icon: "/assets/icons/figma-metal.svg" },
+  { id: "image", label: "Image", icon: "/assets/icons/figma-image.png" },
 ] as const;
 
 type LibId = (typeof LIBS)[number]["id"];
@@ -163,7 +163,7 @@ function Workbench() {
             onClick={() => select(l.id)}
           >
             <span className="st-lib-ico" aria-hidden="true">
-              <img src={l.icon} alt="" draggable={false} data-pad={l.id === "image" ? "" : undefined} />
+              <img src={l.icon} alt="" draggable={false} />
             </span>
             {l.label}
           </button>

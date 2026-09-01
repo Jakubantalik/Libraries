@@ -32,8 +32,16 @@
 }
 .docs-sidebar::-webkit-scrollbar { display: none; }
 .docs-group { display: flex; flex-direction: column; min-width: 0; }
-.docs-list { display: flex; flex-direction: column; min-width: 0; }
-.docs-group-label { font-size: 13px; line-height: 14px; color: #979797; padding: 4px 8px 8px; }
+/* 4px between rows, per the Studio nav in Figma. */
+.docs-list { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+/* Group label follows transitions.dev's sidebar: 11px and subtle, so it
+   reads as a label rather than as another link. */
+.docs-group-label {
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--text-subtle);
+  padding: 9px 8px;
+}
 
 /* Rows follow the Studio nav (.st-lib): 40px on a 12px radius, the active
    one lifted on the material ring. */
@@ -67,22 +75,37 @@
     inset 0 0 0 1px rgba(255, 255, 255, 0.02),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
 }
-.docs-link--muted { color: #979797; }
+.docs-link--muted {
+  height: 32px;
+  font-weight: 400;
+  line-height: 16px;
+  color: var(--text-muted);
+}
 .docs-link:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
-/* Same 24px tile the Studio nav uses, on the homepage card's treatment
-   (.lib-ico): a clipped box with no CSS shadow of its own — the depth is
-   in the tile bitmap. */
-.docs-link-icon {
+/* Icon card: the Figma export used verbatim (fill, rim, glyph and its
+   soft 0 1px 1.5px drop all baked in). The 24px slot just positions it;
+   the canvas is larger than the card (filter margins, and the beam's
+   glow), and the row's own overflow:hidden clips the spill exactly the
+   way the design's row does. */
+.docs-link-ico {
+  position: relative;
   flex: none;
   width: 24px;
   height: 24px;
-  border-radius: 7px;
-  object-fit: cover;
-  display: block;
 }
-/* The image-generation export sits on a larger canvas than the rest, so
-   scale it up to crop that padding away. */
-.docs-link-icon[src*="tile-image"] { width: 27px; height: 27px; max-width: none; margin: -1.5px; }
+.docs-link-icon {
+  position: absolute;
+  display: block;
+  max-width: none;
+  /* 30x30 canvas, card at (3,2) */
+  width: 30px;
+  height: 30px;
+  left: -3px;
+  top: -2px;
+}
+/* Beam is a processed raster: 40x40 canvas, card at (8,8), the glow
+   kept as alpha. */
+.docs-link-icon[src*="figma-beam"] { width: 40px; height: 40px; left: -8px; top: -8px; }
 
 .docs-main { position: relative; min-width: 0; }
 
@@ -153,6 +176,28 @@
 @media (prefers-reduced-motion: reduce) {
   .proto-modal-tabs-indicator { transition: none; }
 }
+
+/* On the detail pages the bar wears the Studio's Manual controls / Agent
+   pill: darker bar, lit indicator, brighter active label. */
+.detail-tabs.proto-modal-tabs { height: 36px; overflow: hidden; }
+.detail-tabs .proto-modal-tabs-indicator {
+  top: 3px;
+  height: 30px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 36px;
+  box-shadow:
+    0 1px 1px 0 rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+}
+.detail-tabs .proto-modal-tab {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 36px;
+  color: #979797;
+}
+.detail-tabs .proto-modal-tab:hover,
+.detail-tabs .proto-modal-tab[aria-selected="true"] { color: #fbfbfb; }
+html[data-theme="dark"] .detail-tabs.proto-modal-tabs { background: #272727; }
 
 /* The two head actions sit together, opposite the tabs. */
 .detail-head-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -472,7 +517,7 @@
 .detail-examples,
 .detail-playground-label,
 .detail-body .pg,
-.detail-body .pg-snippet { max-width: 686px; }
+.detail-body .pg-snippet { max-width: 686px; margin-top: 12px; }
 .detail-panel[hidden] { display: none; }
 
 @media (max-width: 900px) {
@@ -721,7 +766,10 @@ html[data-theme="dark"] .pg-stage::after { box-shadow: inset 0 0 0 1px rgba(191,
   border-radius: 16px;
   background: var(--card-bg);
   box-shadow: var(--card-shadow), inset 0 0 0 1px var(--card-border);
-  overflow: hidden;
+  /* Not clipped: the copy button's tooltip sits ABOVE the button and so
+     outside the card. transitions.dev keeps the button out of the clipping
+     card entirely; here the <pre> does the rounding instead, which it can
+     because it is the thing that scrolls. */
 }
 /* Same surface as the stage and the example cards: a flat #171717 card
    with no border, reading against the #121212 page on its own. */
@@ -731,6 +779,7 @@ html[data-theme="dark"] .code-block {
 }
 .code-block pre {
   margin: 0;
+  border-radius: inherit;
   max-height: 520px;
   overflow: auto;
   padding: 24px 26px;
@@ -771,14 +820,32 @@ html[data-theme="dark"] .code-block {
 .code-block .code-copy:hover { background: var(--chip-bg-hover); color: var(--text); }
 .code-block .code-copy svg { width: 15px; height: 15px; display: block; }
 
-/* The snippet copy button is the site's .card-copy component, and keeps
-   its size, radius, wash and icon swap. Only the placement differs: the
-   top-right of the code card rather than a gallery card's bottom-right. */
+/* The snippet copy button: .card-copy's icon swap and tooltip, but its own
+   32px ghost treatment — no fill at rest, a surface only on hover — sat at
+   the top-right of the code card rather than a gallery card's bottom-right. */
 .detail-code-copy {
   top: 14px;
   right: 14px;
   bottom: auto;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  background-image: none;
+  box-shadow: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
 }
+/* No fill at rest: the button only takes a surface on hover. */
+html[data-theme="dark"] .detail-code-copy { background: transparent; background-image: none; }
+.detail-code-copy:hover,
+html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hover); color: var(--text); }
+.detail-code-copy svg { width: 15px; height: 15px; }
 /* Right-align the tooltip to the button so the pill grows leftward and
    never overhangs the card's right edge. */
 .detail-code-copy .card-copy-tooltip {
