@@ -23,6 +23,7 @@ export default defineConfig({
         image: resolve(__dirname, "image.html"),
         pro: resolve(__dirname, "pro.html"),
         studio: resolve(__dirname, "studio.html"),
+        "how-to-use": resolve(__dirname, "how-to-use.html"),
         "studio-app": resolve(__dirname, "studio/app.html"),
         account: resolve(__dirname, "account.html"),
         activate: resolve(__dirname, "activate.html"),

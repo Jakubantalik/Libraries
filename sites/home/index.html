@@ -120,10 +120,22 @@
         inset 0 0 0 1px rgba(0, 0, 0, 0.06),
         inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
         inset 0 0 0 1px rgba(196, 196, 196, 0.1);
-      transition: background-color 0.15s ease;
+      transition:
+        background-color 0.15s ease,
+        transform var(--tile-lift-dur, var(--duration-medium))
+                  var(--tile-lift-ease, cubic-bezier(0.34, 1.85, 0.64, 1));
       z-index: 5;
     }
-    .hero-tile:hover { background: #1c1c1c; }
+    /* Hover lifts the tile 6px over 350ms on a softened bounce curve, so it
+       overshoots a little and settles. The curve sits between --ease-bounce
+       and --ease-bounce-strong, so it's spelled out rather than tokenised.
+       The three vars are what the dev-only motion tuner writes to (see the
+       bottom of this file); the fallbacks are the shipped values. */
+    .hero-tile:hover,
+    .hero-tile:focus-visible {
+      background: #1c1c1c;
+      transform: translateY(calc(-1 * var(--tile-lift-y, 6px)));
+    }
     .hero-tile-stage {
       position: absolute; inset: 11px; border-radius: 14px; background: #101010;
       overflow: hidden; display: flex; align-items: center; justify-content: center;
@@ -172,7 +184,8 @@
         opacity var(--dropdown-open-dur) var(--dropdown-ease);
     }
     @media (prefers-reduced-motion: reduce) {
-      .hero-tile-pill { transition: none; }
+      .hero-tile-pill, .hero-tile { transition: none; }
+      .hero-tile:hover, .hero-tile:focus-visible { transform: none; }
     }
     /* Scatter positions around the centered hero copy — desktop only,
        so the static-row fallback below 981px keeps untouched tiles. */
@@ -306,6 +319,12 @@
       .howto-step { padding: 24px; }
     }
 
+    .home-section-sub {
+      margin: -24px 0 32px; text-align: center;
+      font-size: 14px; line-height: 22px; color: var(--text-muted);
+    }
+    .home-section-sub a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
+
     /* ── FAQ accordion (styling from transitions.dev/pro) ───────── */
     .faq-list {
       --acc-expand: 250ms; --acc-collapse: 250ms; --acc-chevron: 250ms;
@@ -397,6 +416,7 @@
           <nav class="site-nav-menu" aria-label="Primary">
             <a class="nav-pill nav-pill--active" href="/#components">Libraries</a>
             <a class="nav-pill" href="/studio.html">Studio</a>
+            <a class="nav-pill" href="/how-to-use.html">How to use</a>
           </nav>
         </div>
         <div class="site-nav-right">
@@ -468,7 +488,8 @@
         <ul class="mobile-menu-list">
           <li><a class="mobile-menu-link mobile-menu-link--1" href="/#components">Libraries</a></li>
           <li><a class="mobile-menu-link mobile-menu-link--2" href="/studio.html">Studio</a></li>
-          <li><a class="mobile-menu-link mobile-menu-link--3 mobile-menu-link--pro" href="/pro.html">Get Pro</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--3" href="/how-to-use.html">How to use</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--4 mobile-menu-link--pro" href="/pro.html">Get Pro</a></li>
         </ul>
         <a class="mobile-menu-cta" id="mobile-signin" href="/pro.html">Sign in</a>
       </nav>
@@ -653,6 +674,7 @@
 
     <section class="home-section" aria-labelledby="how-to-use-title">
       <h2 class="home-section-title" id="how-to-use-title">How to use</h2>
+      <p class="home-section-sub"><a href="/how-to-use.html">Read the full guide</a></p>
       <ol class="howto-steps">
         <li class="howto-step">
           <span class="howto-step-num" aria-hidden="true">1</span>
@@ -763,6 +785,7 @@
             <p class="footer-col-title">Product</p>
             <a href="/">Home</a>
             <a href="/studio.html">Studio</a>
+            <a href="/how-to-use.html">How to use</a>
             <a href="/pro.html">Get Pro</a>
           </div>
           <div class="footer-col">
@@ -816,6 +839,313 @@
           try { sessionStorage.setItem(KEY, JSON.stringify({ n: total, t: Date.now() })); } catch (e) {}
         }
       });
+    })();
+  </script>
+  <script>
+    /* Dev-only motion tuner for the hero-tile hover lift.
+       Renders only on localhost or with ?motion in the URL, and builds its
+       own DOM — nothing ships to a production page but this script. Easing
+       and duration start from the transitions.dev motion tokens the site
+       defines in site.css, and either can be overridden with custom values:
+       the four cubic-bezier control points are editable (with a live curve
+       preview) and the duration takes any millisecond value. */
+    (function () {
+      var isDev = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+      if (!isDev && !new URLSearchParams(location.search).has("motion")) return;
+
+      var DURATIONS = [
+        ["--duration-stagger", 40], ["--duration-micro", 80],
+        ["--duration-quick", 150], ["--duration-fast", 250],
+        ["--duration-medium", 350], ["--duration-slow", 400],
+        ["--duration-very-slow", 500]
+      ];
+      /* Bezier tokens carry their control points so a token can seed the
+         custom fields; the keyword easings have none. */
+      var EASINGS = [
+        ["--ease-bounce", "cubic-bezier(0.34, 1.36, 0.64, 1)", [0.34, 1.36, 0.64, 1]],
+        ["--ease-bounce-strong", "cubic-bezier(0.34, 3.85, 0.64, 1)", [0.34, 3.85, 0.64, 1]],
+        ["--ease-smooth-out", "cubic-bezier(0.22, 1, 0.36, 1)", [0.22, 1, 0.36, 1]],
+        ["--ease-in-out", "ease-in-out", null],
+        ["--ease-out", "ease-out", null],
+        ["--ease-linear", "linear", null]
+      ];
+      var DISTANCES = [
+        ["--distance-micro", "4px"], ["--distance-small", "6px"],
+        ["--distance-base", "8px"], ["--distance-medium", "12px"],
+        ["--distance-large", "30px"]
+      ];
+      /* Shipped defaults — Reset returns here, and these are what the CSS
+         fallbacks use when the tuner never runs. */
+      var DEFAULTS = {
+        dur: "var(--duration-medium)",
+        ease: "cubic-bezier(0.34, 1.85, 0.64, 1)",
+        y: "6px"
+      };
+      var DEFAULT_PTS = [0.34, 1.85, 0.64, 1];
+      var state = Object.assign({}, DEFAULTS);
+      var pts = DEFAULT_PTS.slice();
+
+      var css = document.createElement("style");
+      css.textContent = [
+        ".mt { position: fixed; right: 16px; bottom: 16px; z-index: 300; width: 268px;",
+        "  max-height: calc(100dvh - 32px); overflow-y: auto;",
+        "  background: #181818; border-radius: 16px; padding: 14px;",
+        "  box-shadow: 0 8px 32px rgba(0,0,0,.5), inset 0 0 0 1px rgba(196,196,196,.1);",
+        "  font-family: var(--font-sans); color: #ededed; }",
+        ".mt[hidden] { display: none; }",
+        ".mt-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }",
+        ".mt-title { font-size: 12px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; color: #8a8a8a; }",
+        ".mt-x { border: 0; background: rgba(255,255,255,.07); color: #ededed; width: 22px; height: 22px;",
+        "  border-radius: 50px; cursor: pointer; font-size: 13px; line-height: 1; }",
+        ".mt-f { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }",
+        /* display:flex above would otherwise beat the UA [hidden] rule. */
+        ".mt-f[hidden] { display: none; }",
+        ".mt-l { font-size: 11px; font-weight: 500; color: #8a8a8a; display: flex; justify-content: space-between; }",
+        ".mt-l b { font-weight: 400; color: #cfcfcf; font-family: var(--font-mono); font-size: 10px; }",
+        ".mt select, .mt input[type=number] { width: 100%; height: 30px; border: 0; border-radius: 8px;",
+        "  background: rgba(255,255,255,.07); color: #ededed; font-family: var(--font-sans);",
+        "  font-size: 12px; padding: 0 8px; cursor: pointer; }",
+        ".mt input[type=number] { cursor: text; font-family: var(--font-mono); }",
+        ".mt input[type=range] { width: 100%; accent-color: #ededed; }",
+        ".mt-row { display: flex; gap: 6px; }",
+        /* Bezier editor: curve preview beside a 2x2 grid of control points. */
+        ".mt-bez { display: flex; gap: 10px; align-items: center; }",
+        ".mt-bez svg { flex: none; width: 68px; height: 68px; border-radius: 8px; background: #131313; }",
+        ".mt-bez-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }",
+        ".mt-pt { display: flex; flex-direction: column; gap: 3px; }",
+        ".mt-pt span { font-size: 9px; color: #767676; font-family: var(--font-mono); }",
+        ".mt-pt input { height: 26px !important; font-size: 11px !important; }",
+        ".mt-note { font-size: 10px; line-height: 14px; color: #767676; }",
+        ".mt-btn { flex: 1; height: 30px; border: 0; border-radius: 8px; background: rgba(255,255,255,.07);",
+        "  color: #ededed; font-family: var(--font-sans); font-size: 12px; font-weight: 500; cursor: pointer; }",
+        ".mt-btn:hover { background: rgba(255,255,255,.12); }",
+        ".mt-out { margin-top: 10px; font-family: var(--font-mono); font-size: 10px; line-height: 15px;",
+        "  color: #9a9a9a; background: #131313; border-radius: 8px; padding: 8px; word-break: break-all; }",
+        ".mt-open { position: fixed; right: 16px; bottom: 16px; z-index: 300; height: 32px; padding: 0 12px;",
+        "  border: 0; border-radius: 50px; background: #181818; color: #ededed; font-family: var(--font-sans);",
+        "  font-size: 12px; font-weight: 500; cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,.4), inset 0 0 0 1px rgba(196,196,196,.1); }",
+        ".mt-open[hidden] { display: none; }"
+      ].join("\n");
+      document.head.appendChild(css);
+
+      function durOpts() {
+        return DURATIONS.map(function (o) {
+          return '<option value="var(' + o[0] + ')">' + o[0].replace("--", "") + " · " + o[1] + "ms</option>";
+        }).join("") + '<option value="custom">custom…</option>';
+      }
+      function easeOpts() {
+        return EASINGS.map(function (o) {
+          return '<option value="var(' + o[0] + ')">' + o[0].replace("--", "") + " · " + o[1] + "</option>";
+        }).join("") + '<option value="custom">custom…</option>';
+      }
+      function distOpts() {
+        return '<option value="">custom…</option>' + DISTANCES.map(function (o) {
+          return '<option value="var(' + o[0] + ')">' + o[0].replace("--", "") + " · " + o[1] + "</option>";
+        }).join("");
+      }
+      function ptField(i, label) {
+        return '<label class="mt-pt"><span>' + label + '</span>' +
+               '<input type="number" data-pt="' + i + '" step="0.01" value="' + pts[i] + '" /></label>';
+      }
+
+      var panel = document.createElement("div");
+      panel.className = "mt";
+      panel.innerHTML =
+        '<div class="mt-head"><span class="mt-title">Tile hover</span>' +
+        '<button class="mt-x" type="button" aria-label="Close">×</button></div>' +
+
+        '<div class="mt-f"><span class="mt-l">Duration</span>' +
+        '<select id="mt-dur">' + durOpts() + "</select></div>" +
+        '<div class="mt-f" id="mt-durc" hidden><span class="mt-l">Duration (ms)</span>' +
+        '<input id="mt-durms" type="number" min="0" max="3000" step="10" value="350" /></div>' +
+
+        '<div class="mt-f"><span class="mt-l">Easing</span>' +
+        '<select id="mt-ease">' + easeOpts() + "</select></div>" +
+        '<div class="mt-f"><span class="mt-l">Control points</span>' +
+        '<div class="mt-bez">' +
+        '<svg id="mt-curve" viewBox="0 0 100 100" aria-hidden="true"></svg>' +
+        '<div class="mt-bez-grid">' + ptField(0, "x1") + ptField(1, "y1") + ptField(2, "x2") + ptField(3, "y2") +
+        "</div></div>" +
+        '<p class="mt-note" id="mt-bez-note"></p></div>' +
+
+        '<div class="mt-f"><span class="mt-l">Lift <b id="mt-yv">6px</b></span>' +
+        '<input id="mt-y" type="range" min="0" max="30" step="1" value="6" /></div>' +
+        '<div class="mt-f"><span class="mt-l">Token distances</span>' +
+        '<select id="mt-yt">' + distOpts() + "</select></div>" +
+
+        '<div class="mt-row"><button class="mt-btn" id="mt-reset" type="button">Reset</button>' +
+        '<button class="mt-btn" id="mt-copy" type="button">Copy CSS</button></div>' +
+        '<div class="mt-out" id="mt-out"></div>';
+
+      var openBtn = document.createElement("button");
+      openBtn.className = "mt-open";
+      openBtn.type = "button";
+      openBtn.textContent = "Tile hover";
+      openBtn.hidden = true;
+
+      document.body.appendChild(panel);
+      document.body.appendChild(openBtn);
+
+      var durSel = panel.querySelector("#mt-dur");
+      var durCustom = panel.querySelector("#mt-durc");
+      var durMs = panel.querySelector("#mt-durms");
+      var easeSel = panel.querySelector("#mt-ease");
+      var ptInputs = [].slice.call(panel.querySelectorAll("[data-pt]"));
+      var curve = panel.querySelector("#mt-curve");
+      var bezNote = panel.querySelector("#mt-bez-note");
+      var ySlider = panel.querySelector("#mt-y");
+      var yTokens = panel.querySelector("#mt-yt");
+      var yVal = panel.querySelector("#mt-yv");
+      var out = panel.querySelector("#mt-out");
+
+      durSel.value = DEFAULTS.dur;
+      easeSel.value = "custom";
+
+      function bezOf(easeValue) {
+        var m = /^var\((--[a-z-]+)\)$/.exec(easeValue);
+        if (m) {
+          var row = EASINGS.filter(function (e) { return e[0] === m[1]; })[0];
+          return row ? row[2] : null;
+        }
+        var c = /^cubic-bezier\(([^)]+)\)$/.exec(easeValue);
+        return c ? c[1].split(",").map(Number) : null;
+      }
+
+      /* Curve preview: the unit bezier drawn into a 100x100 box, y flipped.
+         The box is padded so overshoot past 1 (the bounce curves) stays
+         visible instead of clipping at the top edge. */
+      function drawCurve(b) {
+        if (!b) { curve.innerHTML = ""; return; }
+        var ys = [0, b[1], b[3], 1];
+        var lo = Math.min.apply(null, ys), hi = Math.max.apply(null, ys);
+        var pad = 10;
+        var span = Math.max(hi - lo, 1);
+        function X(x) { return pad + x * (100 - 2 * pad); }
+        function Y(y) { return 100 - pad - ((y - lo) / span) * (100 - 2 * pad); }
+        curve.innerHTML =
+          '<line x1="' + X(0) + '" y1="' + Y(0) + '" x2="' + X(1) + '" y2="' + Y(0) +
+          '" stroke="rgba(255,255,255,.10)" stroke-width="1"/>' +
+          '<line x1="' + X(0) + '" y1="' + Y(1) + '" x2="' + X(1) + '" y2="' + Y(1) +
+          '" stroke="rgba(255,255,255,.10)" stroke-width="1"/>' +
+          '<path d="M' + X(0) + " " + Y(0) + " C" + X(b[0]) + " " + Y(b[1]) + ", " +
+          X(b[2]) + " " + Y(b[3]) + ", " + X(1) + " " + Y(1) +
+          '" fill="none" stroke="#ededed" stroke-width="2" stroke-linecap="round"/>' +
+          '<circle cx="' + X(b[0]) + '" cy="' + Y(b[1]) + '" r="2.5" fill="#7cd4ff"/>' +
+          '<circle cx="' + X(b[2]) + '" cy="' + Y(b[3]) + '" r="2.5" fill="#7cd4ff"/>';
+      }
+
+      function syncBezUI() {
+        var b = bezOf(state.ease);
+        var editable = !!b;
+        ptInputs.forEach(function (inp, i) {
+          inp.disabled = !editable;
+          inp.style.opacity = editable ? "1" : ".4";
+          if (b) inp.value = b[i];
+        });
+        if (b) pts = b.slice();
+        bezNote.textContent = editable
+          ? "Edit a point to switch to a custom curve."
+          : "Keyword easing — no control points to edit.";
+        drawCurve(b);
+      }
+
+      function cssText() {
+        return ".hero-tile { transition: transform " + state.dur + " " + state.ease + "; }\n" +
+               ".hero-tile:hover { transform: translateY(-" + state.y + "); }";
+      }
+      function apply() {
+        var r = document.documentElement.style;
+        r.setProperty("--tile-lift-dur", state.dur);
+        r.setProperty("--tile-lift-ease", state.ease);
+        r.setProperty("--tile-lift-y", state.y);
+        yVal.textContent = state.y;
+        out.textContent = cssText();
+      }
+
+      durSel.addEventListener("change", function () {
+        if (durSel.value === "custom") {
+          durCustom.hidden = false;
+          state.dur = durMs.value + "ms";
+        } else {
+          durCustom.hidden = true;
+          state.dur = durSel.value;
+          /* Keep the custom field showing whatever the token resolves to,
+             so switching to custom starts from the current value. */
+          var row = DURATIONS.filter(function (d) { return "var(" + d[0] + ")" === durSel.value; })[0];
+          if (row) durMs.value = row[1];
+        }
+        apply();
+      });
+      durMs.addEventListener("input", function () {
+        state.dur = (durMs.value || 0) + "ms";
+        apply();
+      });
+
+      easeSel.addEventListener("change", function () {
+        if (easeSel.value === "custom") {
+          state.ease = "cubic-bezier(" + pts.join(", ") + ")";
+        } else {
+          state.ease = easeSel.value;
+        }
+        syncBezUI();
+        apply();
+      });
+
+      ptInputs.forEach(function (inp) {
+        inp.addEventListener("input", function () {
+          var i = Number(inp.dataset.pt);
+          var v = parseFloat(inp.value);
+          if (isNaN(v)) return;
+          /* x must stay in 0..1 for a valid cubic-bezier; y may overshoot. */
+          if (i === 0 || i === 2) v = Math.min(1, Math.max(0, v));
+          pts[i] = v;
+          state.ease = "cubic-bezier(" + pts.join(", ") + ")";
+          easeSel.value = "custom";
+          bezNote.textContent = "Custom curve.";
+          ptInputs.forEach(function (o) { o.disabled = false; o.style.opacity = "1"; });
+          drawCurve(pts);
+          apply();
+        });
+      });
+
+      ySlider.addEventListener("input", function () {
+        state.y = ySlider.value + "px"; yTokens.value = ""; apply();
+      });
+      yTokens.addEventListener("change", function () {
+        if (!yTokens.value) return;
+        state.y = yTokens.value;
+        var px = parseInt(getComputedStyle(document.documentElement)
+          .getPropertyValue(yTokens.value.slice(4, -1)).trim(), 10);
+        if (!isNaN(px)) ySlider.value = px;
+        apply();
+      });
+
+      panel.querySelector("#mt-reset").addEventListener("click", function () {
+        state = Object.assign({}, DEFAULTS);
+        pts = DEFAULT_PTS.slice();
+        durSel.value = DEFAULTS.dur;
+        durCustom.hidden = true;
+        durMs.value = 350;
+        easeSel.value = "custom";
+        ySlider.value = 6; yTokens.value = "";
+        syncBezUI();
+        apply();
+      });
+      panel.querySelector("#mt-copy").addEventListener("click", function () {
+        if (navigator.clipboard) navigator.clipboard.writeText(cssText()).catch(function () {});
+        var b = panel.querySelector("#mt-copy");
+        b.textContent = "Copied";
+        setTimeout(function () { b.textContent = "Copy CSS"; }, 1400);
+      });
+      panel.querySelector(".mt-x").addEventListener("click", function () {
+        panel.hidden = true; openBtn.hidden = false;
+      });
+      openBtn.addEventListener("click", function () {
+        panel.hidden = false; openBtn.hidden = true;
+      });
+
+      syncBezUI();
+      apply();
     })();
   </script>
   <script src="/assets/site.js" defer></script>
