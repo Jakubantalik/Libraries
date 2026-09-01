@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+
+  <title>How to use · Libraries.dev</title>
+  <meta name="description" content="Install a library, drop it into your UI, and make it yours — the three steps to shipping Beam, Orb, Gooey, Metal and Image, with the details your coding agent needs." />
+  <meta name="author" content="Libraries.dev" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <meta name="googlebot" content="index, follow" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="theme-color" content="#121212" />
+  <meta name="apple-mobile-web-app-title" content="Libraries.dev" />
+  <meta name="application-name" content="Libraries.dev" />
+
+  <link rel="canonical" href="https://libraries.dev/how-to-use.html" />
+  <link rel="alternate" hreflang="en" href="https://libraries.dev/how-to-use.html" />
+  <link rel="alternate" hreflang="x-default" href="https://libraries.dev/how-to-use.html" />
+
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/assets/favicon.svg" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Libraries.dev" />
+  <meta property="og:url" content="https://libraries.dev/how-to-use.html" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:title" content="How to use · Libraries.dev" />
+  <meta property="og:description" content="Install, drop it in, make it yours — the three steps to shipping any Libraries.dev effect." />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="How to use · Libraries.dev" />
+  <meta name="twitter:description" content="Install, drop it in, make it yours — the three steps to shipping any Libraries.dev effect." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    rel="preload"
+    as="style"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
+  />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+  <link
+    rel="preload"
+    as="font"
+    type="font/woff2"
+    href="/assets/fonts/Saans-Medium.woff2"
+    crossorigin
+  />
+  <link rel="stylesheet" href="/assets/site.css" />
+  <link rel="stylesheet" href="/assets/playground.css" />
+  <style>
+    /* How to use — page-specific layout. Cards, code blocks and the FAQ
+       accordion all reuse the shared design system. */
+
+    /* Copy-button icon swap (the detail pages carry this inline too). */
+    .code-copy .icon-check { display: none; }
+    .code-copy[data-copied="true"] .icon-copy { display: none; }
+    .code-copy[data-copied="true"] .icon-check { display: block; }
+
+    .howto-main { width: 100%; max-width: 1008px; margin: 0 auto; }
+
+    .howto-head {
+      padding: 40px 0 56px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .howto-title {
+      margin: 0;
+      font-family: "Saans", var(--font-sans);
+      font-size: 44px;
+      font-weight: 500;
+      line-height: 1.15;
+      letter-spacing: -0.01em;
+      color: var(--text);
+    }
+    .howto-sub {
+      margin: 16px auto 0;
+      max-width: 520px;
+      font-size: 16px;
+      line-height: 24px;
+      color: var(--text-muted);
+    }
+    @media (max-width: 639px) {
+      .howto-head { padding: 24px 0 40px; }
+      .howto-title { font-size: 30px; }
+      .howto-sub { font-size: 15px; line-height: 22px; }
+    }
+
+    /* Numbered step blocks — the homepage card material, one per row so
+       each step has room for its code and detail. */
+    .howto-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 18px; }
+    .howto-block {
+      display: flex;
+      gap: 20px;
+      padding: 32px;
+      border-radius: 24px;
+      background: #141414;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 -1px 0 0 rgba(255, 255, 255, 0.03);
+    }
+    .howto-num {
+      flex: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 50px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #3e3e3e;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+      color: rgba(237, 237, 237, 0.8);
+      font-size: 12px;
+      line-height: 13px;
+      font-weight: 500;
+    }
+    .howto-body { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 12px; }
+    .howto-step-title { margin: 0; font-size: 17px; font-weight: 500; line-height: 24px; color: #ededed; }
+    .howto-text { margin: 0; font-size: 14px; line-height: 22px; color: var(--text-muted); overflow-wrap: anywhere; }
+    .howto-text code {
+      font-family: var(--font-mono); font-size: 12px; line-height: 18px;
+      padding: 1px 6px; border-radius: 6px;
+      background: rgba(255, 255, 255, 0.06); color: var(--text); white-space: nowrap;
+    }
+    .howto-text a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
+    .howto-body .code-block { margin-top: 2px; }
+    @media (max-width: 639px) {
+      .howto-block { padding: 24px; gap: 16px; }
+    }
+
+    /* Library reference table */
+    .howto-table-wrap { overflow-x: auto; }
+    .howto-table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 520px; }
+    .howto-table th, .howto-table td {
+      text-align: left; padding: 12px 16px 12px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .howto-table th { font-weight: 500; color: var(--text-muted); font-size: 12px; letter-spacing: 0.02em; text-transform: uppercase; }
+    .howto-table td { color: var(--text-muted); line-height: 22px; }
+    .howto-table td:first-child { color: var(--text); }
+    .howto-table a { color: var(--text); text-decoration: none; }
+    .howto-table a:hover { text-decoration: underline; text-underline-offset: 2px; }
+    .howto-table code {
+      font-family: var(--font-mono); font-size: 12px;
+      padding: 1px 6px; border-radius: 6px;
+      background: rgba(255, 255, 255, 0.06); color: var(--text); white-space: nowrap;
+    }
+
+    /* Section rhythm shared with the homepage */
+    .home-section { width: 100%; max-width: 1008px; margin: 88px auto 0; }
+    .home-section-title {
+      text-align: center; font-family: "Saans", var(--font-sans);
+      font-size: 30px; font-weight: 500; letter-spacing: -0.01em;
+      color: var(--text); margin: 0 0 40px;
+    }
+    @media (max-width: 640px) {
+      .home-section { margin-top: 56px; }
+      .home-section-title { font-size: 23px; margin-bottom: 28px; }
+    }
+
+    /* FAQ accordion (same wiring and styling as the homepage) */
+    .faq-list {
+      --acc-expand: 250ms; --acc-collapse: 250ms; --acc-chevron: 250ms;
+      --acc-ease: var(--ease-smooth-out); --faq-border: rgba(255, 255, 255, 0.08);
+      display: flex; flex-direction: column; max-width: 640px; margin: 0 auto;
+    }
+    .t-acc { border-top: 1px solid var(--faq-border); }
+    .faq-list .t-acc:last-child { border-bottom: 1px solid var(--faq-border); }
+    .t-acc-head {
+      width: 100%; display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; padding: 16px 0; border: 0; background: none; cursor: pointer;
+      font-family: var(--font-sans); font-size: 15px; font-weight: 400; line-height: 22px;
+      color: var(--text); text-align: left; -webkit-tap-highlight-color: transparent;
+    }
+    .t-acc-head:focus-visible { outline: 2px solid var(--icon-color); outline-offset: 2px; border-radius: 6px; }
+    .t-acc-chevron {
+      display: inline-flex; flex-shrink: 0; color: var(--text-muted);
+      transform: scaleY(1); transform-origin: center;
+      transition: transform var(--acc-chevron) var(--acc-ease);
+    }
+    .t-acc-chevron svg { width: 16px; height: 16px; display: block; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .t-acc-chevron path { vector-effect: non-scaling-stroke; }
+    .t-acc[data-open="true"] .t-acc-chevron { transform: scaleY(-1); }
+    .t-acc-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--acc-collapse) var(--acc-ease); }
+    .t-acc[data-open="true"] .t-acc-panel { grid-template-rows: 1fr; transition: grid-template-rows var(--acc-expand) var(--acc-ease); }
+    .t-acc-panel-inner {
+      overflow: hidden; opacity: 0; filter: blur(var(--blur-small));
+      transition: opacity var(--acc-collapse) var(--acc-ease), filter var(--acc-collapse) var(--acc-ease);
+    }
+    .t-acc[data-open="true"] .t-acc-panel-inner {
+      opacity: 1; filter: blur(0);
+      transition: opacity var(--acc-expand) var(--acc-ease), filter var(--acc-expand) var(--acc-ease);
+    }
+    .t-acc-panel-inner p { margin: 0 0 16px; padding-right: 28px; font-size: 14px; line-height: 22px; color: var(--text-muted); }
+    .t-acc-panel-inner code { font-family: var(--font-mono); font-size: 12px; line-height: 18px; padding: 1px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.06); color: var(--text); }
+    .t-acc-panel-inner a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
+    @media (prefers-reduced-motion: reduce) {
+      .t-acc-panel, .t-acc-panel-inner, .t-acc-chevron { transition: none !important; }
+    }
+
+    /* Closing CTA band */
+    .howto-cta {
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      text-align: center; padding: 56px 24px; border-radius: 24px;
+      background: #141414;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 -1px 0 0 rgba(255, 255, 255, 0.03);
+    }
+    .howto-cta-title {
+      margin: 0; font-family: "Saans", var(--font-sans);
+      font-size: 24px; font-weight: 500; line-height: 1.25; color: var(--text);
+    }
+    .howto-cta-sub { margin: 0; max-width: 46ch; font-size: 14px; line-height: 22px; color: var(--text-muted); }
+    .howto-cta .skill-cta-row { margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#howto">Skip to content</a>
+
+  <main id="main" class="app">
+    <header class="site-nav">
+      <div class="site-nav-inner">
+        <div class="site-nav-left">
+          <a class="brand" href="/" aria-label="Libraries.dev home">
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 22.6705 14.6705" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path class="brand-draw" d="M21.3352 10.3354L6.89079 13.3354L18.0019 7.33536L1.33524 9.33536L19.3352 1.33536L1.33524 4.33536L9.33524 1.33536" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" pathLength="100"/>
+              </svg>
+            </span>
+            <span class="brand-word"><span class="brand-word-strong">Libraries</span><span class="brand-word-dim">.dev</span></span>
+          </a>
+          <nav class="site-nav-menu" aria-label="Primary">
+            <a class="nav-pill" href="/#components">Libraries</a>
+            <a class="nav-pill" href="/studio.html">Studio</a>
+            <a class="nav-pill nav-pill--active" href="/how-to-use.html">How to use</a>
+          </nav>
+        </div>
+        <div class="site-nav-right">
+          <a class="nav-get-pro" href="/pro.html"><span class="nav-get-pro-label"><span class="nav-get-pro-word">Get </span>Pro</span></a>
+          <a
+            class="icon-btn-pill"
+            id="gh-stars-btn"
+            href="https://github.com/Jakubantalik/Libraries"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub repository — star count"
+            data-loading="true"
+          >
+            <svg aria-hidden="true" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+            </svg>
+            <span class="pill-label" id="gh-stars-count">—</span>
+          </a>
+          <a
+            class="icon-btn"
+            href="https://x.com/jakubantalik"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="X (Twitter)"
+          >
+            <svg class="icon-x" aria-hidden="true" viewBox="0 0 16 17" xmlns="http://www.w3.org/2000/svg">
+              <path
+                fill="currentColor"
+                d="M12.4041 1.39726H14.6953L9.69087 7.2591L15.5781 15.2368H10.9696L7.35741 10.3996L3.22921 15.2368H0.934687L6.28641 8.96575L0.642598 1.39726H5.36795L8.62962 5.81859L12.4041 1.39726ZM11.5992 13.8329H12.8682L4.67667 2.72798H3.31359L11.5992 13.8329Z"
+              />
+            </svg>
+          </a>
+          <div class="pm-anchor" id="more-anchor">
+            <button type="button" class="icon-btn" id="more-btn" aria-label="More" aria-haspopup="menu" aria-expanded="false">
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 8C6.66667 7.26362 7.26362 6.66667 8 6.66667C8.73638 6.66667 9.33333 7.26362 9.33333 8C9.33333 8.73638 8.73638 9.33333 8 9.33333C7.26362 9.33333 6.66667 8.73638 6.66667 8Z" fill="currentColor"/>
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 3.33333C6.66667 2.59695 7.26362 2 8 2C8.73638 2 9.33333 2.59695 9.33333 3.33333C9.33333 4.06971 8.73638 4.66667 8 4.66667C7.26362 4.66667 6.66667 4.06971 6.66667 3.33333Z" fill="currentColor"/>
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 12.6667C6.66667 11.9303 7.26362 11.3333 8 11.3333C8.73638 11.3333 9.33333 11.9303 9.33333 12.6667C9.33333 13.403 8.73638 14 8 14C7.26362 14 6.66667 13.403 6.66667 12.6667Z" fill="currentColor"/>
+              </svg>
+            </button>
+            <div class="tl-menu t-dropdown" id="more-menu" data-origin="top-right" role="menu" aria-label="More options">
+              <div class="tl-menu-item" id="pm-signin" role="menuitem" tabindex="0">
+                <span class="tl-menu-item-label">Sign in</span>
+              </div>
+              <div class="tl-menu-divider"></div>
+              <a class="tl-menu-item" id="pm-support" href="mailto:jakubja@gmail.com" role="menuitem">
+                <span class="tl-menu-item-label">Support</span>
+              </a>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="icon-btn nav-burger"
+            id="nav-burger"
+            aria-label="Open menu"
+            aria-expanded="false"
+            aria-controls="mobile-menu"
+          >
+            <span class="nav-burger-box" aria-hidden="true">
+              <span class="nav-burger-line nav-burger-line--top"></span>
+              <span class="nav-burger-line nav-burger-line--bottom"></span>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <div class="mobile-menu-backdrop" id="mobile-menu-backdrop"></div>
+      <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile">
+        <ul class="mobile-menu-list">
+          <li><a class="mobile-menu-link mobile-menu-link--1" href="/#components">Libraries</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--2" href="/studio.html">Studio</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--3" href="/how-to-use.html">How to use</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--4 mobile-menu-link--pro" href="/pro.html">Get Pro</a></li>
+        </ul>
+        <a class="mobile-menu-cta" id="mobile-signin" href="/pro.html">Sign in</a>
+      </nav>
+    </header>
+
+    <header class="howto-head">
+      <h1 class="howto-title">How to use</h1>
+      <p class="howto-sub">
+        Every library is a plain npm package that renders a React component.
+        Install it, wrap your UI, tune it — three steps, no setup.
+      </p>
+    </header>
+
+    <div class="howto-main" id="howto">
+      <ol class="howto-list">
+        <li class="howto-block">
+          <span class="howto-num" aria-hidden="true">1</span>
+          <div class="howto-body">
+            <h2 class="howto-step-title">Install</h2>
+            <p class="howto-text">
+              Each library is standalone — grab only the ones you need. They are
+              MIT-licensed and free, with zero runtime dependencies (Image also
+              needs <code>three</code> as a peer dependency).
+            </p>
+            <div class="code-block">
+              <pre>npm install border-beam thinking-orbs liquid-gooey metal-fx img-fx</pre>
+              <button type="button" class="code-copy" data-copy-static aria-label="Copy install command">
+                <svg class="icon-copy" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+                <svg class="icon-check" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </li>
+
+        <li class="howto-block">
+          <span class="howto-num" aria-hidden="true">2</span>
+          <div class="howto-body">
+            <h2 class="howto-step-title">Drop it in</h2>
+            <p class="howto-text">
+              Import the component and wrap the element you want to affect.
+              React 18+, light and dark mode built in, server-rendering safe.
+              Works from Cursor, Claude Code and Codex out of the box.
+            </p>
+            <div class="code-block">
+              <pre>import { BorderBeam } from 'border-beam';
+
+export function UpgradeCard() {
+  return (
+    &lt;BorderBeam size="md" colorVariant="colorful"&gt;
+      &lt;Card&gt;Upgrade to Pro&lt;/Card&gt;
+    &lt;/BorderBeam&gt;
+  );
+}</pre>
+              <button type="button" class="code-copy" data-copy-static aria-label="Copy usage example">
+                <svg class="icon-copy" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+                <svg class="icon-check" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </li>
+
+        <li class="howto-block">
+          <span class="howto-num" aria-hidden="true">3</span>
+          <div class="howto-body">
+            <h2 class="howto-step-title">Make it yours</h2>
+            <p class="howto-text">
+              Every library page has a playground for its main knobs. For the
+              full parameter surface — physics, shader and glow internals —
+              open the <a href="/studio.html">Studio</a> with Pro, tune the real
+              component live, and copy the exact configuration as props.
+            </p>
+            <div class="code-block">
+              <pre>&lt;BorderBeam size="line" colorVariant="ocean" duration={3.2} brightness={1.6} /&gt;</pre>
+              <button type="button" class="code-copy" data-copy-static aria-label="Copy tuned example">
+                <svg class="icon-copy" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+                <svg class="icon-check" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </li>
+      </ol>
+    </div>
+
+    <section class="home-section" aria-labelledby="howto-libs-title">
+      <h2 class="home-section-title" id="howto-libs-title">The five libraries</h2>
+      <div class="howto-table-wrap">
+        <table class="howto-table">
+          <thead>
+            <tr>
+              <th scope="col">Library</th>
+              <th scope="col">Package</th>
+              <th scope="col">What it does</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><a href="/beam.html">Beam</a></td>
+              <td><code>border-beam</code></td>
+              <td>Rainbow glow riding the border of any element</td>
+            </tr>
+            <tr>
+              <td><a href="/orbs.html">Orb</a></td>
+              <td><code>thinking-orbs</code></td>
+              <td>Thought-orb loading indicators for AI interfaces</td>
+            </tr>
+            <tr>
+              <td><a href="/gooey.html">Gooey</a></td>
+              <td><code>liquid-gooey</code></td>
+              <td>Liquid UI — pieces merge and morph like goo</td>
+            </tr>
+            <tr>
+              <td><a href="/metal.html">Metal</a></td>
+              <td><code>metal-fx</code></td>
+              <td>Liquid-metal WebGL ring around buttons and icons</td>
+            </tr>
+            <tr>
+              <td><a href="/image.html">Image</a></td>
+              <td><code>img-fx</code></td>
+              <td>WebGL image-generation loader for cards</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="home-section" aria-labelledby="howto-faq-title">
+      <h2 class="home-section-title" id="howto-faq-title">FAQs</h2>
+      <div class="faq-list">
+        <div class="t-acc" data-open="false">
+          <button class="t-acc-head" type="button" aria-expanded="false">
+            <span>What do I need to use them?</span>
+            <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
+          </button>
+          <div class="t-acc-panel"><div class="t-acc-panel-inner">
+            <p>React 18 or newer. Each library is a standalone package with zero runtime dependencies, except Image generation which also needs <code>three</code> as a peer dependency. All five together weigh about 83&nbsp;KB gzipped.</p>
+          </div></div>
+        </div>
+
+        <div class="t-acc" data-open="false">
+          <button class="t-acc-head" type="button" aria-expanded="false">
+            <span>Do they work with coding agents?</span>
+            <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
+          </button>
+          <div class="t-acc-panel"><div class="t-acc-panel-inner">
+            <p>Yes &mdash; that is the point. Every library installs and configures cleanly from Cursor, Claude Code and Codex, and each playground has a copy-prompt button that hands your agent the library&rsquo;s full parameter vocabulary along with your current settings.</p>
+          </div></div>
+        </div>
+
+        <div class="t-acc" data-open="false">
+          <button class="t-acc-head" type="button" aria-expanded="false">
+            <span>Do they support light and dark mode?</span>
+            <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
+          </button>
+          <div class="t-acc-panel"><div class="t-acc-panel-inner">
+            <p>Both, and they detect it for you. The default <code>theme="auto"</code> resolves a <code>data-theme</code> attribute or <code>dark</code> class on an ancestor, then falls back to <code>prefers-color-scheme</code>, updating live when either changes. Pass <code>theme="dark"</code> or <code>theme="light"</code> to pin one.</p>
+          </div></div>
+        </div>
+
+        <div class="t-acc" data-open="false">
+          <button class="t-acc-head" type="button" aria-expanded="false">
+            <span>What is Pro and the Studio?</span>
+            <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
+          </button>
+          <div class="t-acc-panel"><div class="t-acc-panel-inner">
+            <p>One plan across every library. Pro unlocks the <a href="/studio.html">Studio</a> &mdash; deep, per-library customization beyond the public playgrounds, with export of the exact configuration &mdash; plus Pro presets and every future library and update. See <a href="/pro.html">pricing</a>.</p>
+          </div></div>
+        </div>
+
+        <div class="t-acc" data-open="false">
+          <button class="t-acc-head" type="button" aria-expanded="false">
+            <span>Can I use them in commercial projects?</span>
+            <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
+          </button>
+          <div class="t-acc-panel"><div class="t-acc-panel-inner">
+            <p>The free libraries are MIT &mdash; use them anywhere, including commercial work. Pro content (Studio exports, Pro presets and recipes) is licensed to you or your team under the plan you buy, for unlimited projects.</p>
+          </div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="home-section" aria-label="Get started">
+      <div class="howto-cta">
+        <h2 class="howto-cta-title">Pick a library and start</h2>
+        <p class="howto-cta-sub">Every library page ships a live playground you can tune right away.</p>
+        <div class="skill-cta-row">
+          <a class="skill-btn skill-btn--primary" href="/#components">Browse libraries</a>
+          <a class="skill-btn skill-btn--secondary" href="/studio.html">Open Studio</a>
+        </div>
+      </div>
+    </section>
+    <footer class="footer">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <a class="footer-brand-logo" href="/" aria-label="Libraries.dev home">
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 22.6705 14.6705" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path class="brand-draw" d="M21.3352 10.3354L6.89079 13.3354L18.0019 7.33536L1.33524 9.33536L19.3352 1.33536L1.33524 4.33536L9.33524 1.33536" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" pathLength="100"/>
+              </svg>
+            </span>
+            <span class="brand-word"><span class="brand-word-strong">Libraries</span><span class="brand-word-dim">.dev</span></span>
+          </a>
+          <p class="footer-tagline">Production-ready UI effect libraries for React</p>
+        </div>
+        <nav class="footer-cols" aria-label="Footer">
+          <div class="footer-col">
+            <p class="footer-col-title">Libraries</p>
+            <a href="/beam.html">Beam</a>
+            <a href="/orbs.html">Orb</a>
+            <a href="/gooey.html">Gooey</a>
+            <a href="/metal.html">Metal</a>
+            <a href="/image.html">Image</a>
+          </div>
+          <div class="footer-col">
+            <p class="footer-col-title">Product</p>
+            <a href="/">Home</a>
+            <a href="/studio.html">Studio</a>
+            <a href="/how-to-use.html">How to use</a>
+            <a href="/pro.html">Get Pro</a>
+          </div>
+          <div class="footer-col">
+            <p class="footer-col-title">Legal &amp; Account</p>
+            <a href="/pro.html" id="footer-signin">Sign in</a>
+            <a href="/terms.html">Terms</a>
+            <a href="/privacy.html">Privacy</a>
+            <a href="mailto:jakubja@gmail.com">Contact</a>
+          </div>
+        </nav>
+      </div>
+      <p class="footer-credit"><span class="footer-muted">Created by</span><a class="footer-name" href="https://x.com/jakubantalik" target="_blank" rel="noopener noreferrer">Jakub Antalik</a></p>
+    </footer>
+  </main>
+
+  <script>
+    /* Copy buttons on the static code blocks, and the FAQ accordion — the
+       same wiring the detail pages and the homepage use. */
+    document.addEventListener("DOMContentLoaded", function () {
+      document.querySelectorAll(".code-copy[data-copy-static]").forEach(function (btn) {
+        var timer = null;
+        btn.addEventListener("click", function () {
+          var block = btn.closest(".code-block");
+          var pre = block && block.querySelector("pre");
+          if (!pre) return;
+          var text = pre.textContent || "";
+          if (navigator.clipboard) navigator.clipboard.writeText(text).catch(function () {});
+          btn.setAttribute("data-copied", "true");
+          clearTimeout(timer);
+          timer = setTimeout(function () { btn.removeAttribute("data-copied"); }, 1600);
+        });
+      });
+
+      document.querySelectorAll(".faq-list .t-acc").forEach(function (acc) {
+        var head = acc.querySelector(".t-acc-head");
+        if (!head) return;
+        head.addEventListener("click", function () {
+          var open = acc.getAttribute("data-open") === "true";
+          acc.setAttribute("data-open", String(!open));
+          head.setAttribute("aria-expanded", String(!open));
+        });
+      });
+    });
+  </script>
+  <script src="/assets/site.js" defer></script>
+  <script src="/assets/pro-client.js" defer></script>
+</body>
+</html>
