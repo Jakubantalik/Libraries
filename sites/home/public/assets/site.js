@@ -358,33 +358,15 @@
    * prompt as readable source rather than an escaped attribute. */
   var promptBtns = [].slice.call(document.querySelectorAll("[data-prompt-target]"));
   promptBtns.forEach(function (btn) {
-    /* Measure both tails once so the swap can tween between two explicit
-       widths — "auto" has nothing to animate. Same technique as the copy
-       tooltip above: lay the hidden tail out statically, read it, restore. */
-    var swap = btn.querySelector(".dp-swap");
-    var a = btn.querySelector(".dp-a");
-    var b = btn.querySelector(".dp-b");
-    if (swap && a && b) {
-      requestAnimationFrame(function () {
-        var wa = a.getBoundingClientRect().width;
-        var prevPos = b.style.position;
-        b.style.position = "static";
-        a.style.display = "none";
-        var wb = b.getBoundingClientRect().width;
-        a.style.display = "";
-        b.style.position = prevPos;
-        btn.style.setProperty("--dp-w-a", wa + "px");
-        btn.style.setProperty("--dp-w-b", wb + "px");
-      });
-    }
     var timer = null;
     btn.addEventListener("click", function () {
       var src = document.querySelector(btn.getAttribute("data-prompt-target"));
       var text = src ? (src.textContent || "").trim() : "";
       if (!text) return;
       if (navigator.clipboard) navigator.clipboard.writeText(text).catch(function () {});
-      /* The label swap is CSS off this attribute, so nothing rewrites the
-         text — the two tails stay in the DOM and cross-blur. */
+      /* Only the icon reacts: the CSS swaps copy for check off this
+         attribute, and the label never changes, so the pill holds its
+         size and position. */
       btn.setAttribute("data-copied", "true");
       clearTimeout(timer);
       timer = setTimeout(function () {

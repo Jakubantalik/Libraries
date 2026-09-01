@@ -7,6 +7,7 @@ import {
   MockSearchBar,
 } from "./examples/beam-mocks";
 import { CodeCopy } from "./examples/CodeCopy";
+import { StudioTeaser } from "./examples/StudioTeaser";
 
 /* Beam detail page — one React island rendering the whole playground grid
    (stage + controls) plus the live-updating snippet below it. Controls
@@ -76,7 +77,6 @@ const FAMILY_OPTIONS = [
 const SIZE_OPTIONS_BY_FAMILY: Record<BeamFamily, ReadonlyArray<{ value: BorderBeamSize; label: string }>> = {
   rotate: [
     { value: "md", label: "Large" },
-    { value: "sm", label: "Small" },
     { value: "line", label: "Line" },
   ],
   pulse: [
@@ -106,14 +106,7 @@ const PULSE_OUTSIDE_TUNED_VARS = {
   "--sub-glow-opacity-mul": 1.71,
 } as CSSProperties;
 
-function DemoCard({ size }: { size: BorderBeamSize }) {
-  if (size === "sm") {
-    return (
-      <div className="beam-card beam-card--sm">
-        <div className="beam-card-dot" />
-      </div>
-    );
-  }
+function DemoCard() {
   return (
     <div className="beam-card">
       <div className="beam-card-line beam-card-line--title" />
@@ -127,7 +120,10 @@ function BeamPlayground() {
   const [family, setFamily] = useState<BeamFamily>("rotate");
   const [size, setSize] = useState<BorderBeamSize>("md");
   const [colorVariant, setColorVariant] = useState<BorderBeamColorVariant>("colorful");
-  const [active, setActive] = useState(true);
+  /* The playground stage is paused on arrival, like every other library's:
+     it only animates once you press Play. The examples above run on their
+     own — they are the library introducing itself, not a control. */
+  const [active, setActive] = useState(false);
 
   const handleFamilyChange = useCallback((next: BeamFamily) => {
     setFamily(next);
@@ -152,13 +148,13 @@ function BeamPlayground() {
           setting, not for meeting the library. */}
       <div className="detail-examples">
         <div className="example-row-full">
-          <BorderBeam className="beam-host" size="md" colorVariant="colorful" theme="dark" active={active}>
+          <BorderBeam className="beam-host" size="md" colorVariant="colorful" theme="dark">
             <MockChatInput />
           </BorderBeam>
         </div>
         <div className="example-row-split">
           <div className="example-cell">
-            <BorderBeam className="beam-host" size="sm" colorVariant="colorful" theme="dark" active={active}>
+            <BorderBeam className="beam-host" size="sm" colorVariant="colorful" theme="dark">
               <MockIconButton />
             </BorderBeam>
           </div>
@@ -168,7 +164,6 @@ function BeamPlayground() {
               size="line"
               colorVariant="colorful"
               theme="dark"
-              active={active}
               duration={3.1}
               borderRadius={20}
             >
@@ -189,7 +184,7 @@ function BeamPlayground() {
             active={active}
             style={isPulseOutside ? PULSE_OUTSIDE_TUNED_VARS : undefined}
           >
-            <DemoCard size={size} />
+            <DemoCard />
           </BorderBeam>
           <button
             type="button"
@@ -205,6 +200,14 @@ function BeamPlayground() {
           <PgTabs label="Family" options={FAMILY_OPTIONS} value={family} onChange={handleFamilyChange} />
           <PgTabs label="Type" options={SIZE_OPTIONS_BY_FAMILY[family]} value={size} onChange={setSize} />
           <PgTabs label="Color" options={COLOR_OPTIONS} value={colorVariant} onChange={setColorVariant} />
+          <StudioTeaser
+            rows={[
+              { kind: "slider", label: "Duration", value: "1.96s", fill: 27 },
+              { kind: "slider", label: "Corner radius", value: "16px", fill: 50 },
+              { kind: "slider", label: "Brightness", value: "1.3\u00d7", fill: 47 },
+              { kind: "slider", label: "Hue shift", value: "0\u00b0", fill: 50 },
+            ]}
+          />
         </div>
       </div>
 

@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="color-scheme" content="dark" />
 
-  <title>Libraries.dev — High-crafted UI libraries for AI agents</title>
+  <title>Libraries.dev: High-crafted UI libraries for AI agents</title>
   <meta
     name="description"
-    content="Home of Jakub Antalik's UI effect libraries — Beam, Orb, Gooey, Metal and Image. Production-ready React effects you can install from npm."
+    content="Home of Jakub Antalik's UI effect libraries: Beam, Orb, Gooey, Metal and Image. Production-ready React effects you can install from npm."
   />
   <meta
     name="keywords"
@@ -34,12 +34,12 @@
   <meta property="og:site_name" content="Libraries.dev" />
   <meta property="og:url" content="https://libraries.dev/" />
   <meta property="og:locale" content="en_US" />
-  <meta property="og:title" content="Libraries.dev — High-crafted UI libraries for AI agents" />
-  <meta property="og:description" content="Home of Jakub Antalik's UI effect libraries — Beam, Orb, Gooey, Metal and Image." />
+  <meta property="og:title" content="Libraries.dev: High-crafted UI libraries for AI agents" />
+  <meta property="og:description" content="Home of Jakub Antalik's UI effect libraries: Beam, Orb, Gooey, Metal and Image." />
 
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Libraries.dev — High-crafted UI libraries for AI agents" />
-  <meta name="twitter:description" content="Home of Jakub Antalik's UI effect libraries — Beam, Orb, Gooey, Metal and Image." />
+  <meta name="twitter:title" content="Libraries.dev: High-crafted UI libraries for AI agents" />
+  <meta name="twitter:description" content="Home of Jakub Antalik's UI effect libraries: Beam, Orb, Gooey, Metal and Image." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -100,10 +100,19 @@
     }
     .header .subtitle { margin-top: 12px; max-width: 560px; color: #9e9e9e; }
     .header .skill-cta-row { margin-top: 20px; }
+    /* Below ~900px the scatter's inner tiles reach into the copy's column.
+       The badge already sat above them; the rest of the hero copy joins it,
+       so a tile slides behind the headline as depth instead of colliding
+       with it. Keeps the CTAs clickable at every width, too. */
+    .header .title,
+    .header .subtitle,
+    .header .skill-cta-row { position: relative; z-index: 6; }
     @media (max-width: 639px) {
       .header .title { font-size: 30px; line-height: 34px; }
+      /* Tracks `.app`'s narrower gutter at this width. */
+      .header { --app-gutter: 12px; }
     }
-    @media (min-width: 981px) {
+    @media (min-width: 761px) {
       /* Clear the orb tile floating above the headline (Figma order:
          tile, badge, title). */
       .header { padding-top: 0; }
@@ -123,12 +132,19 @@
         inset 0 0 0 1px rgba(0, 0, 0, 0.06),
         inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
         inset 0 0 0 1px rgba(196, 196, 196, 0.07);
+      /* Drag offset lives in vars, not an inline transform, so the hover
+         lift below can compose with a dropped tile's position instead of
+         being shadowed by it. */
+      transform: translate(var(--drag-x, 0px), var(--drag-y, 0px));
       transition:
         background-color 0.15s ease,
         transform var(--tile-lift-dur, var(--duration-medium))
                   var(--tile-lift-ease, cubic-bezier(0.34, 1.85, 0.64, 1));
       z-index: 5;
     }
+    /* Mid-drag the transform must track the pointer raw — the 350ms bounce
+       above would trail it by a third of a second. */
+    .hero-tile[data-dragging="true"] { transition: background-color 0.15s ease; }
     /* Hover lifts the tile 6px over 350ms on a softened bounce curve, so it
        overshoots a little and settles. The curve sits between --ease-bounce
        and --ease-bounce-strong, so it's spelled out rather than tokenised.
@@ -137,7 +153,10 @@
     .hero-tile:hover,
     .hero-tile:focus-visible {
       background: #1c1c1c;
-      transform: translateY(calc(-1 * var(--tile-lift-y, 6px)));
+      transform: translate(
+        var(--drag-x, 0px),
+        calc(var(--drag-y, 0px) - var(--tile-lift-y, 6px))
+      );
     }
     /* Invisible margin around each tile: a 130px target scattered in open
        space is easy to miss, and the label reads better if it opens just
@@ -152,6 +171,17 @@
       inset: calc(-1 * var(--tile-safe, 0px));
       border-radius: calc(24px + var(--tile-safe, 0px));
     }
+    /* The island wraps the tiles in a real box, so the row goes
+       display:contents at every breakpoint and this takes over both the
+       desktop scatter and the wrapped mobile row. It spans the whole hero on
+       desktop, so it stays transparent to the pointer — only the tiles take
+       input, or it would swallow the CTA clicks behind it. */
+    /* The group's own SVG layers span the whole hero box, so they must stay
+       transparent to the pointer or they swallow the CTA clicks behind them.
+       Only the tiles take input — and they sit under GooeyItem's
+       display:contents span, so this can't be a child combinator. */
+    .hero-tiles-box { pointer-events: none; }
+    .hero-tiles-box .hero-tile { pointer-events: auto; }
     .hero-tile-stage {
       position: absolute; inset: 11px; border-radius: 14px; background: #101010;
       overflow: hidden; display: flex; align-items: center; justify-content: center;
@@ -201,35 +231,96 @@
     }
     @media (prefers-reduced-motion: reduce) {
       .hero-tile-pill, .hero-tile { transition: none; }
-      .hero-tile:hover, .hero-tile:focus-visible { transform: none; }
-    }
-    /* Scatter positions around the centered hero copy — desktop only,
-       so the static-row fallback below 981px keeps untouched tiles. */
-    @media (min-width: 981px) {
-      .hero-tile { --tile-safe: 30px; }
-      .hero-tile--orb   { top: 0;     left: calc(50% - 7px); }
-      .hero-tile--beam  { top: 147px; left: calc(50% - 481px); }
-      .hero-tile--metal { top: 171px; left: calc(50% + 317px); }
-      .hero-tile--gooey { top: 432px; left: calc(50% - 351px); }
-      .hero-tile--image { top: 475px; left: calc(50% + 90px); }
-    }
-    @media (min-width: 981px) and (max-width: 1160px) {
-      .hero-tile--beam  { left: calc(50% - 440px); }
-      .hero-tile--metal { left: calc(50% + 300px); }
-      .hero-tile--gooey { left: calc(50% - 330px); }
-    }
-    @media (max-width: 980px) {
-      .header { padding-top: 72px; padding-bottom: 104px; }
-      .hero-tile { position: static; flex: none; }
-      .hero-tile-pill { display: none; }
-      .hero-tiles-row {
-        display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
-        margin-top: 40px; width: 100%;
+      .hero-tile:hover, .hero-tile:focus-visible {
+        transform: translate(var(--drag-x, 0px), var(--drag-y, 0px));
       }
-      .hero-tile { position: relative; --tile-safe: 8px; }
     }
-    @media (min-width: 981px) {
+    /* Scatter positions around the centered hero copy, held down to 761px;
+       below that the static-row fallback takes over. */
+    /* Offsets are the Figma spacings expressed as a share of the viewport,
+       capped at their design values, so the composition contracts smoothly
+       instead of stepping through breakpoint tiers. Each min() reaches its
+       px cap at 1280px, the width the layout was drawn at. */
+    @media (min-width: 761px) {
+      .hero-tile { --tile-safe: 18px; }
+      .hero-tile--orb   { top: 0;     left: calc(50% - 7px); }
+      .hero-tile--beam  { top: 147px; left: calc(50% - min(481px, 37.6vw)); }
+      .hero-tile--metal { top: 171px; left: calc(50% + min(317px, 24.8vw)); }
+      .hero-tile--gooey { top: 432px; left: calc(50% - min(351px, 27.4vw)); }
+      .hero-tile--image { top: 475px; left: calc(50% + min(90px, 7vw)); }
+    }
+    /* The halo can only widen once the tiles are far enough apart for two
+       of them never to overlap. */
+    @media (min-width: 1161px) {
+      .hero-tile { --tile-safe: 30px; }
+    }
+    /* Mobile hero: the tiles cluster at the top and the copy is pushed to
+       the foot of the viewport, so the headline reads last and the CTAs land
+       in thumb reach. The header becomes a column and the tile box takes
+       order -1 to lead, since it comes last in the DOM (the copy should stay
+       first for reading order and for the no-JS render). */
+    @media (max-width: 760px) {
+      .header {
+        display: flex;
+        flex-direction: column;
+        /* Left-ragged on mobile: centred copy over a full-bleed tile cluster
+           reads as a poster, and the CTAs are easier to hit from one edge. */
+        align-items: flex-start;
+        text-align: left;
+        min-height: calc(100dvh - var(--nav-h, 68px));
+        padding-top: 24px;
+        padding-bottom: 32px;
+      }
+      /* .title and .subtitle set their own centring in site.css, so the
+         header's text-align alone does not reach them. */
+      .header .title,
+      .header .subtitle { text-align: left; }
+      .header .skill-cta-row { justify-content: flex-start; }
+
+      /* The copy sits 32px from the viewport edge while the tile cluster
+         stays full-bleed. `.app` already contributes a gutter — 24px, or
+         12px below 639px — so the inset is measured from the viewport edge
+         and that gutter subtracted, rather than stacking on top of it.
+         Stretching the text items first means the padding eats into their
+         width instead of widening them past the column. The badge is a pill,
+         so it takes a margin — padding would stretch the chip itself. */
+      .header { --hero-copy-inset: calc(32px - var(--app-gutter, 24px)); }
+      .hero-badge { margin-left: var(--hero-copy-inset); }
+      .header .title,
+      .header .subtitle {
+        align-self: stretch;
+        box-sizing: border-box;
+        padding-left: var(--hero-copy-inset);
+      }
+      .header .skill-cta-row { padding-left: var(--hero-copy-inset); }
+      /* Absorbs the slack, which drops everything below it to the bottom. */
+      .hero-badge { order: 1; margin-top: auto; }
+      .header .title { order: 2; }
+      .header .subtitle { order: 3; }
+      .header .skill-cta-row { order: 4; }
+
+      .hero-tile-pill { display: none; }
       .hero-tiles-row { display: contents; }
+      .hero-tiles-box {
+        order: -1;
+        position: relative;
+        flex: none;
+        width: 100%;
+        height: 422px;
+      }
+      /* A 2-1-2 stagger rather than a row: it reads as a loose cluster while
+         keeping every tile's tap target clear of its neighbours, so the halo
+         goes to zero. */
+      .hero-tile { position: absolute; --tile-safe: 0px; }
+      .hero-tile--beam  { top: 0;     left: 12px; }
+      .hero-tile--metal { top: 0;     left: calc(100% - 142px); }
+      .hero-tile--orb   { top: 146px; left: calc(50% - 65px); }
+      .hero-tile--gooey { top: 292px; left: 12px; }
+      .hero-tile--image { top: 292px; left: calc(100% - 142px); }
+    }
+    @media (min-width: 761px) {
+      .hero-tiles-row { display: contents; }
+      .hero-tiles-box { position: absolute; inset: 0; }
       .header { min-height: 689px; }
     }
 
@@ -284,6 +375,13 @@
       background: rgba(255, 255, 255, 0.06); color: var(--text-muted);
       font-size: 13px; font-weight: 500; overflow: hidden;
     }
+    /* Real photo when one is installed; the initial stays underneath as the
+       fallback, and a missing file drops the img so the initial shows. */
+    .pro-quote-avatar { position: relative; }
+    .pro-quote-avatar-img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; border-radius: inherit; display: block;
+    }
     .pro-quote-id { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
     .pro-quote-name { align-self: flex-start; font-size: 13px; line-height: 16px; font-weight: 500; color: #ededed; text-decoration: none; }
     a.pro-quote-name:hover { text-decoration: underline; text-underline-offset: 2px; }
@@ -300,20 +398,33 @@
       .pro-quote-text { font-size: 15px; line-height: 23px; }
     }
 
-    /* ── How to use (same card material as the pro quotes) ──────── */
+    /* ── How to use: tall showcase cards under a left-aligned lede.
+       Each step carries a mock of the moment itself (terminal, diff,
+       Studio panel) with the copy at the foot of the card. ── */
+    .howto-head { max-width: 640px; margin-bottom: 40px; }
+    .howto-title {
+      margin: 0;
+      font-family: "Saans", var(--font-sans);
+      font-size: 38px; font-weight: 500; line-height: 1.16;
+      letter-spacing: -0.01em; color: var(--text);
+    }
+    .howto-title-dim { opacity: 0.6; }
+    .howto-lede { margin: 14px 0 0; font-size: 16px; line-height: 24px; color: var(--text-muted); max-width: 46ch; }
     .howto-steps {
-      list-style: none; margin: 0; padding: 0; counter-reset: none;
+      list-style: none; margin: 0; padding: 0;
       display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 18px; align-items: stretch;
     }
+    /* Fill and shadow come from the gallery card surface in site.css. */
     .howto-step {
-      display: flex; flex-direction: column; gap: 12px; min-width: 0;
+      display: flex; flex-direction: column; gap: 24px; min-width: 0;
       padding: 32px; border-radius: 24px;
     }
+    .howto-step > * { position: relative; z-index: 2; }
+    .howto-step-meta { display: flex; align-items: center; gap: 10px; }
     .howto-step-num {
-      width: 28px; height: 28px; border-radius: 50px;
+      flex: none; width: 28px; height: 28px; border-radius: 50px;
       display: inline-flex; align-items: center; justify-content: center;
-      margin-bottom: 8px;
       background: #3e3e3e;
       box-shadow:
         0 1px 3px 0 rgba(0, 0, 0, 0.04),
@@ -322,9 +433,7 @@
         inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
         inset 0 0 0 1px rgba(196, 196, 196, 0.1);
       color: rgba(237, 237, 237, 0.8);
-      font-size: 12px;
-      line-height: 13px;
-      font-weight: 500;
+      font-size: 12px; line-height: 13px; font-weight: 500;
     }
     .howto-step-title { margin: 0; font-size: 15px; font-weight: 500; line-height: 20px; color: #ededed; }
     .howto-step-text { margin: 0; font-size: 14px; line-height: 22px; color: var(--text-muted); overflow-wrap: anywhere; }
@@ -333,10 +442,12 @@
       padding: 1px 6px; border-radius: 6px;
       background: rgba(255, 255, 255, 0.06); color: var(--text); white-space: nowrap;
     }
-    .howto-step-text a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
+    .howto-step-text a { color: var(--text); text-decoration: none; }
+    .howto-step-text a:hover { text-decoration: underline; text-underline-offset: 2px; }
     @media (max-width: 900px) {
+      .howto-title { font-size: 30px; }
       .howto-steps { grid-template-columns: minmax(0, 1fr); gap: 12px; }
-      .howto-step { padding: 24px; }
+      .howto-step { padding: 24px; gap: 20px; }
     }
 
     /* ── FAQ accordion (styling from transitions.dev/pro) ───────── */
@@ -374,7 +485,8 @@
     }
     .t-acc-panel-inner p { margin: 0 0 16px; padding-right: 28px; font-size: 14px; line-height: 22px; color: var(--text-muted); }
     .t-acc-panel-inner code { font-family: var(--font-mono); font-size: 12px; line-height: 18px; padding: 1px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.06); color: var(--text); }
-    .t-acc-panel-inner a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
+    .t-acc-panel-inner a { color: var(--text); text-decoration: none; }
+    .t-acc-panel-inner a:hover { text-decoration: underline; text-underline-offset: 2px; }
     @media (prefers-reduced-motion: reduce) {
       .t-acc-panel, .t-acc-panel-inner, .t-acc-chevron, .hero-tile { transition: none !important; }
     }
@@ -430,7 +542,7 @@
           <nav class="site-nav-menu" aria-label="Primary">
             <a class="nav-pill nav-pill--active" href="/#components">Libraries</a>
             <a class="nav-pill" href="/how-to-use.html">How to use</a>
-            <a class="nav-pill" href="/studio.html">Studio</a>
+            <a class="nav-pill" href="/studio.html">Studio <span class="nav-pill-pro">Pro</span></a>
           </nav>
         </div>
         <div class="site-nav-right">
@@ -441,27 +553,13 @@
             href="https://github.com/Jakubantalik/Libraries"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="GitHub repository — star count"
+            aria-label="GitHub repository star count"
             data-loading="true"
           >
             <svg aria-hidden="true" viewBox="0 0 16 16" fill="currentColor">
               <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
             </svg>
             <span class="pill-label" id="gh-stars-count">—</span>
-          </a>
-          <a
-            class="icon-btn"
-            href="https://x.com/jakubantalik"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="X (Twitter)"
-          >
-            <svg class="icon-x" aria-hidden="true" viewBox="0 0 16 17" xmlns="http://www.w3.org/2000/svg">
-              <path
-                fill="currentColor"
-                d="M12.4041 1.39726H14.6953L9.69087 7.2591L15.5781 15.2368H10.9696L7.35741 10.3996L3.22921 15.2368H0.934687L6.28641 8.96575L0.642598 1.39726H5.36795L8.62962 5.81859L12.4041 1.39726ZM11.5992 13.8329H12.8682L4.67667 2.72798H3.31359L11.5992 13.8329Z"
-              />
-            </svg>
           </a>
           <div class="pm-anchor" id="more-anchor">
             <button type="button" class="icon-btn" id="more-btn" aria-label="More" aria-haspopup="menu" aria-expanded="false">
@@ -517,7 +615,8 @@
         <a class="skill-btn skill-btn--primary" href="#components">Browse</a>
         <a class="skill-btn skill-btn--secondary" href="/pro.html">Get Pro access</a>
       </div>
-      <div class="hero-tiles-row">
+      <div class="hero-tiles-row" id="hero-tiles">
+        <div class="hero-tiles-box">
         <a class="hero-tile hero-tile--orb" href="/orbs.html" aria-label="Thinking orbs">
           <span class="hero-tile-stage"></span>
           <span class="hero-tile-pill">Thinking orbs <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.47 6.22a.75.75 0 0 1 1.06 0L8 8.69l2.47-2.47a.75.75 0 1 1 1.06 1.06l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 0 1 0-1.06Z" fill="currentColor"/></svg></span>
@@ -538,7 +637,9 @@
           <span class="hero-tile-stage"></span>
           <span class="hero-tile-pill">Image generation <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.47 6.22a.75.75 0 0 1 1.06 0L8 8.69l2.47-2.47a.75.75 0 1 1 1.06 1.06l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 0 1 0-1.06Z" fill="currentColor"/></svg></span>
         </a>
+        </div>
       </div>
+      <script type="module" src="/src/hero-tiles.tsx"></script>
     </header>
 
     <section class="cards" id="components" aria-label="Effect libraries" style="scroll-margin-top: 24px;">
@@ -579,7 +680,7 @@
           <span class="lib-ico"><img src="/assets/icons/tile-gooey.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
           <span class="lib-meta-text">
             <span class="lib-name">Gooey</span>
-            <span class="lib-desc">Liquid UI — pieces merge and morph like goo</span>
+            <span class="lib-desc">Liquid UI: pieces merge and morph like goo</span>
           </span>
         </div>
       </article>
@@ -620,9 +721,9 @@
         <li class="pro-quote">
           <p class="pro-quote-text">Generational cook!</p>
           <div class="pro-quote-author">
-            <span class="pro-quote-avatar" aria-hidden="true">H</span>
+            <span class="pro-quote-avatar" aria-hidden="true">G<img class="pro-quote-avatar-img" src="/assets/avatars/rauchg.jpg" alt="" onerror="this.remove()" /></span>
             <span class="pro-quote-id">
-              <span class="pro-quote-name">Harsh</span>
+              <span class="pro-quote-name">Guillermo Rauch</span>
               <span class="pro-quote-role">CEO, Vercel</span>
             </span>
           </div>
@@ -630,9 +731,9 @@
         <li class="pro-quote">
           <p class="pro-quote-text">Very cool</p>
           <div class="pro-quote-author">
-            <span class="pro-quote-avatar" aria-hidden="true">D</span>
+            <span class="pro-quote-avatar" aria-hidden="true">D<img class="pro-quote-avatar-img" src="/assets/avatars/destraynor.jpg" alt="" onerror="this.remove()" /></span>
             <span class="pro-quote-id">
-              <span class="pro-quote-name">Des</span>
+              <span class="pro-quote-name">Des Traynor</span>
               <span class="pro-quote-role">Co-founder of Intercom</span>
             </span>
           </div>
@@ -640,7 +741,7 @@
         <li class="pro-quote">
           <p class="pro-quote-text">INSANELY AMAZING</p>
           <div class="pro-quote-author">
-            <span class="pro-quote-avatar" aria-hidden="true">K</span>
+            <span class="pro-quote-avatar" aria-hidden="true">K<img class="pro-quote-avatar-img" src="/assets/avatars/krispuckett.jpg" alt="" onerror="this.remove()" /></span>
             <span class="pro-quote-id">
               <span class="pro-quote-name">Kris Puckett</span>
               <span class="pro-quote-role">Design manager at Stripe</span>
@@ -655,12 +756,12 @@
             </a>
             <span class="pro-quote-id">
               <a class="pro-quote-name" href="https://x.com/witsdev" target="_blank" rel="noopener noreferrer">wits</a>
-              <span class="pro-quote-role">Engineer at Vercel — after shipping Border Beam in the Vercel dashboard</span>
+              <span class="pro-quote-role">Engineer at Vercel, after shipping Border Beam in the Vercel dashboard</span>
             </span>
           </div>
         </li>
         <li class="pro-quote">
-          <p class="pro-quote-text">Your AI agent&rsquo;s &ldquo;thinking...&rdquo; state doesn&rsquo;t have to be a boring spinner. 6 animated orb types, zero dependencies, light + dark mode built in — npm install and you&rsquo;re done.</p>
+          <p class="pro-quote-text">Your AI agent&rsquo;s &ldquo;thinking...&rdquo; state doesn&rsquo;t have to be a boring spinner. 6 animated orb types, zero dependencies, light + dark mode built in. npm install and you&rsquo;re done.</p>
           <div class="pro-quote-author">
             <a class="pro-quote-avatar-link" href="https://x.com/tranmautritam" target="_blank" rel="noopener noreferrer" aria-label="Tran Mau Tri Tam on X" tabindex="-1">
               <span class="pro-quote-avatar" aria-hidden="true">T</span>
@@ -687,22 +788,31 @@
     </section>
 
     <section class="home-section" aria-labelledby="how-to-use-title">
-      <h2 class="home-section-title" id="how-to-use-title">How to use</h2>
+      <div class="howto-head">
+        <h2 class="howto-title" id="how-to-use-title">Copy the prompt.<br /><span class="howto-title-dim">Paste it to coding agent</span></h2>
+        <p class="howto-lede">Every library ships as a prompt. One copy, and your coding agent builds it in: Claude Code, Cursor or Codex.</p>
+      </div>
       <ol class="howto-steps">
         <li class="howto-step">
-          <span class="howto-step-num" aria-hidden="true">1</span>
-          <h3 class="howto-step-title">Install</h3>
-          <p class="howto-step-text">Every library is a standalone npm package — grab only what you need: <code>npm install border-beam</code>, <code>thinking-orbs</code>, <code>liquid-gooey</code>, <code>metal-fx</code> or <code>img-fx</code>.</p>
+          <div class="howto-step-meta">
+            <span class="howto-step-num" aria-hidden="true">1</span>
+            <h3 class="howto-step-title">Copy the prompt</h3>
+          </div>
+          <p class="howto-step-text">One button packs the install line, usage and every prop into a single paste.</p>
         </li>
         <li class="howto-step">
-          <span class="howto-step-num" aria-hidden="true">2</span>
-          <h3 class="howto-step-title">Drop it in</h3>
-          <p class="howto-step-text">Import the component and wrap your UI — React 18+, zero runtime dependencies, light and dark mode built in. Works from Cursor, Claude Code and Codex out of the box.</p>
+          <div class="howto-step-meta">
+            <span class="howto-step-num" aria-hidden="true">2</span>
+            <h3 class="howto-step-title">Paste it in your agent</h3>
+          </div>
+          <p class="howto-step-text">Claude Code, Cursor or Codex installs it and wires it into your app.</p>
         </li>
         <li class="howto-step">
-          <span class="howto-step-num" aria-hidden="true">3</span>
-          <h3 class="howto-step-title">Make it yours</h3>
-          <p class="howto-step-text">Tune the effect in each library&rsquo;s playground, or go deeper in the <a href="/studio.html">Studio</a> with Pro and export the exact configuration as props.</p>
+          <div class="howto-step-meta">
+            <span class="howto-step-num" aria-hidden="true">3</span>
+            <h3 class="howto-step-title">Make it yours</h3>
+          </div>
+          <p class="howto-step-text">Tune it in the playground, or go deeper in the <a href="/studio.html">Studio</a> with Pro.</p>
         </li>
       </ol>
     </section>
@@ -716,7 +826,7 @@
             <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
           </button>
           <div class="t-acc-panel"><div class="t-acc-panel-inner">
-            <p>Yes. All five libraries — Beam, Orb, Gooey, Metal and Image — are MIT-licensed and free on npm. Install any of them with <code>npm install border-beam</code>, <code>thinking-orbs</code>, <code>liquid-gooey</code>, <code>metal-fx</code> or <code>img-fx</code>.</p>
+            <p>Yes. All five libraries (Beam, Orb, Gooey, Metal and Image) are MIT-licensed and free on npm. Install any of them with <code>npm install border-beam</code>, <code>thinking-orbs</code>, <code>liquid-gooey</code>, <code>metal-fx</code> or <code>img-fx</code>.</p>
           </div></div>
         </div>
 
@@ -736,7 +846,7 @@
             <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
           </button>
           <div class="t-acc-panel"><div class="t-acc-panel-inner">
-            <p>One plan across every library. Pro unlocks the <a href="/studio.html">Studio</a> — deep, per-library customization beyond the public playgrounds, with export of the exact configuration — plus Pro presets and every future library and update. See <a href="/pro.html">pricing</a>.</p>
+            <p>One plan across every library. Pro unlocks the <a href="/studio.html">Studio</a>: deep, per-library customization beyond the public playgrounds, with export of the exact configuration — plus Pro presets and every future library and update. See <a href="/pro.html">pricing</a>.</p>
           </div></div>
         </div>
 
@@ -746,17 +856,7 @@
             <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
           </button>
           <div class="t-acc-panel"><div class="t-acc-panel-inner">
-            <p>Yes — that is the point. Every library installs and configures cleanly from Cursor, Claude Code, Codex and similar tools, and the effects are designed so agent-built apps stop looking generic. Pro adds skills that teach your agent each library&rsquo;s full parameter vocabulary.</p>
-          </div></div>
-        </div>
-
-        <div class="t-acc" data-open="false">
-          <button class="t-acc-head" type="button" aria-expanded="false">
-            <span>Can I use them in commercial projects?</span>
-            <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
-          </button>
-          <div class="t-acc-panel"><div class="t-acc-panel-inner">
-            <p>The free libraries are MIT — use them anywhere, including commercial work. Pro content (Studio exports, Pro presets and recipes) is licensed to you or your team under the plan you buy, for unlimited projects.</p>
+            <p>Yes, that is the point. Every library installs and configures cleanly from Cursor, Claude Code, Codex and similar tools, and the effects are designed so agent-built apps stop looking generic. Pro adds skills that teach your agent each library&rsquo;s full parameter vocabulary.</p>
           </div></div>
         </div>
 
@@ -766,7 +866,7 @@
             <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
           </button>
           <div class="t-acc-panel"><div class="t-acc-panel-inner">
-            <p>Officially the packages target React. Community ports exist — Expo and React Native for the orbs, Svelte and Vue ports of Beam and Gooey — and SwiftUI plus React Native ports for Beam and Orb live in the main repository.</p>
+            <p>Officially the packages target React. Community ports exist (Expo and React Native for the orbs, Svelte and Vue ports of Beam and Gooey), and SwiftUI plus React Native ports for Beam and Orb live in the main repository.</p>
           </div></div>
         </div>
       </div>
@@ -1046,7 +1146,6 @@
       var yTokens = panel.querySelector("#mt-yt");
       var yVal = panel.querySelector("#mt-yv");
       var out = panel.querySelector("#mt-out");
-
       durSel.value = DEFAULTS.dur;
       easeSel.value = "custom";
 
@@ -1100,7 +1199,13 @@
 
       function cssText() {
         return ".hero-tile { transition: transform " + state.dur + " " + state.ease + "; }\n" +
-               ".hero-tile:hover { transform: translateY(-" + state.y + "); }";
+               ".hero-tile:hover { transform: translateY(-" + state.y + "); }\n\n" +
+               "/* hero-tiles.tsx */\n" +
+               "BEND_TUNING = { vertical: " + state.bv + ", horizontal: " + state.bh + " }\n\n" +
+               ".hero-tiles-box .hero-tile-pill {\n" +
+               "  --bend-skew: " + state.skew + ";\n" +
+               "  --bend-stretch: " + state.stretch + ";\n" +
+               "  --bend-squash: " + state.squash + ";\n}";
       }
       function apply() {
         var r = document.documentElement.style;
@@ -1110,6 +1215,7 @@
         yVal.textContent = state.y;
         out.textContent = cssText();
       }
+
 
       durSel.addEventListener("change", function () {
         if (durSel.value === "custom") {

@@ -362,6 +362,11 @@
       min-height: 100dvh;
     }
 
+    /* Headings balance their lines so a short last line never dangles; body
+       text uses `pretty`, which guards the orphan without equalising lengths
+       (ported by value: this page links no shared stylesheet). */
+    h1, h2, h3, h4 { text-wrap: balance; }
+    p, li, figcaption, blockquote { text-wrap: pretty; }
     body {
       background: var(--bg);
       color: var(--text);
@@ -559,9 +564,27 @@
       height: 24px;
       color: var(--icon-color);
     }
-    /* Natural 18×20.295 ratio centered in the 24px box (Figma vector
-       inset 7.72%/12.5%), not stretched edge-to-edge. */
-    .brand-mark svg { width: 18px; height: 20.295px; display: block; }
+    /* Libraries scribble mark: natural 22.67×14.67 ratio in the 24px box.
+       Ported from site.css, which this page does not link. */
+    .brand-mark svg { width: 22px; height: 15px; display: block; }
+    /* Hand-drawn redraw on hover: the scribble erases itself stroke-first
+       and immediately redraws from the start, like a quick pencil pass.
+       One continuous dash slide (period 200 on a 100-length path) does
+       both halves in a single animation. */
+    .brand-draw {
+      stroke-dasharray: 100 100;
+      stroke-dashoffset: 0;
+    }
+    .brand:hover .brand-draw,
+    .footer-brand-logo:hover .brand-draw { animation: brand-redraw 1.15s ease-in-out; }
+    @keyframes brand-redraw {
+      from { stroke-dashoffset: 0; }
+      to   { stroke-dashoffset: -200; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .brand:hover .brand-draw,
+      .footer-brand-logo:hover .brand-draw { animation: none; }
+    }
     .brand-word {
       font-size: 15px;
       font-weight: 500;
@@ -582,7 +605,7 @@
       align-items: center;
       justify-content: center;
       height: 36px;
-      padding: 0 13px;
+      padding: 0 12px;
       border-radius: 50px;
       font-family: var(--font-sans);
       font-size: 13px;
@@ -593,6 +616,27 @@
       white-space: nowrap;
       transition: background-color 0.15s ease, color 0.15s ease;
       -webkit-tap-highlight-color: transparent;
+    }
+    /* Small Pro tag riding the Studio pill (ported by value: this page links
+       no shared stylesheet). Matches site.css .nav-pill-pro. */
+    .nav-pill-pro {
+      display: inline-flex;
+      align-items: center;
+      height: 18px;
+      margin-left: 6px;
+      padding: 0 6px;
+      border-radius: 50px;
+      background: rgba(85, 207, 255, 0.14);
+      color: #7cd4ff;
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 14px;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
     }
     .nav-pill:hover { color: var(--text); background: rgba(0, 0, 0, 0.03); }
     html[data-theme="dark"] .nav-pill:hover { background: rgba(255, 255, 255, 0.06); }
@@ -1311,19 +1355,16 @@
       line-height: 1.4;
       color: var(--text);
     }
+    /* No underline at rest; it appears on hover, like every other link. */
     .course-cta-headline a {
       color: inherit;
-      text-decoration: underline;
+      text-decoration: none;
       text-underline-offset: 2px;
-      /* 50% of the text color at rest, 100% on hover. Using
-         color-mix with currentColor keeps it theme-agnostic — the
-         underline tracks light/dark text without an explicit
-         dark-mode override. */
-      text-decoration-color: color-mix(in srgb, currentColor 50%, transparent);
+      text-decoration-color: currentColor;
       transition: text-decoration-color 180ms ease;
     }
     .course-cta-headline a:hover {
-      text-decoration-color: currentColor;
+      text-decoration: underline;
     }
     .course-cta-byline {
       margin: 0;
@@ -1439,7 +1480,6 @@
       transform-origin: center;
     }
     .footer-brand-logo:hover { opacity: 1; transform: scale(1.02); }
-    .footer-brand-logo:hover .brand-mark { transform: rotate(60deg); }
     @media (prefers-reduced-motion: reduce) {
       .footer-brand-logo { transition: opacity 150ms ease; }
       .footer-brand-logo:hover { transform: none; }
@@ -3497,7 +3537,6 @@
       transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
       transform-origin: center;
     }
-    .brand:hover .brand-mark { transform: rotate(60deg); }
     @media (prefers-reduced-motion: reduce) {
       .brand, .brand-mark { transition: none; }
       .brand:hover, .brand:hover .brand-mark { transform: none; }
@@ -3708,7 +3747,7 @@
           <nav class="site-nav-menu" aria-label="Primary">
             <a class="nav-pill" href="/#components">Libraries</a>
             <a class="nav-pill" href="/how-to-use.html">How to use</a>
-            <a class="nav-pill" href="/studio.html">Studio</a>
+            <a class="nav-pill" href="/studio.html">Studio <span class="nav-pill-pro">Pro</span></a>
           </nav>
         </div>
         <div class="site-nav-right">
@@ -3726,20 +3765,6 @@
               <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
             </svg>
             <span class="pill-label" id="gh-stars-count">—</span>
-          </a>
-          <a
-            class="icon-btn"
-            href="https://x.com/jakubantalik"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="X (Twitter)"
-          >
-            <svg class="icon-x" aria-hidden="true" viewBox="0 0 16 17" xmlns="http://www.w3.org/2000/svg">
-              <path
-                fill="currentColor"
-                d="M12.4041 1.39726H14.6953L9.69087 7.2591L15.5781 15.2368H10.9696L7.35741 10.3996L3.22921 15.2368H0.934687L6.28641 8.96575L0.642598 1.39726H5.36795L8.62962 5.81859L12.4041 1.39726ZM11.5992 13.8329H12.8682L4.67667 2.72798H3.31359L11.5992 13.8329Z"
-              />
-            </svg>
           </a>
           <div class="pm-anchor" id="more-anchor">
             <button type="button" class="icon-btn" id="more-btn" aria-label="More" aria-haspopup="menu" aria-expanded="false">

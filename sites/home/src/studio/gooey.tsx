@@ -9,6 +9,7 @@ import {
 } from "react";
 import { Liquid } from "liquid-gooey";
 import { ControlsPanel, PgTabs, PgSlider, PgToggles, PgSwatches, PanelSep, Snippet, num, StageBar, PgGroup } from "./controls";
+import { StudioTeaser } from "../examples/StudioTeaser";
 
 /* Studio — Gooey workbench. The four demos are the LIVE gooey demo page's
    prototypes (sites/gooey/playground/demos), ported verbatim in dark mode:
@@ -859,6 +860,14 @@ export function GooeyStudio({
               <PgSlider label="Gravity" value={melt.gravity} min={0} max={4} step={0.1} onChange={(v) => setMelt((m) => ({ ...m, gravity: v }))} />
             </>
           )}
+          <StudioTeaser
+            rows={[
+              { kind: "slider", label: "Waviness", value: "0", fill: 0 },
+              { kind: "tabs", label: "Fill", options: ["Surface", "Light", "Sky"] },
+              { kind: "slider", label: "Bounce", value: "0.5", fill: 50 },
+              { kind: "slider", label: "Stagger", value: "40ms", fill: 20 },
+            ]}
+          />
         </div>
       ) : (
         <ControlsPanel

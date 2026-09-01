@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark" />
 
   <title>How to use · Libraries.dev</title>
-  <meta name="description" content="Install a library, drop it into your UI, and make it yours — the three steps to shipping Beam, Orb, Gooey, Metal and Image, with the details your coding agent needs." />
+  <meta name="description" content="Copy a library's prompt, paste it into your coding agent, and make it yours: the three steps to shipping Beam, Orb, Gooey, Metal and Image with Claude Code, Cursor or Codex." />
   <meta name="author" content="Libraries.dev" />
   <meta name="robots" content="index, follow, max-image-preview:large" />
   <meta name="googlebot" content="index, follow" />
@@ -28,11 +28,11 @@
   <meta property="og:url" content="https://libraries.dev/how-to-use.html" />
   <meta property="og:locale" content="en_US" />
   <meta property="og:title" content="How to use · Libraries.dev" />
-  <meta property="og:description" content="Install, drop it in, make it yours — the three steps to shipping any Libraries.dev effect." />
+  <meta property="og:description" content="Copy the prompt, paste it in your agent, make it yours: the three steps to shipping any Libraries.dev effect." />
 
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="How to use · Libraries.dev" />
-  <meta name="twitter:description" content="Install, drop it in, make it yours — the three steps to shipping any Libraries.dev effect." />
+  <meta name="twitter:description" content="Install, drop it in, make it yours: the three steps to shipping any Libraries.dev effect." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -133,8 +133,11 @@
       padding: 1px 6px; border-radius: 6px;
       background: rgba(255, 255, 255, 0.06); color: var(--text); white-space: nowrap;
     }
-    .howto-text a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
+    .howto-text a { color: var(--text); text-decoration: none; }
+    .howto-text a:hover { text-decoration: underline; text-underline-offset: 2px; }
     .howto-body .code-block { margin-top: 2px; }
+    /* No copy button here, so the block does not reserve room for one. */
+    .howto-body .code-block { padding-right: 18px; }
     @media (max-width: 639px) {
       .howto-block { padding: 24px; gap: 16px; }
     }
@@ -146,7 +149,7 @@
       text-align: left; padding: 12px 16px 12px 0;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
-    .howto-table th { font-weight: 500; color: var(--text-muted); font-size: 12px; letter-spacing: 0.02em; text-transform: uppercase; }
+    .howto-table th { font-weight: 500; color: var(--text-muted); font-size: 13px; }
     .howto-table td { color: var(--text-muted); line-height: 22px; }
     .howto-table td:first-child { color: var(--text); }
     .howto-table a { color: var(--text); text-decoration: none; }
@@ -204,7 +207,8 @@
     }
     .t-acc-panel-inner p { margin: 0 0 16px; padding-right: 28px; font-size: 14px; line-height: 22px; color: var(--text-muted); }
     .t-acc-panel-inner code { font-family: var(--font-mono); font-size: 12px; line-height: 18px; padding: 1px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.06); color: var(--text); }
-    .t-acc-panel-inner a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
+    .t-acc-panel-inner a { color: var(--text); text-decoration: none; }
+    .t-acc-panel-inner a:hover { text-decoration: underline; text-underline-offset: 2px; }
     @media (prefers-reduced-motion: reduce) {
       .t-acc-panel, .t-acc-panel-inner, .t-acc-chevron { transition: none !important; }
     }
@@ -241,7 +245,7 @@
           </a>
           <nav class="site-nav-menu" aria-label="Primary">
             <a class="nav-pill" href="/#components">Libraries</a>
-            <a class="nav-pill" href="/studio.html">Studio</a>
+            <a class="nav-pill" href="/studio.html">Studio <span class="nav-pill-pro">Pro</span></a>
             <a class="nav-pill nav-pill--active" href="/how-to-use.html">How to use</a>
           </nav>
         </div>
@@ -253,27 +257,13 @@
             href="https://github.com/Jakubantalik/Libraries"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="GitHub repository — star count"
+            aria-label="GitHub repository star count"
             data-loading="true"
           >
             <svg aria-hidden="true" viewBox="0 0 16 16" fill="currentColor">
               <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
             </svg>
             <span class="pill-label" id="gh-stars-count">—</span>
-          </a>
-          <a
-            class="icon-btn"
-            href="https://x.com/jakubantalik"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="X (Twitter)"
-          >
-            <svg class="icon-x" aria-hidden="true" viewBox="0 0 16 17" xmlns="http://www.w3.org/2000/svg">
-              <path
-                fill="currentColor"
-                d="M12.4041 1.39726H14.6953L9.69087 7.2591L15.5781 15.2368H10.9696L7.35741 10.3996L3.22921 15.2368H0.934687L6.28641 8.96575L0.642598 1.39726H5.36795L8.62962 5.81859L12.4041 1.39726ZM11.5992 13.8329H12.8682L4.67667 2.72798H3.31359L11.5992 13.8329Z"
-              />
-            </svg>
           </a>
           <div class="pm-anchor" id="more-anchor">
             <button type="button" class="icon-btn" id="more-btn" aria-label="More" aria-haspopup="menu" aria-expanded="false">
@@ -324,8 +314,8 @@
     <header class="howto-head">
       <h1 class="howto-title">How to use</h1>
       <p class="howto-sub">
-        Every library is a plain npm package that renders a React component.
-        Install it, wrap your UI, tune it — three steps, no setup.
+        Every library ships as a prompt. Copy it, paste it into your coding
+        agent, and make it yours. Three steps, no setup.
       </p>
     </header>
 
@@ -334,23 +324,16 @@
         <li class="howto-block">
           <span class="howto-num" aria-hidden="true">1</span>
           <div class="howto-body">
-            <h2 class="howto-step-title">Install</h2>
+            <h2 class="howto-step-title">Copy the prompt</h2>
             <p class="howto-text">
-              Each library is standalone — grab only the ones you need. They are
-              MIT-licensed and free, with zero runtime dependencies (Image also
-              needs <code>three</code> as a peer dependency).
+              Every library page has a Copy prompt button. It packs the install
+              line, the usage and the full prop vocabulary into one paste, so
+              your agent knows the whole library, not just a snippet.
             </p>
             <div class="code-block">
-              <pre>npm install border-beam thinking-orbs liquid-gooey metal-fx img-fx</pre>
-              <button type="button" class="code-copy" data-copy-static aria-label="Copy install command">
-                <svg class="icon-copy" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </svg>
-                <svg class="icon-check" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              </button>
+              <pre>Border beam is an animated rainbow glow that rides any border.
+Install border-beam from npm, wrap the element, then tune
+size, colorVariant, strength, duration and brightness&hellip;</pre>
             </div>
           </div>
         </li>
@@ -358,31 +341,20 @@
         <li class="howto-block">
           <span class="howto-num" aria-hidden="true">2</span>
           <div class="howto-body">
-            <h2 class="howto-step-title">Drop it in</h2>
+            <h2 class="howto-step-title">Paste it in your agent</h2>
             <p class="howto-text">
-              Import the component and wrap the element you want to affect.
-              React 18+, light and dark mode built in, server-rendering safe.
-              Works from Cursor, Claude Code and Codex out of the box.
+              Drop the prompt into Claude Code, Cursor or Codex. The agent
+              installs the package and wires the component into your app,
+              adapted to your theme. React 18+, light and dark mode built in,
+              server-rendering safe.
             </p>
             <div class="code-block">
-              <pre>import { BorderBeam } from 'border-beam';
+              <pre>$ claude
+&rsaquo; [Pasted text #1 +42 lines]
 
-export function UpgradeCard() {
-  return (
-    &lt;BorderBeam size="md" colorVariant="colorful"&gt;
-      &lt;Card&gt;Upgrade to Pro&lt;/Card&gt;
-    &lt;/BorderBeam&gt;
-  );
-}</pre>
-              <button type="button" class="code-copy" data-copy-static aria-label="Copy usage example">
-                <svg class="icon-copy" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </svg>
-                <svg class="icon-check" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              </button>
+&#10003; npm install border-beam
+&#10003; components/ui/upgrade-card.tsx
+&#10003; wrapped &lt;Card&gt; in &lt;BorderBeam&gt;, matched to your theme</pre>
             </div>
           </div>
         </li>
@@ -393,21 +365,12 @@ export function UpgradeCard() {
             <h2 class="howto-step-title">Make it yours</h2>
             <p class="howto-text">
               Every library page has a playground for its main knobs. For the
-              full parameter surface — physics, shader and glow internals —
+              full parameter surface (physics, shader and glow internals)
               open the <a href="/studio.html">Studio</a> with Pro, tune the real
               component live, and copy the exact configuration as props.
             </p>
             <div class="code-block">
               <pre>&lt;BorderBeam size="line" colorVariant="ocean" duration={3.2} brightness={1.6} /&gt;</pre>
-              <button type="button" class="code-copy" data-copy-static aria-label="Copy tuned example">
-                <svg class="icon-copy" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </svg>
-                <svg class="icon-check" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              </button>
             </div>
           </div>
         </li>
@@ -439,7 +402,7 @@ export function UpgradeCard() {
             <tr>
               <td><a href="/gooey.html">Gooey</a></td>
               <td><code>liquid-gooey</code></td>
-              <td>Liquid UI — pieces merge and morph like goo</td>
+              <td>Liquid UI: pieces merge and morph like goo</td>
             </tr>
             <tr>
               <td><a href="/metal.html">Metal</a></td>
