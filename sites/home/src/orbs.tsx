@@ -1,5 +1,6 @@
 import { StrictMode, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { CodeCopy } from "./examples/CodeCopy";
 import { ThinkingOrb, type OrbSize, type OrbState } from "thinking-orbs";
 
 /* Orb detail page — playground island (stage + controls + live snippet).
@@ -40,23 +41,6 @@ function CheckIcon() {
     <svg className="icon-check" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="20 6 9 17 4 12" />
     </svg>
-  );
-}
-
-function CopyButton({ getText, label }: { getText: () => string; label: string }) {
-  const [copied, setCopied] = useState(false);
-  const timerRef = useRef<number | undefined>(undefined);
-  const onClick = () => {
-    if (navigator.clipboard) void navigator.clipboard.writeText(getText()).catch(() => {});
-    setCopied(true);
-    window.clearTimeout(timerRef.current);
-    timerRef.current = window.setTimeout(() => setCopied(false), 1600);
-  };
-  return (
-    <button type="button" className="code-copy" data-copied={copied ? "true" : undefined} aria-label={label} onClick={onClick}>
-      <CopyIcon />
-      <CheckIcon />
-    </button>
   );
 }
 
@@ -166,7 +150,7 @@ function OrbPlayground() {
 
       <div className="code-block pg-snippet">
         <pre>{snippet}</pre>
-        <CopyButton getText={() => snippet} label="Copy playground snippet" />
+        <CodeCopy text={snippet} label="Copy playground snippet" />
       </div>
     </>
   );

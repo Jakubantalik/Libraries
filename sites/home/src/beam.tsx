@@ -6,6 +6,7 @@ import {
   MockIconButton,
   MockSearchBar,
 } from "./examples/beam-mocks";
+import { CodeCopy } from "./examples/CodeCopy";
 
 /* Beam detail page — one React island rendering the whole playground grid
    (stage + controls) plus the live-updating snippet below it. Controls
@@ -32,32 +33,6 @@ function CheckIcon() {
 /* Same markup as the static blocks' copy buttons; wired in React because
    the page-level script only binds [data-copy-static] buttons that exist
    before the island mounts. */
-function CodeCopy({ text, label }: { text: string; label: string }) {
-  const [copied, setCopied] = useState(false);
-  const timer = useRef<number | undefined>(undefined);
-  useEffect(() => () => window.clearTimeout(timer.current), []);
-  const handleClick = useCallback(() => {
-    if (typeof navigator !== "undefined" && navigator.clipboard) {
-      navigator.clipboard.writeText(text).catch(() => {});
-    }
-    setCopied(true);
-    window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => setCopied(false), 1600);
-  }, [text]);
-  return (
-    <button
-      type="button"
-      className="code-copy"
-      onClick={handleClick}
-      data-copied={copied ? "true" : undefined}
-      aria-label={copied ? "Copied" : label}
-    >
-      <CopyIcon />
-      <CheckIcon />
-    </button>
-  );
-}
-
 function PgTabs<T extends string>({
   label,
   options,

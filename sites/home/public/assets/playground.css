@@ -684,6 +684,39 @@ html[data-theme="dark"] .code-block {
 .code-block .code-copy:hover { background: var(--chip-bg-hover); color: var(--text); }
 .code-block .code-copy svg { width: 15px; height: 15px; display: block; }
 
+/* The snippet copy button — transitions.dev's .detail-code-copy, verbatim.
+   It overrides .card-copy's own bottom-right placement and pill radius. */
+.detail-code-copy {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  bottom: auto;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 9px;
+  background: var(--chip-bg);
+  background-image: none;
+  box-shadow: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+.detail-code-copy:hover { background: var(--chip-bg-hover); color: var(--text); }
+.detail-code-copy svg { width: 15px; height: 15px; }
+/* Right-align the tooltip to the button so the pill grows leftward and
+   never overhangs the card's right edge. */
+.detail-code-copy .card-copy-tooltip {
+  top: auto;
+  bottom: calc(100% + 8px);
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
 /* ── Studio control panel pieces ──────────────────────────────
    Shared by the Studio workbench and the Gooey detail page, which
    renders the same controls. */

@@ -1,5 +1,6 @@
 import { StrictMode, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { CodeCopy } from "./examples/CodeCopy";
 import { MetalFx, type MetalFxPreset, type MetalFxVariant } from "metal-fx";
 
 /* Metal detail page — playground island (stage + controls + live snippet).
@@ -62,23 +63,6 @@ function SearchIcon() {
       <circle cx="8" cy="8" r="6" />
       <path d="m16 16-3.5-3.5" />
     </svg>
-  );
-}
-
-function CopyButton({ getText, label }: { getText: () => string; label: string }) {
-  const [copied, setCopied] = useState(false);
-  const timerRef = useRef<number | undefined>(undefined);
-  const onClick = () => {
-    if (navigator.clipboard) void navigator.clipboard.writeText(getText()).catch(() => {});
-    setCopied(true);
-    window.clearTimeout(timerRef.current);
-    timerRef.current = window.setTimeout(() => setCopied(false), 1600);
-  };
-  return (
-    <button type="button" className="code-copy" data-copied={copied ? "true" : undefined} aria-label={label} onClick={onClick}>
-      <CopyIcon />
-      <CheckIcon />
-    </button>
   );
 }
 
@@ -291,7 +275,7 @@ function MetalPlayground() {
 
       <div className="code-block pg-snippet">
         <pre>{snippet}</pre>
-        <CopyButton getText={() => snippet} label="Copy playground snippet" />
+        <CodeCopy text={snippet} label="Copy playground snippet" />
       </div>
     </>
   );
