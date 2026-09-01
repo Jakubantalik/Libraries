@@ -66,12 +66,10 @@
     inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
 }
 .docs-link--muted { color: #979797; }
-/* The text-only rows have no icon to indent them, so they take the icon's
-   width as padding and keep one left edge down the whole sidebar. */
-.docs-group--links .docs-link { padding-left: 40px; }
 .docs-link:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
-/* Same 24px ringed tile the Studio nav uses. On a replaced element the
-   inset ring paints over the bitmap, so it can sit on the <img> itself. */
+/* Same 24px tile the Studio nav uses, on the homepage card's treatment
+   (.lib-ico): a clipped box with no CSS shadow of its own — the depth is
+   in the tile bitmap. */
 .docs-link-icon {
   flex: none;
   width: 24px;
@@ -79,12 +77,6 @@
   border-radius: 7px;
   object-fit: cover;
   display: block;
-  box-shadow:
-    0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
-        0 0 0 1px rgba(0, 0, 0, 0.06) inset,
-        0 -1px 0 0 rgba(0, 0, 0, 0.06) inset,
-        0 0 0 1px rgba(196, 196, 196, 0.1) inset;
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.04));
 }
 /* The image-generation export sits on a larger canvas than the rest, so
    scale it up to crop that padding away. */
@@ -619,40 +611,65 @@ html[data-theme="dark"] .pg-stage::after { box-shadow: inset 0 0 0 1px rgba(191,
 }
 
 /* Code blocks (install / usage / live snippet) */
+/* Snippet card — transitions.dev's detail-page code block: a 24px card on
+   the panel surface with the scroll and its padding inside, so a long
+   snippet scrolls without the card's corners clipping the text. Its copy
+   button is a 32px ghost at 9px radius, tinting only on hover. */
 .code-block {
   position: relative;
-  border-radius: 14px;
-  background: #131313;
-  box-shadow: inset 0 0 0 1px rgba(191, 192, 203, 0.08);
-  padding: 16px 52px 16px 18px;
-  overflow-x: auto;
+  width: 100%;
+  border-radius: 24px;
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow), inset 0 0 0 1px var(--card-border);
+  overflow: hidden;
+}
+html[data-theme="dark"] .code-block {
+  background: #181818;
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.04),
+    inset 0 0 0 1px rgba(196, 196, 196, 0.07);
 }
 .code-block pre {
   margin: 0;
+  max-height: 520px;
+  overflow: auto;
+  padding: 24px 26px;
   font-family: var(--font-mono);
-  font-size: 13px;
-  line-height: 20px;
-  color: #d6d6d6;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--text);
   white-space: pre;
+  scrollbar-width: thin;
+  scrollbar-color: var(--chip-bg-pressed) transparent;
 }
+.code-block pre::-webkit-scrollbar { width: 8px; height: 8px; }
+.code-block pre::-webkit-scrollbar-track { background: transparent; }
+.code-block pre::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  border: 2px solid var(--card-bg);
+  background-clip: padding-box;
+  background-color: var(--chip-bg-pressed);
+}
+.code-block pre::-webkit-scrollbar-thumb:hover { background-color: var(--text-faint); }
 .code-block .code-copy {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 14px;
+  right: 14px;
   width: 32px;
   height: 32px;
   border: 0;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--icon-color-muted);
+  border-radius: 9px;
+  background: none;
+  box-shadow: none;
+  color: var(--text-muted);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background 140ms, color 140ms;
 }
-.code-block .code-copy:hover { background: rgba(255, 255, 255, 0.1); color: var(--icon-color); }
-.code-block .code-copy svg { width: 14px; height: 14px; display: block; }
+.code-block .code-copy:hover { background: var(--chip-bg-hover); color: var(--text); }
+.code-block .code-copy svg { width: 15px; height: 15px; display: block; }
 
 /* ── Studio control panel pieces ──────────────────────────────
    Shared by the Studio workbench and the Gooey detail page, which

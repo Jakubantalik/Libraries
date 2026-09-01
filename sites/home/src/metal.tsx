@@ -163,6 +163,7 @@ function MetalPlayground() {
 
       <p className="detail-playground-label">Playground</p>
 
+      <div className="pg">
       <div className="pg-stage">
         <div className="metal-stage-row">
           <label ref={searchRef} className="metal-search">
@@ -284,6 +285,8 @@ function MetalPlayground() {
             </button>
           </div>
         </div>
+      </div>
+
       </div>
 
       <div className="code-block pg-snippet">

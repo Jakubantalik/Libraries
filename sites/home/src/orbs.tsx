@@ -107,6 +107,7 @@ function OrbPlayground() {
 
       <p className="detail-playground-label">Playground</p>
 
+      <div className="pg">
       <div className="pg-stage">
         {/* key remounts the canvas on state/size change, matching the live playground */}
         <ThinkingOrb key={`${state}-${size}`} state={state} size={size} paused={paused} theme="dark" />
@@ -158,6 +159,8 @@ function OrbPlayground() {
             ))}
           </div>
         </div>
+
+      </div>
 
       </div>
 

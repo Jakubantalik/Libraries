@@ -161,6 +161,7 @@ function ImagePlayground() {
 
       <p className="detail-playground-label">Playground</p>
 
+      <div className="pg">
       <div className="pg-stage">
         <ImageGeneration
           ref={handleRef}
@@ -245,6 +246,8 @@ function ImagePlayground() {
             ariaLabel="Strength"
           />
         </div>
+      </div>
+
       </div>
 
       <div className="code-block pg-snippet">
