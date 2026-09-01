@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Account — Libraries.dev</title>
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/site.css" />
+  <script>
+    // Theme: mirror the system preference onto data-theme so every style —
+    // including the injected avatar/modal CSS — keys off one attribute.
+    (function () {
+      var mq = matchMedia("(prefers-color-scheme: dark)");
+      function apply() { document.documentElement.dataset.theme = mq.matches ? "dark" : "light"; }
+      apply(); mq.addEventListener("change", apply);
+    })();
+  </script>
+  <style>
+    .plan-badge { display: inline-flex; align-items: center; height: 22px; padding: 0 10px; border-radius: 50px;
+      font: 500 12px/1 inherit; background: rgba(0, 115, 255, 0.08); color: #2f6fe0;
+      box-shadow: inset 0 0 0 1px rgba(0, 101, 208, 0.15); }
+    .member-row { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+    .member-row:last-child { border-bottom: 0; }
+    .link-btn { border: 0; background: none; color: var(--muted); cursor: pointer; font: 500 13px/1 inherit; padding: 4px; }
+    .link-btn:hover { color: var(--fg); }
+    input.text {
+      height: 38px; padding: 0 14px; border-radius: 50px; border: 1px solid var(--line);
+      background: transparent; color: inherit; font: 400 13px/1.4 inherit; outline: none; min-width: 220px;
+    }
+    input.text:focus { border-color: var(--muted); }
+  </style>
+</head>
+<body>
+  <header class="wrap">
+    <nav class="nav">
+      <a class="nav-logo" href="/">Libraries<span class="dot">.dev</span></a>
+      <div class="nav-links">
+        <a class="nav-link" href="pro.html">Pro</a>
+        <div id="nav-auth" data-no-getpro></div>
+      </div>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <section style="padding: 48px 0 0; max-width: 560px">
+      <h1>Account</h1>
+
+      <!-- Signed out -->
+      <div id="acct-signedout" class="card" hidden>
+        <p style="margin:0 0 16px">Sign in with the email you used at checkout.</p>
+        <button class="btn" id="acct-signin-btn">Sign in</button>
+      </div>
+
+      <!-- Signed in -->
+      <div id="acct-signedin" hidden class="stack" style="gap:16px">
+        <div class="card">
+          <div class="row" style="justify-content: space-between">
+            <div>
+              <div class="small muted">Signed in as</div>
+              <div id="acct-email" style="font-weight: 500"></div>
+            </div>
+            <span class="plan-badge" id="acct-plan-badge" hidden>Pro</span>
+          </div>
+        </div>
+
+        <div class="card" id="acct-plan-card">
+          <h2 style="margin: 0 0 8px">Plan</h2>
+          <p class="muted small" id="acct-plan-desc" style="margin: 0 0 16px">—</p>
+          <div class="row">
+            <button class="btn btn--ghost" id="acct-portal" hidden>Manage billing</button>
+            <a class="btn" id="acct-getpro" href="pro.html" hidden>Get Pro</a>
+          </div>
+        </div>
+
+        <div class="card" id="acct-team-card" hidden>
+          <h2 style="margin: 0 0 4px">Team <span class="small muted" id="team-seats"></span></h2>
+          <div id="team-members"></div>
+          <form id="team-invite-form" class="row" style="margin-top: 14px" hidden>
+            <input class="text" type="email" id="team-invite-email" placeholder="teammate@company.com" />
+            <button class="btn btn--ghost" type="submit">Invite</button>
+          </form>
+          <p class="small" id="team-note" style="margin: 10px 0 0" hidden></p>
+        </div>
+
+        <div class="card">
+          <h2 style="margin: 0 0 8px">Sessions & data</h2>
+          <div class="row">
+            <button class="btn btn--ghost" id="acct-signout-all">Sign out everywhere</button>
+            <button class="btn btn--danger" id="acct-delete">Delete account</button>
+          </div>
+          <p class="small muted" style="margin: 12px 0 0">Deleting cancels any subscription and permanently
+            removes your data (GDPR erasure). Invoices already issued are retained by Stripe as
+            merchant of record.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-row">
+      <span>© <span id="y"></span> Jakub Antalik</span>
+      <div class="footer-links">
+        <a href="terms.html">Terms</a>
+        <a href="privacy.html">Privacy</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById("y").textContent = new Date().getFullYear();
+
+    function fmtDate(ms) {
+      try { return new Date(ms).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }); }
+      catch (e) { return ""; }
+    }
+
+    function paintAccount(state) {
+      var out = document.getElementById("acct-signedout");
+      var inn = document.getElementById("acct-signedin");
+      if (!state.resolved) return; // never paint a definitive signed-out UI early
+      out.hidden = state.authenticated;
+      inn.hidden = !state.authenticated;
+      if (!state.authenticated) return;
+
+      document.getElementById("acct-email").textContent = state.email || "";
+      document.getElementById("acct-plan-badge").hidden = !state.pro;
+      document.getElementById("acct-portal").hidden = !state.billing;
+      document.getElementById("acct-getpro").hidden = state.pro;
+
+      var desc = "No active plan.";
+      if (state.lifetime) {
+        desc = "Lifetime — paid once, yours forever.";
+      } else if (state.subscription) {
+        var s = state.subscription;
+        var name = s.interval === "year" ? "Yearly" : "Monthly";
+        if (s.status === "active" || s.status === "trialing") {
+          desc = name + " — " + (s.cancel_at_period_end
+            ? "cancels on " + fmtDate(s.current_period_end)
+            : "renews on " + fmtDate(s.current_period_end)) + ".";
+        } else {
+          desc = name + " — " + s.status + ".";
+        }
+      } else if (state.pro) {
+        desc = "Pro via team membership.";
+      }
+      document.getElementById("acct-plan-desc").textContent = desc;
+
+      loadTeam();
+    }
+
+    var teamLoaded = false;
+    function loadTeam() {
+      if (teamLoaded) return;
+      teamLoaded = true;
+      LibrariesPro.team.get().then(function (t) {
+        if (!t || t.error || !t.team) return;
+        var team = t.team;
+        var card = document.getElementById("acct-team-card");
+        card.hidden = false;
+        document.getElementById("team-seats").textContent =
+          "· " + (team.seats_used || 0) + "/" + team.seats + " seats";
+        var canManage = team.my_role === "owner" || team.my_role === "admin";
+        document.getElementById("team-invite-form").hidden = !canManage;
+        var box = document.getElementById("team-members");
+        box.innerHTML = "";
+        (team.members || []).forEach(function (m) {
+          var row = document.createElement("div");
+          row.className = "member-row";
+          var who = document.createElement("span");
+          who.textContent = (m.email || "") + (m.role === "owner" ? " (owner)" : "");
+          row.appendChild(who);
+          if (canManage && m.role !== "owner") {
+            var rm = document.createElement("button");
+            rm.className = "link-btn"; rm.textContent = "Remove";
+            rm.addEventListener("click", function () {
+              LibrariesPro.team.remove(m.user_id).then(function () { teamLoaded = false; loadTeam(); });
+            });
+            row.appendChild(rm);
+          }
+          box.appendChild(row);
+        });
+        (team.invitations || []).forEach(function (i) {
+          var row = document.createElement("div");
+          row.className = "member-row";
+          var who = document.createElement("span");
+          who.className = "muted";
+          who.textContent = (i.email || "") + " (invited)";
+          row.appendChild(who);
+          if (canManage) {
+            var cancel = document.createElement("button");
+            cancel.className = "link-btn"; cancel.textContent = "Cancel";
+            cancel.addEventListener("click", function () {
+              LibrariesPro.team.cancel(i.id).then(function () { teamLoaded = false; loadTeam(); });
+            });
+            row.appendChild(cancel);
+          }
+          box.appendChild(row);
+        });
+      }).catch(function () {});
+    }
+
+    document.addEventListener("pro:me", function (e) { paintAccount(e.detail); });
+
+    document.addEventListener("DOMContentLoaded", function () {
+      document.getElementById("acct-signin-btn").addEventListener("click", function () {
+        LibrariesPro.openSignIn();
+      });
+      document.getElementById("acct-portal").addEventListener("click", function () {
+        LibrariesPro.portal();
+      });
+      document.getElementById("acct-signout-all").addEventListener("click", function () {
+        LibrariesPro.logout(true).then(function () { location.href = "/"; });
+      });
+      document.getElementById("acct-delete").addEventListener("click", function () {
+        if (!confirm("Delete your account? This cancels any subscription and permanently removes your data.")) return;
+        fetch(LibrariesPro.apiBase + "/account/delete", { method: "POST", credentials: "include" })
+          .then(function (r) { return r.json(); })
+          .then(function (r) {
+            if (r && r.ok) { location.href = "/"; }
+            else if (r && r.error === "owns_team") alert(r.note || "Transfer or cancel your team first.");
+            else alert("Couldn't delete the account. Please try again or email support@libraries.dev.");
+          })
+          .catch(function () { alert("Couldn't delete the account. Please try again."); });
+      });
+      var inviteForm = document.getElementById("team-invite-form");
+      inviteForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var email = document.getElementById("team-invite-email").value.trim();
+        if (!email) return;
+        LibrariesPro.team.invite(email, "member").then(function (r) {
+          var note = document.getElementById("team-note");
+          if (r && r.error) { note.textContent = "Couldn't invite: " + r.error; note.hidden = false; }
+          else { note.hidden = true; document.getElementById("team-invite-email").value = ""; teamLoaded = false; loadTeam(); }
+        });
+      });
+      // Team invite link: /account.html?invite=TOKEN — accept after sign-in.
+      var invite = new URLSearchParams(location.search).get("invite");
+      if (invite) {
+        document.addEventListener("pro:me", function once(e) {
+          if (!e.detail.authenticated) {
+            LibrariesPro.openSignIn({ inviteToken: invite });
+          } else {
+            LibrariesPro.team.accept(invite).then(function () { teamLoaded = false; loadTeam(); });
+          }
+          document.removeEventListener("pro:me", once);
+        });
+      }
+    });
+  </script>
+  <script src="assets/pro-client.js" defer></script>
+</body>
+</html>

@@ -59,6 +59,10 @@ domain per repo:
   `npm run build:site-gooey`, output `sites/gooey/dist`.
 - **orbs.jakubantalik.com** — Cloudflare Pages, built with
   `npm run build:site-orbs`, output `sites/orbs/dist`.
+- **libraries.dev** — Cloudflare Pages, static (no build command), output
+  `sites/home`. The umbrella site: landing, Pro pricing, account and legal
+  pages. Its backend is `api.libraries.dev`, a Worker in the private
+  `libraries-pro` repo — see `sites/home/README.md`.
 
 `.node-version` pins Node 20 for the Cloudflare builds, matching the version
 the GitHub workflows use; Cloudflare's default is older.

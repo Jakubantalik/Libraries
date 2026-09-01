@@ -2,18 +2,16 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "beam",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "-w", "@sites/beam"],
-      "port": 5173,
-      "autoPort": true
-    },
-    {
-      "name": "gooey",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "-w", "@sites/gooey"],
-      "port": 5174,
-      "autoPort": true
+      "name": "home",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8014",
+        "-d",
+        "sites/home"
+      ],
+      "port": 8014
     }
   ]
 }

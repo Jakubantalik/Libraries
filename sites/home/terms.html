@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Terms — Libraries.dev</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/site.css" />
+  <script>
+    // Theme: mirror the system preference onto data-theme so every style —
+    // including the injected avatar/modal CSS — keys off one attribute.
+    (function () {
+      var mq = matchMedia("(prefers-color-scheme: dark)");
+      function apply() { document.documentElement.dataset.theme = mq.matches ? "dark" : "light"; }
+      apply(); mq.addEventListener("change", apply);
+    })();
+  </script>
+  <style>
+    .legal { max-width: 680px; }
+    .legal h2 { margin-top: 36px; }
+  </style>
+</head>
+<body>
+  <header class="wrap">
+    <nav class="nav">
+      <a class="nav-logo" href="/">Libraries<span class="dot">.dev</span></a>
+      <div class="nav-links">
+        <a class="nav-link" href="pro.html">Pro</a>
+        <div id="nav-auth" data-no-getpro></div>
+      </div>
+    </nav>
+  </header>
+
+  <main class="wrap legal">
+    <section style="padding: 48px 0 0">
+      <h1>Libraries.dev Terms &amp; License</h1>
+      <p class="muted small">Last updated September 2026</p>
+      <p>These terms cover using Libraries.dev — the open-source libraries (border-beam,
+        liquid-gooey, thinking-orbs), the Libraries Pro subscription and Team plans, and Studio.
+        By using the site or subscribing you agree to them. In short: use the components in as
+        many projects as you like, including commercial ones; a subscription bills until you
+        cancel; and what you've already downloaded stays yours.</p>
+
+      <h2>Open-source libraries</h2>
+      <p>The base libraries are published on npm under the MIT License — use them freely, no
+        account needed. These terms add the Pro layer on top; they never restrict what MIT
+        already grants you.</p>
+
+      <h2>Using the Pro components</h2>
+      <p>Every premium variant is source code you add to your own project. Once you have access,
+        you may use it in <strong>unlimited personal and commercial projects</strong>, modify it
+        freely, and ship it to your users as part of your product. The one thing you may not do is
+        redistribute the collection itself — you can't repackage, resell, or publish the premium
+        variants (or a substantial part of them) as a competing library, template pack, or
+        component kit. Use them in your products, not as a product of their own.</p>
+
+      <h2>Libraries Pro</h2>
+      <p>Libraries Pro is a paid plan that unlocks the premium variants across all three
+        libraries, Studio access, a commercial license, support, and every new Pro release and
+        update while your plan is active.</p>
+      <ul>
+        <li><strong>Merchant of record.</strong> All purchases are processed by Stripe, which acts
+          as the merchant of record: Stripe is the seller of record for the transaction, collects
+          and remits applicable VAT/GST/sales tax, issues your invoice, and handles payment
+          disputes. Stripe's <a href="https://stripe.com/legal/consumer">consumer terms</a> apply
+          to the purchase itself.</li>
+        <li><strong>Billing &amp; renewal.</strong> Pro is billed monthly or yearly and renews
+          automatically at the end of each period until you cancel. Prices are shown at
+          checkout.</li>
+        <li><strong>Lifetime plans.</strong> Solo and Team lifetime plans are a one-time payment —
+          no renewal, nothing to cancel. They include ongoing access and every future Pro release
+          for as long as the service operates. Team lifetime includes a fixed 5 seats.</li>
+        <li><strong>Your account is your email.</strong> A purchase automatically creates your
+          profile from the checkout email; sign-in is a code we email you — no password, no
+          links.</li>
+        <li><strong>You keep what you've downloaded.</strong> Cancelling stops future access,
+          downloads, and updates — but files already added to your projects continue to work and
+          remain licensed under the terms above.</li>
+      </ul>
+
+      <h2>Cancellation &amp; refunds</h2>
+      <p>You can cancel any time from <a href="account.html">your account</a>. Your plan stays
+        active until the end of the period you've already paid for; we don't prorate partial
+        periods. Refunds for purchases are handled through Stripe as merchant of record — if
+        something's wrong (a double charge, a technical problem that stops you using Pro), email
+        <a href="mailto:jakubja@gmail.com">jakubja@gmail.com</a> and we'll make it right,
+        including a refund where fair. EU/EEA consumers may have a statutory right of withdrawal;
+        by starting to use Pro content immediately you acknowledge digital delivery begins at
+        once.</p>
+
+      <h2>Team plans</h2>
+      <p>A Team plan buys a set number of <strong>seats</strong>. The team owner invites members
+        up to the seat count (a pending invitation reserves a seat), manages roles, and can add or
+        remove seats, which adjusts billing accordingly. Each member gets full Pro access while
+        they belong to an active team. Removing a member, or the team's subscription ending, ends
+        that person's Pro access — already-downloaded files keep working. The owner is responsible
+        for who they invite and for the team's billing.</p>
+
+      <h2>Studio</h2>
+      <p>Studio is included with Pro while your plan is active. It may change, gain or lose
+        features, or be reworked as it evolves; we make no guarantee of any particular feature
+        set.</p>
+
+      <h2>Your account</h2>
+      <p>Accounts use passwordless email sign-in with a one-time code. Keep access to your email
+        secure — anyone who can receive your sign-in code can access your account. Don't share
+        credentials, probe or abuse the service, attempt to bypass the entitlement checks, or
+        scrape the Pro content. We may suspend accounts that do. How we handle your data is
+        described in our <a href="privacy.html">Privacy Policy</a>.</p>
+
+      <h2>No warranty &amp; limitation of liability</h2>
+      <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+        INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+        PURPOSE, AND NONINFRINGEMENT. To the maximum extent permitted by law, the authors and
+        copyright holders shall not be liable for any claim, damages, or other liability — whether
+        direct, indirect, incidental, or consequential, including lost work or lost data — arising
+        from or in connection with the software or its use.</p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-row">
+      <span>© <span id="y"></span> Jakub Antalik</span>
+      <div class="footer-links">
+        <a href="terms.html">Terms</a>
+        <a href="privacy.html">Privacy</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>document.getElementById("y").textContent = new Date().getFullYear();</script>
+  <script src="assets/pro-client.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Libraries.dev Pro — pricing</title>
+  <meta name="description" content="Premium variants, Studio access, commercial license and support for border-beam, liquid-gooey and thinking-orbs." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/site.css" />
+  <script>
+    // Theme: mirror the system preference onto data-theme so every style —
+    // including the injected avatar/modal CSS — keys off one attribute.
+    (function () {
+      var mq = matchMedia("(prefers-color-scheme: dark)");
+      function apply() { document.documentElement.dataset.theme = mq.matches ? "dark" : "light"; }
+      apply(); mq.addEventListener("change", apply);
+    })();
+  </script>
+  <style>
+    .price-tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 50px; box-shadow: inset 0 0 0 1px var(--line); }
+    .pro-price-tab {
+      border: 0; background: none; color: var(--muted); cursor: pointer;
+      height: 32px; padding: 0 16px; border-radius: 50px; font: 500 13px/1 inherit;
+      transition: background 120ms ease, color 120ms ease;
+    }
+    .pro-price-tab[data-active="true"] { background: var(--accent); color: var(--accent-fg); }
+    .billing-toggle { display: inline-flex; gap: 4px; padding: 4px; border-radius: 50px; box-shadow: inset 0 0 0 1px var(--line); }
+    .billing-opt {
+      border: 0; background: none; color: var(--muted); cursor: pointer;
+      height: 28px; padding: 0 12px; border-radius: 50px; font: 500 12.5px/1 inherit;
+      transition: background 120ms ease, color 120ms ease;
+    }
+    .billing-opt[data-active="true"] { background: var(--accent); color: var(--accent-fg); }
+    .price-num { font-size: 44px; font-weight: 650; letter-spacing: -0.03em; }
+    .price-per { color: var(--muted); font-size: 14px; }
+    .feature-list { list-style: none; margin: 20px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+    .feature-list li { padding-left: 22px; position: relative; font-size: 14px; }
+    .feature-list li::before { content: "✓"; position: absolute; left: 0; color: var(--ok); font-weight: 600; }
+    .vat-note { color: var(--faint); font-size: 12.5px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <header class="wrap">
+    <nav class="nav">
+      <a class="nav-logo" href="/">Libraries<span class="dot">.dev</span></a>
+      <div class="nav-links">
+        <a class="nav-link" href="pro.html">Pro</a>
+        <div id="nav-auth" data-no-getpro></div>
+      </div>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <section style="padding: 48px 0 0">
+      <h1>Libraries.dev Pro</h1>
+      <p class="lead">Premium variants, Studio access, a commercial license and support —
+        one plan across border-beam, liquid-gooey and thinking-orbs.</p>
+
+      <div id="pro-ppp" hidden></div>
+
+      <div class="row" style="margin-bottom: 20px; gap: 16px">
+        <div class="price-tabs" role="tablist" aria-label="Plan">
+          <button class="pro-price-tab" role="tab" data-plan="solo" data-active="true">Solo</button>
+          <button class="pro-price-tab" role="tab" data-plan="team" data-active="false">Team</button>
+        </div>
+        <div class="billing-toggle" id="pro-billing" data-billing="monthly" role="tablist" aria-label="Billing period">
+          <button class="billing-opt" data-kind="monthly" data-active="true">Monthly</button>
+          <button class="billing-opt" data-kind="annual" data-active="false">Yearly</button>
+          <button class="billing-opt" data-kind="lifetime" data-active="false">Lifetime</button>
+        </div>
+      </div>
+
+      <div class="card" style="max-width: 420px">
+        <div>
+          <span class="price-num" id="price-num">$9</span>
+          <span class="price-per" id="price-per">/ month</span>
+        </div>
+        <p class="muted small" id="price-note" style="margin: 6px 0 0">Cancel anytime.</p>
+        <ul class="feature-list">
+          <li>Premium variants for all three libraries</li>
+          <li>Studio access</li>
+          <li>Commercial license</li>
+          <li>Support</li>
+          <li id="feat-seats" hidden>5 seats included, +$9 per extra seat</li>
+        </ul>
+        <div style="margin-top: 24px">
+          <button class="btn" id="pro-price-cta" style="width: 100%">Unlock Pro</button>
+        </div>
+        <p class="vat-note">Prices exclude VAT/GST where applicable. Stripe is the merchant
+          of record and handles tax at checkout. Auto-creates your account from the
+          checkout email — no password, ever.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-row">
+      <span>© <span id="y"></span> Jakub Antalik</span>
+      <div class="footer-links">
+        <a href="#" id="footer-signin">Sign in</a>
+        <a href="terms.html">Terms</a>
+        <a href="privacy.html">Privacy</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById("y").textContent = new Date().getFullYear();
+
+    // Pricing matrix — display only; the server owns the real prices.
+    var PRICES = {
+      solo: { monthly: ["$9", "/ month", "Cancel anytime."],
+              annual:  ["$90", "/ year", "Two months free."],
+              lifetime:["$149", "one-time", "Pay once, keep it forever."] },
+      team: { monthly: ["$39", "/ month", "5 seats included; adjust seats at checkout."],
+              annual:  ["$390", "/ year", "5 seats included; two months free."],
+              lifetime:["$499", "one-time", "5 seats included, forever."] },
+    };
+
+    function currentPlan() {
+      return document.querySelector('.pro-price-tab[data-active="true"]').getAttribute("data-plan");
+    }
+    function currentBilling() {
+      return document.getElementById("pro-billing").getAttribute("data-billing");
+    }
+    function paintPrice() {
+      var p = PRICES[currentPlan()][currentBilling()];
+      document.getElementById("price-num").textContent = p[0];
+      document.getElementById("price-per").textContent = " " + p[1];
+      document.getElementById("price-note").textContent = p[2];
+      var seats = document.getElementById("feat-seats");
+      seats.hidden = currentPlan() !== "team";
+      seats.textContent = currentBilling() === "lifetime"
+        ? "5 seats included"
+        : "5 seats included, +$9 per extra seat";
+    }
+
+    document.querySelectorAll(".pro-price-tab").forEach(function (tab) {
+      tab.addEventListener("click", function () {
+        document.querySelectorAll(".pro-price-tab").forEach(function (t) {
+          t.setAttribute("data-active", String(t === tab));
+        });
+        paintPrice();
+      });
+    });
+    document.querySelectorAll(".billing-opt").forEach(function (opt) {
+      opt.addEventListener("click", function () {
+        document.querySelectorAll(".billing-opt").forEach(function (o) {
+          o.setAttribute("data-active", String(o === opt));
+        });
+        document.getElementById("pro-billing").setAttribute("data-billing", opt.getAttribute("data-kind"));
+        paintPrice();
+      });
+    });
+    paintPrice();
+  </script>
+  <script src="assets/pro-client.js" defer></script>
+</body>
+</html>

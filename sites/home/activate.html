@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Activate a device — Libraries.dev</title>
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/site.css" />
+  <script>
+    // Theme: mirror the system preference onto data-theme so every style —
+    // including the injected avatar/modal CSS — keys off one attribute.
+    (function () {
+      var mq = matchMedia("(prefers-color-scheme: dark)");
+      function apply() { document.documentElement.dataset.theme = mq.matches ? "dark" : "light"; }
+      apply(); mq.addEventListener("change", apply);
+    })();
+  </script>
+  <style>
+    input.code {
+      height: 44px; padding: 0 16px; border-radius: 50px; border: 1px solid var(--line);
+      background: transparent; color: inherit; outline: none; text-transform: uppercase;
+      font: 600 16px/1 ui-monospace, Menlo, monospace; letter-spacing: 3px; width: 200px; text-align: center;
+    }
+    input.code:focus { border-color: var(--muted); }
+  </style>
+</head>
+<body>
+  <header class="wrap">
+    <nav class="nav">
+      <a class="nav-logo" href="/">Libraries<span class="dot">.dev</span></a>
+      <div class="nav-links"><div id="nav-auth" data-no-getpro></div></div>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <section style="padding: 56px 0 0; max-width: 520px">
+      <h1>Activate a device</h1>
+      <p class="lead">Enter the code your CLI or agent shows to connect it to your Pro plan.</p>
+
+      <div class="card">
+        <form id="act-form" class="row">
+          <input class="code" id="act-code" placeholder="XXXX-XXXX" spellcheck="false" autocomplete="off" />
+          <button class="btn" type="submit">Approve</button>
+        </form>
+        <p class="small" id="act-msg" style="margin: 12px 0 0" hidden></p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-row">
+      <span>© <span id="y"></span> Jakub Antalik</span>
+      <div class="footer-links">
+        <a href="terms.html">Terms</a>
+        <a href="privacy.html">Privacy</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById("y").textContent = new Date().getFullYear();
+
+    function setMsg(text, ok) {
+      var el = document.getElementById("act-msg");
+      el.textContent = text;
+      el.style.color = ok ? "var(--ok)" : "var(--err)";
+      el.hidden = false;
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      // ?code=XXXX-XXXX prefills from the CLI's printed URL.
+      var pre = new URLSearchParams(location.search).get("code");
+      if (pre) document.getElementById("act-code").value = pre.toUpperCase();
+
+      // A sign-in that carried a device_code approves/denies server-side.
+      document.addEventListener("pro:device", function (e) {
+        if (e.detail === "device_approved") setMsg("Device approved — switch back to your terminal.", true);
+        else setMsg("This account has no Pro plan, so the device was not approved.", false);
+      });
+
+      document.getElementById("act-form").addEventListener("submit", function (e) {
+        e.preventDefault();
+        var code = document.getElementById("act-code").value.trim().toUpperCase();
+        if (!code) return;
+        var st = LibrariesPro.state;
+        if (!st.authenticated) {
+          // Signing in with this device code attached approves it in one step.
+          LibrariesPro.openSignIn({ deviceCode: code });
+          return;
+        }
+        LibrariesPro.approveDevice(code).then(function (r) {
+          if (r && r.status === "approved") setMsg("Device approved — switch back to your terminal.", true);
+          else if (r && r.status === "denied") setMsg("This account has no Pro plan, so the device was not approved.", false);
+          else setMsg("That code didn't work — check the terminal and try again.", false);
+        });
+      });
+    });
+  </script>
+  <script src="assets/pro-client.js" defer></script>
+</body>
+</html>

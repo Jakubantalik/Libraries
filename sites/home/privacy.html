@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Privacy — Libraries.dev</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/site.css" />
+  <script>
+    // Theme: mirror the system preference onto data-theme so every style —
+    // including the injected avatar/modal CSS — keys off one attribute.
+    (function () {
+      var mq = matchMedia("(prefers-color-scheme: dark)");
+      function apply() { document.documentElement.dataset.theme = mq.matches ? "dark" : "light"; }
+      apply(); mq.addEventListener("change", apply);
+    })();
+  </script>
+  <style>
+    .legal { max-width: 680px; }
+    .legal h2 { margin-top: 36px; }
+    .legal table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 12px 0; }
+    .legal th, .legal td { text-align: left; padding: 8px 12px 8px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+    .legal th { color: var(--muted); font-weight: 500; }
+  </style>
+</head>
+<body>
+  <header class="wrap">
+    <nav class="nav">
+      <a class="nav-logo" href="/">Libraries<span class="dot">.dev</span></a>
+      <div class="nav-links">
+        <a class="nav-link" href="pro.html">Pro</a>
+        <div id="nav-auth" data-no-getpro></div>
+      </div>
+    </nav>
+  </header>
+
+  <main class="wrap legal">
+    <section style="padding: 48px 0 0">
+      <h1>Libraries.dev Privacy Policy</h1>
+      <p class="muted small">Last updated September 2026</p>
+      <p>This policy explains what data Libraries.dev collects when you use the site, create an
+        account, or subscribe to Pro — why we collect it, who processes it on our behalf, and the
+        rights you have over it. We collect as little as the product needs to work, and we never
+        sell your data.</p>
+
+      <h2>Who we are</h2>
+      <p>Libraries.dev is operated by Jakub Antalik ("we", "us"). For anything in this policy —
+        including data requests — contact <a href="mailto:jakubja@gmail.com">jakubja@gmail.com</a>.
+        For visitors in the EU/EEA and UK, we act as the data controller for the personal data
+        described below, except where noted for Stripe.</p>
+
+      <h2>What we collect</h2>
+      <p>Browsing the libraries and their documentation needs no account and collects no personal
+        data. The data below applies once you sign in or subscribe.</p>
+      <ul>
+        <li><strong>Your email address</strong> — the anchor for your account and passwordless
+          sign-in. A purchase creates your profile automatically from the email you use at
+          checkout; nothing else is required.</li>
+        <li><strong>Billing details</strong> — handled by Stripe. Stripe acts as the
+          <strong>merchant of record</strong> for every sale: your card details, billing address
+          and tax handling live entirely with Stripe. We store only your Stripe customer and
+          subscription identifiers and your plan status — we never see or store your card
+          number.</li>
+        <li><strong>Team membership</strong> — if you own or join a team, we store the team name,
+          its members, roles, and pending invitations (invited email addresses).</li>
+        <li><strong>Sign-in &amp; access records</strong> — short-lived sign-in codes, active
+          sessions, and an audit log of protected downloads and auth events. IP addresses in that
+          log are stored only as a salted hash, never in the clear.</li>
+      </ul>
+
+      <h2>How we use it, and our legal basis</h2>
+      <ul>
+        <li><strong>To provide the service you asked for (contract)</strong> — authenticate you,
+          unlock and deliver Pro content, manage your team, and process your subscription.</li>
+        <li><strong>To send transactional email (contract)</strong> — sign-in codes, team
+          invitations, and payment receipts. These are not marketing; we don't send marketing
+          email without your consent.</li>
+        <li><strong>To keep the service secure (legitimate interest)</strong> — rate-limiting,
+          abuse and fraud prevention, and the access audit log.</li>
+        <li><strong>To meet legal obligations</strong> — e.g. retaining accounting records.</li>
+      </ul>
+
+      <h2>Who processes your data</h2>
+      <table>
+        <tr><th>Provider</th><th>Purpose</th><th>Data</th></tr>
+        <tr><td>Stripe</td><td>Payments &amp; subscriptions, as merchant of record</td>
+          <td>Email, card details (entered directly with Stripe), billing address, tax status,
+            plan status. For purchases, Stripe is an independent controller under its own
+            <a href="https://stripe.com/privacy">privacy policy</a>.</td></tr>
+        <tr><td>Resend</td><td>Transactional email</td>
+          <td>Email address, message content (sign-in codes / invites)</td></tr>
+        <tr><td>Cloudflare</td><td>Hosting, database &amp; file storage</td>
+          <td>Account &amp; team data, sessions, hashed access logs, Pro content delivery</td></tr>
+      </table>
+      <p>We do not sell or rent your personal data, and we don't share it with advertisers.</p>
+
+      <h2>Cookies</h2>
+      <p>We use a single essential cookie — <code>lp_session</code> — to keep you signed in. It is
+        HttpOnly, Secure, and set only after you sign in; it carries no tracking data. We use no
+        advertising or third-party tracking cookies — so there is no cookie consent banner to
+        click through.</p>
+
+      <h2>How long we keep it</h2>
+      <ul>
+        <li><strong>Account &amp; team data</strong> — for as long as your account exists. Delete
+          your account and it goes with it, immediately.</li>
+        <li><strong>Sessions &amp; sign-in codes</strong> — short-lived; codes expire in minutes,
+          sessions in weeks. Both are deleted once used or expired.</li>
+        <li><strong>Access &amp; audit logs</strong> — 12 months, for abuse prevention and
+          security investigation, then deleted automatically. If you delete your account, these
+          stop being linked to you straight away.</li>
+        <li><strong>Billing records</strong> — invoices for your purchases are issued and retained
+          by Stripe as merchant of record, for as long as tax law requires.</li>
+      </ul>
+
+      <h2>International transfers</h2>
+      <p>We host in Cloudflare's EU region where possible, and our email region is the EU
+        (Ireland). Some processors (e.g. Stripe) may process data outside the EEA; where they do,
+        they rely on appropriate safeguards such as the EU Standard Contractual Clauses.</p>
+
+      <h2>Your rights</h2>
+      <p>If you're in the EU/EEA or UK, you can ask us to:</p>
+      <ul>
+        <li><strong>Access</strong> the personal data we hold about you, or receive a copy
+          (portability).</li>
+        <li><strong>Correct</strong> data that's wrong or out of date.</li>
+        <li><strong>Delete</strong> your account and personal data (billing records held by Stripe
+          are subject to Stripe's own legal retention).</li>
+        <li><strong>Object to or restrict</strong> certain processing.</li>
+      </ul>
+      <p>Email <a href="mailto:jakubja@gmail.com">jakubja@gmail.com</a> and we'll action it. You
+        can delete most account data yourself from <a href="account.html">your account</a>. You
+        also have the right to complain to your local data protection authority.</p>
+
+      <h2>Children</h2>
+      <p>Libraries.dev is a developer tool and isn't directed at children. We don't knowingly
+        collect data from anyone under 16.</p>
+
+      <h2>Changes to this policy</h2>
+      <p>If we make material changes, we'll update the date above and, where appropriate, notify
+        you by email. Continued use after a change means you accept the updated policy.</p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-row">
+      <span>© <span id="y"></span> Jakub Antalik</span>
+      <div class="footer-links">
+        <a href="terms.html">Terms</a>
+        <a href="privacy.html">Privacy</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>document.getElementById("y").textContent = new Date().getFullYear();</script>
+  <script src="assets/pro-client.js" defer></script>
+</body>
+</html>
