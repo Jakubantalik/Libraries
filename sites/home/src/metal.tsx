@@ -1,4 +1,4 @@
-import { StrictMode, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { CodeCopy } from "./examples/CodeCopy";
 import { MetalExamples } from "./examples/metal-examples";
@@ -260,8 +260,10 @@ function MetalPlayground() {
 const el = document.getElementById("playground-root");
 if (el) {
   createRoot(el).render(
-    <StrictMode>
-      <MetalPlayground />
-    </StrictMode>
+    /* No StrictMode: metal-fx v1 keeps one shared renderer, and the
+       simulated double-mount destroys it in a state its loop never
+       recovers from — everything paints one frame and freezes. The
+       library's own demo mounts without StrictMode too. */
+    <MetalPlayground />
   );
 }
