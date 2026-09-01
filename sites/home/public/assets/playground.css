@@ -5,10 +5,12 @@
 /* ── Detail page shell: sidebar + main, after transitions.dev/detail ──
    Sidebar sticks under the nav and lists the five libraries; the main
    column carries prev/next arrows, the head, and the tab panels. */
+/* Fills the .app container like transitions.dev's — no cap of its own, so
+   the sidebar's left edge lands on the same 24px app padding as the nav
+   brand, and the content column starts right of it instead of centring.
+   The 686px cap on the panels is what bounds the content. */
 .docs {
   width: 100%;
-  max-width: 1008px;
-  margin: 0 auto;
   padding: 32px 0 96px;
   display: grid;
   grid-template-columns: 200px minmax(0, 1fr);
