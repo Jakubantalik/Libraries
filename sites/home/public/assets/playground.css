@@ -74,14 +74,18 @@
     inset 0 0 0 1px rgba(255, 255, 255, 0.02),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
 }
-/* The "Getting started" group takes transitions.dev's plain 32px row
-   whatever its state — active changes the colour and fill, never the
-   height, so the list does not jump as you move between pages. */
+/* The "Getting started" group takes transitions.dev's plain row whole:
+   32px on 12px of side padding, whatever its state — active changes the
+   colour and fill, never the height, so the list does not jump as you
+   move between pages. Its label takes the same 12px so the text lines
+   up with the links under it. */
 .docs-group--links .docs-link {
   height: 32px;
+  padding: 0 12px;
   font-weight: 400;
   line-height: 16px;
 }
+.docs-group--links .docs-group-label { padding: 9px 12px; }
 .docs-link--muted { color: var(--text-muted); }
 .docs-link:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
 /* Icon card: the Figma export used verbatim (fill, rim, glyph and its
