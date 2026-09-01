@@ -200,8 +200,9 @@
         inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
     }
     .st-lib:focus-visible { outline: 2px solid var(--icon-color); outline-offset: 2px; }
-    /* Icon card per Figma 1419:38618 — hairline rim, lit top edge, and a
-       1px drop under the box. */
+    /* Icon card per Figma 1419:38618 — same treatment as the docs sidebar:
+       the box owns the fill and the rim (in ::after, above the bitmap),
+       and the bitmap's baked #222 ground blends `lighten` up to the fill. */
     .st-lib-ico {
       position: relative;
       flex: none;
@@ -209,14 +210,23 @@
       height: 24px;
       border-radius: 7px;
       overflow: hidden;
-      box-shadow:
-        0 1px 3px 0 rgba(0, 0, 0, 0.04),
-        inset 0 0 0 1px rgba(196, 196, 196, 0.1),
-        inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
-        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06);
+      background: rgba(59, 59, 59, 0.7);
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
       filter: drop-shadow(0 1px 0.5px rgba(0, 0, 0, 0.24));
     }
-    .st-lib-ico img { width: 100%; height: 100%; display: block; object-fit: cover; }
+    .st-lib-ico::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      box-shadow:
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.1),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06);
+    }
+    .st-lib-ico img { width: 100%; height: 100%; display: block; object-fit: cover; mix-blend-mode: lighten; }
     /* The image-generation export sits on a larger canvas (104px against
        the 92px the others use), so scale it up to crop that padding away
        and let its art fill the slot like every other tile. */
