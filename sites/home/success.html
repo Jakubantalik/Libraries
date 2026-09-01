@@ -51,6 +51,15 @@
         <p class="small" id="succ-err" style="color: var(--err); margin: 10px 0 0" hidden></p>
       </div>
 
+      <!-- Fallback when the checkout email can't be resolved: signing in is
+           the one thing the buyer still has to do, so it gets the primary CTA
+           rather than a one-shot auto-opened dialog. -->
+      <div class="card" id="succ-signin-card" hidden>
+        <p style="margin: 0 0 16px">Your payment went through. Sign in with your checkout
+          email to open your account — your profile was created automatically.</p>
+        <button class="btn" id="succ-signin-btn">Sign in</button>
+      </div>
+
       <div class="card" id="succ-done-card" hidden>
         <p style="margin: 0 0 16px">You're signed in. Premium variants, Studio access and your
           commercial license are active.</p>
@@ -81,9 +90,14 @@
       document.getElementById("succ-code-card").hidden = false;
       document.getElementById("succ-code").focus();
     }
+    function showSignInCard() {
+      document.getElementById("succ-lead").textContent = "One last step to open your account.";
+      document.getElementById("succ-signin-card").hidden = false;
+    }
     function showDone() {
       document.getElementById("succ-lead").textContent = "Everything is ready.";
       document.getElementById("succ-code-card").hidden = true;
+      document.getElementById("succ-signin-card").hidden = true;
       document.getElementById("succ-done-card").hidden = false;
     }
 
@@ -95,21 +109,20 @@
       document.addEventListener("pro:me", function once(e) {
         document.removeEventListener("pro:me", once);
         if (e.detail.authenticated) { showDone(); return; }
-        if (!sessionId) {
-          document.getElementById("succ-lead").textContent =
-            "Your payment went through. Sign in with your checkout email to open your account.";
-          LibrariesPro.openSignIn();
-          return;
-        }
+        if (!sessionId) { showSignInCard(); return; }
         // Ask the API to email a sign-in code to the buyer's checkout address.
         LibrariesPro.signInFromCheckout(sessionId).then(function (r) {
           if (r && r.ok && r.email) showCodeCard(r.email);
-          else {
-            document.getElementById("succ-lead").textContent =
-              "Your payment went through. Sign in with your checkout email to open your account.";
-            LibrariesPro.openSignIn();
-          }
+          else showSignInCard();
         });
+      });
+
+      document.getElementById("succ-signin-btn").addEventListener("click", function () {
+        LibrariesPro.openSignIn();
+      });
+      // Signing in through the modal (or another tab) finishes this page too.
+      document.addEventListener("pro:me", function (e) {
+        if (e.detail.authenticated && e.detail.resolved) showDone();
       });
 
       document.getElementById("succ-form").addEventListener("submit", function (e) {

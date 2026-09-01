@@ -435,29 +435,32 @@
     modalEl = document.createElement("div");
     modalEl.className = "lp-modal";
     modalEl.setAttribute("hidden", "");
+    // Two steps, one question each: ask for the email, then ask for the code.
+    // Both forms on screen together presented two inputs and two buttons at
+    // once and left the user deciding which they were meant to use.
     modalEl.innerHTML =
       '<div class="lp-modal-backdrop" data-lp-close></div>' +
       '<div class="lp-modal-card" role="dialog" aria-modal="true" aria-labelledby="lp-modal-title">' +
         '<button type="button" class="lp-modal-x" aria-label="Close" data-lp-close>&times;</button>' +
-        '<p class="lp-modal-intro" id="lp-modal-title">Enter your email.' +
-          ' <span class="lp-modal-intro-muted">We’ll send you a sign-in code.</span></p>' +
+        '<p class="lp-modal-intro" id="lp-modal-title">Enter your email address' +
+          '<span class="lp-modal-intro-muted" data-step-sub>The one you used at checkout.</span></p>' +
         '<form class="lp-modal-form lp-modal-email-form" novalidate>' +
           '<div class="lp-modal-field">' +
-            '<label class="lp-modal-label" for="lp-modal-email">Your email</label>' +
-            '<input class="lp-modal-input" id="lp-modal-email" type="email" name="email" placeholder="name@example.com" autocomplete="email" />' +
+            '<input class="lp-modal-input" id="lp-modal-email" type="email" name="email" placeholder="you@example.com" autocomplete="email" aria-label="Email address" />' +
             '<p class="lp-modal-error" role="alert" hidden>Please enter a valid email.</p>' +
           '</div>' +
           '<button class="lp-modal-btn" type="submit">Send code</button>' +
+          '<button class="lp-modal-btn lp-modal-btn--ghost" type="button" data-lp-close>Back</button>' +
         '</form>' +
-        '<p class="lp-modal-note" role="status" hidden></p>' +
         '<form class="lp-modal-form lp-modal-code-form" novalidate hidden>' +
           '<div class="lp-modal-field">' +
-            '<label class="lp-modal-label" for="lp-modal-code">Enter the code from the email</label>' +
-            '<input class="lp-modal-input" id="lp-modal-code" type="text" name="code" placeholder="XXXX-XXXX" autocomplete="one-time-code" spellcheck="false" style="text-transform:uppercase" />' +
+            '<input class="lp-modal-input" id="lp-modal-code" type="text" name="code" placeholder="XXXX-XXXX" autocomplete="one-time-code" spellcheck="false" inputmode="text" style="text-transform:uppercase" aria-label="One-time code" />' +
             '<p class="lp-modal-error" role="alert" hidden>That code didn’t work — check it and try again.</p>' +
           '</div>' +
-          '<button class="lp-modal-btn" type="submit">Sign in</button>' +
+          '<button class="lp-modal-btn" type="submit">Verify</button>' +
+          '<button class="lp-modal-btn lp-modal-btn--ghost" type="button" data-lp-restart>Use a different email</button>' +
         '</form>' +
+        '<p class="lp-modal-note" role="status" hidden></p>' +
         '<p class="lp-modal-foot">No access? <a href="pro.html">Get Pro</a></p>' +
       "</div>";
     document.body.appendChild(modalEl);
@@ -469,7 +472,38 @@
       if (e.key === "Escape" && !modalEl.hasAttribute("hidden")) closeAuthModal();
     });
 
+    // Step control. The card shows exactly one form at a time; the heading and
+    // sub-line change with it so the user is answering one question per screen.
     var emailForm = modalEl.querySelector(".lp-modal-email-form");
+    var codeFormEl = modalEl.querySelector(".lp-modal-code-form");
+    var titleEl = modalEl.querySelector(".lp-modal-intro");
+    function showStep(step, email) {
+      var code = step === "code";
+      emailForm.hidden = code;
+      codeFormEl.hidden = !code;
+      titleEl.firstChild.nodeValue = code ? "Enter one-time password" : "Enter your email address";
+      var sub = titleEl.querySelector("[data-step-sub]");
+      if (sub) sub.textContent = code
+        ? "We sent it to " + (email || "your inbox") + "."
+        : "The one you used at checkout.";
+      var focusEl = modalEl.querySelector(code ? "#lp-modal-code" : "#lp-modal-email");
+      setTimeout(function () { if (focusEl) focusEl.focus(); }, 0);
+    }
+    modalEl.__showStep = showStep;
+
+    // "Use a different email" returns to step one rather than closing, so a
+    // typo in the address costs one click instead of restarting the flow.
+    var restart = modalEl.querySelector("[data-lp-restart]");
+    if (restart) {
+      restart.addEventListener("click", function () {
+        var note = modalEl.querySelector(".lp-modal-note");
+        setModalNote(note, "", "");
+        codeFormEl.querySelector(".lp-modal-error").hidden = true;
+        codeFormEl.querySelector(".lp-modal-input").value = "";
+        showStep("email");
+      });
+    }
+
     var input = emailForm.querySelector(".lp-modal-input");
     var errEl = emailForm.querySelector(".lp-modal-error");
     function setError(on) {
@@ -502,15 +536,16 @@
               "err");
             return;
           }
-          setModalNote(note, "Check your email — type the code below.", "ok");
-          var cf = modalEl.querySelector(".lp-modal-code-form");
-          if (cf) { cf.hidden = false; cf.querySelector("input").focus(); }
+          // The step itself already says an email was sent and to which address;
+          // a second confirmation line only competes with it.
+          setModalNote(note, "", "");
+          if (modalEl.__showStep) modalEl.__showStep("code", email);
         })
         .catch(function () { setModalNote(note, "Couldn’t send the code. Please try again.", "err"); })
         .finally(function () { btn.disabled = false; btn.textContent = "Send code"; });
     });
 
-    var codeForm = modalEl.querySelector(".lp-modal-code-form");
+    var codeForm = codeFormEl;
     codeForm.addEventListener("submit", function (e) {
       e.preventDefault();
       var cInput = codeForm.querySelector("input");
@@ -520,7 +555,7 @@
       var code = cInput.value.trim();
       if (!code) { cErr.hidden = false; cInput.focus(); return; }
       cErr.hidden = true;
-      cBtn.disabled = true; cBtn.textContent = "Signing in…";
+      cBtn.disabled = true; cBtn.textContent = "Verifying…";
       submitCode(input.value.trim(), code)
         .then(function (r) {
           if (r && r.ok) {
@@ -541,7 +576,7 @@
           setTimeout(function () { cInput.classList.remove("is-shaking"); }, 300);
         })
         .catch(function () { cErr.hidden = false; })
-        .finally(function () { cBtn.disabled = false; cBtn.textContent = "Sign in"; });
+        .finally(function () { cBtn.disabled = false; cBtn.textContent = "Verify"; });
     });
     return modalEl;
   }
@@ -558,6 +593,7 @@
     m._inviteToken = opts && opts.inviteToken || null;
     lastFocus = document.activeElement;
     setModalNote(m.querySelector(".lp-modal-note"), "", "");
+    if (m.__showStep) m.__showStep("email");
     m.classList.remove("is-closing");
     m.removeAttribute("hidden");
     void m.offsetWidth;
@@ -605,9 +641,12 @@
       ".lp-modal-x:hover{opacity:.9}" +
       ".lp-modal-x:active{scale:.9}" +
       ".lp-modal-intro{margin:0;font-size:16px;line-height:24.2px;font-weight:400;padding-right:20px}" +
-      ".lp-modal-intro-muted{color:#8a8a8a}" +
-      ".lp-modal-form{display:flex;flex-direction:column;gap:24px}" +
-      ".lp-modal-form[hidden]{display:none}" +
+      ".lp-modal-intro-muted{color:#8a8a8a;display:block}" +
+      ".lp-modal-form{display:flex;flex-direction:column;gap:12px}" +
+      // An author display rule outranks the UA [hidden] style, so every element
+      // this modal toggles needs its own companion rule (site.css's global
+      // [hidden] covers pages, but the modal must stand alone).
+      ".lp-modal-form[hidden],.lp-modal-note[hidden],.lp-modal-error[hidden]{display:none}" +
       ".lp-modal-field{display:flex;flex-direction:column;gap:6px}" +
       ".lp-modal-label{font-size:13px;line-height:1.4;color:#4d4d4d}" +
       'html[data-theme="dark"] .lp-modal-label{color:#b5b5b5}' +
@@ -628,6 +667,14 @@
       ".lp-modal-btn:not([disabled]):active{scale:.96}" +
       ".lp-modal-btn[disabled]{opacity:.6;cursor:default}" +
       'html[data-theme="dark"] .lp-modal-btn{background:#f2f2f2;color:#111}' +
+      // Site secondary tokens, matching the paywall's secondary action: the
+      // 0 1px 2px shadow belongs to the PRIMARY variant only, so the secondary
+      // drops it rather than inheriting it from the base class. Doubled class
+      // so this outranks the themed base rule whatever the sheet order.
+      ".lp-modal-btn.lp-modal-btn--ghost{background:#e9e9e9;color:#17181c;box-shadow:none}" +
+      ".lp-modal-btn.lp-modal-btn--ghost:hover{background:#e0e0e0}" +
+      'html[data-theme="dark"] .lp-modal-btn.lp-modal-btn--ghost{background:#2a2a2c;color:#f2f2f2}' +
+      'html[data-theme="dark"] .lp-modal-btn.lp-modal-btn--ghost:hover{background:#333336}' +
       ".lp-modal-note{margin:0;font-size:13px;line-height:1.4;white-space:pre-line}" +
       '.lp-modal-note[data-kind="ok"]{color:#16a34a}' +
       '.lp-modal-note[data-kind="err"]{color:#d62b11}' +
