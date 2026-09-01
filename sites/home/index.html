@@ -114,12 +114,15 @@
     .hero-tile {
       position: absolute; width: 130px; height: 130px; display: block;
       border-radius: 24px; background: #181818; text-decoration: none;
+      /* The gallery card's surface, to the value — the tiles sat a shade
+         brighter on the last ring (0.1 against 0.07), which read as a
+         different material at a glance. */
       box-shadow:
         0 1px 3px 0 rgba(0, 0, 0, 0.04),
         inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
         inset 0 0 0 1px rgba(0, 0, 0, 0.06),
         inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
-        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+        inset 0 0 0 1px rgba(196, 196, 196, 0.07);
       transition: background-color 0.15s ease;
       z-index: 5;
     }
