@@ -605,7 +605,10 @@ html[data-theme="dark"] .detail-tabs.proto-modal-tabs { background: #272727; }
   grid-template-columns: minmax(0, 1fr) 244px;
   gap: 12px;
 }
-.detail-body .pg > .pg-snippet { grid-column: 1 / -1; }
+/* A snippet inside the grid is already spaced by its row gap, so it drops
+   the margin the standalone rule gives it — otherwise the two stack to 24px
+   and gooey sits lower than every other detail page. */
+.detail-body .pg > .pg-snippet { grid-column: 1 / -1; margin-top: 0; }
 /* Sibling snippets sit outside the grid, so they need its gap. */
 .detail-body .pg + .pg-snippet { margin-top: 12px; }
 @media (max-width: 860px) {

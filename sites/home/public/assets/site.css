@@ -205,6 +205,13 @@ body {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+/* Headings balance their lines so a short last line never dangles; body text
+   uses `pretty`, which only guards the orphan without equalising lengths.
+   `balance` is capped at six lines in Chromium, so it is deliberately kept
+   off paragraphs, where it would be silently ignored. */
+h1, h2, h3, h4 { text-wrap: balance; }
+p, li, figcaption, blockquote { text-wrap: pretty; }
+
 html {
   /* In-page anchors glide rather than jump. Honoured site-wide; the
      reduced-motion block below puts the instant jump back. */
@@ -425,7 +432,7 @@ html {
   align-items: center;
   justify-content: center;
   height: 36px;
-  padding: 0 13px;
+  padding: 0 12px;
   border-radius: 50px;
   font-family: var(--font-sans);
   font-size: 13px;
@@ -436,6 +443,22 @@ html {
   white-space: nowrap;
   transition: background-color 0.15s ease, color 0.15s ease;
   -webkit-tap-highlight-color: transparent;
+}
+/* Small Pro tag riding the Studio pill — the Studio app's own .st-top-chip
+   at nav scale: same blue wash, ink and raised-surface ring. */
+.nav-pill-pro {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 50px;
+  background: rgba(85, 207, 255, 0.14);
+  color: #7cd4ff;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 14px;
+  box-shadow: var(--material-shadow);
 }
 .nav-pill:hover { color: var(--text); background: rgba(0, 0, 0, 0.03); }
 html[data-theme="dark"] .nav-pill:hover { background: rgba(255, 255, 255, 0.06); }

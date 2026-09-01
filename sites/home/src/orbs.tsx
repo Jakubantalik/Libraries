@@ -38,16 +38,15 @@ const LABEL_OVERRIDES: Partial<Record<OrbState, string>> = {
 
 const cap = (v: string) => v.charAt(0).toUpperCase() + v.slice(1);
 
+/* Weaving and shaping live in the Studio, not here. */
 const STATES: OrbState[] = [
   "working",
   "searching",
   "solving",
   "listening",
   "connecting",
-  "weaving",
   "composing",
   "breathing",
-  "shaping",
 ];
 /* Two sizes here; 32px and the speed knob live in the Studio. */
 const SIZES: OrbSize[] = [64, 20];
