@@ -103,9 +103,7 @@
   left: -3px;
   top: -2px;
 }
-/* Beam is a processed raster: 40x40 canvas, card at (8,8), the glow
-   kept as alpha. */
-.docs-link-icon[src*="figma-beam"] { width: 40px; height: 40px; left: -8px; top: -8px; }
+
 
 .docs-main { position: relative; min-width: 0; }
 
