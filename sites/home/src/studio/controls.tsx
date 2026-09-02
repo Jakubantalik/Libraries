@@ -1177,9 +1177,15 @@ export function StageBar({
               menuOpen ? closeMenu() : openMenu();
             }}
           >
-            <span className="detail-prompt-label">Preset</span>
+            <span className="detail-prompt-label">Presets</span>
+            {/* Icon/Chevron small down, exported from the same Figma frame. */}
             <svg className="st-preset-chev" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M5 6.5L8 9.5L11 6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M4.46967 6.46967C4.76256 6.17678 5.23744 6.17678 5.53033 6.46967L8 8.93934L10.4697 6.46967C10.7626 6.17678 11.2374 6.17678 11.5303 6.46967C11.8232 6.76256 11.8232 7.23744 11.5303 7.53033L8.53033 10.5303C8.23744 10.8232 7.76256 10.8232 7.46967 10.5303L4.46967 7.53033C4.17678 7.23744 4.17678 6.76256 4.46967 6.46967Z"
+                fill="currentColor"
+              />
             </svg>
           </button>
           <div
@@ -1189,8 +1195,11 @@ export function StageBar({
             aria-label="Presets"
           >
             {presets.length === 0 && !dirty && (
-              <div className="tl-menu-item st-preset-empty" aria-disabled="true">
-                <span className="tl-menu-item-label">No saved presets</span>
+              /* Empty state, Figma 1432:39119: the headline plus a line
+                 saying where presets come from. */
+              <div className="st-preset-empty">
+                <p className="st-preset-empty-title">No saved presets</p>
+                <p className="st-preset-empty-sub">Once customized, you’ll be able to save presets here.</p>
               </div>
             )}
             {presets.map((x) => (
@@ -1243,9 +1252,15 @@ export function StageBar({
           onClick={resetAll}
           aria-label="Reset to default"
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M3 12a9 9 0 1 0 3-6.7" />
-            <path d="M3 4v5h5" />
+          {/* refresh-ccw-01, exported from the same Figma frame. */}
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path
+              d="M1.33301 6.66667C1.33301 6.66667 2.66966 4.84548 3.75556 3.75883C4.84147 2.67218 6.34207 2 7.99967 2C11.3134 2 13.9997 4.68629 13.9997 8C13.9997 11.3137 11.3134 14 7.99967 14C5.26428 14 2.95642 12.1695 2.23419 9.66667M5.33301 6.66667H1.33301V2.66667"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
           <span className="card-copy-tooltip" aria-hidden="true"><span className="tt-text">Reset to default</span></span>
         </button>
@@ -1259,12 +1274,12 @@ export function StageBar({
           aria-label="Copy agent prompt"
         >
           <span className="detail-prompt-ico" aria-hidden="true">
-            <svg className="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            {/* copy-03, exported from Figma 1419:38547. */}
+            <svg className="icon-copy" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5.6 5.6V3.92C5.6 3.24794 5.6 2.91191 5.73079 2.65521C5.84584 2.42942 6.02942 2.24584 6.25521 2.13079C6.51191 2 6.84794 2 7.52 2H12.08C12.7521 2 13.0881 2 13.3448 2.13079C13.5706 2.24584 13.7542 2.42942 13.8692 2.65521C14 2.91191 14 3.24794 14 3.92V8.48C14 9.15206 14 9.4881 13.8692 9.74479C13.7542 9.97058 13.5706 10.1542 13.3448 10.2692C13.0881 10.4 12.7521 10.4 12.08 10.4H10.4M3.92 14H8.48C9.15206 14 9.48809 14 9.74479 13.8692C9.97058 13.7542 10.1542 13.5706 10.2692 13.3448C10.4 13.0881 10.4 12.7521 10.4 12.08V7.52C10.4 6.84794 10.4 6.51191 10.2692 6.25521C10.1542 6.02942 9.97058 5.84584 9.74479 5.73079C9.48809 5.6 9.15206 5.6 8.48 5.6H3.92C3.24794 5.6 2.91191 5.6 2.65521 5.73079C2.42942 5.84584 2.24584 6.02942 2.13079 6.25521C2 6.51191 2 6.84794 2 7.52V12.08C2 12.7521 2 13.0881 2.13079 13.3448C2.24584 13.5706 2.42942 13.7542 2.65521 13.8692C2.91191 14 3.24794 14 3.92 14Z" />
             </svg>
-            <svg className="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12" />
+            <svg className="icon-check" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="13.5 4.5 6.5 12 2.5 8" />
             </svg>
           </span>
           <span className="detail-prompt-label">Copy prompt</span>

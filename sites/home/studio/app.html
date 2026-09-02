@@ -114,8 +114,9 @@
       gap: 8px;
       white-space: nowrap;
     }
-    /* Pro chip — transitions.dev's Pro blue (the same wash its "Get Pro"
-       pill wears in dark mode) at their eyebrow-badge proportions. */
+    /* Pro chip — the nav's small badge (.nav-pill-pro in site.css), same
+       18px proportions and Pro blue, so the Studio's title wears exactly
+       what "Studio Pro" wears in the site nav. */
     html[data-theme="dark"] .st-top-chip {
       background: rgba(85, 207, 255, 0.14);
       color: #7cd4ff;
@@ -123,15 +124,15 @@
     .st-top-chip {
       display: inline-flex;
       align-items: center;
-      height: 22px;
-      padding: 0 8px;
+      height: 18px;
+      padding: 0 6px;
       border-radius: 50px;
       background: rgba(0, 122, 175, 0.1);
       color: #0f7ba5;
       font-family: var(--font-sans);
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 500;
-      line-height: 16px;
+      line-height: 14px;
       /* The raised-surface ring every card and pill here wears, so the chip
          sits on the same material instead of reading as a flat wash. */
       box-shadow: var(--material-shadow);
@@ -310,9 +311,12 @@
       margin-bottom: -16px;
       padding-bottom: 16px;
     }
+    /* The rules run the card's full width: the scroll box carries the
+       panel's 16px inset as its own padding, so -16px lands exactly on the
+       card's edge — inside the box, so it neither clips nor scrolls. */
     .st-main .pg-controls .st-panel-body > .pg-field::before {
-      left: 0;
-      right: 0;
+      left: -16px;
+      right: -16px;
     }
     /* The head is the panel's sticky header: it sits outside the scroll box,
        so it holds while the knobs scroll under it. The rule that used to be

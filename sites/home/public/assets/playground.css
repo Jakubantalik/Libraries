@@ -487,66 +487,61 @@ html[data-theme="light"] .detail-prompt:active { background: #f1f1f1; }
   color: var(--pg-title);
 }
 
-/* Stage-bar action group: Preset ▾ · reset · Copy prompt, all 32px.
-   Preset and reset are the design system's ghost button (Figma
-   1432:39019): 32px at 36px radius, 12px sides, no fill or ring at rest
-   with #cecece text; white-4% on hover and white-6% on press, both
-   lifting the text to #fbfbfb; disabled keeps the rest fill at 50%.
+/* Stage-bar action group: Presets ▾ · reset · Copy prompt, all 32px.
+   Figma 1432:39116 — both are ghosts at 60px radius: no fill at rest,
+   white-4% on hover and while pressed/open, #fbfbfb label at 13px/16px,
+   16px icons. Presets pads 12 left / 8 right around its chevron; reset is
+   a square with 8px sides. Disabled drops the whole button to 60%.
    Copy prompt keeps the filled pill so the one real action reads first. */
 .st-stage-actions { display: flex; align-items: center; gap: 4px; }
 .st-stage-actions .detail-prompt:not(.st-preset-btn) { margin-left: 4px; }
-.st-ghost-btn,
 .st-preset-btn,
 html[data-theme="dark"] .st-preset-btn,
 html[data-theme="light"] .st-preset-btn,
 .st-reset-btn,
 html[data-theme="dark"] .st-reset-btn {
   height: 32px;
-  padding: 0 12px;
   border: 0;
-  border-radius: 36px;
+  border-radius: 60px;
   background: transparent;
   box-shadow: none;
-  color: #cecece;
+  color: #fbfbfb;
   font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 500;
-  line-height: 14px;
-  transition: background 140ms, color 140ms;
+  line-height: 16px;
+  transition: background 140ms, opacity 140ms;
 }
-/* Theme-prefixed so these outrank the theme-scoped rest rule above. */
+.st-preset-btn { gap: 4px; padding: 6px 8px 6px 12px; }
+.st-reset-btn { position: relative; width: 32px; padding: 6px 8px; }
+/* Theme-prefixed so these outrank the theme-scoped rest rules above. */
 .st-preset-btn:hover,
 .st-preset-btn[aria-expanded="true"],
+.st-preset-btn:active,
 .st-reset-btn:hover,
+.st-reset-btn:active,
 html[data-theme="dark"] .st-preset-btn:hover,
 html[data-theme="dark"] .st-preset-btn[aria-expanded="true"],
-html[data-theme="dark"] .st-reset-btn:hover {
-  background: rgba(255, 255, 255, 0.04);
-  color: #fbfbfb;
-}
-.st-preset-btn:active,
-.st-reset-btn:active,
 html[data-theme="dark"] .st-preset-btn:active,
-html[data-theme="dark"] .st-reset-btn:active {
-  background: rgba(255, 255, 255, 0.06);
-  color: #fbfbfb;
-}
+html[data-theme="dark"] .st-reset-btn:hover,
+html[data-theme="dark"] .st-reset-btn:active { background: rgba(255, 255, 255, 0.04); }
 .st-preset-btn:disabled,
-.st-reset-btn:disabled { background: transparent; color: rgba(251, 251, 251, 0.5); cursor: default; }
+.st-reset-btn:disabled { background: transparent; opacity: 0.6; cursor: default; }
 /* Light theme: the same ghost, inked for a light surface. */
 html[data-theme="light"] .st-preset-btn,
-html[data-theme="light"] .st-reset-btn { color: var(--pg-label); }
+html[data-theme="light"] .st-reset-btn { color: var(--pg-title); }
 html[data-theme="light"] .st-preset-btn:hover,
 html[data-theme="light"] .st-preset-btn[aria-expanded="true"],
-html[data-theme="light"] .st-reset-btn:hover { background: rgba(0, 0, 0, 0.04); color: var(--pg-title); }
 html[data-theme="light"] .st-preset-btn:active,
-html[data-theme="light"] .st-reset-btn:active { background: rgba(0, 0, 0, 0.06); color: var(--pg-title); }
-.st-preset-btn { gap: 4px; padding-right: 10px; }
-/* The chevron and the reset glyph take the button's own text color. */
-.st-preset-chev { flex: none; color: currentColor; }
-.st-reset-btn { position: relative; width: 32px; padding: 0; }
+html[data-theme="light"] .st-reset-btn:hover,
+html[data-theme="light"] .st-reset-btn:active { background: rgba(0, 0, 0, 0.04); }
+/* Both glyphs are the frame's own 16px icons, at the icon grey the export
+   carries (#b8b8b8) rather than the label's #fbfbfb. */
+.st-preset-chev { flex: none; width: 16px; height: 16px; color: #b8b8b8; }
 .st-reset-btn svg,
-.st-reset-btn:hover svg { width: 16px; height: 16px; fill: none; stroke: currentColor; color: currentColor; }
+.st-reset-btn:hover svg { width: 16px; height: 16px; fill: none; color: #b8b8b8; }
+html[data-theme="light"] .st-preset-chev,
+html[data-theme="light"] .st-reset-btn svg { color: var(--pg-label); }
 @media (hover: hover) {
   .st-reset-btn:hover .card-copy-tooltip,
   .st-reset-btn:focus-visible .card-copy-tooltip {
@@ -562,8 +557,26 @@ html[data-theme="light"] .st-reset-btn:active { background: rgba(0, 0, 0, 0.06);
 /* Preset menu: the nav's tl-menu, with a save form under the list. */
 .st-preset-menu { width: 240px; }
 .st-preset-row .tl-menu-item-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.st-preset-empty { color: var(--text-muted); cursor: default; }
-.st-preset-empty:hover { background: transparent; }
+/* Empty presets menu (Figma 1432:39119): centred, 8px between the two
+   lines, #fbfbfb 13px headline over a #b1b1b1 12px explainer. */
+.st-preset-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px 10px;
+  text-align: center;
+}
+.st-preset-empty-title,
+.st-preset-empty-sub {
+  margin: 0;
+  font-family: var(--font-sans);
+  line-height: 16px;
+}
+.st-preset-empty-title { font-size: 13px; font-weight: 500; color: #fbfbfb; }
+.st-preset-empty-sub { font-size: 12px; font-weight: 400; color: #b1b1b1; }
+html[data-theme="light"] .st-preset-empty-title { color: var(--pg-title); }
+html[data-theme="light"] .st-preset-empty-sub { color: var(--pg-label); }
 .st-preset-menu .st-preset-remove {
   flex: none; width: 20px; height: 20px; border: 0; border-radius: 6px; padding: 0;
   background: transparent; color: var(--text-muted); font-size: 14px; line-height: 1; cursor: pointer;
@@ -623,7 +636,8 @@ html[data-theme="light"] .st-preset-save:active { background: #fafafa; }
   flex: none;
   width: 16px;
   height: 16px;
-  margin-right: 6px;
+  /* Figma 1419:38547: 8px between the copy-03 glyph and the label. */
+  margin-right: 8px;
 }
 .detail-prompt-ico svg {
   position: absolute;
