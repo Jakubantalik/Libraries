@@ -75,6 +75,8 @@
     signIn: signIn,
     portal: startPortal,
     magicLink: magicLink,
+    requestCode: magicLink,
+    submitCode: submitCode,
     approveDevice: approveDevice,
     mountBadges: mountProBadges,
     openSignIn: signIn,
@@ -335,13 +337,19 @@
     }).catch(function () { notify("Couldn't open the billing portal."); });
   }
 
-  // Send a magic-link email. Optional deviceCode ties the login to a device-activate
-  // flow; optional inviteToken makes signing in also accept a team invitation.
+  // Request an emailed sign-in code — deliberately link-free, so the session
+  // always opens in the browser that asked. Optional deviceCode ties the login
+  // to a device-activate flow; inviteToken makes signing in accept a team invite.
+  // (Name kept from the magic-link era so existing pages keep working.)
   function magicLink(email, deviceCode, inviteToken) {
     var body = { email: (email || "").trim() };
     if (deviceCode) body.device_code = deviceCode;
     if (inviteToken) body.invite_token = inviteToken;
-    return apiJSON("/auth/magic-link", "POST", body);
+    return apiJSON("/auth/code/request", "POST", body);
+  }
+  // Exchange email + typed code for a session in THIS browser.
+  function submitCode(email, code) {
+    return apiJSON("/auth/code", "POST", { email: (email || "").trim(), code: (code || "").trim() });
   }
 
   // Approve a device user_code for the currently signed-in user.
@@ -349,12 +357,14 @@
     return apiJSON("/device/approve", "POST", { user_code: (userCode || "").trim().toUpperCase() });
   }
 
-  // After checkout: resolve the buyer's email from the Stripe session and email a sign-in link.
+  // After checkout: resolve the buyer's email from the Stripe session and email a sign-in code.
   function signInFromCheckout(sessionId) {
     return apiJSON("/auth/from-checkout", "POST", { session_id: sessionId });
   }
 
-  function signIn() { openAuthModal(); }
+  // opts: { email?, step? } — the success page prefills the address and jumps
+  // straight to the code step after /auth/from-checkout has emailed one.
+  function signIn(opts) { openAuthModal(opts); }
 
   function notify(msg) { window.alert(msg); }
 
@@ -405,29 +415,32 @@
     modalEl.className = "tp-modal";
     modalEl.setAttribute("hidden", "");
     // Sign-in card (Figma 2330:2574) + input states (Figma 2330:2712).
+    // Two steps, one question each: ask for the email, then ask for the code.
+    // Both forms on screen together presented two inputs and two buttons at
+    // once and left the user deciding which they were meant to use.
     modalEl.innerHTML =
       '<div class="tp-modal-backdrop" data-tp-close></div>' +
       '<div class="tp-modal-card" role="dialog" aria-modal="true" aria-labelledby="tp-modal-title">' +
         '<button type="button" class="tp-modal-x" aria-label="Close" data-tp-close>&times;</button>' +
-        '<p class="tp-modal-intro" id="tp-modal-title">Enter your email you used at checkout.' +
-          ' <span class="tp-modal-intro-muted">We’ll send you a sign-in link.</span></p>' +
+        '<p class="tp-modal-intro" id="tp-modal-title">Enter your email address' +
+          '<span class="tp-modal-intro-muted" data-step-sub>The one you used at checkout.</span></p>' +
         '<form class="tp-modal-form" novalidate>' +
           '<div class="tp-modal-field">' +
-            '<label class="tp-modal-label" for="tp-modal-email">Your email</label>' +
-            '<input class="tp-modal-input" id="tp-modal-email" type="email" name="email" placeholder="name@example.com" autocomplete="email" />' +
+            '<input class="tp-modal-input" id="tp-modal-email" type="email" name="email" placeholder="you@example.com" autocomplete="email" aria-label="Email address" />' +
             '<p class="tp-modal-error" role="alert" hidden>Please enter a valid email.</p>' +
           '</div>' +
-          '<button class="tp-modal-btn" type="submit">Send login link</button>' +
+          '<button class="tp-modal-btn" type="submit">Send code</button>' +
+          '<button class="tp-modal-btn tp-modal-btn--ghost" type="button" data-tp-close>Back</button>' +
         '</form>' +
-        '<p class="tp-modal-note" role="status" hidden></p>' +
         '<form class="tp-modal-form tp-modal-code-form" novalidate hidden>' +
           '<div class="tp-modal-field">' +
-            '<label class="tp-modal-label" for="tp-modal-code">Or enter the code from the email</label>' +
-            '<input class="tp-modal-input" id="tp-modal-code" type="text" name="code" placeholder="XXXX-XXXX" autocomplete="one-time-code" spellcheck="false" style="text-transform:uppercase" />' +
+            '<input class="tp-modal-input" id="tp-modal-code" type="text" name="code" placeholder="XXXX-XXXX" autocomplete="one-time-code" spellcheck="false" inputmode="text" style="text-transform:uppercase" aria-label="One-time code" />' +
             '<p class="tp-modal-error" role="alert" hidden>That code didn\u2019t work \u2014 check it and try again.</p>' +
           '</div>' +
-          '<button class="tp-modal-btn" type="submit">Sign in with code</button>' +
+          '<button class="tp-modal-btn" type="submit">Verify</button>' +
+          '<button class="tp-modal-btn tp-modal-btn--ghost" type="button" data-tp-restart>Use a different email</button>' +
         '</form>' +
+        '<p class="tp-modal-note" role="status" hidden></p>' +
         '<p class="tp-modal-foot">No access? <a href="pro.html">Get Pro</a></p>' +
       "</div>";
     document.body.appendChild(modalEl);
@@ -439,8 +452,40 @@
       if (e.key === "Escape" && !modalEl.hasAttribute("hidden")) closeAuthModal();
     });
 
-    var input = modalEl.querySelector(".tp-modal-input");
-    var errEl = modalEl.querySelector(".tp-modal-error");
+    // Step control. The card shows exactly one form at a time; the heading and
+    // sub-line change with it so the user is answering one question per screen.
+    var emailForm = modalEl.querySelector(".tp-modal-form:not(.tp-modal-code-form)");
+    var codeFormEl = modalEl.querySelector(".tp-modal-code-form");
+    var titleEl = modalEl.querySelector(".tp-modal-intro");
+    function showStep(step, email) {
+      var code = step === "code";
+      emailForm.hidden = code;
+      codeFormEl.hidden = !code;
+      titleEl.firstChild.nodeValue = code ? "Enter one-time password" : "Enter your email address";
+      var sub = titleEl.querySelector("[data-step-sub]");
+      if (sub) sub.textContent = code
+        ? "We sent it to " + (email || "your inbox") + "."
+        : "The one you used at checkout.";
+      var focusEl = modalEl.querySelector(code ? "#tp-modal-code" : "#tp-modal-email");
+      setTimeout(function () { if (focusEl) focusEl.focus(); }, 0);
+    }
+    modalEl.__showStep = showStep;
+
+    // "Use a different email" returns to step one rather than closing, so a
+    // typo in the address costs one click instead of restarting the flow.
+    var restart = modalEl.querySelector("[data-tp-restart]");
+    if (restart) {
+      restart.addEventListener("click", function () {
+        var note = modalEl.querySelector(".tp-modal-note");
+        setModalNote(note, "", "");
+        codeFormEl.querySelector(".tp-modal-error").hidden = true;
+        codeFormEl.querySelector(".tp-modal-input").value = "";
+        showStep("email");
+      });
+    }
+
+    var input = modalEl.querySelector("#tp-modal-email");
+    var errEl = emailForm.querySelector(".tp-modal-error");
     function setError(on) {
       input.classList.toggle("is-error", on);
       errEl.hidden = !on;
@@ -454,9 +499,9 @@
     }
     input.addEventListener("input", function () { setError(false); });
 
-    modalEl.querySelector(".tp-modal-form").addEventListener("submit", function (e) {
+    emailForm.addEventListener("submit", function (e) {
       e.preventDefault();
-      var btn = modalEl.querySelector(".tp-modal-btn");
+      var btn = emailForm.querySelector(".tp-modal-btn");
       var note = modalEl.querySelector(".tp-modal-note");
       var email = input.value.trim();
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { setError(true); input.focus(); return; }
@@ -474,17 +519,17 @@
               "err");
             return;
           }
-          setModalNote(note, "Check your email — click the link, or type the code below.", "ok");
-          var cf = modalEl.querySelector(".tp-modal-code-form");
-          if (cf) { cf.hidden = false; cf.querySelector("input").focus(); }
+          // The step itself already says an email was sent and to which address;
+          // a second confirmation line only competes with it.
+          setModalNote(note, "", "");
+          if (modalEl.__showStep) modalEl.__showStep("code", email);
         })
-        .catch(function () { setModalNote(note, "Couldn’t send the link. Please try again.", "err"); })
-        .finally(function () { btn.disabled = false; btn.textContent = "Send login link"; });
+        .catch(function () { setModalNote(note, "Couldn’t send the code. Please try again.", "err"); })
+        .finally(function () { btn.disabled = false; btn.textContent = "Send code"; });
     });
 
-    // Typed-code path: signs this browser in even when the emailed link was
-    // opened elsewhere (mail apps often open links in their own in-app browser).
-    var codeForm = modalEl.querySelector(".tp-modal-code-form");
+    // Typed-code path — the only path: verifies the code and opens the session.
+    var codeForm = codeFormEl;
     codeForm.addEventListener("submit", function (e) {
       e.preventDefault();
       var cInput = codeForm.querySelector("input");
@@ -494,7 +539,7 @@
       var code = cInput.value.trim();
       if (!code) { cErr.hidden = false; cInput.focus(); return; }
       cErr.hidden = true;
-      cBtn.disabled = true; cBtn.textContent = "Signing in…";
+      cBtn.disabled = true; cBtn.textContent = "Verifying…";
       apiJSON("/auth/code", "POST", { email: input.value.trim(), code: code })
         .then(function (r) {
           if (r && r.ok) {
@@ -502,14 +547,14 @@
             return refreshMe().then(function () { closeAuthModal(); });
           }
           cErr.textContent = r && r.error === "too_many_attempts"
-            ? "Too many tries — request a fresh link and use its new code."
+            ? "Too many tries — request a fresh code."
             : "That code didn’t work — check it and try again.";
           cErr.hidden = false;
           cInput.classList.remove("is-shaking"); void cInput.offsetWidth; cInput.classList.add("is-shaking");
           setTimeout(function () { cInput.classList.remove("is-shaking"); }, 300);
         })
         .catch(function () { cErr.hidden = false; })
-        .finally(function () { cBtn.disabled = false; cBtn.textContent = "Sign in with code"; });
+        .finally(function () { cBtn.disabled = false; cBtn.textContent = "Verify"; });
     });
     return modalEl;
   }
@@ -519,10 +564,12 @@
     note.setAttribute("data-kind", kind || "");
   }
 
-  function openAuthModal() {
+  function openAuthModal(opts) {
     var m = ensureAuthModal();
     lastFocus = document.activeElement;
     setModalNote(m.querySelector(".tp-modal-note"), "", "");
+    if (opts && opts.email) m.querySelector("#tp-modal-email").value = opts.email;
+    if (m.__showStep) m.__showStep(opts && opts.step === "code" ? "code" : "email", opts && opts.email);
     m.classList.remove("is-closing");
     m.removeAttribute("hidden");
     // Reflow so the enter transition plays from the closed (scale .96 / opacity 0) state.
@@ -573,8 +620,12 @@
       ".tp-modal-x:hover{opacity:.9}" +
       ".tp-modal-x:active{scale:.9}" +
       ".tp-modal-intro{margin:0;font-size:16px;line-height:24.2px;font-weight:400;padding-right:20px}" +
-      ".tp-modal-intro-muted{color:#8a8a8a}" +
-      ".tp-modal-form{display:flex;flex-direction:column;gap:24px}" +
+      ".tp-modal-intro-muted{color:#8a8a8a;display:block}" +
+      ".tp-modal-form{display:flex;flex-direction:column;gap:12px}" +
+      // An author display rule outranks the UA [hidden] style, so every element
+      // this modal toggles needs its own companion rule. Without it the code
+      // form was permanently on screen.
+      ".tp-modal-form[hidden],.tp-modal-note[hidden],.tp-modal-error[hidden]{display:none}" +
       ".tp-modal-field{display:flex;flex-direction:column;gap:6px}" +
       ".tp-modal-label{font-size:13px;line-height:1.4;color:#4d4d4d}" +
       'html[data-theme="dark"] .tp-modal-label{color:#b5b5b5}' +
@@ -595,6 +646,12 @@
       ".tp-modal-btn:not([disabled]):active{scale:.96}" +
       ".tp-modal-btn[disabled]{opacity:.6;cursor:default}" +
       'html[data-theme="dark"] .tp-modal-btn{background:#f2f2f2;color:#111}' +
+      // Site secondary tokens: the 0 1px 2px shadow belongs to the PRIMARY
+      // variant only. Doubled class so this outranks the themed base rule.
+      ".tp-modal-btn.tp-modal-btn--ghost{background:#e9e9e9;color:#17181c;box-shadow:none}" +
+      ".tp-modal-btn.tp-modal-btn--ghost:hover{background:#e0e0e0}" +
+      'html[data-theme="dark"] .tp-modal-btn.tp-modal-btn--ghost{background:#2a2a2c;color:#f2f2f2}' +
+      'html[data-theme="dark"] .tp-modal-btn.tp-modal-btn--ghost:hover{background:#333336}' +
       ".tp-modal-note{margin:0;font-size:13px;line-height:1.4}" +
       '.tp-modal-note[data-kind="ok"]{color:#16a34a}' +
       '.tp-modal-note[data-kind="err"]{color:#d62b11}' +

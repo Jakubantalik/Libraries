@@ -64,7 +64,7 @@
        production. Installs a fetch() shim (before pro-client.js runs)
        that answers the Pro API from static data — so the whole normal
        code path renders signed-in and survives reloads, with no Worker
-       / magic-link login needed. Runs on localhost only.
+       / sign-in code needed. Runs on localhost only.
        ───────────────────────────────────────────────────────────── */
     (function () {
       var mock = new URLSearchParams(location.search).get("mock");

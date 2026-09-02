@@ -12,8 +12,8 @@
       • Plain sign-in:    /activate.html
       • Checkout return:  /activate.html?checkout=success&session_id=...
       • Device activate:  /activate.html?code=WXYZ-WXYZ   (from `npx libraries-pro skill` / `add --pro`)
-    Redirect states from the API's magic-link callback:
-      ?signed_in=1 · ?device=approved · ?device=denied · ?error=link_invalid
+    Redirect states (device-approval flow):
+      ?signed_in=1 · ?device=approved · ?device=denied
   -->
   <link rel="preload" href="/assets/fonts/Saans-Medium.woff2" as="font" type="font/woff2" crossorigin />
   <style>
@@ -321,12 +321,12 @@
 
     <div class="signin-card">
       <p class="card-intro" id="a-desc">Enter your email you used at checkout.
-        <span class="muted">We’ll send you a sign-in link.</span></p>
+        <span class="muted">We’ll send you a sign-in code.</span></p>
 
       <!-- Device code display (device flow) -->
       <span class="device-code" id="a-code" hidden></span>
 
-      <!-- Sign-in form (email → magic link) -->
+      <!-- Sign-in form (email → one-time code) -->
       <form id="a-signin" novalidate>
         <div class="field">
           <label class="field-label" for="a-email">Your email</label>
@@ -335,13 +335,13 @@
           <p class="field-error" id="a-email-error" role="alert" hidden>Please enter a valid email.</p>
         </div>
         <div style="height:24px"></div>
-        <button class="btn-primary" type="submit" id="a-signin-btn">Send login link</button>
+        <button class="btn-primary" type="submit" id="a-signin-btn">Send code</button>
       </form>
 
-      <!-- Typed sign-in code (shown after a link is sent; rescues in-app-browser opens) -->
+      <!-- Typed sign-in code (shown once the email is sent) -->
       <form id="a-codeform" novalidate hidden>
         <div class="field">
-          <label class="field-label" for="a-signin-code">Or enter the code from the email</label>
+          <label class="field-label" for="a-signin-code">Enter the code from the email</label>
           <input class="field-input" type="text" id="a-signin-code" placeholder="XXXX-XXXX"
                  autocomplete="one-time-code" spellcheck="false" style="text-transform:uppercase" />
           <p class="field-error" id="a-code-error" role="alert" hidden>That code didn’t work — check it and try again.</p>
@@ -445,8 +445,7 @@
       emailInput.addEventListener("input", function () { setEmailError(false); });
       function show(node, on) { if (node) node.hidden = !on; }
 
-      // Redirect states from the magic-link callback.
-      if (q.get("error") === "link_invalid") setNote("That sign-in link was invalid or expired. Try again below.", "err");
+      // Redirect states from the device-approval flow.
       if (q.get("device") === "approved") setNote("Device approved — you can return to your terminal.", "ok");
       if (q.get("device") === "denied") setNote("This account doesn't have an active Pro plan, so the device wasn't approved.", "err");
 
@@ -467,17 +466,18 @@
                       "If you bought Pro with a different address, use that one.", "err");
               return;
             }
-            setNote("Check your email — click the link, or type the code below.", "ok");
+            // One question per step: the email form gives way to the code form.
+            setNote("We sent a code to " + email + " — enter it below.", "ok");
+            signinForm.hidden = true;
             var cf = document.getElementById("a-codeform");
             if (cf) { cf.hidden = false; document.getElementById("a-signin-code").focus(); }
           })
-          .catch(function () { setNote("Couldn't send the link. Please try again.", "err"); })
-          .finally(function () { signinBtn.disabled = false; signinBtn.textContent = "Send login link"; });
+          .catch(function () { setNote("Couldn't send the code. Please try again.", "err"); })
+          .finally(function () { signinBtn.disabled = false; signinBtn.textContent = "Send code"; });
       });
 
-      // Typed-code sign-in: works even when the emailed link opened in a mail
-      // app's in-app browser (the cookie lands there, not here). The code signs
-      // THIS browser in, and carries the same device/invite side effects.
+      // Typed-code sign-in — the only path: the code signs THIS browser in and
+      // carries the same device/invite side effects.
       document.getElementById("a-codeform").addEventListener("submit", function (e) {
         e.preventDefault();
         var cInput = document.getElementById("a-signin-code");
@@ -495,7 +495,7 @@
           .then(function (r) {
             if (!r || !r.ok) {
               cErr.textContent = r && r.error === "too_many_attempts"
-                ? "Too many tries — request a fresh link and use its new code."
+                ? "Too many tries — request a fresh code."
                 : "That code didn’t work — check it and try again.";
               cErr.hidden = false;
               cInput.classList.remove("is-shaking"); void cInput.offsetWidth; cInput.classList.add("is-shaking");
