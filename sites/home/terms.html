@@ -34,6 +34,10 @@
 
   <style>
     :root {
+      /* Inline code in prose: a chip with its own hairline (ported by value;
+         this page links no shared stylesheet). */
+      --code-chip-bg: rgba(0, 0, 0, 0.04);
+      --code-chip-ring: rgba(0, 0, 0, 0.08);
       color-scheme: light;
       --bg: #fdfdfd;
       --text: #0d0d0d;
@@ -52,6 +56,8 @@
     }
 
     html[data-theme="dark"] {
+      --code-chip-bg: rgba(255, 255, 255, 0.05);
+      --code-chip-ring: rgba(255, 255, 255, 0.09);
       color-scheme: dark;
       --bg: #121212;
       --text: #ffffff;
@@ -197,13 +203,15 @@
     }
 
     code {
-      font-family: var(--font-mono);
-      font-size: 0.86em;
-      padding: 2px 6px;
-      border-radius: 6px;
-      background: var(--code-bg);
-      color: var(--code-text);
-    }
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 18px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--code-chip-bg);
+  box-shadow: inset 0 0 0 1px var(--code-chip-ring);
+  color: var(--text);
+}
 
     .license-block {
       margin: 0;
