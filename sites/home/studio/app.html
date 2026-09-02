@@ -114,9 +114,6 @@
       gap: 8px;
       white-space: nowrap;
     }
-    /* Pro chip — the nav's small badge (.nav-pill-pro in site.css), same
-       18px proportions and Pro blue, so the Studio's title wears exactly
-       what "Studio Pro" wears in the site nav. */
     /* Light: the lockup's dark parts sit at #0e0e0e rather than the
        page's near-black --text, so the mark and wordmark read a touch
        softer against the white top bar. */
@@ -124,13 +121,11 @@
     html[data-theme="light"] .st-top .brand-word-strong,
     html[data-theme="light"] .st-top-name { color: #0e0e0e; }
 
-    /* transitions.dev's .detail-pro-badge exactly: a flat blue wash with
-       no ring in either theme. The material ring this used to carry read
-       as a grey slab on the light surface. */
-    html[data-theme="dark"] .st-top-chip {
-      background: rgba(0, 115, 255, 0.16);
-      color: rgba(122, 168, 255, 0.95);
-    }
+    /* Pro chip — a flat blue wash with no ring in either theme
+       (transitions.dev's .detail-pro-badge); the material ring this used to
+       carry read as a grey slab on the light surface. The tint tokens carry
+       the theme swap, so it is the same blue the nav's Get Pro pill and
+       Studio chip wear. */
     .st-top-chip {
       display: inline-flex;
       align-items: center;
@@ -138,8 +133,8 @@
       height: 18px;
       padding: 0 6px;
       border-radius: 50px;
-      background: rgba(0, 115, 255, 0.06);
-      color: rgba(0, 83, 227, 0.8);
+      background: var(--pro-tint-bg);
+      color: var(--pro-tint-ink);
       font-family: var(--font-sans);
       font-size: 11px;
       font-weight: 500;

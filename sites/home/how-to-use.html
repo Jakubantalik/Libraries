@@ -96,49 +96,84 @@
 
     /* Numbered step blocks — the homepage card material, one per row so
        each step has room for its code and detail. */
-    .howto-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 18px; }
+    /* Three cards abreast: each step reads top to bottom, and the row makes
+       the three-step arc legible at a glance instead of as a long scroll. */
+    .howto-list {
+      list-style: none; margin: 0; padding: 0;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      align-items: stretch;
+    }
     .howto-block {
       display: flex;
+      flex-direction: column;
       gap: 20px;
       padding: 32px;
       border-radius: 24px;
-      background: #141414;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 -1px 0 0 rgba(255, 255, 255, 0.03);
+      /* The testimonial card's material (site.css .pro-quote), so the two
+         card families read as one. */
+      background-color: #1a1a1a;
+      box-shadow:
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.02),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.02);
     }
     .howto-num {
-      flex: none;
-      width: 28px;
-      height: 28px;
-      border-radius: 50px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background: #3e3e3e;
+      position: relative;
+      /* Own stacking context, or the halo's z-index -1 sinks behind the card. */
+      isolation: isolate;
+      flex: none; width: 21px; height: 21px; border-radius: 50px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: #0071fc;
       box-shadow:
         0 1px 3px 0 rgba(0, 0, 0, 0.04),
         inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
-        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
-        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
-        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
-      color: rgba(237, 237, 237, 0.8);
-      font-size: 12px;
-      line-height: 13px;
-      font-weight: 500;
+        inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      font-size: 11px; line-height: 12px; font-weight: 500;
+    }
+    /* The halo behind the disc (Figma 1418:38284): the same blue at
+       20 percent, reaching past each edge in the design's 3:2 ratio. */
+    .howto-num::before {
+      content: "";
+      position: absolute;
+      inset: -5.25px;
+      border-radius: 50px;
+      background: #0071fc;
+      opacity: 0.2;
+      z-index: -1;
     }
     .howto-body { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 12px; }
     .howto-step-title { margin: 0; font-size: 17px; font-weight: 500; line-height: 24px; color: #ededed; }
     .howto-text { margin: 0; font-size: 14px; line-height: 22px; color: var(--text-muted); overflow-wrap: anywhere; }
     .howto-text code {
-      font-family: var(--font-mono); font-size: 12px; line-height: 18px;
-      padding: 1px 6px; border-radius: 6px;
-      background: rgba(255, 255, 255, 0.06); color: var(--text); white-space: nowrap;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 18px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: var(--code-chip-bg);
+      box-shadow: inset 0 0 0 1px var(--code-chip-ring);
+      color: var(--text);
     }
     .howto-text a { color: var(--text); text-decoration: none; }
     .howto-text a:hover { text-decoration: underline; text-underline-offset: 2px; }
-    .howto-body .code-block { margin-top: 2px; }
-    /* No copy button here, so the block does not reserve room for one. */
-    .howto-body .code-block { padding-right: 18px; }
+    /* auto pushes the snippet to the card's foot, so the three code blocks
+       sit on one line however tall their prose runs. */
+    .howto-body .code-block { margin-top: auto; }
+    /* No copy button here, so the block does not reserve room for one. The
+       snippets are wider than a third-column card, so they scroll inside
+       themselves rather than stretching the grid. */
+    .howto-body .code-block { padding-right: 18px; overflow-x: auto; }
+    .howto-body .code-block pre { white-space: pre; }
+    @media (max-width: 1000px) {
+      .howto-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      /* Odd card out spans the row rather than leaving a gap. */
+      .howto-block:last-child:nth-child(odd) { grid-column: 1 / -1; }
+    }
     @media (max-width: 639px) {
+      .howto-list { grid-template-columns: minmax(0, 1fr); }
       .howto-block { padding: 24px; gap: 16px; }
     }
 
@@ -155,9 +190,14 @@
     .howto-table a { color: var(--text); text-decoration: none; }
     .howto-table a:hover { text-decoration: underline; text-underline-offset: 2px; }
     .howto-table code {
-      font-family: var(--font-mono); font-size: 12px;
-      padding: 1px 6px; border-radius: 6px;
-      background: rgba(255, 255, 255, 0.06); color: var(--text); white-space: nowrap;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 18px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: var(--code-chip-bg);
+      box-shadow: inset 0 0 0 1px var(--code-chip-ring);
+      color: var(--text);
     }
 
     /* Section rhythm shared with the homepage */
@@ -206,7 +246,16 @@
       transition: opacity var(--acc-expand) var(--acc-ease), filter var(--acc-expand) var(--acc-ease);
     }
     .t-acc-panel-inner p { margin: 0 0 16px; padding-right: 28px; font-size: 14px; line-height: 22px; color: var(--text-muted); }
-    .t-acc-panel-inner code { font-family: var(--font-mono); font-size: 12px; line-height: 18px; padding: 1px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.06); color: var(--text); }
+    .t-acc-panel-inner code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 18px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: var(--code-chip-bg);
+      box-shadow: inset 0 0 0 1px var(--code-chip-ring);
+      color: var(--text);
+    }
     .t-acc-panel-inner a { color: var(--text); text-decoration: none; }
     .t-acc-panel-inner a:hover { text-decoration: underline; text-underline-offset: 2px; }
     @media (prefers-reduced-motion: reduce) {
@@ -326,9 +375,9 @@
           <div class="howto-body">
             <h2 class="howto-step-title">Copy the prompt</h2>
             <p class="howto-text">
-              Every library page has a Copy prompt button. It packs the install
-              line, the usage and the full prop vocabulary into one paste, so
-              your agent knows the whole library, not just a snippet.
+              Every library page has a Copy prompt button: the install line,
+              usage and full prop vocabulary in one paste, so your agent gets
+              the whole library.
             </p>
             <div class="code-block">
               <pre>Border beam is an animated rainbow glow that rides any border.
@@ -344,9 +393,8 @@ size, colorVariant, strength, duration and brightness&hellip;</pre>
             <h2 class="howto-step-title">Paste it in your agent</h2>
             <p class="howto-text">
               Drop the prompt into Claude Code, Cursor or Codex. The agent
-              installs the package and wires the component into your app,
-              adapted to your theme. React 18+, light and dark mode built in,
-              server-rendering safe.
+              installs the package and wires it into your app, matched to your
+              theme. React 18+, SSR safe.
             </p>
             <div class="code-block">
               <pre>$ claude
@@ -364,10 +412,10 @@ size, colorVariant, strength, duration and brightness&hellip;</pre>
           <div class="howto-body">
             <h2 class="howto-step-title">Make it yours</h2>
             <p class="howto-text">
-              Every library page has a playground for its main knobs. For the
-              full parameter surface (physics, shader and glow internals)
-              open the <a href="/studio.html">Studio</a> with Pro, tune the real
-              component live, and copy the exact configuration as props.
+              Every library page has a playground for its main knobs. Open the
+              <a href="/studio.html">Studio</a> with Pro for the full parameter
+              surface, tune the component live, and copy the configuration as
+              props.
             </p>
             <div class="code-block">
               <pre>&lt;BorderBeam size="line" colorVariant="ocean" duration={3.2} brightness={1.6} /&gt;</pre>
