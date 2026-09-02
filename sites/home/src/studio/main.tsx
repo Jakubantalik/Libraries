@@ -231,7 +231,7 @@ function TopBar({ email, pro }: { email: string | null; pro: boolean }) {
         </span>
       </div>
       <div className="st-top-right">
-        {email && <span className="st-top-email">{email}</span>}
+        {/* The avatar replaces the raw email here, matching the site nav. */}
         {/* TEMP: signed-out fallback initial so the avatar is visible for
             testing before the auth Worker is deployed. */}
         <AvatarMenu email={email ?? "j"} />
