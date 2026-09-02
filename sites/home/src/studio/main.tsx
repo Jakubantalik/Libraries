@@ -250,7 +250,7 @@ const LIBS = [
   { id: "beam", label: "Border beam", icon: "/assets/icons/figma-beam.png" },
   { id: "orb", label: "Thinking orbs", icon: "/assets/icons/figma-orbs.svg" },
   { id: "gooey", label: "Gooey", icon: "/assets/icons/figma-gooey.svg" },
-  { id: "metal", label: "Metal", icon: "/assets/icons/figma-metal.svg" },
+  { id: "metal", label: "Metal", icon: "/assets/icons/figma-metal.png" },
   { id: "image", label: "Image", icon: "/assets/icons/figma-image.png" },
 ] as const;
 

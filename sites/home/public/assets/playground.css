@@ -110,16 +110,6 @@
   left: -3px;
   top: -2px;
 }
-/* Metal's export is the 46px card alone (no canvas padding) and carries a
-   baked background, so it fills the slot squarely and takes the card's own
-   radius to cut the corners the export left opaque. */
-.docs-link-icon[src*="figma-metal"] {
-  width: 24px;
-  height: 24px;
-  left: 0;
-  top: 0;
-  border-radius: 6px;
-}
 
 
 .docs-main { position: relative; min-width: 0; }
