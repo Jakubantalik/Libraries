@@ -3827,7 +3827,7 @@
       </p>
       <p class="success-signin" id="success-signin" role="status" hidden></p>
       <div class="skill-cta-row">
-        <a class="skill-btn skill-btn--primary" href="/studio.html">Open the Studio</a>
+        <a class="skill-btn skill-btn--primary" id="success-cta" href="/studio.html">Sign in</a>
         <a class="skill-btn skill-btn--secondary" href="/#components">Browse libraries</a>
       </div>
       <p class="success-foot">You can also <a href="account.html">download</a> everything from your account.</p>
@@ -3889,21 +3889,48 @@
 
   <!-- Shared nav behaviors (burger, 3-dot, ⌘K palette, GitHub stars). -->
   <script src="/assets/site.js" defer></script>
-  <!-- Post-purchase: sign the buyer in by emailing a magic link (no typing). -->
+  <!-- Post-purchase: email the buyer a one-time code and ask for exactly that. -->
   <script src="/assets/pro-client.js" defer></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       var TP = window.LibrariesPro;
       var note = document.getElementById("success-signin");
       var sid = new URLSearchParams(location.search).get("session_id");
-      if (!TP || !sid || !note) return;
+      if (!TP) return;
       function esc(x){ var d=document.createElement("div"); d.textContent=x; return d.innerHTML; }
+
+      // Signing in is the next thing a buyer has to do, so the primary CTA asks
+      // for exactly that — until they are signed in, when it becomes the way
+      // into the Studio instead. The code step is prefilled with the checkout
+      // email once /auth/from-checkout has resolved it.
+      var cta = document.getElementById("success-cta");
+      var buyerEmail = null, codeSent = false;
+      function paintCta(state) {
+        if (!cta) return;
+        var inAccount = !!(state && state.authenticated);
+        cta.textContent = inAccount ? "Open the Studio" : "Sign in";
+        cta.setAttribute("href", inAccount ? "/studio.html" : "#");
+      }
+      if (cta) {
+        cta.addEventListener("click", function (e) {
+          if (TP.state && TP.state.authenticated) return; // let the link through
+          e.preventDefault();
+          if (codeSent && buyerEmail) TP.openSignIn({ email: buyerEmail, step: "code" });
+          else TP.openSignIn();
+        });
+      }
+      document.addEventListener("pro:me", function (e) { paintCta(e.detail); });
+      paintCta(TP.state);
+
+      // The rest only applies to a real post-checkout return.
+      if (!sid || !note) return;
       TP.refresh().then(function (state) {
         if (state && state.authenticated) return; // already signed in
         TP.signInFromCheckout(sid).then(function (r) {
           if (r && r.ok) {
-            note.innerHTML = "We\u2019ve emailed a sign-in link to <strong>" +
-              (r.email ? esc(r.email) : "your inbox") + "</strong>. Click it to access your account.";
+            buyerEmail = r.email || null; codeSent = true;
+            note.innerHTML = "We\u2019ve emailed a one-time code to <strong>" +
+              (r.email ? esc(r.email) : "your inbox") + "</strong>. Click Sign in and enter it \u2014 your account was created from that email.";
             note.hidden = false;
           }
         }).catch(function(){});
