@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+
+  <title>Studio · Libraries.dev</title>
+  <meta name="description" content="The Studio: deep, live customization of every library — Beam, Orb, Gooey, Metal and Image. Tune every parameter, preview the real component, export the exact code. A Libraries Pro feature." />
+  <meta name="author" content="Libraries.dev" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <meta name="googlebot" content="index, follow" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="theme-color" content="#121212" />
+  <meta name="apple-mobile-web-app-title" content="Libraries.dev" />
+  <meta name="application-name" content="Libraries.dev" />
+
+  <link rel="canonical" href="https://libraries.dev/studio.html" />
+  <link rel="alternate" hreflang="en" href="https://libraries.dev/studio.html" />
+  <link rel="alternate" hreflang="x-default" href="https://libraries.dev/studio.html" />
+
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/assets/favicon.svg" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Libraries.dev" />
+  <meta property="og:url" content="https://libraries.dev/studio.html" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:title" content="Studio · Libraries.dev" />
+  <meta property="og:description" content="Deep, live customization of every library — tune every parameter, preview the real component, export the exact code. A Libraries Pro feature." />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Studio · Libraries.dev" />
+  <meta name="twitter:description" content="Deep, live customization of every library — tune every parameter, preview the real component, export the exact code. A Libraries Pro feature." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    rel="preload"
+    as="style"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
+  />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+  <link
+    rel="preload"
+    as="font"
+    type="font/woff2"
+    href="/assets/fonts/Saans-Medium.woff2"
+    crossorigin
+  />
+  <link rel="stylesheet" href="/assets/site.css" />
+  <style>
+    /* Studio marketing page — everything else comes from the design system. */
+
+    /* ── Hero (transitions.dev/refine composition) ─────────────── */
+    .studio-hero {
+      padding-top: 64px;
+      padding-bottom: 56px;
+    }
+    .studio-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .studio-eyebrow-name {
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 18px;
+      color: var(--text);
+    }
+    /* Pro chip — transitions.dev's Pro blue (the same wash its "Get Pro"
+       pill wears in dark mode) at their eyebrow-badge proportions. */
+    .studio-eyebrow-chip {
+      display: inline-flex;
+      align-items: center;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 50px;
+      background: rgba(85, 207, 255, 0.14);
+      color: #7cd4ff;
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 16px;
+      /* The raised-surface ring every card and pill here wears, so the chip
+         sits on the same material instead of reading as a flat wash. */
+      box-shadow: var(--material-shadow);
+    }
+    .studio-hero-title {
+      margin: 0;
+      font-family: "Saans", var(--font-sans);
+      font-size: 44px;
+      font-weight: 500;
+      line-height: 1.15;
+      letter-spacing: -0.01em;
+      color: var(--text);
+      max-width: 620px;
+    }
+    .studio-hero-sub {
+      margin: 16px auto 0;
+      max-width: 480px;
+      font-size: 16px;
+      line-height: 24px;
+      color: var(--text-muted);
+    }
+    .studio-hero .skill-cta-row { margin-top: 24px; gap: 11px; }
+    .studio-hero .skill-btn {
+      height: 32px;
+      font-size: 13px;
+      line-height: 13px;
+      font-weight: 500;
+    }
+    .studio-hero .skill-btn--primary {
+      background: #e9e9e9;
+      color: #17181c;
+      padding: 0 16px;
+      border-radius: 26px;
+      box-shadow: none;
+    }
+    .studio-hero .skill-btn--primary:hover { background: #ffffff; }
+    .studio-hero .skill-btn--primary:active { background: #dcdcdc; }
+    @media (max-width: 639px) {
+      .studio-hero { padding-top: 40px; padding-bottom: 40px; }
+      .studio-hero-title { font-size: 32px; }
+      .studio-hero-sub { font-size: 15px; line-height: 22px; }
+    }
+
+    /* ── App mock: framed screenshot-style preview of the Studio ── */
+    .studio-shot {
+      width: 100%;
+      max-width: 1008px;
+      margin: 0 auto;
+      border-radius: 24px;
+      background: #141414;
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+        inset 0 -1px 0 0 rgba(255, 255, 255, 0.03);
+      padding: clamp(16px, 4vw, 48px);
+    }
+    .studio-mock {
+      display: grid;
+      grid-template-columns: 148px 1fr 218px;
+      gap: 10px;
+      border-radius: 16px;
+      background: #101010;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+      padding: 10px;
+      user-select: none;
+      pointer-events: none;
+    }
+    .studio-mock-side {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 8px 4px;
+    }
+    .studio-mock-side-label {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #5c5c5c;
+      padding: 4px 10px 8px;
+    }
+    .studio-mock-lib {
+      display: flex;
+      align-items: center;
+      height: 30px;
+      padding: 0 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #9a9a9a;
+    }
+    .studio-mock-lib[data-active] {
+      background: rgba(255, 255, 255, 0.07);
+      color: #ededed;
+    }
+    .studio-mock-stage {
+      position: relative;
+      min-height: 300px;
+      border-radius: 12px;
+      background: #131313;
+      box-shadow: inset 0 0 0 1px rgba(191, 192, 203, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    /* Gooey-style blob cluster on the mock stage — pure CSS. */
+    .studio-mock-goo {
+      position: relative;
+      width: 148px;
+      height: 120px;
+      filter: url(#none);
+    }
+    .studio-mock-goo span {
+      position: absolute;
+      border-radius: 50%;
+      background: #e9e9e9;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+    }
+    .studio-mock-goo .g1 { width: 48px; height: 48px; left: 50px; bottom: 0; }
+    .studio-mock-goo .g2 { width: 36px; height: 36px; left: 8px;  bottom: 26px; }
+    .studio-mock-goo .g3 { width: 36px; height: 36px; right: 8px; bottom: 26px; }
+    .studio-mock-goo .g4 { width: 36px; height: 36px; left: 56px; top: 0; }
+    .studio-mock-goo .g2::after,
+    .studio-mock-goo .g3::after,
+    .studio-mock-goo .g4::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 8px;
+      height: 8px;
+      transform: translate(-50%, -50%);
+      border-radius: 2px;
+      background: #131313;
+      opacity: 0.85;
+    }
+    .studio-mock-play {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 14px;
+      height: 28px;
+      padding: 0 12px;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 40px;
+      background: rgba(255, 255, 255, 0.05);
+      color: #cfcfcf;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .studio-mock-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      border-radius: 12px;
+      background: #181818;
+      box-shadow:
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.07);
+      padding: 14px;
+    }
+    .studio-mock-field { display: flex; flex-direction: column; gap: 6px; }
+    .studio-mock-label { font-size: 10px; font-weight: 500; color: #8a8a8a; }
+    .studio-mock-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+    .studio-mock-tab {
+      height: 22px;
+      padding: 0 9px;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.07);
+      color: #9a9a9a;
+      font-size: 10px;
+      font-weight: 500;
+    }
+    .studio-mock-tab[data-active] { background: rgba(255, 255, 255, 0.14); color: #ededed; }
+    .studio-mock-slider {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 16px;
+    }
+    .studio-mock-track {
+      position: relative;
+      flex: 1;
+      height: 3px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .studio-mock-track i {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      border-radius: 2px;
+      background: #ededed;
+    }
+    .studio-mock-track b {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 10px;
+      height: 10px;
+      border-radius: 5px;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+    .studio-mock-val { font-size: 10px; color: #767676; min-width: 26px; text-align: right; }
+    @media (max-width: 860px) {
+      .studio-mock { grid-template-columns: 1fr; }
+      .studio-mock-side { flex-direction: row; flex-wrap: wrap; align-items: center; }
+      .studio-mock-side-label { display: none; }
+      .studio-mock-stage { min-height: 240px; }
+    }
+
+    /* ── Sections (steps, features, FAQ) ───────────────────────── */
+    .home-section { width: 100%; max-width: 1008px; margin: 96px auto 0; }
+    .home-section-title {
+      text-align: center; font-family: "Saans", var(--font-sans);
+      font-size: 30px; font-weight: 500; letter-spacing: -0.01em;
+      color: var(--text); margin: 0 0 40px;
+    }
+    @media (max-width: 640px) {
+      .home-section { margin-top: 64px; }
+      .home-section-title { font-size: 23px; margin-bottom: 28px; }
+    }
+
+    /* Features — 2-col cards on the quote surface. */
+    .studio-features {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+    .studio-feature {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+      padding: 28px;
+      border-radius: 24px;
+      background: #141414;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 -1px 0 0 rgba(255, 255, 255, 0.03);
+    }
+    .studio-feature-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 22px;
+      color: var(--text);
+    }
+    .studio-feature-text {
+      margin: 0;
+      font-size: 14px;
+      line-height: 22px;
+      color: var(--text-muted);
+    }
+    @media (max-width: 720px) {
+      .studio-features { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+      .studio-feature { padding: 24px; }
+    }
+
+    /* FAQ accordion (styling from transitions.dev/pro — same as home). */
+    .faq-list {
+      --acc-expand: 250ms; --acc-collapse: 250ms; --acc-chevron: 250ms;
+      --acc-ease: var(--ease-smooth-out); --faq-border: rgba(255, 255, 255, 0.08);
+      display: flex; flex-direction: column; max-width: 640px; margin: 0 auto;
+    }
+    .t-acc { border-top: 1px solid var(--faq-border); }
+    .faq-list .t-acc:last-child { border-bottom: 1px solid var(--faq-border); }
+    .t-acc-head {
+      width: 100%; display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; padding: 16px 0; border: 0; background: none; cursor: pointer;
+      font-family: var(--font-sans); font-size: 15px; font-weight: 400; line-height: 22px;
+      color: var(--text); text-align: left; -webkit-tap-highlight-color: transparent;
+    }
+    .t-acc-head:focus-visible { outline: 2px solid var(--icon-color); outline-offset: 2px; border-radius: 6px; }
+    .t-acc-chevron {
+      display: inline-flex; flex-shrink: 0; color: var(--text-muted);
+      transform: scaleY(1); transform-origin: center;
+      transition: transform var(--acc-chevron) var(--acc-ease);
+    }
+    .t-acc-chevron svg { width: 16px; height: 16px; display: block; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .t-acc-chevron path { vector-effect: non-scaling-stroke; }
+    .t-acc[data-open="true"] .t-acc-chevron { transform: scaleY(-1); }
+    .t-acc-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--acc-collapse) var(--acc-ease); }
+    .t-acc[data-open="true"] .t-acc-panel { grid-template-rows: 1fr; transition: grid-template-rows var(--acc-expand) var(--acc-ease); }
+    .t-acc-panel-inner {
+      overflow: hidden; opacity: 0; filter: blur(var(--blur-small));
+      transition: opacity var(--acc-collapse) var(--acc-ease), filter var(--acc-collapse) var(--acc-ease);
+    }
+    .t-acc[data-open="true"] .t-acc-panel-inner {
+      opacity: 1; filter: blur(0);
+      transition: opacity var(--acc-expand) var(--acc-ease), filter var(--acc-expand) var(--acc-ease);
+    }
+    .t-acc-panel-inner p { margin: 0 0 16px; padding-right: 28px; font-size: 14px; line-height: 22px; color: var(--text-muted); }
+    .t-acc-panel-inner code { font-family: var(--font-mono); font-size: 12px; line-height: 18px; padding: 1px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.06); color: var(--text); }
+    .t-acc-panel-inner a { color: var(--text); text-decoration: none; }
+    .t-acc-panel-inner a:hover { text-decoration: underline; text-underline-offset: 2px; }
+    @media (prefers-reduced-motion: reduce) {
+      .t-acc-panel, .t-acc-panel-inner, .t-acc-chevron { transition: none !important; }
+    }
+
+    /* Closing CTA band. */
+    .studio-cta-band {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-align: center;
+      padding: 56px 24px;
+      border-radius: 24px;
+      background: #141414;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 -1px 0 0 rgba(255, 255, 255, 0.03);
+    }
+    .studio-cta-band-title {
+      margin: 0;
+      font-family: "Saans", var(--font-sans);
+      font-size: 24px;
+      font-weight: 500;
+      line-height: 1.25;
+      color: var(--text);
+    }
+    .studio-cta-band-sub {
+      margin: 0;
+      max-width: 46ch;
+      font-size: 14px;
+      line-height: 22px;
+      color: var(--text-muted);
+    }
+    .studio-cta-band .skill-cta-row { margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#studio">Skip to content</a>
+
+  <main id="main" class="app">
+    <header class="site-nav">
+      <div class="site-nav-inner">
+        <div class="site-nav-left">
+          <a class="brand" href="/" aria-label="Libraries.dev home">
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 22.6705 14.6705" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path class="brand-draw" d="M21.3352 10.3354L6.89079 13.3354L18.0019 7.33536L1.33524 9.33536L19.3352 1.33536L1.33524 4.33536L9.33524 1.33536" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" pathLength="100"/>
+              </svg>
+            </span>
+            <span class="brand-word"><span class="brand-word-strong">Libraries</span><span class="brand-word-dim">.dev</span></span>
+          </a>
+          <nav class="site-nav-menu" aria-label="Primary">
+            <a class="nav-pill" href="/#components">Libraries</a>
+            <a class="nav-pill nav-pill--active" href="/studio.html">Studio <span class="nav-pill-pro">Pro</span></a>
+          </nav>
+        </div>
+        <div class="site-nav-right">
+          <a class="nav-get-pro" href="/pro.html"><span class="nav-get-pro-label"><span class="nav-get-pro-word">Get </span>Pro</span></a>
+          <a
+            class="icon-btn-pill"
+            id="gh-stars-btn"
+            href="https://github.com/Jakubantalik/Libraries"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub repository — star count"
+            data-loading="true"
+          >
+            <svg aria-hidden="true" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+            </svg>
+            <span class="pill-label" id="gh-stars-count">—</span>
+          </a>
+          <div class="pm-anchor" id="more-anchor">
+            <button type="button" class="icon-btn" id="more-btn" aria-label="More" aria-haspopup="menu" aria-expanded="false">
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 8C6.66667 7.26362 7.26362 6.66667 8 6.66667C8.73638 6.66667 9.33333 7.26362 9.33333 8C9.33333 8.73638 8.73638 9.33333 8 9.33333C7.26362 9.33333 6.66667 8.73638 6.66667 8Z" fill="currentColor"/>
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 3.33333C6.66667 2.59695 7.26362 2 8 2C8.73638 2 9.33333 2.59695 9.33333 3.33333C9.33333 4.06971 8.73638 4.66667 8 4.66667C7.26362 4.66667 6.66667 4.06971 6.66667 3.33333Z" fill="currentColor"/>
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 12.6667C6.66667 11.9303 7.26362 11.3333 8 11.3333C8.73638 11.3333 9.33333 11.9303 9.33333 12.6667C9.33333 13.403 8.73638 14 8 14C7.26362 14 6.66667 13.403 6.66667 12.6667Z" fill="currentColor"/>
+              </svg>
+            </button>
+            <div class="tl-menu t-dropdown" id="more-menu" data-origin="top-right" role="menu" aria-label="More options">
+              <div class="tl-menu-item" id="pm-signin" role="menuitem" tabindex="0">
+                <span class="tl-menu-item-label">Sign in</span>
+              </div>
+              <div class="tl-menu-divider"></div>
+              <a class="tl-menu-item" id="pm-support" href="mailto:jakubja@gmail.com" role="menuitem">
+                <span class="tl-menu-item-label">Support</span>
+              </a>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="icon-btn nav-burger"
+            id="nav-burger"
+            aria-label="Open menu"
+            aria-expanded="false"
+            aria-controls="mobile-menu"
+          >
+            <span class="nav-burger-box" aria-hidden="true">
+              <span class="nav-burger-line nav-burger-line--top"></span>
+              <span class="nav-burger-line nav-burger-line--bottom"></span>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <div class="mobile-menu-backdrop" id="mobile-menu-backdrop"></div>
+      <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile">
+        <ul class="mobile-menu-list">
+          <li><a class="mobile-menu-link mobile-menu-link--1" href="/#components">Libraries</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--2" href="/studio.html">Studio</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--3" href="/how-to-use.html">How to use</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--4 mobile-menu-link--pro" href="/pro.html">Get Pro</a></li>
+        </ul>
+        <a class="mobile-menu-cta" id="mobile-signin" href="/pro.html">Sign in</a>
+      </nav>
+    </header>
+
+    <!-- Hero -->
+    <header class="header studio-hero" id="studio">
+      <p class="studio-eyebrow">
+        <span class="studio-eyebrow-name">Studio</span>
+        <span class="studio-eyebrow-chip">Pro</span>
+      </p>
+      <h1 class="studio-hero-title">Every library, tuned to&nbsp;yours</h1>
+      <p class="studio-hero-sub">
+        The Studio is one workbench for all five libraries. Tune every
+        parameter live, far beyond the public playgrounds, or just describe the
+        look you want and let the built-in agent dial it in. Export the exact
+        code either way.
+      </p>
+      <div class="skill-cta-row">
+        <a class="skill-btn skill-btn--primary" data-studio-cta href="/studio/app.html">Open Studio</a>
+      </div>
+    </header>
+
+    <!-- App mock -->
+    <section class="studio-shot" aria-label="Studio app preview">
+      <div class="studio-mock" aria-hidden="true">
+        <div class="studio-mock-side">
+          <span class="studio-mock-side-label">Libraries</span>
+          <span class="studio-mock-lib">Border beam</span>
+          <span class="studio-mock-lib">Thinking orbs</span>
+          <span class="studio-mock-lib" data-active>Gooey</span>
+          <span class="studio-mock-lib">Metal</span>
+          <span class="studio-mock-lib">Image</span>
+        </div>
+        <div class="studio-mock-stage">
+          <div class="studio-mock-goo">
+            <span class="g1"></span><span class="g2"></span><span class="g3"></span><span class="g4"></span>
+          </div>
+          <span class="studio-mock-play">Pause</span>
+        </div>
+        <div class="studio-mock-panel">
+          <div class="studio-mock-field">
+            <span class="studio-mock-label">Effect</span>
+            <div class="studio-mock-tabs">
+              <span class="studio-mock-tab" data-active>Morph</span>
+              <span class="studio-mock-tab">Move</span>
+              <span class="studio-mock-tab">Bend</span>
+              <span class="studio-mock-tab">Melt</span>
+            </div>
+          </div>
+          <div class="studio-mock-field">
+            <span class="studio-mock-label">Goo blur</span>
+            <div class="studio-mock-slider">
+              <span class="studio-mock-track"><i style="width:38%"></i><b style="left:38%"></b></span>
+              <span class="studio-mock-val">6</span>
+            </div>
+          </div>
+          <div class="studio-mock-field">
+            <span class="studio-mock-label">Contrast</span>
+            <div class="studio-mock-slider">
+              <span class="studio-mock-track"><i style="width:39%"></i><b style="left:39%"></b></span>
+              <span class="studio-mock-val">18</span>
+            </div>
+          </div>
+          <div class="studio-mock-field">
+            <span class="studio-mock-label">Bounce</span>
+            <div class="studio-mock-slider">
+              <span class="studio-mock-track"><i style="width:50%"></i><b style="left:50%"></b></span>
+              <span class="studio-mock-val">0.5</span>
+            </div>
+          </div>
+          <div class="studio-mock-field">
+            <span class="studio-mock-label">Waviness</span>
+            <div class="studio-mock-slider">
+              <span class="studio-mock-track"><i style="width:20%"></i><b style="left:20%"></b></span>
+              <span class="studio-mock-val">2</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- Features -->
+    <section class="home-section" aria-labelledby="studio-features-title">
+      <h2 class="home-section-title" id="studio-features-title">Features</h2>
+      <ul class="studio-features">
+        <li class="studio-feature">
+          <h3 class="studio-feature-title">Extra variants and types</h3>
+          <p class="studio-feature-text">States, sizes and effect types the detail pages hold back: the full set of orb states, every beam family, all four gooey effects.</p>
+        </li>
+        <li class="studio-feature">
+          <h3 class="studio-feature-title">The full parameter surface</h3>
+          <p class="studio-feature-text">Every knob the libraries expose: beam duration, brightness and hue range; gooey spring physics per effect; metal ring and shader scale; image pixel grids and palettes.</p>
+        </li>
+        <li class="studio-feature">
+          <h3 class="studio-feature-title">Physics-level tuning on Gooey</h3>
+          <p class="studio-feature-text">Morph, Move, Bend and Melt each get their own panel — springiness, wobble, stretch, trail, melt reach and marbling, all live.</p>
+        </li>
+        <li class="studio-feature">
+          <h3 class="studio-feature-title">Live preview, real package</h3>
+          <p class="studio-feature-text">The stage renders the same published npm packages your app installs, so what you tune is exactly what ships.</p>
+        </li>
+        <li class="studio-feature">
+          <h3 class="studio-feature-title">Code export</h3>
+          <p class="studio-feature-text">A live JSX snippet tracks your settings, listing only non-default props. Copy it with one click.</p>
+        </li>
+        <li class="studio-feature">
+          <h3 class="studio-feature-title">Built for agent workflows</h3>
+          <p class="studio-feature-text">Exports drop cleanly into Cursor, Claude Code or Codex sessions — tune by hand, let the agent do the wiring.</p>
+        </li>
+      </ul>
+    </section>
+
+    <!-- FAQ -->
+    <section class="home-section" aria-labelledby="studio-faq-title">
+      <h2 class="home-section-title" id="studio-faq-title">FAQ</h2>
+      <div class="faq-list">
+        <div class="t-acc" data-open="false">
+          <button class="t-acc-head" type="button" aria-expanded="false">
+            <span>What is the Studio?</span>
+            <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
+          </button>
+          <div class="t-acc-panel"><div class="t-acc-panel-inner">
+            <p>A customization app for all five libraries. Each library's public page has a small playground; the Studio exposes the complete parameter surface, renders the real component live, and exports the exact configuration as code.</p>
+          </div></div>
+        </div>
+
+        <div class="t-acc" data-open="false">
+          <button class="t-acc-head" type="button" aria-expanded="false">
+            <span>Do I need Pro to use it?</span>
+            <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
+          </button>
+          <div class="t-acc-panel"><div class="t-acc-panel-inner">
+            <p>Yes. The Studio is a <a href="/pro.html">Libraries Pro</a> feature. If you already have Pro, sign in and it unlocks automatically on this device.</p>
+          </div></div>
+        </div>
+
+        <div class="t-acc" data-open="false">
+          <button class="t-acc-head" type="button" aria-expanded="false">
+            <span>Which libraries and effects are covered?</span>
+            <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
+          </button>
+          <div class="t-acc-panel"><div class="t-acc-panel-inner">
+            <p>All five: Beam (rotate and pulse families), Orb (all nine states), Gooey (Morph, Move, Bend and Melt with per-effect physics), Metal (both variants and all presets) and Image (all shader presets). New libraries join the Studio when they ship.</p>
+          </div></div>
+        </div>
+
+        <div class="t-acc" data-open="false">
+          <button class="t-acc-head" type="button" aria-expanded="false">
+            <span>Does the exported code need Pro at runtime?</span>
+            <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
+          </button>
+          <div class="t-acc-panel"><div class="t-acc-panel-inner">
+            <p>No. Exports use the free, MIT-licensed npm packages — <code>border-beam</code>, <code>thinking-orbs</code>, <code>liquid-gooey</code>, <code>metal-fx</code> and <code>img-fx</code>. Nothing phones home; your app has no dependency on your Pro plan.</p>
+          </div></div>
+        </div>
+
+        <div class="t-acc" data-open="false">
+          <button class="t-acc-head" type="button" aria-expanded="false">
+            <span>Can I use Studio exports in commercial projects?</span>
+            <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
+          </button>
+          <div class="t-acc-panel"><div class="t-acc-panel-inner">
+            <p>Yes — exports are licensed to you or your team under the plan you buy, for unlimited projects, commercial included.</p>
+          </div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Closing CTA -->
+    <section class="home-section" aria-label="Open the Studio">
+      <div class="studio-cta-band">
+        <h2 class="studio-cta-band-title">Ready to make it yours?</h2>
+        <p class="studio-cta-band-sub">Open the Studio and start tuning every parameter of all five libraries.</p>
+        <div class="skill-cta-row">
+          <a class="skill-btn skill-btn--primary" data-studio-cta href="/studio/app.html">Open Studio</a>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <a class="footer-brand-logo" href="/" aria-label="Libraries.dev home">
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 22.6705 14.6705" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path class="brand-draw" d="M21.3352 10.3354L6.89079 13.3354L18.0019 7.33536L1.33524 9.33536L19.3352 1.33536L1.33524 4.33536L9.33524 1.33536" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" pathLength="100"/>
+              </svg>
+            </span>
+            <span class="brand-word"><span class="brand-word-strong">Libraries</span><span class="brand-word-dim">.dev</span></span>
+          </a>
+          <p class="footer-tagline">High-crafted UI libraries for AI agents</p>
+        </div>
+        <nav class="footer-cols" aria-label="Footer">
+          <div class="footer-col">
+            <p class="footer-col-title">Libraries</p>
+            <a href="/beam.html">Border beam</a>
+            <a href="/orbs.html">Thinking orbs</a>
+            <a href="/gooey.html">Gooey</a>
+            <a href="/metal.html">Metal</a>
+            <a href="/image.html">Image</a>
+          </div>
+          <div class="footer-col">
+            <p class="footer-col-title">Product</p>
+            <a href="/">Home</a>
+            <a href="/studio.html">Studio</a>
+            <a href="/how-to-use.html">How to use</a>
+            <a href="/pro.html">Get Pro</a>
+          </div>
+          <div class="footer-col">
+            <p class="footer-col-title">Legal &amp; Account</p>
+            <a href="/pro.html" id="footer-signin">Sign in</a>
+            <a href="/terms.html">Terms</a>
+            <a href="/privacy.html">Privacy</a>
+            <a href="mailto:jakubja@gmail.com">Contact</a>
+          </div>
+        </nav>
+      </div>
+      <p class="footer-credit"><span class="footer-muted">Created by</span><a class="footer-name" href="https://x.com/jakubantalik" target="_blank" rel="noopener noreferrer">Jakub Antalik</a></p>
+    </footer>
+  </main>
+
+  <script>
+    /* Studio CTA follows auth state: signed-in visitors open the Studio,
+       signed-out ones go straight to Stripe Checkout via /checkout. The href
+       stays a real link to /pro.html as the no-JS / API-down fallback. */
+    (function () {
+      var ctas = document.querySelectorAll("[data-studio-cta]");
+      if (!ctas.length) return;
+
+      var AUTH_CACHE_KEY = "ldev:auth";
+      var AUTH_CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
+
+      // Same cache pro-client.js writes — paints the right CTA on the first
+      // frame instead of flashing the wrong one for a /me round-trip.
+      function cachedAuth() {
+        try {
+          var raw = localStorage.getItem(AUTH_CACHE_KEY);
+          if (!raw) return null;
+          var c = JSON.parse(raw);
+          if (!c || typeof c.t !== "number" || Date.now() - c.t > AUTH_CACHE_TTL) return null;
+          return !!c.a;
+        } catch (e) { return null; }
+      }
+
+      function paint(authed) {
+        Array.prototype.forEach.call(ctas, function (cta) {
+          cta.textContent = authed ? "Open Studio" : "Get access";
+          cta.setAttribute("href", authed ? "/studio/app.html" : "/pro.html");
+          if (authed) cta.removeAttribute("data-action");
+          else cta.setAttribute("data-action", "checkout");
+        });
+      }
+
+      var cached = cachedAuth();
+      if (cached !== null) paint(cached);
+
+      document.addEventListener("pro:me", function (e) {
+        var st = e.detail;
+        if (st && st.resolved) paint(!!st.authenticated);
+      });
+
+      Array.prototype.forEach.call(ctas, function (cta) {
+        cta.addEventListener("click", function (e) {
+          if (cta.getAttribute("data-action") !== "checkout") return;
+          var LP = window.LibrariesPro;
+          if (!LP || typeof LP.checkout !== "function") return; // href fallback
+          e.preventDefault();
+          cta.setAttribute("aria-busy", "true");
+          LP.checkout();
+          setTimeout(function () { cta.removeAttribute("aria-busy"); }, 8000);
+        });
+      });
+    })();
+  </script>
+
+  <script>
+    /* FAQ accordion (transitions-dev P21 — same wiring as the homepage). */
+    (function () {
+      document.querySelectorAll(".faq-list .t-acc").forEach(function (acc) {
+        var head = acc.querySelector(".t-acc-head");
+        if (!head) return;
+        head.addEventListener("click", function () {
+          var open = acc.getAttribute("data-open") === "true";
+          acc.setAttribute("data-open", String(!open));
+          head.setAttribute("aria-expanded", String(!open));
+        });
+      });
+    })();
+  </script>
+  <script src="/assets/site.js" defer></script>
+  <script src="/assets/pro-client.js" defer></script>
+</body>
+</html>

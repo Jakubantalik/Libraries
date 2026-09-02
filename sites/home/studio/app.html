@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+
+  <title>Studio App · Libraries.dev</title>
+  <meta name="description" content="The Studio app — deep, live customization of Beam, Orb, Gooey, Metal and Image. A Libraries Pro feature." />
+  <meta name="author" content="Libraries.dev" />
+  <meta name="robots" content="noindex, follow" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="theme-color" content="#121212" />
+
+  <link rel="canonical" href="https://libraries.dev/studio/app.html" />
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/assets/favicon.svg" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Libraries.dev" />
+  <meta property="og:url" content="https://libraries.dev/studio/app.html" />
+  <meta property="og:title" content="Studio App · Libraries.dev" />
+  <meta property="og:description" content="Deep, live customization of every library. A Libraries Pro feature." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    rel="preload"
+    as="style"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
+  />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+  <link
+    rel="preload"
+    as="font"
+    type="font/woff2"
+    href="/assets/fonts/Saans-Medium.woff2"
+    crossorigin
+  />
+  <script>
+    /* Studio theme: restore the saved choice before first paint. The rest
+       of the site stays dark-only; only this app writes ldev:studio-theme. */
+    (function () {
+      try {
+        var saved = localStorage.getItem("ldev:studio-theme");
+        if (saved === "light" || saved === "dark") {
+          document.documentElement.setAttribute("data-theme", saved);
+          document.documentElement.style.colorScheme = saved;
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="/assets/site.css" />
+  <link rel="stylesheet" href="/assets/playground.css" />
+  <link rel="stylesheet" href="/assets/examples.css" />
+  <style>
+    /* ============================================================ */
+    /* Studio app — dark-only workbench chrome. Control conventions */
+    /* (pg-*) come from playground.css; tokens from site.css.       */
+    /* ============================================================ */
+
+    /* Copy-button icon swap (same as the detail pages). */
+    .code-copy svg {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      transition: opacity 0.2s ease, transform 0.2s ease, filter 0.2s ease;
+    }
+    .code-copy .icon-check { opacity: 0; transform: translate(-50%, -50%) scale(0.4); filter: blur(3px); }
+    .code-copy[data-copied="true"] .icon-copy { opacity: 0; transform: translate(-50%, -50%) scale(0.4); filter: blur(3px); }
+    .code-copy[data-copied="true"] .icon-check { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0); }
+
+    /* ── App shell ─────────────────────────────────────────────── */
+    .st-app {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      max-width: 1240px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 0 24px 40px;
+    }
+    .st-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 0;
+    }
+    .st-top-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    /* Fades out at both ends rather than stopping on a hard edge. */
+    .st-top-sep {
+      width: 1px;
+      height: 18px;
+      background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        var(--pg-swatch-ring) 50%,
+        transparent 100%
+      );
+    }
+    .st-top-name {
+      font-family: "Saans", var(--font-sans);
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    /* Pro chip — transitions.dev's Pro blue (the same wash its "Get Pro"
+       pill wears in dark mode) at their eyebrow-badge proportions. */
+    html[data-theme="dark"] .st-top-chip {
+      background: rgba(85, 207, 255, 0.14);
+      color: #7cd4ff;
+    }
+    .st-top-chip {
+      display: inline-flex;
+      align-items: center;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 50px;
+      background: rgba(0, 122, 175, 0.1);
+      color: #0f7ba5;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 16px;
+      /* The raised-surface ring every card and pill here wears, so the chip
+         sits on the same material instead of reading as a flat wash. */
+      box-shadow: var(--material-shadow);
+    }
+    .st-top-right { display: flex; align-items: center; gap: 8px; }
+    /* Theme toggle sits with the avatar; same 36px chip as the nav icons. */
+    .st-theme-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; }
+    .st-theme-btn { color: var(--icon-color-muted); }
+    .st-theme-btn:hover { color: var(--icon-color); }
+    .st-top-email {
+      font-size: 13px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 220px;
+    }
+    .st-top-link {
+      display: inline-flex;
+      align-items: center;
+      height: 36px;
+      padding: 0 13px;
+      border: 0;
+      border-radius: 50px;
+      background: var(--chip-bg);
+      color: var(--text-muted);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color 0.15s ease, color 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .st-top-link:hover { background: var(--chip-bg-hover); color: var(--text); }
+
+    /* ── Workbench grid: sidebar · stage · controls ────────────── */
+    .st-body {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 176px minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+    }
+    .st-side {
+      position: sticky;
+      top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 8px 0;
+    }
+    .st-side-label {
+      font-size: 11px;
+      font-weight: 400;
+      line-height: 14px;
+      color: var(--text-subtle);
+      padding: 9px 8px;
+    }
+    .st-lib {
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      gap: 8px;
+      height: 40px;
+      padding: 0 8px;
+      border: 0;
+      border-radius: 12px;
+      background: none;
+      color: var(--pg-control-text);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 13px;
+      text-align: left;
+      cursor: pointer;
+      transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .st-lib:hover { background: var(--pg-control-bg); }
+    .st-lib[data-active="true"] {
+      background: var(--pg-control-active-bg);
+      color: var(--pg-control-active-text);
+      box-shadow: var(--pg-control-active-shadow);
+    }
+    .st-lib:focus-visible { outline: 2px solid var(--icon-color); outline-offset: 2px; }
+    /* Icon card: the Figma export verbatim; see .docs-link-ico. The row
+       clips the oversize canvas (beam's glow) like the design's row. */
+    .st-lib-ico {
+      position: relative;
+      flex: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+    }
+    html[data-theme="dark"] .st-lib-ico { box-shadow: none; }
+    .st-lib-ico img {
+      position: absolute;
+      display: block;
+      max-width: none;
+      width: 30px;
+      height: 30px;
+      left: -3px;
+      top: -2px;
+    }
+
+    .st-main { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+    .st-main .pg { grid-template-columns: minmax(0, 1fr) 320px; grid-template-rows: auto auto 1fr; gap: 12px; align-items: start; }
+    /* The control column spans every grid row, so the snippet sits in the
+       left column directly under the preview (same placement as the detail
+       pages) instead of a full-width strip below everything. It sticks to
+       the viewport and never grows past it: 16px from the top, 24px of air
+       at the bottom, and the knob list scrolls inside when a library has
+       more of them than fit. */
+    /* Stage reads as a detail-page example card (examples.css .example-cell):
+       #171717 at 16px radius with 48px/40px padding and no hairline ring. */
+    /* Stage header bar: effect name + Copy prompt. */
+    .st-main .st-stage-bar {
+      grid-column: 1;
+      grid-row: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 28px;
+    }
+    /* Install / Usage code block takes the stage's grid cell; the CSS
+       sibling switch mirrors the detail pages' data-detail-panel swap. */
+    .st-main .st-stage-panel { grid-column: 1; grid-row: 2; align-self: start; }
+    .st-main .st-stage-bar:not([data-view="preview"]) ~ .pg-stage,
+    .st-main .st-stage-bar:not([data-view="preview"]) ~ .pg-snippet { display: none; }
+    .st-main .pg-stage {
+      min-height: 480px;
+      grid-column: 1;
+      grid-row: 2;
+      padding: 48px 40px;
+      background: var(--stage-bg);
+    }
+    .st-main .pg-stage::after { content: none; }
+    .st-main .pg-controls {
+      grid-column: 2;
+      grid-row: 1 / 4;
+      align-self: start;
+      position: sticky;
+      top: 16px;
+      /* Never taller than the viewport leaves it: the app's 68px top bar is
+         still above the panel before the page scrolls, and 24px of air stays
+         under it either way. */
+      max-height: calc(100dvh - 68px - 24px);
+      overflow: hidden;
+    }
+    /* Only the knob list scrolls — the mode tabs and the actions row stay put. */
+    /* Only the knob list scrolls, and only vertically. The section rules are
+       full-bleed, so instead of letting them overflow (which turns into a
+       horizontal scroll once this box scrolls) the box itself takes the
+       panel's 16px inset back as padding and cancels it with a negative
+       margin — the rules then run edge to edge INSIDE the scroll area. */
+    .st-main .pg-controls .st-panel-body {
+      overflow-y: auto;
+      overflow-x: hidden;
+      min-height: 0;
+      padding-inline: 16px;
+      margin-inline: -16px;
+      /* The scroll box starts AT the header's rule (the panel's 16px gap is
+         cancelled and re-added as padding), so scrolling content is clipped
+         by the line itself instead of 16px under it — which read as a header
+         taller than its divider. */
+      margin-top: -16px;
+      padding-top: 16px;
+    }
+    .st-main .pg-controls .st-panel-body > .pg-field::before {
+      left: 0;
+      right: 0;
+    }
+    /* The head is the panel's sticky header: it sits outside the scroll box,
+       so it holds while the knobs scroll under it. The rule that used to be
+       drawn by the body's ::before now belongs to the head — the body clips
+       its own overflow, and a line drawn above its content box would be cut. */
+    .st-main .pg-controls .st-panel-head {
+      padding-inline: 16px;
+      margin-inline: -16px;
+      padding-bottom: 16px;
+      margin-bottom: 0;
+      border-bottom: 1px solid var(--pg-rule);
+    }
+    .st-main .pg-controls > .st-panel-body::before { content: none; }
+    .st-main .pg-snippet { grid-column: 1; grid-row: 3; align-self: start; }
+    /* Agent tab fills the panel column instead of ending at a 320px box:
+       the chat grows, its log scrolls, the composer and the preset row keep
+       the bottom. :not([hidden]) so the manual tab's display:none still wins. */
+    /* The Agent tab always fills the panel's full height, whatever the
+       manual knob list would have measured — the chat log grows and the
+       composer keeps the bottom. */
+    .st-main .pg-controls:has(.st-panel-body--chat:not([hidden])) { height: calc(100dvh - 68px - 24px); }
+    .st-main .st-panel-body--chat:not([hidden]) { display: flex; flex: 1 1 auto; }
+    .st-main .st-panel-body--chat .st-chat { flex: 1 1 auto; }
+    .st-main .st-panel-body--chat .st-chat-log { flex: 1 1 0; max-height: none; min-height: 120px; }
+    /* The panel-title / separator / swatch rules moved to playground.css —
+       the Gooey detail page renders the same Studio controls. */
+
+    @media (max-width: 980px) {
+      .st-body { grid-template-columns: minmax(0, 1fr); }
+      .st-side {
+        position: static;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 0;
+      }
+      .st-side-label { display: none; }
+      .st-lib { height: 36px; border-radius: 40px; }
+      .st-main .pg { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
+      .st-main .st-stage-bar { grid-column: auto; grid-row: auto; }
+      .st-main .pg-stage { min-height: 380px; grid-column: auto; grid-row: auto; }
+      .st-main .pg-controls {
+        grid-column: auto;
+        grid-row: auto;
+        align-self: auto;
+        position: static;
+        max-height: none;
+        overflow: visible;
+      }
+      .st-main .pg-controls .st-panel-body { overflow-y: visible; }
+      .st-main .pg-snippet { grid-column: auto; grid-row: auto; }
+    }
+    @media (max-width: 639px) {
+      .st-app { padding: 0 12px 32px; }
+      .st-top-email { display: none; }
+    }
+
+    /* ── Gate states (shared look with /studio.html) ───────────── */
+    .st-gate {
+      flex: 1;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 48px;
+    }
+    .st-skeleton {
+      width: min(100%, 686px);
+      border-radius: 24px;
+      background: var(--card-bg);
+      box-shadow: inset 0 0 0 1px var(--card-border), var(--card-shadow);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .st-skeleton .sk-line {
+      height: 14px;
+      border-radius: 7px;
+      background: var(--skeleton);
+      animation: st-pulse 1.4s ease-in-out infinite;
+    }
+    .st-skeleton .sk-line:nth-child(1) { width: 38%; }
+    .st-skeleton .sk-line:nth-child(2) { width: 82%; animation-delay: 120ms; }
+    .st-skeleton .sk-line:nth-child(3) { width: 64%; animation-delay: 240ms; }
+    .st-skeleton .sk-block {
+      height: 220px;
+      border-radius: 16px;
+      background: var(--skeleton);
+      animation: st-pulse 1.4s ease-in-out infinite;
+      animation-delay: 360ms;
+    }
+    @keyframes st-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.45; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .st-skeleton .sk-line, .st-skeleton .sk-block { animation: none; }
+    }
+
+    .st-locked {
+      width: min(100%, 686px);
+      border-radius: 24px;
+      background: var(--card-bg);
+      box-shadow: inset 0 0 0 1px var(--card-border), var(--card-shadow);
+      padding: 56px 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      text-align: center;
+    }
+    .st-lock-glyph {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--chip-bg);
+      color: var(--text);
+    }
+    .st-locked-title {
+      margin: 0;
+      font-family: "Saans", var(--font-sans);
+      font-weight: 500;
+      font-size: 24px;
+      line-height: 1.25;
+      color: var(--text);
+    }
+    .st-locked-sub {
+      margin: 0;
+      max-width: 46ch;
+      font-size: 15px;
+      line-height: 1.65;
+      color: var(--text-muted);
+    }
+    .st-locked .skill-cta-row { margin-top: 8px; }
+
+    /* ── Demo pieces on the stage ──────────────────────────────── */
+
+    /* Beam: demo card wrapped by the beam. */
+    .beam-card {
+      max-width: 100%;
+      padding: 24px 26px;
+      border-radius: 16px;
+      background: #ffffff;
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    html[data-theme="dark"] .beam-card { background: #1d1d1d; box-shadow: none; }
+    .beam-card-line { height: 8px; border-radius: 4px; background: rgba(0, 0, 0, 0.07); }
+    .beam-card-line--title { height: 10px; width: 55%; background: rgba(0, 0, 0, 0.12); }
+    html[data-theme="dark"] .beam-card-line { background: rgba(238, 238, 239, 0.08); }
+    html[data-theme="dark"] .beam-card-line--title { background: rgba(238, 238, 239, 0.14); }
+    .beam-card-line--short { width: 78%; }
+    /* Card size "Small" — the live demo page's button-size card (.card-sm). */
+    .beam-card--btn {
+      width: 80px;
+      height: 36px;
+      padding: 0;
+      border-radius: 36px;
+    }
+
+    /* The Gooey demo prototypes' CSS moved to assets/examples.css —
+       the detail page renders the same demos and needs it too. */
+
+    /* Metal: preview pills (search field = reflection target + demo button). */
+    .metal-stage-row { display: flex; align-items: center; gap: 12px; }
+    .metal-search {
+      display: flex; align-items: center; gap: 6px;
+      width: 180px; height: 40px; border-radius: 999px;
+      padding: 10px 8px 10px 12px;
+      background: #ffffff; border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
+      color: #17181c; font-size: 14px; font-weight: 500; cursor: text;
+    }
+    html[data-theme="dark"] .metal-search {
+      background: #1d1d1d; border-color: rgba(44, 47, 54, 0.52);
+      box-shadow: inset 0 0 50px 0 rgba(255, 255, 255, 0.02);
+      color: #f8f8f8;
+    }
+    .metal-search svg { width: 18px; height: 18px; flex-shrink: 0; stroke: #8b8b8b; fill: none; }
+    .metal-search input {
+      flex: 1; min-width: 0; border: 0; background: transparent;
+      font: inherit; color: inherit; outline: none;
+    }
+    .metal-search input::placeholder { color: currentColor; opacity: 0.3; }
+    .metal-pill {
+      display: flex; align-items: center; justify-content: center;
+      width: 140px; height: 40px; padding: 0; border-radius: 999px;
+      background: #ffffff; border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
+      color: #17181c; font-family: inherit; font-size: 14px; font-weight: 500;
+      white-space: nowrap; cursor: pointer;
+    }
+    html[data-theme="dark"] .metal-pill {
+      background: #1d1d1d; border-color: rgba(44, 47, 54, 0.52);
+      box-shadow: inset 0 0 50px 0 rgba(255, 255, 255, 0.02);
+      color: #f8f8f8;
+    }
+    .metal-pill--circle { width: 40px; }
+    .metal-pill svg { width: 16px; height: 16px; display: block; }
+
+    /* Image: toolbar row of stage buttons. */
+    .pg-toolbar {
+      position: absolute; left: 50%; transform: translateX(-50%);
+      bottom: 20px; display: flex; gap: 8px; z-index: 5;
+    }
+    .pg-toolbar .btn-animate { position: static; left: auto; bottom: auto; transform: none; }
+  </style>
+</head>
+<body>
+  <div id="studio-root">
+    <!-- Pre-React boot skeleton: replaced the moment the island mounts. -->
+    <div class="st-app">
+      <div class="st-top">
+        <div class="st-top-left">
+          <a class="brand" href="/studio.html" aria-label="Back to the Studio page">
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 22.6705 14.6705" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21.3352 10.3354L6.89079 13.3354L18.0019 7.33536L1.33524 9.33536L19.3352 1.33536L1.33524 4.33536L9.33524 1.33536" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span class="brand-word"><span class="brand-word-strong">Libraries</span><span class="brand-word-dim">.dev</span></span>
+          </a>
+          <span class="st-top-sep" aria-hidden="true"></span>
+          <span class="st-top-name">Studio <span class="st-top-chip">Pro</span></span>
+        </div>
+      </div>
+      <div class="st-gate">
+        <div class="st-skeleton" aria-hidden="true">
+          <span class="sk-line"></span>
+          <span class="sk-line"></span>
+          <span class="sk-line"></span>
+          <span class="sk-block"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/assets/pro-client.js" defer></script>
+  <script type="module" src="/src/studio/main.tsx"></script>
+</body>
+</html>

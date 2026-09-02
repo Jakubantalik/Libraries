@@ -24,12 +24,13 @@ export type OrbState =
   | 'shaping';
 
 /**
- * Rendered size in CSS pixels. Exactly two tuned presets ship:
- * 64 (chat-avatar scale) and 20 (inline-text scale). Each size carries
- * its own dot count, dot size and speed tuning — they are separate
- * designs, not a scale factor.
+ * Rendered size in CSS pixels. 64 (chat-avatar scale) and 20 (inline-text
+ * scale) are hand-tuned designs, not a scale factor — each carries its own
+ * dot count, dot size and speed. 32 (compact avatar scale) sits between
+ * them and is interpolated from the two, in log space because those knobs
+ * are ratios; it reads correctly but has not had a tuning pass of its own.
  */
-export type OrbSize = 64 | 20;
+export type OrbSize = 64 | 32 | 20;
 
 /**
  * Theme mode.
@@ -68,6 +69,23 @@ export interface ThinkingOrbProps extends Omit<CanvasHTMLAttributes<HTMLCanvasEl
 
   /** Freeze the animation on the current frame. @default false */
   paused?: boolean;
+
+  /**
+   * Optional ink tint — any `#rgb`, `#rrggbb` or `rgb()` color. The orb's
+   * depth-shading ramp is preserved on the tint (fading toward black on
+   * dark substrates, toward white on light ones), so colored orbs read
+   * with the same 3D language as the grayscale default. Omit for the
+   * stock grayscale ink.
+   */
+  color?: string;
+
+  /**
+   * Density multiplier for the mode's dot/strand/node counts, applied with
+   * the same paired-count scaler the size presets use so the mode keeps
+   * its balance. `1` (default) is the tuned look; `0.5` halves density,
+   * `2` doubles it. Clamped to a 0.1 floor.
+   */
+  dots?: number;
 
   style?: CSSProperties;
 }

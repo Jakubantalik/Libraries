@@ -350,6 +350,10 @@ const COLOR_OPTIONS: { value: BorderBeamColorVariant; label: string }[] = [
   { value: 'mono', label: 'Mono' },
   { value: 'ocean', label: 'Ocean' },
   { value: 'sunset', label: 'Sunset' },
+  { value: 'forest', label: 'Forest' },
+  { value: 'candy', label: 'Candy' },
+  { value: 'ice', label: 'Ice' },
+  { value: 'gold', label: 'Gold' },
 ];
 
 export default function App() {

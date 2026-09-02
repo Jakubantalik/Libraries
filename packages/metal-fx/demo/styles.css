@@ -1,0 +1,73 @@
+/* Icon-swap transitions (copy button + play/pause toggle) */
+.t-icon {
+  grid-area: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    opacity   var(--icon-swap-dur) var(--icon-swap-ease),
+    filter    var(--icon-swap-dur) var(--icon-swap-ease),
+    transform var(--icon-swap-dur) var(--icon-swap-ease);
+  will-change: opacity, filter, transform;
+}
+[data-state="a"] .t-icon[data-icon="a"],
+[data-state="b"] .t-icon[data-icon="b"] {
+  opacity: 1;
+  filter: blur(0);
+  transform: scale(1);
+}
+[data-state="a"] .t-icon[data-icon="b"],
+[data-state="b"] .t-icon[data-icon="a"] {
+  opacity: 0;
+  filter: blur(var(--icon-swap-blur));
+  transform: scale(var(--icon-swap-start-scale));
+}
+.copy-btn .t-icon[data-icon="a"] svg { opacity: 0.5; }
+.copy-btn .t-icon[data-icon="b"] svg { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .t-icon { transition: none !important; }
+}
+
+/* Webkit search input hacks */
+.hero-toolbar-search-input::-webkit-search-cancel-button,
+.hero-toolbar-search-input::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Range input thumb hacks */
+.strength-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 0;
+  height: 0;
+  background: transparent;
+  border: 0;
+}
+.strength-input::-moz-range-thumb {
+  width: 0;
+  height: 0;
+  background: transparent;
+  border: 0;
+}
+
+/* Metal-fx light-mode overrides (targets library internal classes) */
+html[data-theme="light"] .metal-fx {
+  background: #ffffff;
+  color: #121212;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+html[data-theme="light"] .metal-fx-inner { background: #ffffff; }
+html[data-theme="light"] .metal-fx::before { box-shadow: none; }
+html[data-theme="light"] .metal-fx::after { box-shadow: none; }
+html[data-theme="light"] .metal-fx-label,
+html[data-theme="light"] .metal-fx-icon { color: #121212; }
+html[data-theme="light"] .metal-fx .metal-fx-glow-svg {
+  inset: -1px;
+  width: calc(100% + 2px);
+  height: calc(100% + 2px);
+  opacity: 0.2746;
+  mix-blend-mode: multiply;
+  filter: saturate(5.355) brightness(0.78);
+}
