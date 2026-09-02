@@ -34,6 +34,12 @@ export interface GooeyProps extends HTMLAttributes<HTMLDivElement> {
   waviness?: number
   /** Noise frequency of the undulation; lower = longer, lazier waves. */
   wavinessFreq?: number
+  /** Escape hatch: raw SVG filter primitives that REPLACE the goo chain
+   *  (`blur`, `contrast`, `waviness` and the SVG half of `shadow` are then
+   *  yours to reproduce). The input is `SourceGraphic`; the last primitive's
+   *  output is what paints. Inset and spread shadows normally read a
+   *  binarised `shape` result — keep that name if you keep them. */
+  filter?: string
 }
 
 /** Gooey group: renders the silhouette SVG layer (goo filter + shadow chain)
@@ -51,6 +57,7 @@ export const GooeyRoot = forwardRef<HTMLDivElement, GooeyProps>(function Gooey(
     filterPadding = 24,
     waviness = 0,
     wavinessFreq = 0.018,
+    filter: customFilter,
     className,
     style,
     children,
@@ -163,23 +170,36 @@ export const GooeyRoot = forwardRef<HTMLDivElement, GooeyProps>(function Gooey(
         }}
       >
         <defs>
-          <filter
-            id={filterId}
-            filterUnits="userSpaceOnUse"
-            x={-pad}
-            y={-pad}
-            width={size.w + pad * 2}
-            height={size.h + pad * 2}
-            colorInterpolationFilters="sRGB"
-          >
-            <GooFilterPrimitives
-              blur={blur}
-              contrast={contrast}
-              shadows={svgShadows}
-              waviness={waviness}
-              wavinessFreq={wavinessFreq}
+          {customFilter ? (
+            <filter
+              id={filterId}
+              filterUnits="userSpaceOnUse"
+              x={-pad}
+              y={-pad}
+              width={size.w + pad * 2}
+              height={size.h + pad * 2}
+              colorInterpolationFilters="sRGB"
+              dangerouslySetInnerHTML={{ __html: customFilter }}
             />
-          </filter>
+          ) : (
+            <filter
+              id={filterId}
+              filterUnits="userSpaceOnUse"
+              x={-pad}
+              y={-pad}
+              width={size.w + pad * 2}
+              height={size.h + pad * 2}
+              colorInterpolationFilters="sRGB"
+            >
+              <GooFilterPrimitives
+                blur={blur}
+                contrast={contrast}
+                shadows={svgShadows}
+                waviness={waviness}
+                wavinessFreq={wavinessFreq}
+              />
+            </filter>
+          )}
         </defs>
         <g id={`${filterId}-sil`} ref={setPortal} filter={`url(#${filterId})`} style={{ fill }} />
       </svg>

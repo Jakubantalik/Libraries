@@ -819,6 +819,20 @@ export function getMaxDpr(): number {
 /** Internal helper for the reveal sampler — exposes the shared renderer to
  *  reveal.ts so it can momentarily re-render with a different dotMode and read
  *  pixels back via gl.readPixels. */
+/** Swap the fragment stage every instance renders with, or `null` for the
+ *  bundled one. The material is shared, so this is page-wide. Compile
+ *  errors surface from three.js on the next render — validate the source
+ *  on a scratch context first if it comes from somewhere untrusted. */
+export function setSharedFragmentShader(src: string | null): void {
+  const s = ensureShared();
+  const next = src ?? FRAG_SRC;
+  if (s.material.fragmentShader === next) return;
+  s.material.fragmentShader = next;
+  s.material.needsUpdate = true;
+  for (const inst of s.instances) inst.uniformsDirty = true;
+  wakeLoop();
+}
+
 export function withSharedRenderer<T>(fn: (s: SharedRenderer) => T): T {
   return fn(ensureShared());
 }

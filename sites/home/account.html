@@ -439,6 +439,11 @@
       min-height: 100dvh;
     }
 
+    /* Headings balance their lines so a short last line never dangles; body
+       text uses `pretty`, which guards the orphan without equalising lengths
+       (ported by value: this page links no shared stylesheet). */
+    h1, h2, h3, h4 { text-wrap: balance; }
+    p, li, figcaption, blockquote { text-wrap: pretty; }
     body {
       background: var(--bg);
       color: var(--text);
@@ -636,9 +641,27 @@
       height: 24px;
       color: var(--icon-color);
     }
-    /* Natural 18×20.295 ratio centered in the 24px box (Figma vector
-       inset 7.72%/12.5%), not stretched edge-to-edge. */
-    .brand-mark svg { width: 18px; height: 20.295px; display: block; }
+    /* Libraries scribble mark: natural 22.67×14.67 ratio in the 24px box.
+       Ported from site.css, which this page does not link. */
+    .brand-mark svg { width: 22px; height: 15px; display: block; }
+    /* Hand-drawn redraw on hover: the scribble erases itself stroke-first
+       and immediately redraws from the start, like a quick pencil pass.
+       One continuous dash slide (period 200 on a 100-length path) does
+       both halves in a single animation. */
+    .brand-draw {
+      stroke-dasharray: 100 100;
+      stroke-dashoffset: 0;
+    }
+    .brand:hover .brand-draw,
+    .footer-brand-logo:hover .brand-draw { animation: brand-redraw 1.15s ease-in-out; }
+    @keyframes brand-redraw {
+      from { stroke-dashoffset: 0; }
+      to   { stroke-dashoffset: -200; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .brand:hover .brand-draw,
+      .footer-brand-logo:hover .brand-draw { animation: none; }
+    }
     .brand-word {
       font-size: 15px;
       font-weight: 500;
@@ -659,7 +682,7 @@
       align-items: center;
       justify-content: center;
       height: 36px;
-      padding: 0 13px;
+      padding: 0 14px;
       border-radius: 50px;
       font-family: var(--font-sans);
       font-size: 13px;
@@ -671,6 +694,32 @@
       transition: background-color 0.15s ease, color 0.15s ease;
       -webkit-tap-highlight-color: transparent;
     }
+    /* Small Pro tag riding the Studio pill (ported by value: this page links
+       no shared stylesheet). Matches site.css .nav-pill-pro. */
+    .nav-pill-pro {
+      display: inline-flex;
+      align-items: center;
+      height: 18px;
+      margin-left: 6px;
+      padding: 0 6px;
+      border-radius: 50px;
+      background: rgba(85, 207, 255, 0.14);
+      color: #7cd4ff;
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 14px;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+    }
+
+    /* The Studio pill carries the Pro chip, whose own rounded fill reads as
+       padding — so its right side comes in to 9px against the 14px the text-only pills
+       carry on both sides. */
+    .nav-pill:has(.nav-pill-pro) { padding-right: 9px; }
     .nav-pill:hover { color: var(--text); background: rgba(0, 0, 0, 0.03); }
     html[data-theme="dark"] .nav-pill:hover { background: rgba(255, 255, 255, 0.06); }
     .nav-pill--active {
@@ -1388,19 +1437,16 @@
       line-height: 1.4;
       color: var(--text);
     }
+    /* No underline at rest; it appears on hover, like every other link. */
     .course-cta-headline a {
       color: inherit;
-      text-decoration: underline;
+      text-decoration: none;
       text-underline-offset: 2px;
-      /* 50% of the text color at rest, 100% on hover. Using
-         color-mix with currentColor keeps it theme-agnostic — the
-         underline tracks light/dark text without an explicit
-         dark-mode override. */
-      text-decoration-color: color-mix(in srgb, currentColor 50%, transparent);
+      text-decoration-color: currentColor;
       transition: text-decoration-color 180ms ease;
     }
     .course-cta-headline a:hover {
-      text-decoration-color: currentColor;
+      text-decoration: underline;
     }
     .course-cta-byline {
       margin: 0;
@@ -1516,7 +1562,6 @@
       transform-origin: center;
     }
     .footer-brand-logo:hover { opacity: 1; transform: scale(1.02); }
-    .footer-brand-logo:hover .brand-mark { transform: rotate(60deg); }
     @media (prefers-reduced-motion: reduce) {
       .footer-brand-logo { transition: opacity 150ms ease; }
       .footer-brand-logo:hover { transform: none; }
@@ -3575,7 +3620,6 @@
       transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
       transform-origin: center;
     }
-    .brand:hover .brand-mark { transform: rotate(60deg); }
     @media (prefers-reduced-motion: reduce) {
       .brand, .brand-mark { transition: none; }
       .brand:hover, .brand:hover .brand-mark { transform: none; }
@@ -3647,9 +3691,104 @@
       transition: background 150ms var(--ease-smooth-out);
       -webkit-tap-highlight-color: transparent;
     }
-    .nav-get-pro:hover { background: rgba(0, 115, 255, 0.14); }
+    .nav-get-pro:hover { background: rgba(0, 115, 255, 0.10); }
     html[data-theme="dark"] .nav-get-pro { background: rgba(85, 207, 255, 0.14); color: #7cd4ff; }
-    html[data-theme="dark"] .nav-get-pro:hover { background: rgba(85, 207, 255, 0.22); }
+    html[data-theme="dark"] .nav-get-pro:hover { background: rgba(85, 207, 255, 0.17); }
+
+    /* (ported by value: no shared stylesheet here)
+       Get Pro hover: the Tune in Studio button's rim wash (playground.css
+       .t-pro-btn::before), ported so pages without that sheet get it too. The
+       seven Figma radial layers orbit the rim under a centre-clearing mask; at
+       rest the layer is invisible and its orbit paused, and hover fades it in
+       and lets it run. Tuning lives on the pill so the recipe is self-contained. */
+    .nav-get-pro {
+      position: relative;
+      overflow: hidden;
+      --probtn-strength:  0.5;
+      --probtn-core:      50%;
+      --probtn-core-blur: 150%;
+      --probtn-blur:      6px;
+      --probtn-hue-dur:   4000ms;
+      --probtn-drift-dur: 5000ms;
+    }
+    .nav-get-pro-label { position: relative; z-index: 1; }
+    .nav-get-pro::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      background-image:
+        url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='0.88'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(0.34726 -1.3118e-7 8.6482e-7 0.89585 33.5 21)'><stop stop-color='rgba(0,110,245,1)' offset='0'/><stop stop-color='rgba(0,110,245,0)' offset='1'/></radialGradient></defs></svg>"),
+        url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='0.5'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(-1.3 0.25 -1.2633 -2.7471 33.5 21)'><stop stop-color='rgba(0,110,245,1)' offset='0'/><stop stop-color='rgba(0,110,245,0)' offset='1'/></radialGradient></defs></svg>"),
+        url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='0.4'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(1.05 -0.8 0.46018 3.6184 33.5 21)'><stop stop-color='rgba(204,0,167,1)' offset='0'/><stop stop-color='rgba(170,0,204,0)' offset='0.71709'/></radialGradient></defs></svg>"),
+        url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(-0.51067 -3.3275e-16 -4.3352e-14 -1.1396 33.5 21)'><stop stop-color='rgba(204,0,167,1)' offset='0'/><stop stop-color='rgba(170,0,204,0)' offset='1'/></radialGradient></defs></svg>"),
+        url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(-0.45 -0.75 1.9052 -0.7091 33.5 21)'><stop stop-color='rgba(255,173,85,1)' offset='0'/><stop stop-color='rgba(255,173,85,0)' offset='1'/></radialGradient></defs></svg>"),
+        url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(1.25 -0.35 -0.4013 3.5959 33.5 21)'><stop stop-color='rgba(0,204,68,1)' offset='0'/><stop stop-color='rgba(0,196,102,0.75)' offset='0.25'/><stop stop-color='rgba(0,187,136,0.5)' offset='0.5'/><stop stop-color='rgba(0,170,204,0)' offset='1'/></radialGradient></defs></svg>"),
+        url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(-0.87391 0.73043 -4.1482 -1.9503 33.5 21)'><stop stop-color='rgba(0,170,204,1)' offset='0'/><stop stop-color='rgba(0,170,204,0)' offset='1'/></radialGradient></defs></svg>");
+      background-size: 180% 180%, 180% 180%, 180% 180%, 180% 180%,
+                       180% 180%, 180% 180%, 180% 180%;
+      background-repeat: no-repeat;
+      /* Rim-only wash: the mask clears the centre so the label sits on
+         clean white and the colour reads as a glow creeping in from the
+         edges. The ellipse is deliberately smaller than the pill (46%)
+         so full opacity is reached INSIDE the border — sizing it past
+         the edge would clip the opaque end of the ramp and leave the
+         whole wash near-invisible. */
+      -webkit-mask-image: radial-gradient(
+        ellipse 46% 46% at 50% 50%,
+        transparent var(--probtn-core),
+        black calc(var(--probtn-core) + var(--probtn-core-blur))
+      );
+      mask-image: radial-gradient(
+        ellipse 46% 46% at 50% 50%,
+        transparent var(--probtn-core),
+        black calc(var(--probtn-core) + var(--probtn-core-blur))
+      );
+      opacity: 0;
+      transition: opacity 200ms cubic-bezier(0.22, 1, 0.36, 1);
+      animation:
+        nav-pro-hue var(--probtn-hue-dur) linear infinite,
+        nav-pro-drift var(--probtn-drift-dur) ease-in-out infinite;
+      animation-play-state: paused;
+    }
+    .nav-get-pro:hover::before {
+      opacity: var(--probtn-strength);
+      animation-play-state: running;
+    }
+    @keyframes nav-pro-hue {
+      from { filter: hue-rotate(0deg) saturate(1.3) blur(var(--probtn-blur)); }
+      to   { filter: hue-rotate(-360deg) saturate(1.3) blur(var(--probtn-blur)); }
+    }
+    @keyframes nav-pro-drift {
+      0%, 100% {
+        background-position:
+          100% 0%, 0% 50%, 100% 50%, 0% 100%,
+          0% 0%, 50% 0%, 50% 100%;
+      }
+      25% {
+        background-position:
+          100% 100%, 50% 0%, 50% 100%, 0% 0%,
+          100% 0%, 100% 50%, 0% 50%;
+      }
+      50% {
+        background-position:
+          0% 100%, 100% 0%, 0% 100%, 100% 0%,
+          100% 100%, 100% 100%, 0% 0%;
+      }
+      75% {
+        background-position:
+          0% 0%, 100% 100%, 0% 0%, 100% 100%,
+          50% 100%, 0% 100%, 100% 50%;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      /* The wash still appears on hover, frozen on its first frame. */
+      .nav-get-pro::before { animation: none; }
+    }
+    /* The pill sets its own display, which outranks the UA's [hidden] rule —
+       pro-client.js hides it by attribute once a signed-in user is entitled. */
+    .nav-get-pro[hidden] { display: none; }
 
     /* ── 3-dot dropdown — exact Refine tool component ──────────── */
     :root {
@@ -4342,7 +4481,8 @@
     .t-acc-panel-inner p { margin: 0 0 16px; padding-right: 28px; font-size: 14px; line-height: 22px; color: var(--text-muted); }
     .t-acc-panel-inner code { font-family: var(--font-mono); font-size: 12px; line-height: 18px; padding: 1px 6px; border-radius: 6px; background: rgba(0, 0, 0, 0.04); color: var(--text); }
     html[data-theme="dark"] .t-acc-panel-inner code { background: rgba(255, 255, 255, 0.06); }
-    .t-acc-panel-inner a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
+    .t-acc-panel-inner a { color: var(--text); text-decoration: none; }
+    .t-acc-panel-inner a:hover { text-decoration: underline; text-underline-offset: 2px; }
     @media (prefers-reduced-motion: reduce) {
       .t-acc-panel, .t-acc-panel-inner, .t-acc-chevron { transition: none !important; }
     }
@@ -4516,6 +4656,12 @@
     }
     .settings-label { font-size: 13px; color: var(--text); }
     .settings-value { font-size: 13px; color: var(--text-muted, #6c6c6c); }
+    /* A row whose label needs a sentence of explanation under it. */
+    .settings-row:has(.settings-sub) { align-items: flex-start; padding: 12px 0; }
+    .settings-sub {
+      display: block; margin-top: 3px; max-width: 52ch;
+      font-size: 12px; line-height: 1.5; color: var(--text-muted, #6c6c6c);
+    }
 
     .account-note { margin: 16px 0 0; font-size: 13px; line-height: 1.4; }
     .account-note[data-kind="ok"] { color: #16a34a; }
@@ -4694,9 +4840,9 @@
             <span class="brand-word"><span class="brand-word-strong">Libraries</span><span class="brand-word-dim">.dev</span></span>
           </a>
           <nav class="site-nav-menu" aria-label="Primary">
-            <a class="nav-pill" href="/#components">Libraries</a>
+            <a class="nav-pill" href="/beam.html">Libraries</a>
             <a class="nav-pill" href="/how-to-use.html">How to use</a>
-            <a class="nav-pill" href="/studio.html">Studio</a>
+            <a class="nav-pill" href="/studio.html">Studio <span class="nav-pill-pro">Pro</span></a>
           </nav>
         </div>
         <div class="site-nav-right">
@@ -4715,23 +4861,9 @@
             </svg>
             <span class="pill-label" id="gh-stars-count">—</span>
           </a>
-          <a
-            class="icon-btn"
-            href="https://x.com/jakubantalik"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="X (Twitter)"
-          >
-            <svg class="icon-x" aria-hidden="true" viewBox="0 0 16 17" xmlns="http://www.w3.org/2000/svg">
-              <path
-                fill="currentColor"
-                d="M12.4041 1.39726H14.6953L9.69087 7.2591L15.5781 15.2368H10.9696L7.35741 10.3996L3.22921 15.2368H0.934687L6.28641 8.96575L0.642598 1.39726H5.36795L8.62962 5.81859L12.4041 1.39726ZM11.5992 13.8329H12.8682L4.67667 2.72798H3.31359L11.5992 13.8329Z"
-              />
-            </svg>
-          </a>
           <div class="pm-anchor" id="more-anchor">
             <button type="button" class="icon-btn" id="more-btn" aria-label="More" aria-haspopup="menu" aria-expanded="false">
-              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block">
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 8C6.66667 7.26362 7.26362 6.66667 8 6.66667C8.73638 6.66667 9.33333 7.26362 9.33333 8C9.33333 8.73638 8.73638 9.33333 8 9.33333C7.26362 9.33333 6.66667 8.73638 6.66667 8Z" fill="currentColor"/>
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 3.33333C6.66667 2.59695 7.26362 2 8 2C8.73638 2 9.33333 2.59695 9.33333 3.33333C9.33333 4.06971 8.73638 4.66667 8 4.66667C7.26362 4.66667 6.66667 4.06971 6.66667 3.33333Z" fill="currentColor"/>
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 12.6667C6.66667 11.9303 7.26362 11.3333 8 11.3333C8.73638 11.3333 9.33333 11.9303 9.33333 12.6667C9.33333 13.403 8.73638 14 8 14C7.26362 14 6.66667 13.403 6.66667 12.6667Z" fill="currentColor"/>
@@ -4766,9 +4898,9 @@
       <div class="mobile-menu-backdrop" id="mobile-menu-backdrop"></div>
       <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile">
         <ul class="mobile-menu-list">
-          <li><a class="mobile-menu-link mobile-menu-link--1" href="/#components">Libraries</a></li>
-          <li><a class="mobile-menu-link mobile-menu-link--2" href="/studio.html">Studio</a></li>
-          <li><a class="mobile-menu-link mobile-menu-link--3" href="/how-to-use.html">How to use</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--1" href="/beam.html">Libraries</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--2" href="/how-to-use.html">How to use</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--3" href="/studio.html">Studio</a></li>
           <li><a class="mobile-menu-link mobile-menu-link--4 mobile-menu-link--pro" href="/pro.html">Get Pro</a></li>
         </ul>
         <a class="mobile-menu-cta" id="mobile-signin" href="/pro.html">Sign in</a>
@@ -4826,6 +4958,13 @@
             <div class="settings-row">
               <span class="settings-label">Email</span>
               <span class="settings-value" id="acc-email"></span>
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">
+                Studio agent analytics
+                <span class="settings-sub" id="acc-analytics-sub">Your Studio agent requests are stored anonymised, with personal details removed, to improve the agent. They carry no identifier and are deleted after three months.</span>
+              </span>
+              <button type="button" class="row-btn" id="acc-analytics">Turn off</button>
             </div>
             <div class="settings-row">
               <span class="settings-label">Log out of all devices</span>
@@ -5309,6 +5448,30 @@
       el("acc-adjust").addEventListener("click", function (e) { e.preventDefault(); portal(); });
       el("acc-cancel").addEventListener("click", portal);
       el("acc-portal").addEventListener("click", portal);
+
+      // Studio agent analytics opt-out. Kept in this browser (no account
+      // field): the record it governs carries no identifier, so there is
+      // nothing server-side to attach the choice to. The Studio reads this
+      // same key when it sends a turn (sites/home/src/studio/controls.tsx).
+      var ANALYTICS_KEY = "ldev:studio:agent-analytics";
+      function analyticsOn() {
+        try { return localStorage.getItem(ANALYTICS_KEY) !== "off"; } catch (e) { return true; }
+      }
+      function paintAnalytics() {
+        var on = analyticsOn();
+        el("acc-analytics").textContent = on ? "Turn off" : "Turn on";
+        el("acc-analytics-sub").textContent = on
+          ? "Your Studio agent requests are stored anonymised, with personal details removed, to improve the agent. They carry no identifier and are deleted after three months."
+          : "Your Studio agent requests are not stored. Only this browser remembers the choice.";
+      }
+      paintAnalytics();
+      el("acc-analytics").addEventListener("click", function () {
+        try {
+          if (analyticsOn()) localStorage.setItem(ANALYTICS_KEY, "off");
+          else localStorage.removeItem(ANALYTICS_KEY);
+        } catch (e) { /* private mode — nothing to persist */ }
+        paintAnalytics();
+      });
 
       el("acc-logout-all").addEventListener("click", function () {
         TP.logout(true).then(function () { location.href = "/"; });

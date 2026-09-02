@@ -59,7 +59,7 @@
   font-size: 13px;
   font-weight: 500;
   line-height: 13px;
-  color: #bbbbbb;
+  color: #ededed;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -86,7 +86,8 @@
   line-height: 16px;
 }
 .docs-group--links .docs-group-label { padding: 9px 12px; }
-.docs-link--muted { color: var(--text-muted); }
+/* Getting-started rows sit at the same near-white as the library rows. */
+.docs-link--muted { color: #ededed; }
 .docs-link:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
 /* Icon card: the Figma export used verbatim (fill, rim, glyph and its
    soft 0 1px 1.5px drop all baked in). The 24px slot just positions it;
@@ -108,6 +109,16 @@
   height: 30px;
   left: -3px;
   top: -2px;
+}
+/* Metal's export is the 46px card alone (no canvas padding) and carries a
+   baked background, so it fills the slot squarely and takes the card's own
+   radius to cut the corners the export left opaque. */
+.docs-link-icon[src*="figma-metal"] {
+  width: 24px;
+  height: 24px;
+  left: 0;
+  top: 0;
+  border-radius: 6px;
 }
 
 
@@ -131,7 +142,7 @@
 .detail-titles { display: flex; flex-direction: column; gap: 12px; }
 /* Effect icon sits above the name, at the tile art's natural 46px. */
 .detail-icon { width: 46px; height: 46px; display: block; }
-.detail-icon img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.detail-icon img { width: 100%; height: 100%; object-fit: contain; display: block; border-radius: 12px; }
 .detail-title { margin: 0; font-family: "Saans", var(--font-sans); font-size: 36px; font-weight: 500; line-height: 42px; letter-spacing: -0.18px; color: var(--text); }
 .detail-sub { margin: 0; font-size: 16px; line-height: 24.2px; color: var(--text-muted); }
 
@@ -181,27 +192,35 @@
   .proto-modal-tabs-indicator { transition: none; }
 }
 
-/* On the detail pages the bar wears the Studio's Manual controls / Agent
-   pill: darker bar, lit indicator, brighter active label. */
-.detail-tabs.proto-modal-tabs { height: 36px; overflow: hidden; }
+/* Preview / Install / Usage bar — Figma 1425:39008: no bar fill, only the
+   selected tab carries one (white-12% pill at 36px radius with the drop +
+   top-highlight shadow), #fbfbfb active / #979797 muted labels, 3px
+   padding at 48px radius. Every instance reads it from the --pg-tabs
+   tokens, so the detail pages and the Studio can never drift. */
+.detail-tabs.proto-modal-tabs,
+html[data-theme="dark"] .detail-tabs.proto-modal-tabs {
+  height: 36px;
+  padding: 3px;
+  border-radius: 48px;
+  overflow: hidden;
+  background: var(--pg-tabs-bg);
+  box-shadow: var(--pg-tabs-ring);
+}
 .detail-tabs .proto-modal-tabs-indicator {
   top: 3px;
   height: 30px;
-  background: rgba(255, 255, 255, 0.12);
   border-radius: 36px;
-  box-shadow:
-    0 1px 1px 0 rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  background: var(--pg-tabs-pill-bg);
+  box-shadow: var(--pg-tabs-pill-shadow);
 }
 .detail-tabs .proto-modal-tab {
   height: 30px;
   padding: 0 12px;
   border-radius: 36px;
-  color: #979797;
+  color: var(--pg-label);
 }
 .detail-tabs .proto-modal-tab:hover,
-.detail-tabs .proto-modal-tab[aria-selected="true"] { color: #fbfbfb; }
-html[data-theme="dark"] .detail-tabs.proto-modal-tabs { background: #272727; }
+.detail-tabs .proto-modal-tab[aria-selected="true"] { color: var(--pg-title); }
 
 /* The two head actions sit together, opposite the tabs. */
 .detail-head-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -430,57 +449,190 @@ html[data-theme="dark"] .detail-tabs.proto-modal-tabs { background: #272727; }
     0 1px 1px 0 rgba(0, 0, 0, 0.24),
     inset 0 0 0 1px rgba(255, 255, 255, 0.04),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
-  transition:
-    background 140ms,
-    margin-right var(--resize-dur) var(--resize-ease);
+  transition: background 140ms;
 }
 .detail-prompt:hover { background: rgba(255, 255, 255, 0.1); }
 .detail-prompt:active { background: rgba(255, 255, 255, 0.12); }
 .detail-prompt:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
-/* Only the changing tail swaps, so "Cop" holds its place while "y prompt"
-   cross-blurs to "ied" — the same swap the copy tooltip uses (.tt-swap in
-   site.css). The pill hugs the tail and tweens between the two measured
-   widths on the card-resize tokens (transitions.dev 01-card-resize).
+/* Studio stage bar: the label is static and the pill never resizes — only
+   the leading icon swaps copy -> check. */
+.st-stage-bar .detail-prompt { justify-content: center; transition: background 140ms; }
 
-   The pill is the last item in a right-aligned actions group, so shrinking
-   it alone would drag its left edge across the row. A right margin of
-   exactly the width it gives up absorbs the difference, holding the group's
-   total width — so the left edge stays put and the pill closes from the
-   right. Both animate on the same tokens, so they move as one. */
-.detail-prompt { justify-content: flex-start; }
-.detail-prompt[data-copied="true"] { margin-right: calc(var(--dp-w-a, 0px) - var(--dp-w-b, 0px)); }
-.detail-prompt-label { display: inline-flex; align-items: baseline; text-align: left; }
-.dp-swap {
-  position: relative;
-  display: inline-block;
-  vertical-align: baseline;
-  width: var(--dp-w-a, auto);
-  transition: width var(--resize-dur) var(--resize-ease);
-  will-change: width;
+html[data-theme="light"] .detail-prompt {
+  background: var(--pg-control-active-bg);
+  color: var(--pg-control-active-text);
+  box-shadow: var(--pg-control-active-shadow);
 }
-.detail-prompt[data-copied="true"] .dp-swap { width: var(--dp-w-b, auto); }
-.dp-label {
-  white-space: pre;
-  transition:
-    opacity 180ms cubic-bezier(0.22, 1, 0.36, 1),
-    filter 180ms cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: opacity, filter;
+html[data-theme="light"] .detail-prompt:hover { background: #fafafa; }
+html[data-theme="light"] .detail-prompt:active { background: #f1f1f1; }
+.detail-prompt-label { display: inline-block; }
+
+/* Install & Usage: the platform switch is the same pill bar as the view
+   tabs, and a caveat under an install block reads as a muted note. */
+.st-platform-tabs { align-self: flex-start; }
+.st-code-note {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--pg-label);
 }
-.dp-a { display: inline-block; opacity: 1; filter: blur(0); }
-.dp-b { position: absolute; top: 0; left: 0; opacity: 0; filter: blur(2px); }
-.detail-prompt[data-copied="true"] .dp-a { opacity: 0; filter: blur(2px); }
-.detail-prompt[data-copied="true"] .dp-b { opacity: 1; filter: blur(0); }
-/* The word arriving waits for the pill to make room, while the one leaving
-   goes at once — otherwise the longer label paints at full width before the
-   pill has re-opened and spills past its edge. Each state delays only its
-   incoming label, so the rule holds in both directions. */
-.dp-a { transition-delay: 140ms; }
-.dp-b { transition-delay: 0ms; }
-.detail-prompt[data-copied="true"] .dp-a { transition-delay: 0ms; }
-.detail-prompt[data-copied="true"] .dp-b { transition-delay: 140ms; }
-@media (prefers-reduced-motion: reduce) {
-  .dp-swap, .dp-label, .detail-prompt { transition: none !important; }
+
+/* Install & Usage: each block wears the panel's section title. */
+.st-code-group { display: flex; flex-direction: column; gap: 8px; }
+.st-code-title {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 14px;
+  color: var(--pg-title);
 }
+
+/* Stage-bar action group: Presets ▾ · reset · Copy prompt, all 32px.
+   Figma 1432:39116 / 1432:39061 — both are ghosts at 60px radius: no fill
+   at rest, white-4% on hover and while pressed/open. The label rests at
+   #b8b8b8 with the icons and lifts to #fbfbfb on hover/open. 16px icons.
+   Presets pads 12 left / 8 right around its chevron; reset is a square
+   with 8px sides. Disabled drops the whole button to 60%.
+   Copy prompt keeps the filled pill so the one real action reads first. */
+.st-stage-actions { display: flex; align-items: center; gap: 4px; }
+.st-stage-actions .detail-prompt:not(.st-preset-btn) { margin-left: 4px; }
+.st-preset-btn,
+html[data-theme="dark"] .st-preset-btn,
+html[data-theme="light"] .st-preset-btn,
+.st-reset-btn,
+html[data-theme="dark"] .st-reset-btn {
+  height: 32px;
+  border: 0;
+  border-radius: 60px;
+  background: transparent;
+  box-shadow: none;
+  color: #b8b8b8;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 16px;
+  transition: background 140ms, color 140ms, opacity 140ms;
+}
+.st-preset-btn { gap: 4px; padding: 6px 8px 6px 12px; }
+.st-reset-btn { position: relative; width: 32px; padding: 6px 8px; }
+/* Theme-prefixed so these outrank the theme-scoped rest rules above. */
+.st-preset-btn:hover,
+.st-preset-btn[aria-expanded="true"],
+.st-preset-btn:active,
+.st-reset-btn:hover,
+.st-reset-btn:active,
+html[data-theme="dark"] .st-preset-btn:hover,
+html[data-theme="dark"] .st-preset-btn[aria-expanded="true"],
+html[data-theme="dark"] .st-preset-btn:active,
+html[data-theme="dark"] .st-reset-btn:hover,
+html[data-theme="dark"] .st-reset-btn:active {
+  background: rgba(255, 255, 255, 0.04);
+  color: #fbfbfb;
+}
+.st-preset-btn:disabled,
+.st-reset-btn:disabled { background: transparent; opacity: 0.6; cursor: default; }
+/* Light theme: the same ghost, inked for a light surface. */
+html[data-theme="light"] .st-preset-btn,
+html[data-theme="light"] .st-reset-btn { color: var(--pg-title); }
+html[data-theme="light"] .st-preset-btn:hover,
+html[data-theme="light"] .st-preset-btn[aria-expanded="true"],
+html[data-theme="light"] .st-preset-btn:active,
+html[data-theme="light"] .st-reset-btn:hover,
+html[data-theme="light"] .st-reset-btn:active {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--pg-title);
+}
+/* Both glyphs are the frame's own 16px icons and take the button's own
+   color, so they rest and lift with the label. */
+.st-preset-chev { flex: none; width: 16px; height: 16px; color: currentColor; }
+.st-reset-btn svg,
+.st-reset-btn:hover svg { width: 16px; height: 16px; fill: none; color: currentColor; }
+@media (hover: hover) {
+  .st-reset-btn:hover .card-copy-tooltip,
+  .st-reset-btn:focus-visible .card-copy-tooltip {
+    opacity: 1;
+    visibility: visible;
+    filter: blur(0);
+    transition:
+      opacity 150ms cubic-bezier(0.22, 1, 0.36, 1) 50ms,
+      filter 150ms cubic-bezier(0.22, 1, 0.36, 1) 50ms,
+      visibility 0s linear 50ms;
+  }
+}
+/* Preset menu: the nav's tl-menu, with a save form under the list. */
+.st-preset-menu { width: 240px; }
+.st-preset-row .tl-menu-item-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Empty presets menu (Figma 1432:39119): centred, 8px between the two
+   lines, #fbfbfb 13px headline over a #b1b1b1 12px explainer. */
+.st-preset-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px 10px;
+  text-align: center;
+}
+.st-preset-empty-title,
+.st-preset-empty-sub {
+  margin: 0;
+  font-family: var(--font-sans);
+  line-height: 16px;
+}
+.st-preset-empty-title { font-size: 13px; font-weight: 500; color: #fbfbfb; }
+.st-preset-empty-sub { font-size: 12px; font-weight: 400; color: #b1b1b1; }
+html[data-theme="light"] .st-preset-empty-title { color: var(--pg-title); }
+html[data-theme="light"] .st-preset-empty-sub { color: var(--pg-label); }
+.st-preset-menu .st-preset-remove {
+  flex: none; width: 20px; height: 20px; border: 0; border-radius: 6px; padding: 0;
+  background: transparent; color: var(--text-muted); font-size: 14px; line-height: 1; cursor: pointer;
+}
+.st-preset-menu .st-preset-remove:hover { color: var(--text); background: var(--pg-control-bg-hover); }
+.st-preset-form { display: flex; flex-direction: column; gap: 6px; padding: 4px 2px 2px; }
+.st-preset-input {
+  height: 32px; padding: 0 10px; border: 0; border-radius: 8px;
+  background: var(--pg-control-bg); color: var(--pg-title);
+  font-family: var(--font-sans); font-size: 13px; outline: none;
+}
+.st-preset-input::placeholder { color: var(--pg-label); }
+.st-preset-input:focus-visible { box-shadow: 0 0 0 2px var(--text-muted); }
+/* Save — Figma 1418:38191: 32px pill on white-6%, lifted by a 1px inner
+   hairline and a top highlight, hover/active at white-10%, disabled at
+   50%. Same family as the panel's material pills. */
+.st-preset-save {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 36px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fbfbfb;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow:
+    0 1px 1px 0 rgba(0, 0, 0, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  transition: background 140ms;
+}
+.st-preset-save:hover,
+.st-preset-save:active { background: rgba(255, 255, 255, 0.1); }
+.st-preset-save:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
+.st-preset-save:disabled { opacity: 0.5; cursor: default; pointer-events: none; }
+html[data-theme="light"] .st-preset-save {
+  background: var(--pg-control-active-bg);
+  color: var(--pg-control-active-text);
+  box-shadow: var(--pg-control-active-shadow);
+}
+html[data-theme="light"] .st-preset-save:hover,
+html[data-theme="light"] .st-preset-save:active { background: #fafafa; }
 /* Leading icon, swapping copy -> check on the same cross-blur the code
    snippets' copy button uses (.card-copy in site.css). The two glyphs
    stack in one 16px slot so the pill's width never shifts. */
@@ -489,7 +641,8 @@ html[data-theme="dark"] .detail-tabs.proto-modal-tabs { background: #272727; }
   flex: none;
   width: 16px;
   height: 16px;
-  margin-right: 6px;
+  /* Figma 1419:38547: 8px between the copy-03 glyph and the label. */
+  margin-right: 8px;
 }
 .detail-prompt-ico svg {
   position: absolute;
@@ -538,6 +691,86 @@ html[data-theme="dark"] .detail-tabs.proto-modal-tabs { background: #272727; }
   .detail-topbar { display: none; }
 }
 
+/* ── Studio teaser (Figma 1425:38896) ──────────────────────────
+   The paywall foot of the options panel: a locked replica of the
+   library's Studio controls at 20% opacity, dissolved by a scrim that
+   fades the panel surface back in over a progressive 4px blur, with the
+   pitch and a Get access pill riding on top. */
+.pg-teaser {
+  position: relative;
+  /* Reach the panel's edges so the scrim resolves into the surface with
+     no seam; the panel's 16px padding comes back as our own. */
+  margin: 0 -16px -16px;
+  padding: 0 16px 16px;
+  min-height: 196px;
+}
+.pg-teaser-locked {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  opacity: 0.2;
+  pointer-events: none;
+  user-select: none;
+}
+.pg-teaser-group { display: flex; flex-direction: column; gap: 14px; }
+.pg-teaser-sep { height: 1px; background: rgba(255, 255, 255, 0.04); }
+/* The locked rows never react — freeze the vslider's hover chrome. */
+.pg-teaser-locked .pg-vslider:hover { background: rgba(255, 255, 255, 0.06); }
+.pg-teaser-locked .pg-vslider-fill::after { display: none; }
+
+/* Scrim: transparent over the tail of the real controls, solid panel by
+   two-thirds down (Figma stops 5% -> 69%). The mask ramps the whole
+   layer in from nothing, so the 4px backdrop blur arrives progressively
+   instead of starting at a hard line. */
+.pg-teaser-scrim {
+  position: absolute;
+  inset: -14px 0 0;
+  border-radius: 0 0 16px 16px;
+  background: linear-gradient(to bottom, rgba(27, 27, 27, 0) 5%, #1b1b1b 69%);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 30%);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 30%);
+  pointer-events: none;
+}
+
+/* The pitch, centred a third of the way into the scrim. Only the button
+   takes the pointer; everything else lets clicks fall through. */
+.pg-teaser-cta {
+  position: absolute;
+  left: 50%;
+  top: 36px;
+  transform: translateX(-50%);
+  width: 210px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
+  text-align: center;
+  pointer-events: none;
+}
+.pg-teaser-copy { display: flex; flex-direction: column; gap: 5px; }
+.pg-teaser-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 14px;
+  color: #e4e4e4;
+}
+.pg-teaser-sub {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 16px;
+  color: #979797;
+}
+/* Get access IS the Tune in Studio button — same .detail-studio body and
+   rim wash; only the pointer-events opt-in and its wider padding differ. */
+.pg-teaser-btn {
+  pointer-events: auto;
+  padding: 0 14px;
+}
+
 /* Section headings — still used by the code panels */
 .detail-section { margin-top: 0; width: 100%; }
 .detail-section-title { font-size: 15px; font-weight: 500; margin-bottom: 16px; color: var(--text); }
@@ -559,7 +792,10 @@ html[data-theme="dark"] .detail-tabs.proto-modal-tabs { background: #272727; }
   grid-template-columns: minmax(0, 1fr) 244px;
   gap: 12px;
 }
-.detail-body .pg > .pg-snippet { grid-column: 1 / -1; }
+/* A snippet inside the grid is already spaced by its row gap, so it drops
+   the margin the standalone rule gives it — otherwise the two stack to 24px
+   and gooey sits lower than every other detail page. */
+.detail-body .pg > .pg-snippet { grid-column: 1 / -1; margin-top: 0; }
 /* Sibling snippets sit outside the grid, so they need its gap. */
 .detail-body .pg + .pg-snippet { margin-top: 12px; }
 @media (max-width: 860px) {
@@ -577,36 +813,101 @@ html[data-theme="dark"] .detail-tabs.proto-modal-tabs { background: #272727; }
   justify-content: center;
   overflow: hidden;
 }
-.pg-stage::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  box-shadow: inset 0 0 0 1px var(--stage-border);
-  pointer-events: none;
-  z-index: 10;
-}
 html[data-theme="dark"] .pg-stage { background: #171717; }
-html[data-theme="dark"] .pg-stage::after { box-shadow: inset 0 0 0 1px rgba(191, 192, 203, 0.08); }
+
+/* ── Studio control tokens ────────────────────────────────────
+   Light values follow transitions.dev's page palette (--bg / --card-bg
+   / --chip-bg) and refine's card + pill button: a white surface on a
+   1px black-6% ring, muted #6d6d6d labels, #17181c active text. The
+   dark block below restores the values the detail pages ship, so those
+   (pinned to data-theme="dark") are untouched. */
+:root {
+  --pg-panel-bg: #ffffff;
+  --pg-panel-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.04),
+    0 4px 42px 0 rgba(0, 0, 0, 0.04),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+
+  --pg-title: #171717;
+  --pg-label: #6d6d6d;
+  --pg-rule: rgba(0, 0, 0, 0.06);
+
+  --pg-control-bg: rgba(0, 0, 0, 0.04);
+  --pg-control-bg-hover: rgba(0, 0, 0, 0.06);
+  --pg-control-text: #6d6d6d;
+  --pg-control-text-hover: #2b2b2b;
+
+  /* Raised state — refine's white pill button. */
+  --pg-control-active-bg: #ffffff;
+  --pg-control-active-text: #17181c;
+  --pg-control-active-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.04),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.1),
+    inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+
+  --pg-grab: #b3b3b3;
+  --pg-swatch-ring: rgba(0, 0, 0, 0.12);
+
+  --pg-tabs-bg: transparent;
+  --pg-tabs-ring: none;
+  --pg-tabs-pill-bg: #ffffff;
+  --pg-tabs-pill-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.06),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+html[data-theme="dark"] {
+  --pg-panel-bg: #1b1b1b;
+  --pg-panel-shadow:
+    0 2px 6px 0 rgba(0, 0, 0, 0.05),
+    0 4px 42px 0 rgba(0, 0, 0, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.02);
+
+  --pg-title: #fbfbfb;
+  --pg-label: #979797;
+  --pg-rule: rgba(255, 255, 255, 0.04);
+
+  --pg-control-bg: rgba(255, 255, 255, 0.04);
+  --pg-control-bg-hover: rgba(255, 255, 255, 0.08);
+  --pg-control-text: #b1b1b1;
+  --pg-control-text-hover: #e0e0e0;
+
+  --pg-control-active-bg: rgba(255, 255, 255, 0.08);
+  --pg-control-active-text: #fbfbfb;
+  --pg-control-active-shadow:
+    0 1px 1px 0 rgba(0, 0, 0, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+
+  --pg-grab: #767676;
+  --pg-swatch-ring: rgba(255, 255, 255, 0.14);
+
+  --pg-tabs-bg: transparent;
+  --pg-tabs-ring: none;
+  --pg-tabs-pill-bg: rgba(255, 255, 255, 0.12);
+  --pg-tabs-pill-shadow:
+    0 1px 1px 0 rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+}
 
 /* Panel surface and rhythm from Figma 1418:38255: #1b1b1b at 16px radius,
    12px side padding, 14px between groups, hairline separators. */
 .pg-controls {
   border-radius: 16px;
-  background: #1b1b1b;
-  box-shadow:
-    0 2px 6px 0 rgba(0, 0, 0, 0.05),
-    0 4px 42px 0 rgba(0, 0, 0, 0.24),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.02);
+  background: var(--pg-panel-bg);
+  box-shadow: var(--pg-panel-shadow);
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  /* 16px on both sides of every rule: this gap + the head's margin put the
+     body rule 16px under the tabs, and the ::before offsets below place it
+     16px above the content it heads. */
+  gap: 16px;
 }
 
 .pg-field { display: flex; flex-direction: column; gap: 8px; }
-.pg-label { font-size: 13px; font-weight: 400; line-height: 14px; color: #979797; }
+.pg-label { font-size: 13px; font-weight: 400; line-height: 14px; color: var(--pg-label); }
 
 /* Pill radio tabs (Figma 1418:38136): the selected pill lifts on the
    material ring, the rest sit flat and only brighten their label. */
@@ -617,8 +918,8 @@ html[data-theme="dark"] .pg-stage::after { box-shadow: inset 0 0 0 1px rgba(191,
   height: 32px;
   padding: 0 12px;
   border-radius: 36px;
-  background: rgba(255, 255, 255, 0.04);
-  color: #b1b1b1;
+  background: var(--pg-control-bg);
+  color: var(--pg-control-text);
   font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 500;
@@ -628,14 +929,11 @@ html[data-theme="dark"] .pg-stage::after { box-shadow: inset 0 0 0 1px rgba(191,
   transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
   -webkit-tap-highlight-color: transparent;
 }
-.pg-tab:hover { color: #e0e0e0; }
+.pg-tab:hover { color: var(--pg-control-text-hover); }
 .pg-tab[data-active="true"] {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fbfbfb;
-  box-shadow:
-    0 1px 1px 0 rgba(0, 0, 0, 0.24),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  background: var(--pg-control-active-bg);
+  color: var(--pg-control-active-text);
+  box-shadow: var(--pg-control-active-shadow);
 }
 
 /* Value slider + input (Figma 1418:38136): a 32px block the fill grows
@@ -647,10 +945,10 @@ html[data-theme="dark"] .pg-stage::after { box-shadow: inset 0 0 0 1px rgba(191,
   align-items: center;
   height: 32px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--pg-control-bg);
   transition: background-color 0.15s ease;
 }
-.pg-vslider:hover { background: rgba(255, 255, 255, 0.08); }
+.pg-vslider:hover { background: var(--pg-control-bg-hover); }
 .pg-vslider-fill {
   position: absolute;
   left: 0;
@@ -658,15 +956,12 @@ html[data-theme="dark"] .pg-stage::after { box-shadow: inset 0 0 0 1px rgba(191,
   bottom: 0;
   min-width: 32px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  box-shadow:
-    0 1px 1px 0 rgba(0, 0, 0, 0.24),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  background: var(--pg-control-active-bg);
+  box-shadow: var(--pg-control-active-shadow);
   transition: background-color 0.15s ease;
 }
 .pg-vslider:hover .pg-vslider-fill,
-.pg-vslider:active .pg-vslider-fill { background: rgba(255, 255, 255, 0.12); }
+.pg-vslider:active .pg-vslider-fill { background: var(--pg-control-active-bg); }
 /* Grab bar at the fill's edge — hinted on hover, solid while dragging. */
 .pg-vslider-fill::after {
   content: "";
@@ -676,7 +971,7 @@ html[data-theme="dark"] .pg-stage::after { box-shadow: inset 0 0 0 1px rgba(191,
   bottom: 6px;
   width: 2px;
   border-radius: 2px;
-  background: #767676;
+  background: var(--pg-grab);
   opacity: 0;
   transition: opacity 0.15s ease;
 }
@@ -691,7 +986,7 @@ html[data-theme="dark"] .pg-stage::after { box-shadow: inset 0 0 0 1px rgba(191,
   font-size: 13px;
   font-weight: 500;
   line-height: 14px;
-  color: #fbfbfb;
+  color: var(--pg-control-active-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -704,7 +999,7 @@ html[data-theme="dark"] .pg-stage::after { box-shadow: inset 0 0 0 1px rgba(191,
   font-size: 13px;
   font-weight: 500;
   line-height: 14px;
-  color: #fbfbfb;
+  color: var(--pg-control-active-text);
   white-space: nowrap;
   pointer-events: none;
 }
@@ -726,8 +1021,8 @@ html[data-theme="dark"] .pg-stage::after { box-shadow: inset 0 0 0 1px rgba(191,
   height: 32px;
   padding: 0 12px;
   border-radius: 36px;
-  background: rgba(255, 255, 255, 0.04);
-  color: #b1b1b1;
+  background: var(--pg-control-bg);
+  color: var(--pg-control-text);
   font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 500;
@@ -737,14 +1032,19 @@ html[data-theme="dark"] .pg-stage::after { box-shadow: inset 0 0 0 1px rgba(191,
   transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
   -webkit-tap-highlight-color: transparent;
 }
-.pg-toggle:hover { color: #e0e0e0; }
+.pg-toggle:hover { color: var(--pg-control-text-hover); }
 .pg-toggle[data-active="true"] {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fbfbfb;
-  box-shadow:
-    0 1px 1px 0 rgba(0, 0, 0, 0.24),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  background: var(--pg-control-active-bg);
+  color: var(--pg-control-active-text);
+  box-shadow: var(--pg-control-active-shadow);
+}
+
+/* Stage buttons run one size smaller than the site-wide 36px animate
+   button — 32px across every playground and Studio stage. */
+.pg-stage .btn-animate,
+.pg-toolbar .btn-animate {
+  height: 32px;
+  padding: 4px 12px;
 }
 
 /* Play / pause pill on the stage */
@@ -792,6 +1092,19 @@ html[data-theme="dark"] .code-block {
   scrollbar-width: thin;
   scrollbar-color: var(--chip-bg-pressed) transparent;
 }
+/* Right-edge fade while the snippet scrolls horizontally: a mask on the
+   scroll container, fixed to its right edge (background-attachment: local
+   keeps the opaque half scrolling with the content, so the fade only shows
+   while there is more to the right and clears once the end is reached). */
+.code-block pre {
+  --code-fade: 40px;
+  mask-image: linear-gradient(to right, #000 calc(100% - var(--code-fade)), transparent 100%);
+  mask-repeat: no-repeat;
+  mask-position: right center;
+  mask-size: 100% 100%;
+}
+.code-block pre[data-scroll-end="true"] { mask-image: none; }
+
 .code-block pre::-webkit-scrollbar { width: 8px; height: 8px; }
 .code-block pre::-webkit-scrollbar-track { background: transparent; }
 .code-block pre::-webkit-scrollbar-thumb {
@@ -866,7 +1179,7 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   font-size: 13px;
   font-weight: 500;
   line-height: 14px;
-  color: #fbfbfb;
+  color: var(--pg-title);
   margin: 4px 0 -8px;
 }
 .pg-controls-title:first-child { margin-top: 0; }
@@ -883,14 +1196,50 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   position: absolute;
   left: -16px;
   right: -16px;
-  top: -12px;
+  top: -16px;
   height: 1px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--pg-rule);
   pointer-events: none;
 }
 .pg-controls .st-panel-body > .pg-controls-title:not(:first-child) { margin-top: 12px; }
 /* The hand-placed separator element is redundant now. */
 .pg-controls-sep { display: none; }
+
+/* One level of titles: with the section headings gone, each labeled group's
+   own label IS the title, and every title carries a full-bleed hairline
+   above it (skipping the first — the body rule already divides it from the
+   mode tabs). Scoped to .st-panel-body so the detail pages' public
+   playground keeps its muted labels. */
+.st-panel-body > .pg-field > .pg-label {
+  font-weight: 400;
+  color: var(--pg-title);
+  /* 16px under every title — the field's own 8px gap plus this. */
+  margin-bottom: 8px;
+}
+.st-panel-body > .pg-field:has(> .pg-label),
+.st-panel-body > .pg-field:has(> .pg-controls-title) { position: relative; }
+.st-panel-body > .pg-field:has(> .pg-label):not(:first-child)::before,
+.st-panel-body > .pg-field:has(> .pg-controls-title):not(:first-child)::before {
+  content: "";
+  position: absolute;
+  left: -16px;
+  right: -16px;
+  top: -16px;
+  height: 1px;
+  background: var(--pg-rule);
+  pointer-events: none;
+}
+
+/* A titled group holds its children at the field rhythm, and their own
+   .pg-field wrappers must not draw a second rule inside it. The title gets
+   16px of air under it; the controls below keep the 12px rhythm. */
+.pg-group { gap: 12px; }
+/* Same 16px under a group title — its own 12px gap plus this. */
+.st-panel-body > .pg-group > .pg-label { margin-bottom: 4px; }
+/* A labeled row inside a group (a swatch row, say) gets the same 16px of
+   air under its label as the group title above it. */
+.pg-group .pg-field > .pg-label { margin-bottom: 8px; }
+.pg-group .pg-field::before { content: none; }
 
 /* Color swatch row */
 .pg-swatches { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -901,7 +1250,7 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   border: 0;
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 0 0 1px var(--pg-swatch-ring);
   transition: transform 150ms var(--ease-smooth-out), box-shadow 150ms ease;
   -webkit-tap-highlight-color: transparent;
 }
@@ -913,10 +1262,116 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
     0 0 0 3.5px #ededed;
 }
 .pg-swatch:focus-visible { outline: 2px solid var(--icon-color); outline-offset: 3px; }
+/* Custom-color swatch: a rainbow disc that opens the panel picker. */
+.pg-swatch--custom {
+  background: conic-gradient(#f66, #fc6, #ce6, #6d8, #6cd, #86e, #e6c, #f66);
+}
+
+/* ── Color picker panel ─────────────────────────────────────────
+   jakubantalik.com's picker (spectrum + hue + hex), on the Studio panel
+   surface: --pg-panel tokens, 12px radius, same elevation as the panel. */
+.cp-panel {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px);
+  width: 220px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-radius: 12px;
+  background: var(--pg-panel-bg);
+  box-shadow: var(--pg-panel-shadow), 0 12px 32px rgba(0, 0, 0, 0.24);
+  z-index: 30;
+}
+.cp-spectrum-wrap {
+  position: relative;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: crosshair;
+  touch-action: none;
+}
+.cp-spectrum { display: block; width: 100%; height: 140px; }
+.cp-cursor {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.2);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.cp-hue-wrap {
+  position: relative;
+  width: 100%;
+  border-radius: 7px;
+  overflow: hidden;
+  cursor: pointer;
+  touch-action: none;
+}
+.cp-hue { display: block; width: 100%; height: 14px; }
+.cp-hue-cursor {
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 16px;
+  border-radius: 3px;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.2);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.cp-hex-row {
+  display: flex;
+  align-items: center;
+  height: 28px;
+  border-radius: 6px;
+  padding: 0 8px;
+  gap: 2px;
+  background: var(--pg-control-bg);
+}
+.cp-hex-label {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--pg-label);
+}
+.cp-hex-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  outline: none;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--pg-title);
+}
 
 /* ── Studio panel: Manual control / Agent ─────────────────────
    Same pill-and-indicator idiom as the detail-page tabs, sized to
    the panel column. */
+/* Head row: mode tabs on the left, the theme toggle in the top-right
+   corner. Carries the 16px gap the tabs used to own. */
+.st-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.st-panel-head .st-theme-btn--panel {
+  width: 30px;
+  height: 30px;
+  background: transparent;
+}
+.st-panel-head .st-theme-btn--panel:hover { background: var(--pg-control-bg); }
+.st-panel-head .st-theme-btn--panel svg { width: 16px; height: 16px; fill: none; stroke: currentColor; }
 .st-panel-tabs {
   position: relative;
   display: inline-flex;
@@ -925,18 +1380,17 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   gap: 3px;
   height: 36px;
   padding: 3px;
-  background: #272727;
+  background: var(--pg-tabs-bg);
+  box-shadow: var(--pg-tabs-ring);
   border-radius: 48px;
   overflow: hidden;
 }
 .st-panel-tabs-indicator {
   position: absolute; top: 3px; left: 0;
   height: 30px; width: 0;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--pg-tabs-pill-bg);
   border-radius: 36px;
-  box-shadow:
-    0 1px 1px 0 rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  box-shadow: var(--pg-tabs-pill-shadow);
   transition:
     transform var(--tabs-dur) var(--tabs-ease),
     width var(--tabs-dur) var(--tabs-ease);
@@ -947,7 +1401,7 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
 .st-panel-tab {
   position: relative; z-index: 1;
   font-family: var(--font-sans); font-size: 13px; font-weight: 500;
-  color: #979797;
+  color: var(--pg-label);
   background: transparent; border: 0;
   height: 30px; padding: 0 12px;
   border-radius: 36px;
@@ -957,14 +1411,14 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   -webkit-tap-highlight-color: transparent;
 }
 .st-panel-tab:hover,
-.st-panel-tab[aria-selected="true"] { color: #fbfbfb; }
+.st-panel-tab[aria-selected="true"] { color: var(--pg-title); }
 .st-panel-tab:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
 
 @media (prefers-reduced-motion: reduce) {
   .st-panel-tabs-indicator, .st-panel-tab { transition: none !important; }
 }
 
-.st-panel-body { display: flex; flex-direction: column; gap: 20px; }
+.st-panel-body { display: flex; flex-direction: column; gap: 32px; }
 .st-panel-body[hidden] { display: none; }
 
 /* Agent chat: transcript above, composer pinned under it */
@@ -977,9 +1431,20 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   max-height: 340px;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+  scrollbar-color: var(--pg-swatch-ring) transparent;
 }
-.st-chat-empty { margin: 0; font-size: 13px; line-height: 20px; color: var(--text-subtle); }
+/* The empty chat is one line of guidance, so it sits in the middle of the
+   log rather than hanging from the top: `auto` margins centre it in the
+   flex column, and balanced wrapping keeps its lines even instead of
+   leaving a short last one. */
+.st-chat-empty {
+  margin: auto 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--text-subtle);
+  text-align: center;
+  text-wrap: balance;
+}
 .st-chat-msg {
   font-size: 13px;
   line-height: 20px;
@@ -1022,9 +1487,8 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding-top: 14px;
-  margin-top: 4px;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding-top: 16px;
+  border-top: 1px solid var(--pg-rule);
 }
 .st-actions-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .st-actions-btn {
@@ -1038,7 +1502,7 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   cursor: pointer;
   transition: background 120ms ease, color 120ms ease;
 }
-.st-actions-btn:hover { color: var(--text); background: rgba(255, 255, 255, 0.1); }
+.st-actions-btn:hover { color: var(--text); background: var(--pg-control-bg-hover); }
 .st-actions-btn[data-copied="true"] { color: var(--text); }
 .st-actions-btn:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
 .st-actions-name {
@@ -1057,7 +1521,7 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--pg-control-bg);
 }
 .st-preset-apply {
   border: 0;
@@ -1082,20 +1546,106 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
 .st-preset-remove:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 1px; }
 
 /* Three dots while the turn is in flight, gone once prose starts arriving. */
-.st-chat-thinking { display: flex; gap: 4px; padding: 6px 0; }
-.st-chat-thinking span {
-  width: 5px; height: 5px; border-radius: 50%;
-  background: var(--text-subtle);
-  animation: st-chat-blink 1.2s infinite ease-in-out;
+/* Pending turn: the 20px Working orb + transitions.dev P28 "Thinking
+   states" — a status line that shimmers while it holds, then swaps to the
+   next with the exit-up / enter-from-below cross-blur. The shimmer lives
+   on ::before (content: attr(data-text)), so text and data-text always
+   move together. Tokens carry the prototype's values; base/highlight
+   follow the theme. */
+.st-chat-thinking {
+  --think-hold: 2000ms;
+  --think-swap-dur: 150ms;
+  --think-swap-distance: 8px;
+  --think-swap-blur: 2px;
+  --think-shimmer-dur: 2000ms;
+  --think-band: 400%;
+  --think-ease: ease-in-out;
+  --think-base: #9a9a9a;
+  --think-highlight: #f5f5f5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
 }
-.st-chat-thinking span:nth-child(2) { animation-delay: 0.16s; }
-.st-chat-thinking span:nth-child(3) { animation-delay: 0.32s; }
-@keyframes st-chat-blink {
-  0%, 80%, 100% { opacity: 0.25; }
-  40% { opacity: 1; }
+html[data-theme="light"] .st-chat-thinking { --think-base: #7c7c7c; --think-highlight: #0d0d0d; }
+.st-think-orb { flex: none; width: 20px; height: 20px; display: block; }
+.st-think-orb canvas { display: block; }
+.st-think-swap {
+  position: relative;
+  display: inline-block;
+  text-align: left;
+  line-height: 18px;
+  min-width: 0;
+}
+.st-think-sizer {
+  display: block;
+  visibility: hidden;
+  white-space: nowrap;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 18px;
+}
+.st-think-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: block;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--think-base);
+  white-space: nowrap;
+  transform: translateY(0);
+  filter: blur(0);
+  opacity: 1;
+  transition:
+    transform var(--think-swap-dur) var(--think-ease),
+    filter var(--think-swap-dur) var(--think-ease),
+    opacity var(--think-swap-dur) var(--think-ease);
+  will-change: transform, filter, opacity;
+}
+.st-think-text::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    transparent 40%,
+    var(--think-highlight) 50%,
+    transparent 60%,
+    transparent 100%
+  );
+  background-size: var(--think-band) 100%;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: st-think-shimmer var(--think-shimmer-dur) var(--ease-linear) infinite;
+}
+@keyframes st-think-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: 0% 0; }
+}
+.st-think-text.is-exit {
+  transform: translateY(calc(var(--think-swap-distance) * -1));
+  filter: blur(var(--think-swap-blur));
+  opacity: 0;
+}
+.st-think-text.is-enter-start {
+  transition: none;
+  transform: translateY(var(--think-swap-distance));
+  filter: blur(var(--think-swap-blur));
+  opacity: 0;
 }
 @media (prefers-reduced-motion: reduce) {
-  .st-chat-thinking span { animation: none; opacity: 0.5; }
+  .st-think-text::before { animation: none; }
+  .st-think-text { transition: none; }
 }
 
 .st-chat-composer {
@@ -1139,7 +1689,7 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
    carries prose instead of tabs and panels. */
 .docs-prose { max-width: 686px; }
 .docs-prose > * + * { margin-top: 16px; }
-.docs-prose p { font-size: 15px; line-height: 25px; color: var(--text-muted); }
+.docs-prose p { font-size: 14px; line-height: 23px; color: var(--text-muted); }
 .docs-prose h2 {
   margin-top: 40px;
   font-family: "Saans", var(--font-sans);
@@ -1147,14 +1697,15 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   color: var(--text);
 }
 .docs-prose h3 { margin-top: 24px; font-size: 15px; font-weight: 500; line-height: 22px; color: var(--text); }
-.docs-prose a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
+.docs-prose a { color: var(--text); text-decoration: none; }
+.docs-prose a:hover { text-decoration: underline; text-underline-offset: 2px; }
 .docs-prose code {
   font-family: var(--font-mono); font-size: 13px;
   padding: 1px 6px; border-radius: 6px;
   background: var(--chip-bg); color: var(--text);
 }
 .docs-prose ol, .docs-prose ul { padding-left: 20px; }
-.docs-prose li { font-size: 15px; line-height: 25px; color: var(--text-muted); }
+.docs-prose li { font-size: 14px; line-height: 23px; color: var(--text-muted); }
 .docs-prose li + li { margin-top: 6px; }
 .docs-prose li strong { color: var(--text); font-weight: 500; }
 
@@ -1164,7 +1715,7 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   padding: 20px 24px;
   border-radius: 18px;
   background: var(--card-bg);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 -1px 0 0 rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 0 0 1px var(--pg-rule), inset 0 -1px 0 0 var(--pg-rule);
 }
 .docs-card h3 { margin: 0 0 6px; font-size: 15px; font-weight: 500; line-height: 22px; color: var(--text); }
 .docs-card p { margin: 0; font-size: 14px; line-height: 22px; }
@@ -1175,3 +1726,35 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   background: var(--chip-bg); color: var(--text-muted);
   font-size: 12px; font-weight: 500;
 }
+
+/* ── Rebuilt core notice (Studio, manual panel) ───────────────────────
+   Sits at the top of the knob column while the agent's core is in place:
+   one line of label and a ghost "Restore stock" on the right. */
+.st-core-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 28px;
+}
+.st-core-text { font-size: 12px; line-height: 16px; color: var(--pg-label); }
+.st-core-restore,
+html[data-theme="dark"] .st-core-restore,
+html[data-theme="light"] .st-core-restore {
+  height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 60px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--pg-title);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  cursor: pointer;
+  transition: background 140ms;
+}
+.st-core-restore:hover,
+html[data-theme="dark"] .st-core-restore:hover { background: rgba(255, 255, 255, 0.04); }
+html[data-theme="light"] .st-core-restore:hover { background: rgba(0, 0, 0, 0.04); }

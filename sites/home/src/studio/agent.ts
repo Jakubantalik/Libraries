@@ -46,6 +46,8 @@ const MESSAGES: Record<string, string> = {
   pro_required: "The Studio agent is a Pro feature.",
   turn_cap_reached:
     "You've hit this month's agent limit. Manual control still works, and the limit resets next month.",
+  user_budget_exhausted:
+    "You've used all your monthly agent tokens. Manual control still works, and your allowance resets next month.",
   budget_exhausted:
     "The agent is paused for the rest of this month. Manual control still works — nothing you tuned is lost.",
   unknown_library: "The agent doesn't know this library yet.",
@@ -61,6 +63,12 @@ export async function streamAgentTurn(
     library: string;
     params: Record<string, unknown>;
     messages: ChatTurn[];
+    /** The library's stock core source, when its core can be rebuilt. */
+    coreSource?: string;
+    /** Why the last rebuilt core failed in the browser, if it did. */
+    coreError?: string;
+    /** false = the user opted out of anonymous prompt analytics. */
+    analytics?: boolean;
     signal?: AbortSignal;
   },
   handlers: AgentEventHandlers
@@ -75,6 +83,9 @@ export async function streamAgentTurn(
         library: args.library,
         params: args.params,
         messages: args.messages,
+        coreSource: args.coreSource,
+        coreError: args.coreError,
+        analytics: args.analytics,
       }),
       signal: args.signal,
     });
@@ -147,6 +158,8 @@ export function describePatch(
   return Object.entries(patch)
     .map(([key, value]) => {
       const name = labels[key] ?? key;
+      /* The core is source, not a value: name the move, not the text. */
+      if (key === "core") return value === "" ? "Core restored to stock" : "Core rebuilt";
       const from = before[key];
       const fmt = (v: unknown) => (typeof v === "number" ? String(Number(v.toFixed(2))) : String(v));
       return from === undefined || from === value

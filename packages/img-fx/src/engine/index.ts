@@ -19,10 +19,13 @@ export {
   setInstanceStrength,
   setInstanceVisible,
   setMaxDpr,
+  setSharedFragmentShader,
   updateInstanceSize,
   type CreateInstanceOptions,
   type Instance
 } from './renderer';
+
+export { FRAG_SRC as IMAGE_FRAGMENT_SHADER } from './shaders';
 
 export {
   createReveal,

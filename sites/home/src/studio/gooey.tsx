@@ -6,10 +6,11 @@ import {
   useState,
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
-  type ReactNode,
 } from "react";
 import { Liquid } from "liquid-gooey";
-import { ControlsPanel, PgTabs, PgSlider, PgToggles, PgSwatches, PanelTitle, PanelSep, Snippet, num } from "./controls";
+import { checkSvgFilter, tpl, type CoreWiring } from "./core";
+import { ControlsPanel, PgTabs, PgSlider, PgToggles, PgSwatches, PanelSep, Snippet, num, StageBar, PgGroup } from "./controls";
+import { StudioTeaser } from "../examples/StudioTeaser";
 
 /* Studio — Gooey workbench. The four demos are the LIVE gooey demo page's
    prototypes (sites/gooey/playground/demos), ported verbatim in dark mode:
@@ -38,17 +39,17 @@ const EASE_OPTIONS = [
 ] as const;
 type EaseName = (typeof EASE_OPTIONS)[number]["value"];
 
-/* Per-effect liquid surfaces, matching the live page's dark tokens:
-   --modal-bg for the menu and the drag card, --sl-thumb for the slider. */
+/* Per-effect liquid surfaces, both themes taken from the live demo page's
+   tokens (sites/gooey/playground/styles.css): dark --modal-bg #202020 /
+   --sl-thumb #525252, light --modal-bg and --sl-thumb both #ffffff. */
+type GooeyTheme = "dark" | "light";
 const SURFACE_DEFAULT = "default";
-const FILLS: Record<EffectType, string> = {
-  morph: "#202020",
-  move: "#525252",
-  bend: "#202020",
-  melt: "#ffffff",
+const FILLS: Record<GooeyTheme, Record<EffectType, string>> = {
+  dark: { morph: "#202020", move: "#525252", bend: "#202020", melt: "#ffffff" },
+  light: { morph: "#ffffff", move: "#ffffff", bend: "#ffffff", melt: "#ffffff" },
 };
-const FILL_OPTIONS = [
-  { value: SURFACE_DEFAULT, label: "Surface (default)", swatch: "#202020" },
+const FILL_SWATCH: Record<GooeyTheme, string> = { dark: "#202020", light: "#ffffff" };
+const FILL_OPTIONS_REST = [
   { value: "#e9e9e9", label: "Light" },
   { value: "#7cd4ff", label: "Sky" },
   { value: "#ffd28f", label: "Amber" },
@@ -59,13 +60,18 @@ const FILL_OPTIONS = [
    collapse back onto the same panel label — "Goo blur" belongs to both the
    shared surface and to melt, which never appear together. */
 const GOOEY_PARAM_LABELS: Record<string, string> = {
+  core: "Core",
   effect: "Effect",
   blur: "Goo blur",
   contrast: "Contrast",
   waviness: "Waviness",
-  fill: "Fill",
-  morphDuration: "Duration",
-  morphEasing: "Easing",
+  fill: "Button fill color",
+  morphDuration: "Open duration",
+  morphCloseDuration: "Close duration",
+  morphCloseStagger: "Close stagger",
+  morphAnticipationDuration: "Anticipation duration",
+  morphIconDuration: "Icon fade",
+  morphIconDelay: "Icon delay",
   morphStagger: "Stagger",
   morphSpread: "Spread",
   morphAnticipation: "Anticipation",
@@ -83,13 +89,20 @@ const GOOEY_PARAM_LABELS: Record<string, string> = {
   meltWarp: "Warp",
   meltMarbling: "Marbling",
   meltGravity: "Gravity",
+  meltMixBlur: "Marbling blur",
+  meltWaviness: "Waviness",
 };
 
-/* The Logram surface shadow (dark), shared by the menu, the slider thumb and
-   the drag card on the live page (sites/gooey/playground/theme.ts + Slider). */
-const LIQUID_SHADOW =
-  "0 0 0 1px rgba(255, 255, 255, 0.04) inset, 0 1px 0 0 rgba(255, 255, 255, 0.03) inset, " +
-  "0 0 0 1px rgba(0, 0, 0, 0.06), 0 2px 6px 0 rgba(0, 0, 0, 0.05), 0 4px 42px 0 rgba(0, 0, 0, 0.24)";
+/* The liquid surface shadows, verbatim from the live page's theme.ts
+   ("Figma soft"): the dark Logram dropdown spec, and light's prototype
+   Figma elevation. */
+const LIQUID_SHADOW: Record<GooeyTheme, string> = {
+  dark:
+    "0 0 0 1px rgba(255, 255, 255, 0.04) inset, 0 1px 0 0 rgba(255, 255, 255, 0.03) inset, " +
+    "0 0 0 1px rgba(0, 0, 0, 0.06), 0 2px 6px 0 rgba(0, 0, 0, 0.05), 0 4px 42px 0 rgba(0, 0, 0, 0.24)",
+  light:
+    "0 0 0 1px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.05), 0 4px 42px rgba(0, 0, 0, 0.06)",
+};
 
 /* Content ink flips with the liquid's luminance so icons stay legible on
    both the dark surface defaults and the light/colored fills. */
@@ -108,8 +121,8 @@ interface GroupTuning {
   waviness: number;
 }
 
-function fillFor(group: GroupTuning, effect: EffectType): string {
-  return group.fill === SURFACE_DEFAULT ? FILLS[effect] : group.fill;
+function fillFor(group: GroupTuning, effect: EffectType, theme: GooeyTheme): string {
+  return group.fill === SURFACE_DEFAULT ? FILLS[theme][effect] : group.fill;
 }
 
 /* ── Morph demo: the live PlusMenu, verbatim ──────────────────── */
@@ -153,24 +166,34 @@ const SATELLITES = [
 /* Live PlusMenu defaults (DEFAULTS in demos/PlusMenu.tsx). */
 interface MorphKnobs {
   openDur: number;
+  /** The live menu closes faster than it opens; both are tunable here. */
+  closeDur: number;
   openEase: EaseName;
   openStagger: number;
+  closeStagger: number;
   spread: number;
   anticipDist: number;
+  anticipDur: number;
+  iconDur: number;
+  iconDelay: number;
 }
+/* The live playground's PRO panel defaults (sites/gooey/playground/demos/
+   PlusMenu.tsx DEFAULTS) — the Studio now exposes the same surface. */
 const MORPH_DEFAULTS: MorphKnobs = {
   openDur: 550,
+  closeDur: 250,
   openEase: "Bouncy",
   openStagger: 40,
+  closeStagger: 0,
   spread: 1,
   anticipDist: 5,
+  anticipDur: 700,
+  iconDur: 180,
+  iconDelay: 120,
 };
-const CLOSE_PHASE = { dur: 250, ease: EASES.Snappy, stagger: 0 };
-const ANTICIP_DUR = 700;
-const ICON_DUR = 180;
-const ICON_DELAY = 120;
 
-export function MorphDemo({ group, knobs }: { group: GroupTuning; knobs: MorphKnobs }) {
+
+export function MorphDemo({ group, knobs, theme = "dark", filter }: { group: GroupTuning; knobs: MorphKnobs; theme?: GooeyTheme; filter?: string }) {
   const [open, setOpen] = useState(false);
   const [anticipating, setAnticipating] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -185,29 +208,30 @@ export function MorphDemo({ group, knobs }: { group: GroupTuning; knobs: MorphKn
       if (timer.current) clearTimeout(timer.current);
       setAnticipating(false);
       requestAnimationFrame(() => setAnticipating(true));
-      timer.current = setTimeout(() => setAnticipating(false), ANTICIP_DUR);
+      timer.current = setTimeout(() => setAnticipating(false), knobs.anticipDur);
     }
     setOpen((o) => !o);
   };
 
-  const fill = fillFor(group, "morph");
+  const fill = fillFor(group, "morph", theme);
   const vars = {
     "--pm-anticip": `${knobs.anticipDist}px`,
-    "--pm-anticip-dur": `${ANTICIP_DUR}ms`,
-    "--pm-icon-dur": `${ICON_DUR}ms`,
+    "--pm-anticip-dur": `${knobs.anticipDur}ms`,
+    "--pm-icon-dur": `${knobs.iconDur}ms`,
     "--gd-ink": inkFor(fill),
   } as CSSProperties;
 
   const phase = open
     ? { dur: knobs.openDur, ease: EASES[knobs.openEase], stagger: knobs.openStagger }
-    : CLOSE_PHASE;
+    : { dur: knobs.closeDur, ease: EASES.Snappy, stagger: knobs.closeStagger };
 
   return (
     <Liquid
+      filter={filter}
       blur={group.blur}
       contrast={group.contrast}
       fill={fill}
-      shadow={LIQUID_SHADOW}
+      shadow={LIQUID_SHADOW[theme]}
       waviness={group.waviness}
       className={`pm ${open ? "pm-open" : ""} ${anticipating ? "pm-anticipating" : ""}`}
       style={vars}
@@ -230,7 +254,7 @@ export function MorphDemo({ group, knobs }: { group: GroupTuning; knobs: MorphKn
           >
             <span
               className="pm-sat-icon"
-              style={{ transitionDelay: open ? `${ICON_DELAY + i * phase.stagger}ms` : "0ms" }}
+              style={{ transitionDelay: open ? `${knobs.iconDelay + i * phase.stagger}ms` : "0ms" }}
             >
               {s.icon}
             </span>
@@ -271,7 +295,7 @@ interface MoveKnobs {
 }
 const MOVE_DEFAULTS: MoveKnobs = { springiness: 0.5, wobble: 0.5, stretch: 0.6, trail: 0.35 };
 
-export function MoveDemo({ group, knobs }: { group: GroupTuning; knobs: MoveKnobs }) {
+export function MoveDemo({ group, knobs, theme = "dark", filter }: { group: GroupTuning; knobs: MoveKnobs; theme?: GooeyTheme; filter?: string }) {
   const [x, setX] = useState(84);
   const drag = useRef<number | null>(null);
 
@@ -293,10 +317,11 @@ export function MoveDemo({ group, knobs }: { group: GroupTuning; knobs: MoveKnob
 
   return (
     <Liquid
+      filter={filter}
       blur={group.blur}
       contrast={group.contrast}
-      fill={fillFor(group, "move")}
-      shadow={LIQUID_SHADOW}
+      fill={fillFor(group, "move", theme)}
+      shadow={LIQUID_SHADOW[theme]}
       waviness={group.waviness}
       className="sl"
     >
@@ -334,7 +359,7 @@ interface BendKnobs {
 }
 const BEND_DEFAULTS: BendKnobs = { vertical: 0.6, horizontal: 0.35, content: 0.3 };
 
-export function BendDemo({ group, knobs }: { group: GroupTuning; knobs: BendKnobs }) {
+export function BendDemo({ group, knobs, theme = "dark", filter }: { group: GroupTuning; knobs: BendKnobs; theme?: GooeyTheme; filter?: string }) {
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const [releasing, setReleasing] = useState(false);
   const stageRef = useRef<HTMLDivElement | null>(null);
@@ -379,13 +404,14 @@ export function BendDemo({ group, knobs }: { group: GroupTuning; knobs: BendKnob
     window.setTimeout(() => setReleasing(false), DROP_MS);
   };
 
-  const fill = fillFor(group, "bend");
+  const fill = fillFor(group, "bend", theme);
   return (
     <Liquid
+      filter={filter}
       blur={group.blur}
       contrast={group.contrast}
       fill={fill}
-      shadow={LIQUID_SHADOW}
+      shadow={LIQUID_SHADOW[theme]}
       waviness={group.waviness}
       className="dgc"
       ref={stageRef}
@@ -430,7 +456,9 @@ interface MeltKnobs {
   fade: number;
   warp: number;
   mix: number;
+  mixBlur: number;
   gravity: number;
+  waviness: number;
 }
 
 interface Pos {
@@ -484,7 +512,7 @@ function MeltCard({
   );
 }
 
-export function MeltDemo({ melt }: { melt: MeltKnobs }) {
+export function MeltDemo({ melt, filter }: { melt: MeltKnobs; filter?: string }) {
   const stageRef = useRef<HTMLDivElement | null>(null);
   const [a, setA] = useState<Pos>({ x: 0, y: (MELT_STAGE_H - MELT_CARD) / 2 });
   const [b, setB] = useState<Pos>({ x: MELT_CARD + 24, y: (MELT_STAGE_H - MELT_CARD) / 2 });
@@ -514,7 +542,7 @@ export function MeltDemo({ melt }: { melt: MeltKnobs }) {
   }, []);
 
   return (
-    <Liquid className="mp" style={{ width: "min(100%, 420px)", height: MELT_STAGE_H }} ref={stageRef}>
+    <Liquid filter={filter} className="mp" style={{ width: "min(100%, 420px)", height: MELT_STAGE_H }} ref={stageRef}>
       <MeltCard src="/images/melt-a.jpg" pos={a} setPos={setA} stageRef={stageRef} melt={melt} />
       <MeltCard src="/images/melt-b.jpg" pos={b} setPos={setB} stageRef={stageRef} melt={melt} />
     </Liquid>
@@ -523,11 +551,11 @@ export function MeltDemo({ melt }: { melt: MeltKnobs }) {
 
 /* ── Snippet builders ──────────────────────────────────────────── */
 
-function groupAttrs(group: GroupTuning, effect: EffectType): string {
+function groupAttrs(group: GroupTuning, effect: EffectType, theme: GooeyTheme): string {
   const parts: string[] = [];
   if (group.blur !== 6) parts.push(` blur={${num(group.blur)}}`);
   if (group.contrast !== 18) parts.push(` contrast={${num(group.contrast)}}`);
-  parts.push(` fill="${fillFor(group, effect)}"`);
+  parts.push(` fill="${fillFor(group, effect, theme)}"`);
   if (group.waviness !== 0) parts.push(` waviness={${num(group.waviness)}}`);
   return parts.join("");
 }
@@ -543,7 +571,8 @@ function buildSnippet(
   morph: MorphKnobs,
   move: MoveKnobs,
   bend: BendKnobs,
-  melt: MeltKnobs
+  melt: MeltKnobs,
+  theme: GooeyTheme
 ): string {
   const head = "import { Liquid } from 'liquid-gooey'\n\n";
   if (effect === "morph") {
@@ -553,7 +582,7 @@ function buildSnippet(
     const ty = num(-64 * morph.spread);
     return (
       head +
-      `<Liquid${groupAttrs(group, effect)}>\n` +
+      `<Liquid${groupAttrs(group, effect, theme)}>\n` +
       `  <Liquid.Item x={open ? ${sx} : 0} y={open ? ${sy} : 0}${t}>\n` +
       `    <button className="round-btn">…</button>\n` +
       `  </Liquid.Item>\n` +
@@ -575,7 +604,7 @@ function buildSnippet(
     ]);
     return (
       head +
-      `<Liquid${groupAttrs(group, effect)}>\n` +
+      `<Liquid${groupAttrs(group, effect, theme)}>\n` +
       `  <Liquid.Item effect="move" move=${moveObj}>\n` +
       `    <div className="thumb" style={{ transform: \`translateX(\${x}px)\` }} />\n` +
       `  </Liquid.Item>\n` +
@@ -590,7 +619,7 @@ function buildSnippet(
     const bendAttr = bendObj ? ` bend=${bendObj}` : "";
     return (
       head +
-      `<Liquid${groupAttrs(group, effect)}>\n` +
+      `<Liquid${groupAttrs(group, effect, theme)}>\n` +
       `  <Liquid.Item effect="bend"${bendAttr}>\n` +
       `    <div className="card" style={{ transform: \`translate(\${x}px, \${y}px)\` }}>…</div>\n` +
       `  </Liquid.Item>\n` +
@@ -638,18 +667,39 @@ export const GOOEY_EXAMPLE_DEFAULTS = {
 export function GooeyStudio({
   visible = true,
   variant = "studio",
+  theme = "dark",
 }: {
   visible?: boolean;
   variant?: "studio" | "public";
+  theme?: GooeyTheme;
 }) {
   const isPublic = variant === "public";
+  const fillOptions = [
+    { value: SURFACE_DEFAULT, label: "Surface (default)", swatch: FILL_SWATCH[theme] },
+    ...FILL_OPTIONS_REST,
+  ];
   const [effect, setEffect] = useState<EffectType>("morph");
 
   const [group, setGroup] = useState<GroupTuning>({ blur: 6, contrast: 18, fill: SURFACE_DEFAULT, waviness: 0 });
   const [morph, setMorph] = useState<MorphKnobs>(MORPH_DEFAULTS);
   const [move, setMove] = useState<MoveKnobs>(MOVE_DEFAULTS);
   const [bend, setBend] = useState<BendKnobs>(BEND_DEFAULTS);
-  const [melt, setMelt] = useState<MeltKnobs>({ blur: 7, contrast: 40, reach: 0.8, fade: 17, warp: 0, mix: 1, gravity: 1.9 });
+  const [melt, setMelt] = useState<MeltKnobs>({ blur: 7, contrast: 40, reach: 0.8, fade: 17, warp: 0, mix: 1, mixBlur: 8, gravity: 1.9, waviness: 12 });
+  /* The agent's rebuilt filter chain (raw SVG primitives), or "" for the
+     library's goo chain. */
+  const [core, setCore] = useState("");
+  const coreWiring: CoreWiring = {
+    lang: "svg",
+    /* The chain the library rendered for the visible demo, read back from
+       its <filter> — the exact primitives the agent is replacing. */
+    source: () => {
+      const f = Array.from(document.querySelectorAll<SVGFilterElement>(".pg [data-gooey-svg] filter")).find(
+        (el) => ((el.closest(".pg") as HTMLElement | null)?.offsetWidth ?? 0) > 0
+      );
+      return f ? f.innerHTML.trim() : "";
+    },
+    check: checkSvgFilter,
+  };
 
   /* Every Gooey effect is hand-driven — click the menu, drag the thumb, the
      card, the photos. No idle loop and no play/pause pill. */
@@ -666,12 +716,17 @@ export function GooeyStudio({
      inert. */
   const agentParams: Record<string, unknown> = {
     effect,
+    core,
     blur: group.blur,
     contrast: group.contrast,
     waviness: group.waviness,
     fill: group.fill,
     morphDuration: morph.openDur,
-    morphEasing: morph.openEase,
+    morphCloseDuration: morph.closeDur,
+    morphCloseStagger: morph.closeStagger,
+    morphAnticipationDuration: morph.anticipDur,
+    morphIconDuration: morph.iconDur,
+    morphIconDelay: morph.iconDelay,
     morphStagger: morph.openStagger,
     morphSpread: morph.spread,
     morphAnticipation: morph.anticipDist,
@@ -689,12 +744,15 @@ export function GooeyStudio({
     meltWarp: melt.warp,
     meltMarbling: melt.mix,
     meltGravity: melt.gravity,
+    meltMixBlur: melt.mixBlur,
+    meltWaviness: melt.waviness,
   };
 
   const applyAgentParams = useCallback((patch: Record<string, unknown>) => {
     const n = (k: string) => (typeof patch[k] === "number" ? (patch[k] as number) : undefined);
 
     if (typeof patch.effect === "string") setEffect(patch.effect as EffectType);
+    if (typeof patch.core === "string") setCore(patch.core);
 
     setGroup((g) => ({
       ...g,
@@ -706,7 +764,11 @@ export function GooeyStudio({
     setMorph((m) => ({
       ...m,
       openDur: n("morphDuration") ?? m.openDur,
-      openEase: typeof patch.morphEasing === "string" ? (patch.morphEasing as EaseName) : m.openEase,
+      closeDur: n("morphCloseDuration") ?? m.closeDur,
+      closeStagger: n("morphCloseStagger") ?? m.closeStagger,
+      anticipDur: n("morphAnticipationDuration") ?? m.anticipDur,
+      iconDur: n("morphIconDuration") ?? m.iconDur,
+      iconDelay: n("morphIconDelay") ?? m.iconDelay,
       openStagger: n("morphStagger") ?? m.openStagger,
       spread: n("morphSpread") ?? m.spread,
       anticipDist: n("morphAnticipation") ?? m.anticipDist,
@@ -733,17 +795,106 @@ export function GooeyStudio({
       warp: n("meltWarp") ?? m.warp,
       mix: n("meltMarbling") ?? m.mix,
       gravity: n("meltGravity") ?? m.gravity,
+      mixBlur: n("meltMixBlur") ?? m.mixBlur,
+      waviness: n("meltWaviness") ?? m.waviness,
     }));
   }, []);
 
-  const snippet = buildSnippet(effect, group, morph, move, bend, melt);
+  const stockSnippet = buildSnippet(effect, group, morph, move, bend, melt, theme);
+  const snippet = core
+    ? stockSnippet.replace("\n\n<Liquid", `\n\nconst liquidFilter = ${tpl(core)}\n\n<Liquid filter={liquidFilter}`)
+    : stockSnippet;
 
   /* The public page skips ControlsPanel entirely, so the Agent tab never
      renders there rather than rendering hidden — which also means it never
-     mounts the agent wiring the Studio side passes below. */
-  const Controls = isPublic
-    ? ({ children }: { children: ReactNode }) => <div className="pg-controls">{children}</div>
-    : ({ children }: { children: ReactNode }) => (
+     mounts the agent wiring the Studio side passes below. Both branches are
+     written inline: a component declared inside this render would be a new
+     type on every state change, so React would remount the whole panel and
+     kill any in-flight slider drag. */
+
+  return (
+    <div className="pg">
+      {!isPublic && <StageBar library="Gooey" prompt={{ pkg: "liquid-gooey", docsPath: "/gooey.html", snippet }} agent={{ libraryId: "gooey", params: agentParams, labels: GOOEY_PARAM_LABELS, onApply: applyAgentParams }} />}
+      <div className="pg-stage">
+        {visible && effect === "morph" && <MorphDemo group={group} knobs={morph} theme={theme} filter={core || undefined} />}
+        {visible && effect === "move" && <MoveDemo group={group} knobs={move} theme={theme} filter={core || undefined} />}
+        {visible && effect === "bend" && <BendDemo group={group} knobs={bend} theme={theme} filter={core || undefined} />}
+        {visible && effect === "melt" && <MeltDemo melt={melt} filter={core || undefined} />}
+      </div>
+
+      {isPublic ? (
+        <div className="pg-controls">
+          <PgTabs label="Effect" options={EFFECT_OPTIONS} value={effect} onChange={setEffect} />
+
+          {isPublic && effect !== "melt" && (
+            <>
+              <PgSlider label="Goo blur" value={group.blur} min={0} max={16} step={0.5} onChange={(v) => setGroupKey("blur", v)} />
+              <PgSlider label="Contrast" value={group.contrast} min={4} max={40} step={1} onChange={(v) => setGroupKey("contrast", v)} />
+            </>
+          )}
+
+          {!isPublic && effect !== "melt" && (
+            <>
+              <PanelSep />
+              <PgSlider label="Goo blur" value={group.blur} min={0} max={16} step={0.5} onChange={(v) => setGroupKey("blur", v)} />
+              <PgSlider label="Contrast" value={group.contrast} min={4} max={40} step={1} onChange={(v) => setGroupKey("contrast", v)} />
+              <PgSlider label="Waviness" value={group.waviness} min={0} max={8} step={0.5} onChange={(v) => setGroupKey("waviness", v)} />
+              <PgSwatches label="Button fill color" options={fillOptions} value={group.fill} onChange={(v) => setGroupKey("fill", v)} allowCustom />
+            </>
+          )}
+
+          {!isPublic && effect === "morph" && (
+            <>
+              <PanelSep />
+              <PgSlider label="Open duration" value={morph.openDur} min={80} max={1200} step={10} display={`${morph.openDur}ms`} onChange={(v) => setMorph((m) => ({ ...m, openDur: v }))} />
+              <PgSlider label="Close duration" value={morph.closeDur} min={80} max={1200} step={10} display={`${morph.closeDur}ms`} onChange={(v) => setMorph((m) => ({ ...m, closeDur: v }))} />
+              <PgSlider label="Stagger" value={morph.openStagger} min={0} max={200} step={5} display={`${morph.openStagger}ms`} onChange={(v) => setMorph((m) => ({ ...m, openStagger: v }))} />
+              <PgSlider label="Spread" value={morph.spread} min={0.4} max={2} step={0.05} display={`${num(morph.spread)}×`} onChange={(v) => setMorph((m) => ({ ...m, spread: v }))} />
+              <PgSlider label="Anticipation" value={morph.anticipDist} min={0} max={24} step={1} display={`${morph.anticipDist}px`} onChange={(v) => setMorph((m) => ({ ...m, anticipDist: v }))} />
+            </>
+          )}
+
+          {!isPublic && effect === "move" && (
+            <>
+              <PanelSep />
+              <PgSlider label="Springiness" value={move.springiness} min={0} max={1} step={0.05} onChange={(v) => setMove((m) => ({ ...m, springiness: v }))} />
+              <PgSlider label="Wobble" value={move.wobble} min={0} max={1} step={0.05} onChange={(v) => setMove((m) => ({ ...m, wobble: v }))} />
+              <PgSlider label="Stretch" value={move.stretch} min={0} max={1} step={0.02} onChange={(v) => setMove((m) => ({ ...m, stretch: v }))} />
+              <PgSlider label="Trail" value={move.trail} min={0} max={1} step={0.025} onChange={(v) => setMove((m) => ({ ...m, trail: v }))} />
+            </>
+          )}
+
+          {!isPublic && effect === "bend" && (
+            <>
+              <PanelSep />
+              <PgSlider label="Vertical bow" value={bend.vertical} min={0} max={1} step={0.05} onChange={(v) => setBend((b) => ({ ...b, vertical: v }))} />
+              <PgSlider label="Horizontal caps" value={bend.horizontal} min={0} max={1} step={0.05} onChange={(v) => setBend((b) => ({ ...b, horizontal: v }))} />
+              <PgSlider label="Content bend" value={bend.content} min={0} max={1} step={0.05} onChange={(v) => setBend((b) => ({ ...b, content: v }))} />
+            </>
+          )}
+
+          {!isPublic && effect === "melt" && (
+            <>
+              <PanelSep />
+              <PgSlider label="Goo blur" value={melt.blur} min={0} max={20} step={0.5} onChange={(v) => setMelt((m) => ({ ...m, blur: v }))} />
+              <PgSlider label="Contrast" value={melt.contrast} min={10} max={80} step={1} onChange={(v) => setMelt((m) => ({ ...m, contrast: v }))} />
+              <PgSlider label="Reach" value={melt.reach} min={0} max={2} step={0.05} onChange={(v) => setMelt((m) => ({ ...m, reach: v }))} />
+              <PgSlider label="Fade" value={melt.fade} min={0} max={40} step={1} onChange={(v) => setMelt((m) => ({ ...m, fade: v }))} />
+              <PgSlider label="Warp" value={melt.warp} min={0} max={40} step={1} onChange={(v) => setMelt((m) => ({ ...m, warp: v }))} />
+              <PgSlider label="Marbling" value={melt.mix} min={0} max={1} step={0.05} onChange={(v) => setMelt((m) => ({ ...m, mix: v }))} />
+              <PgSlider label="Gravity" value={melt.gravity} min={0} max={4} step={0.1} onChange={(v) => setMelt((m) => ({ ...m, gravity: v }))} />
+            </>
+          )}
+          <StudioTeaser
+            rows={[
+              { kind: "slider", label: "Waviness", value: "0", fill: 0 },
+              { kind: "tabs", label: "Fill", options: ["Surface", "Light", "Sky"] },
+              { kind: "slider", label: "Bounce", value: "0.5", fill: 50 },
+              { kind: "slider", label: "Stagger", value: "40ms", fill: 20 },
+            ]}
+          />
+        </div>
+      ) : (
         <ControlsPanel
           library="Gooey"
           agent={{
@@ -751,91 +902,86 @@ export function GooeyStudio({
             params: agentParams,
             labels: GOOEY_PARAM_LABELS,
             onApply: applyAgentParams,
+            core: coreWiring,
           }}
-          prompt={{ pkg: "liquid-gooey", docsPath: "/gooey.html", snippet }}
         >
-          {children}
+          <PgTabs label="Effect" options={EFFECT_OPTIONS} value={effect} onChange={setEffect} />
+
+          {isPublic && effect !== "melt" && (
+            <>
+              <PgSlider label="Goo blur" value={group.blur} min={0} max={16} step={0.5} onChange={(v) => setGroupKey("blur", v)} />
+              <PgSlider label="Contrast" value={group.contrast} min={4} max={40} step={1} onChange={(v) => setGroupKey("contrast", v)} />
+            </>
+          )}
+
+          {!isPublic && effect !== "melt" && (
+            <>
+              <PanelSep />
+              <PgGroup label="Effect settings">
+                <PgSlider label="Goo blur" value={group.blur} min={0} max={16} step={0.5} onChange={(v) => setGroupKey("blur", v)} />
+                <PgSlider label="Contrast" value={group.contrast} min={4} max={40} step={1} onChange={(v) => setGroupKey("contrast", v)} />
+                <PgSlider label="Waviness" value={group.waviness} min={0} max={8} step={0.5} onChange={(v) => setGroupKey("waviness", v)} />
+                {/* Move's and Bend's physics ARE the effect — neither has a
+                    separate open/close animation, so they belong here. */}
+                {effect === "bend" && (
+                  <>
+                    <PgSlider label="Vertical bow" value={bend.vertical} min={0} max={1} step={0.05} onChange={(v) => setBend((b) => ({ ...b, vertical: v }))} />
+                    <PgSlider label="Horizontal caps" value={bend.horizontal} min={0} max={1} step={0.05} onChange={(v) => setBend((b) => ({ ...b, horizontal: v }))} />
+                    <PgSlider label="Content bend" value={bend.content} min={0} max={1} step={0.05} onChange={(v) => setBend((b) => ({ ...b, content: v }))} />
+                  </>
+                )}
+                {effect === "move" && (
+                  <>
+                    <PgSlider label="Springiness" value={move.springiness} min={0} max={1} step={0.05} onChange={(v) => setMove((m) => ({ ...m, springiness: v }))} />
+                    <PgSlider label="Wobble" value={move.wobble} min={0} max={1} step={0.05} onChange={(v) => setMove((m) => ({ ...m, wobble: v }))} />
+                    <PgSlider label="Stretch" value={move.stretch} min={0} max={1} step={0.02} onChange={(v) => setMove((m) => ({ ...m, stretch: v }))} />
+                    <PgSlider label="Trail" value={move.trail} min={0} max={1} step={0.025} onChange={(v) => setMove((m) => ({ ...m, trail: v }))} />
+                  </>
+                )}
+              </PgGroup>
+              <PanelSep />
+              <PgSwatches label="Button fill color" options={fillOptions} value={group.fill} onChange={(v) => setGroupKey("fill", v)} allowCustom />
+            </>
+          )}
+
+          {!isPublic && effect !== "move" && effect !== "bend" && (
+            <>
+              <PanelSep />
+              {/* Melt has no separate open/close animation either — its knobs
+                  ARE the effect, so the section takes the same title as the
+                  other effects' surface controls. */}
+              <PgGroup label={effect === "melt" ? "Effect settings" : "Component animation"}>
+                {effect === "morph" && (
+                  <>
+                    <PgSlider label="Open duration" value={morph.openDur} min={80} max={1200} step={10} display={`${morph.openDur}ms`} onChange={(v) => setMorph((m) => ({ ...m, openDur: v }))} />
+                    <PgSlider label="Close duration" value={morph.closeDur} min={80} max={1200} step={10} display={`${morph.closeDur}ms`} onChange={(v) => setMorph((m) => ({ ...m, closeDur: v }))} />
+                    <PgSlider label="Open stagger" value={morph.openStagger} min={0} max={200} step={5} display={`${morph.openStagger}ms`} onChange={(v) => setMorph((m) => ({ ...m, openStagger: v }))} />
+                    <PgSlider label="Close stagger" value={morph.closeStagger} min={0} max={200} step={5} display={`${morph.closeStagger}ms`} onChange={(v) => setMorph((m) => ({ ...m, closeStagger: v }))} />
+                    <PgSlider label="Spread" value={morph.spread} min={0.4} max={2} step={0.05} display={`${num(morph.spread)}×`} onChange={(v) => setMorph((m) => ({ ...m, spread: v }))} />
+                    <PgSlider label="Anticipation" value={morph.anticipDist} min={0} max={24} step={1} display={`${morph.anticipDist}px`} onChange={(v) => setMorph((m) => ({ ...m, anticipDist: v }))} />
+                    <PgSlider label="Anticipation duration" value={morph.anticipDur} min={120} max={1400} step={20} display={`${morph.anticipDur}ms`} onChange={(v) => setMorph((m) => ({ ...m, anticipDur: v }))} />
+                    <PgSlider label="Icon fade" value={morph.iconDur} min={0} max={600} step={10} display={`${morph.iconDur}ms`} onChange={(v) => setMorph((m) => ({ ...m, iconDur: v }))} />
+                    <PgSlider label="Icon delay" value={morph.iconDelay} min={0} max={600} step={10} display={`${morph.iconDelay}ms`} onChange={(v) => setMorph((m) => ({ ...m, iconDelay: v }))} />
+                  </>
+                )}
+                {effect === "melt" && (
+                  <>
+                    <PgSlider label="Goo blur" value={melt.blur} min={0} max={20} step={0.5} onChange={(v) => setMelt((m) => ({ ...m, blur: v }))} />
+                    <PgSlider label="Contrast" value={melt.contrast} min={10} max={80} step={1} onChange={(v) => setMelt((m) => ({ ...m, contrast: v }))} />
+                    <PgSlider label="Reach" value={melt.reach} min={0} max={2} step={0.05} onChange={(v) => setMelt((m) => ({ ...m, reach: v }))} />
+                    <PgSlider label="Fade" value={melt.fade} min={0} max={40} step={1} onChange={(v) => setMelt((m) => ({ ...m, fade: v }))} />
+                    <PgSlider label="Warp" value={melt.warp} min={0} max={40} step={1} onChange={(v) => setMelt((m) => ({ ...m, warp: v }))} />
+                    <PgSlider label="Marbling" value={melt.mix} min={0} max={1} step={0.05} onChange={(v) => setMelt((m) => ({ ...m, mix: v }))} />
+                    <PgSlider label="Marbling blur" value={melt.mixBlur} min={0} max={24} step={0.5} onChange={(v) => setMelt((m) => ({ ...m, mixBlur: v }))} />
+                    <PgSlider label="Gravity" value={melt.gravity} min={0} max={4} step={0.1} onChange={(v) => setMelt((m) => ({ ...m, gravity: v }))} />
+                    <PgSlider label="Waviness" value={melt.waviness} min={0} max={40} step={1} onChange={(v) => setMelt((m) => ({ ...m, waviness: v }))} />
+                  </>
+                )}
+              </PgGroup>
+            </>
+          )}
         </ControlsPanel>
-      );
-
-  return (
-    <div className="pg">
-      <div className="pg-stage">
-        {visible && effect === "morph" && <MorphDemo group={group} knobs={morph} />}
-        {visible && effect === "move" && <MoveDemo group={group} knobs={move} />}
-        {visible && effect === "bend" && <BendDemo group={group} knobs={bend} />}
-        {visible && effect === "melt" && <MeltDemo melt={melt} />}
-      </div>
-
-      <Controls>
-        {!isPublic && <PanelTitle>Main</PanelTitle>}
-        <PgTabs label="Effect" options={EFFECT_OPTIONS} value={effect} onChange={setEffect} />
-
-        {isPublic && effect !== "melt" && (
-          <>
-            <PgSlider label="Goo blur" value={group.blur} min={0} max={16} step={0.5} onChange={(v) => setGroupKey("blur", v)} />
-            <PgSlider label="Contrast" value={group.contrast} min={4} max={40} step={1} onChange={(v) => setGroupKey("contrast", v)} />
-          </>
-        )}
-
-        {!isPublic && effect !== "melt" && (
-          <>
-            <PanelSep />
-            <PanelTitle>Surface</PanelTitle>
-            <PgSlider label="Goo blur" value={group.blur} min={0} max={16} step={0.5} onChange={(v) => setGroupKey("blur", v)} />
-            <PgSlider label="Contrast" value={group.contrast} min={4} max={40} step={1} onChange={(v) => setGroupKey("contrast", v)} />
-            <PgSlider label="Waviness" value={group.waviness} min={0} max={8} step={0.5} onChange={(v) => setGroupKey("waviness", v)} />
-            <PgSwatches label="Fill" options={FILL_OPTIONS} value={group.fill} onChange={(v) => setGroupKey("fill", v)} />
-          </>
-        )}
-
-        {!isPublic && effect === "morph" && (
-          <>
-            <PanelSep />
-            <PanelTitle>Menu motion</PanelTitle>
-            <PgSlider label="Duration" value={morph.openDur} min={80} max={1200} step={10} display={`${morph.openDur}ms`} onChange={(v) => setMorph((m) => ({ ...m, openDur: v }))} />
-            <PgTabs label="Easing" options={EASE_OPTIONS} value={morph.openEase} onChange={(v) => setMorph((m) => ({ ...m, openEase: v }))} />
-            <PgSlider label="Stagger" value={morph.openStagger} min={0} max={200} step={5} display={`${morph.openStagger}ms`} onChange={(v) => setMorph((m) => ({ ...m, openStagger: v }))} />
-            <PgSlider label="Spread" value={morph.spread} min={0.4} max={2} step={0.05} display={`${num(morph.spread)}×`} onChange={(v) => setMorph((m) => ({ ...m, spread: v }))} />
-            <PgSlider label="Anticipation" value={morph.anticipDist} min={0} max={24} step={1} display={`${morph.anticipDist}px`} onChange={(v) => setMorph((m) => ({ ...m, anticipDist: v }))} />
-          </>
-        )}
-
-        {!isPublic && effect === "move" && (
-          <>
-            <PanelSep />
-            <PanelTitle>Move physics</PanelTitle>
-            <PgSlider label="Springiness" value={move.springiness} min={0} max={1} step={0.05} onChange={(v) => setMove((m) => ({ ...m, springiness: v }))} />
-            <PgSlider label="Wobble" value={move.wobble} min={0} max={1} step={0.05} onChange={(v) => setMove((m) => ({ ...m, wobble: v }))} />
-            <PgSlider label="Stretch" value={move.stretch} min={0} max={1} step={0.02} onChange={(v) => setMove((m) => ({ ...m, stretch: v }))} />
-            <PgSlider label="Trail" value={move.trail} min={0} max={1} step={0.025} onChange={(v) => setMove((m) => ({ ...m, trail: v }))} />
-          </>
-        )}
-
-        {!isPublic && effect === "bend" && (
-          <>
-            <PanelSep />
-            <PanelTitle>Bend physics</PanelTitle>
-            <PgSlider label="Vertical bow" value={bend.vertical} min={0} max={1} step={0.05} onChange={(v) => setBend((b) => ({ ...b, vertical: v }))} />
-            <PgSlider label="Horizontal caps" value={bend.horizontal} min={0} max={1} step={0.05} onChange={(v) => setBend((b) => ({ ...b, horizontal: v }))} />
-            <PgSlider label="Content bend" value={bend.content} min={0} max={1} step={0.05} onChange={(v) => setBend((b) => ({ ...b, content: v }))} />
-          </>
-        )}
-
-        {!isPublic && effect === "melt" && (
-          <>
-            <PanelSep />
-            <PanelTitle>Melt physics</PanelTitle>
-            <PgSlider label="Goo blur" value={melt.blur} min={0} max={20} step={0.5} onChange={(v) => setMelt((m) => ({ ...m, blur: v }))} />
-            <PgSlider label="Contrast" value={melt.contrast} min={10} max={80} step={1} onChange={(v) => setMelt((m) => ({ ...m, contrast: v }))} />
-            <PgSlider label="Reach" value={melt.reach} min={0} max={2} step={0.05} onChange={(v) => setMelt((m) => ({ ...m, reach: v }))} />
-            <PgSlider label="Fade" value={melt.fade} min={0} max={40} step={1} onChange={(v) => setMelt((m) => ({ ...m, fade: v }))} />
-            <PgSlider label="Warp" value={melt.warp} min={0} max={40} step={1} onChange={(v) => setMelt((m) => ({ ...m, warp: v }))} />
-            <PgSlider label="Marbling" value={melt.mix} min={0} max={1} step={0.05} onChange={(v) => setMelt((m) => ({ ...m, mix: v }))} />
-            <PgSlider label="Gravity" value={melt.gravity} min={0} max={4} step={0.1} onChange={(v) => setMelt((m) => ({ ...m, gravity: v }))} />
-          </>
-        )}
-      </Controls>
+      )}
 
       <Snippet code={snippet} />
     </div>

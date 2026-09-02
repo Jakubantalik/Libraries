@@ -1,6 +1,7 @@
 import { StrictMode, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { CodeCopy } from "./examples/CodeCopy";
+import { StudioTeaser } from "./examples/StudioTeaser";
 import {
   ImageGeneration,
   type ImageGenerationCycleEvent,
@@ -16,8 +17,8 @@ import {
    labels to match visual character), labels here map directly to values. */
 
 const PRESET_OPTIONS: Array<{ value: ImageGenerationPreset; label: string }> = [
-  { value: "pixels-organic", label: "Pixel Organic" },
-  { value: "pixels-mechanic", label: "Pixel Mechanic" },
+  { value: "pixels-organic", label: "Organic" },
+  { value: "pixels-mechanic", label: "Mechanic" },
   { value: "sweep-gradient", label: "Gradient Sweep" },
 ];
 
@@ -230,6 +231,14 @@ function ImagePlayground() {
             ariaLabel="Strength"
           />
         </div>
+        <StudioTeaser
+          rows={[
+            { kind: "slider", label: "Speed", value: "1\u00d7", fill: 31 },
+            { kind: "tabs", label: "Palette", options: ["Preset", "Ocean", "Ember"] },
+            { kind: "slider", label: "Pixel scale", value: "1\u00d7", fill: 33 },
+            { kind: "tabs", label: "Card background", options: ["Charcoal", "Ink", "Navy"] },
+          ]}
+        />
       </div>
 
       </div>

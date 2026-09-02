@@ -79,14 +79,17 @@ const SEG = HOLD + MORPH;
 export const frameMorph: ModeFrame = (size, t, o) => {
   const K = CYCLE.length;
   const tc = t % (SEG * K);
-  const k = Math.floor(tc / SEG);
-  const local = tc - k * SEG;
-  const m = local > HOLD ? smoothE((local - HOLD) / MORPH) : 0;
+  // `shape` 0 / 1 / 2 holds one outline instead of cycling; anything else
+  // (unset, or out of range) keeps the tuned circle → triangle → square loop
+  const held = o.shape != null && o.shape >= 0 && o.shape < K ? Math.floor(o.shape) : -1;
+  const k = held >= 0 ? held : Math.floor(tc / SEG);
+  const local = held >= 0 ? t % SEG : tc - k * SEG;
+  const m = held >= 0 ? 0 : local > HOLD ? smoothE((local - HOLD) / MORPH) : 0;
   const sprd = o.spread ?? 1;
 
   // blend the two shape PATHS at m, then measure the blended outline
   const pA = CYCLE[k];
-  const pB = CYCLE[(k + 1) % K];
+  const pB = held >= 0 ? pA : CYCLE[(k + 1) % K];
   const M = 160;
   const pts: Array<[number, number]> = [];
   for (let i = 0; i < M; i++) {

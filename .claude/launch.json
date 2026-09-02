@@ -7,6 +7,12 @@
       "runtimeArgs": ["run", "dev", "-w", "@sites/home"],
       "port": 5173,
       "autoPort": true
+    },
+    {
+      "name": "studio-agent",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "services/studio-agent", "run", "dev"],
+      "port": 8787
     }
   ]
 }

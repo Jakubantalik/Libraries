@@ -40,6 +40,19 @@
     href="/assets/fonts/Saans-Medium.woff2"
     crossorigin
   />
+  <script>
+    /* Studio theme: restore the saved choice before first paint. The rest
+       of the site stays dark-only; only this app writes ldev:studio-theme. */
+    (function () {
+      try {
+        var saved = localStorage.getItem("ldev:studio-theme");
+        if (saved === "light" || saved === "dark") {
+          document.documentElement.setAttribute("data-theme", saved);
+          document.documentElement.style.colorScheme = saved;
+        }
+      } catch (e) {}
+    })();
+  </script>
   <link rel="stylesheet" href="/assets/site.css" />
   <link rel="stylesheet" href="/assets/playground.css" />
   <link rel="stylesheet" href="/assets/examples.css" />
@@ -85,9 +98,9 @@
       height: 18px;
       background: linear-gradient(
         to bottom,
-        rgba(255, 255, 255, 0) 0%,
-        rgba(255, 255, 255, 0.12) 50%,
-        rgba(255, 255, 255, 0) 100%
+        transparent 0%,
+        var(--pg-swatch-ring) 50%,
+        transparent 100%
       );
     }
     .st-top-name {
@@ -101,33 +114,34 @@
       gap: 8px;
       white-space: nowrap;
     }
-    /* Pro chip — transitions.dev's Pro blue (the same wash its "Get Pro"
-       pill wears in dark mode) at their eyebrow-badge proportions. */
+    /* Pro chip — the nav's small badge (.nav-pill-pro in site.css), same
+       18px proportions and Pro blue, so the Studio's title wears exactly
+       what "Studio Pro" wears in the site nav. */
+    html[data-theme="dark"] .st-top-chip {
+      background: rgba(85, 207, 255, 0.14);
+      color: #7cd4ff;
+    }
     .st-top-chip {
       display: inline-flex;
       align-items: center;
-      height: 22px;
-      padding: 0 8px;
+      height: 18px;
+      padding: 0 6px;
       border-radius: 50px;
-      background: rgba(85, 207, 255, 0.14);
-      color: #7cd4ff;
+      background: rgba(0, 122, 175, 0.1);
+      color: #0f7ba5;
       font-family: var(--font-sans);
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 500;
-      line-height: 16px;
+      line-height: 14px;
       /* The raised-surface ring every card and pill here wears, so the chip
          sits on the same material instead of reading as a flat wash. */
       box-shadow: var(--material-shadow);
     }
     .st-top-right { display: flex; align-items: center; gap: 8px; }
-    .st-top-email {
-      font-size: 13px;
-      color: var(--text-muted);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 220px;
-    }
+    /* Theme toggle sits with the avatar; same 36px chip as the nav icons. */
+    .st-theme-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; }
+    .st-theme-btn { color: var(--icon-color-muted); }
+    .st-theme-btn:hover { color: var(--icon-color); }
     .st-top-link {
       display: inline-flex;
       align-items: center;
@@ -153,7 +167,7 @@
       flex: 1;
       display: grid;
       grid-template-columns: 176px minmax(0, 1fr);
-      gap: 24px;
+      gap: 12px;
       align-items: start;
     }
     .st-side {
@@ -181,7 +195,7 @@
       border: 0;
       border-radius: 12px;
       background: none;
-      color: #bbbbbb;
+      color: var(--pg-control-text);
       font-family: var(--font-sans);
       font-size: 13px;
       font-weight: 500;
@@ -191,14 +205,11 @@
       transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
       -webkit-tap-highlight-color: transparent;
     }
-    .st-lib:hover { background: rgba(255, 255, 255, 0.04); }
+    .st-lib:hover { background: var(--pg-control-bg); }
     .st-lib[data-active="true"] {
-      background: rgba(255, 255, 255, 0.08);
-      color: #f5f5f5;
-      box-shadow:
-        0 1px 1px 0 rgba(0, 0, 0, 0.24),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.02),
-        inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+      background: var(--pg-control-active-bg);
+      color: var(--pg-control-active-text);
+      box-shadow: var(--pg-control-active-shadow);
     }
     .st-lib:focus-visible { outline: 2px solid var(--icon-color); outline-offset: 2px; }
     /* Icon card: the Figma export verbatim; see .docs-link-ico. The row
@@ -208,7 +219,11 @@
       flex: none;
       width: 24px;
       height: 24px;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
     }
+    html[data-theme="dark"] .st-lib-ico { box-shadow: none; }
     .st-lib-ico img {
       position: absolute;
       display: block;
@@ -219,19 +234,110 @@
       top: -2px;
     }
 
-    .st-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-    .st-main .pg { grid-template-columns: minmax(0, 1fr) 244px; grid-template-rows: auto 1fr; row-gap: 16px; align-items: start; }
-    /* The control column runs its full length rather than scrolling inside a
-       capped box — a workbench panel that hides half its knobs reads as broken.
-       It spans both grid rows, so the snippet sits in the left column directly
-       under the preview (same placement as the detail pages) instead of a
-       full-width strip below everything. */
-    .st-main .pg-stage { min-height: 480px; grid-column: 1; grid-row: 1; }
-    .st-main .pg-controls { grid-column: 2; grid-row: 1 / 3; align-self: stretch; }
-    .st-main .pg-snippet { grid-column: 1; grid-row: 2; align-self: start; }
+    .st-main { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+    .st-main .pg { grid-template-columns: minmax(0, 1fr) 320px; grid-template-rows: auto auto 1fr; gap: 12px; align-items: start; }
+    /* The control column spans every grid row, so the snippet sits in the
+       left column directly under the preview (same placement as the detail
+       pages) instead of a full-width strip below everything. It sticks to
+       the viewport and never grows past it: 16px from the top, 24px of air
+       at the bottom, and the knob list scrolls inside when a library has
+       more of them than fit. */
+    /* Stage reads as a detail-page example card (examples.css .example-cell):
+       #171717 at 16px radius with 48px/40px padding and no hairline ring. */
+    /* Stage header bar: effect name + Copy prompt. */
+    .st-main .st-stage-bar {
+      grid-column: 1;
+      grid-row: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 28px;
+    }
+    /* Install / Usage code block takes the stage's grid cell; the CSS
+       sibling switch mirrors the detail pages' data-detail-panel swap. */
+    .st-main .st-stage-panel {
+      grid-column: 1;
+      grid-row: 2;
+      align-self: start;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .st-main .st-stage-bar:not([data-view="preview"]) ~ .pg-stage,
+    .st-main .st-stage-bar:not([data-view="preview"]) ~ .pg-snippet { display: none; }
+    .st-main .pg-stage {
+      min-height: 480px;
+      grid-column: 1;
+      grid-row: 2;
+      padding: 48px 40px;
+      background: var(--stage-bg);
+    }
+    .st-main .pg-stage::after { content: none; }
+    .st-main .pg-controls {
+      grid-column: 2;
+      grid-row: 1 / 4;
+      align-self: start;
+      position: sticky;
+      top: 16px;
+      /* Never taller than the viewport leaves it: the app's 68px top bar is
+         still above the panel before the page scrolls, and 24px of air stays
+         under it either way. */
+      max-height: calc(100dvh - 68px - 24px);
+      overflow: hidden;
+    }
+    /* Only the knob list scrolls — the mode tabs and the actions row stay put. */
+    /* Only the knob list scrolls, and only vertically. The section rules are
+       full-bleed, so instead of letting them overflow (which turns into a
+       horizontal scroll once this box scrolls) the box itself takes the
+       panel's 16px inset back as padding and cancels it with a negative
+       margin — the rules then run edge to edge INSIDE the scroll area. */
+    .st-main .pg-controls .st-panel-body {
+      overflow-y: auto;
+      overflow-x: hidden;
+      min-height: 0;
+      padding-inline: 16px;
+      margin-inline: -16px;
+      /* The scroll box starts AT the header's rule (the panel's 16px gap is
+         cancelled and re-added as padding), so scrolling content is clipped
+         by the line itself instead of 16px under it — which read as a header
+         taller than its divider. */
+      margin-top: -16px;
+      padding-top: 16px;
+      /* Same at the foot: without this the box ends at the panel's padding
+         edge, so scrolling content was cut 16px above the card and read as
+         cropped. Now it clips at the card's own edge, and the 16px comes
+         back as padding so the last row still has air at the end. */
+      margin-bottom: -16px;
+      padding-bottom: 16px;
+    }
+    /* The rules run the card's full width: the scroll box carries the
+       panel's 16px inset as its own padding, so -16px lands exactly on the
+       card's edge — inside the box, so it neither clips nor scrolls. */
+    .st-main .pg-controls .st-panel-body > .pg-field::before {
+      left: -16px;
+      right: -16px;
+    }
+    /* The head is the panel's sticky header: it sits outside the scroll box,
+       so it holds while the knobs scroll under it. The rule that used to be
+       drawn by the body's ::before now belongs to the head — the body clips
+       its own overflow, and a line drawn above its content box would be cut. */
+    .st-main .pg-controls .st-panel-head {
+      padding-inline: 16px;
+      margin-inline: -16px;
+      padding-bottom: 16px;
+      margin-bottom: 0;
+      border-bottom: 1px solid var(--pg-rule);
+    }
+    .st-main .pg-controls > .st-panel-body::before { content: none; }
+    .st-main .pg-snippet { grid-column: 1; grid-row: 3; align-self: start; }
     /* Agent tab fills the panel column instead of ending at a 320px box:
        the chat grows, its log scrolls, the composer and the preset row keep
        the bottom. :not([hidden]) so the manual tab's display:none still wins. */
+    /* The Agent tab always fills the panel's full height, whatever the
+       manual knob list would have measured — the chat log grows and the
+       composer keeps the bottom. */
+    .st-main .pg-controls:has(.st-panel-body--chat:not([hidden])) { height: calc(100dvh - 68px - 24px); }
     .st-main .st-panel-body--chat:not([hidden]) { display: flex; flex: 1 1 auto; }
     .st-main .st-panel-body--chat .st-chat { flex: 1 1 auto; }
     .st-main .st-panel-body--chat .st-chat-log { flex: 1 1 0; max-height: none; min-height: 120px; }
@@ -250,13 +356,21 @@
       .st-side-label { display: none; }
       .st-lib { height: 36px; border-radius: 40px; }
       .st-main .pg { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
+      .st-main .st-stage-bar { grid-column: auto; grid-row: auto; }
       .st-main .pg-stage { min-height: 380px; grid-column: auto; grid-row: auto; }
-      .st-main .pg-controls { grid-column: auto; grid-row: auto; align-self: auto; }
+      .st-main .pg-controls {
+        grid-column: auto;
+        grid-row: auto;
+        align-self: auto;
+        position: static;
+        max-height: none;
+        overflow: visible;
+      }
+      .st-main .pg-controls .st-panel-body { overflow-y: visible; }
       .st-main .pg-snippet { grid-column: auto; grid-row: auto; }
     }
     @media (max-width: 639px) {
       .st-app { padding: 0 12px 32px; }
-      .st-top-email { display: none; }
     }
 
     /* ── Gate states (shared look with /studio.html) ───────────── */
@@ -267,45 +381,49 @@
       justify-content: center;
       padding-top: 48px;
     }
-    .st-skeleton {
-      width: min(100%, 686px);
-      border-radius: 24px;
-      background: var(--card-bg);
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
-      padding: 28px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-    .st-skeleton .sk-line {
-      height: 14px;
-      border-radius: 7px;
-      background: rgba(255, 255, 255, 0.07);
+    /* Loading state: the workbench's own layout with unpainted pieces, so
+       nothing shifts when the real panel arrives. Shapes match the parts
+       they stand in for — 40px library rows, a 36px tab pill, 32px control
+       rows, the 480px stage. */
+    .st-skeleton .pg-stage { min-height: 480px; }
+    .sk {
+      display: block;
+      border-radius: 8px;
+      background: var(--skeleton);
       animation: st-pulse 1.4s ease-in-out infinite;
     }
-    .st-skeleton .sk-line:nth-child(1) { width: 38%; }
-    .st-skeleton .sk-line:nth-child(2) { width: 82%; animation-delay: 120ms; }
-    .st-skeleton .sk-line:nth-child(3) { width: 64%; animation-delay: 240ms; }
-    .st-skeleton .sk-block {
-      height: 220px;
-      border-radius: 16px;
-      background: rgba(255, 255, 255, 0.05);
-      animation: st-pulse 1.4s ease-in-out infinite;
-      animation-delay: 360ms;
-    }
+    .st-skeleton .sk-side-label { width: 56px; height: 11px; margin: 9px 8px; border-radius: 6px; }
+    .st-skeleton .sk-lib { height: 40px; border-radius: 12px; }
+    .st-skeleton .sk-lib:nth-of-type(2) { animation-delay: 80ms; }
+    .st-skeleton .sk-lib:nth-of-type(3) { animation-delay: 160ms; }
+    .st-skeleton .sk-lib:nth-of-type(4) { animation-delay: 240ms; }
+    .st-skeleton .sk-lib:nth-of-type(5) { animation-delay: 320ms; }
+    .st-skeleton .sk-tabs { width: 190px; height: 36px; border-radius: 48px; }
+    .st-skeleton .sk-prompt { width: 127px; height: 32px; border-radius: 36px; }
+    .st-skeleton .sk-icon { width: 30px; height: 30px; border-radius: 50%; }
+    .st-skeleton .sk-section { display: flex; flex-direction: column; gap: 12px; }
+    .st-skeleton .sk-label { width: 96px; height: 13px; border-radius: 6px; margin-bottom: 4px; }
+    .st-skeleton .sk-field { height: 32px; border-radius: 8px; animation-delay: 120ms; }
+    .st-skeleton .sk-preset { width: 86px; height: 32px; border-radius: 36px; }
+    .st-skeleton .sk-icon-sm { width: 32px; height: 32px; border-radius: 50%; }
+    .st-skeleton .pg-snippet { padding: 24px 26px; display: flex; flex-direction: column; gap: 12px; }
+    .st-skeleton .sk-code { height: 12px; border-radius: 6px; }
+    .st-skeleton .sk-code:nth-child(1) { width: 62%; }
+    .st-skeleton .sk-code:nth-child(2) { width: 88%; animation-delay: 120ms; }
+    .st-skeleton .sk-code:nth-child(3) { width: 74%; animation-delay: 240ms; }
     @keyframes st-pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.45; }
     }
     @media (prefers-reduced-motion: reduce) {
-      .st-skeleton .sk-line, .st-skeleton .sk-block { animation: none; }
+      .st-skeleton .sk { animation: none; }
     }
 
     .st-locked {
       width: min(100%, 686px);
       border-radius: 24px;
       background: var(--card-bg);
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+      box-shadow: inset 0 0 0 1px var(--card-border), var(--card-shadow);
       padding: 56px 32px;
       display: flex;
       flex-direction: column;
@@ -344,25 +462,28 @@
 
     /* Beam: demo card wrapped by the beam. */
     .beam-card {
-      width: 250px;
+      max-width: 100%;
       padding: 24px 26px;
       border-radius: 16px;
-      background: #1d1d1d;
+      background: #ffffff;
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
-    .beam-card-line { height: 8px; border-radius: 4px; background: rgba(238, 238, 239, 0.08); }
-    .beam-card-line--title { height: 10px; width: 55%; background: rgba(238, 238, 239, 0.14); }
+    html[data-theme="dark"] .beam-card { background: #1d1d1d; box-shadow: none; }
+    .beam-card-line { height: 8px; border-radius: 4px; background: rgba(0, 0, 0, 0.07); }
+    .beam-card-line--title { height: 10px; width: 55%; background: rgba(0, 0, 0, 0.12); }
+    html[data-theme="dark"] .beam-card-line { background: rgba(238, 238, 239, 0.08); }
+    html[data-theme="dark"] .beam-card-line--title { background: rgba(238, 238, 239, 0.14); }
     .beam-card-line--short { width: 78%; }
-    .beam-card--sm {
-      width: 56px;
-      height: 56px;
+    /* Card size "Small" — the live demo page's button-size card (.card-sm). */
+    .beam-card--btn {
+      width: 80px;
+      height: 36px;
       padding: 0;
-      align-items: center;
-      justify-content: center;
+      border-radius: 36px;
     }
-    .beam-card--sm .beam-card-dot { width: 14px; height: 14px; border-radius: 7px; background: rgba(238, 238, 239, 0.2); }
 
     /* The Gooey demo prototypes' CSS moved to assets/examples.css —
        the detail page renders the same demos and needs it too. */
@@ -373,9 +494,14 @@
       display: flex; align-items: center; gap: 6px;
       width: 180px; height: 40px; border-radius: 999px;
       padding: 10px 8px 10px 12px;
-      background: #1d1d1d; border: 1px solid rgba(44, 47, 54, 0.52);
+      background: #ffffff; border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
+      color: #17181c; font-size: 14px; font-weight: 500; cursor: text;
+    }
+    html[data-theme="dark"] .metal-search {
+      background: #1d1d1d; border-color: rgba(44, 47, 54, 0.52);
       box-shadow: inset 0 0 50px 0 rgba(255, 255, 255, 0.02);
-      color: #f8f8f8; font-size: 14px; font-weight: 500; cursor: text;
+      color: #f8f8f8;
     }
     .metal-search svg { width: 18px; height: 18px; flex-shrink: 0; stroke: #8b8b8b; fill: none; }
     .metal-search input {
@@ -386,10 +512,15 @@
     .metal-pill {
       display: flex; align-items: center; justify-content: center;
       width: 140px; height: 40px; padding: 0; border-radius: 999px;
-      background: #1d1d1d; border: 1px solid rgba(44, 47, 54, 0.52);
-      box-shadow: inset 0 0 50px 0 rgba(255, 255, 255, 0.02);
-      color: #f8f8f8; font-family: inherit; font-size: 14px; font-weight: 500;
+      background: #ffffff; border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
+      color: #17181c; font-family: inherit; font-size: 14px; font-weight: 500;
       white-space: nowrap; cursor: pointer;
+    }
+    html[data-theme="dark"] .metal-pill {
+      background: #1d1d1d; border-color: rgba(44, 47, 54, 0.52);
+      box-shadow: inset 0 0 50px 0 rgba(255, 255, 255, 0.02);
+      color: #f8f8f8;
     }
     .metal-pill--circle { width: 40px; }
     .metal-pill svg { width: 16px; height: 16px; display: block; }
@@ -420,12 +551,60 @@
           <span class="st-top-name">Studio <span class="st-top-chip">Pro</span></span>
         </div>
       </div>
-      <div class="st-gate">
-        <div class="st-skeleton" aria-hidden="true">
-          <span class="sk-line"></span>
-          <span class="sk-line"></span>
-          <span class="sk-line"></span>
-          <span class="sk-block"></span>
+      <!-- Same structure as the React <Skeleton>: keep the two in step. -->
+      <div class="st-body st-skeleton" aria-hidden="true">
+        <div class="st-side">
+          <span class="sk sk-side-label"></span>
+          <span class="sk sk-lib"></span>
+          <span class="sk sk-lib"></span>
+          <span class="sk sk-lib"></span>
+          <span class="sk sk-lib"></span>
+          <span class="sk sk-lib"></span>
+        </div>
+        <div class="st-main">
+          <div class="pg">
+            <div class="st-stage-bar" data-view="preview">
+              <span class="sk sk-tabs"></span>
+              <span class="st-stage-actions">
+                <span class="sk sk-preset"></span>
+                <span class="sk sk-icon-sm"></span>
+                <span class="sk sk-prompt"></span>
+              </span>
+            </div>
+            <div class="pg-stage"></div>
+            <div class="pg-controls">
+              <div class="st-panel-head">
+                <span class="sk sk-tabs"></span>
+                <span class="sk sk-icon"></span>
+              </div>
+              <div class="st-panel-body">
+            <div class="sk-section">
+              <span class="sk sk-label"></span>
+              <span class="sk sk-field"></span>
+              <span class="sk sk-field"></span>
+              <span class="sk sk-field"></span>
+            </div>
+            <div class="sk-section">
+              <span class="sk sk-label"></span>
+              <span class="sk sk-field"></span>
+              <span class="sk sk-field"></span>
+              <span class="sk sk-field"></span>
+              <span class="sk sk-field"></span>
+            </div>
+            <div class="sk-section">
+              <span class="sk sk-label"></span>
+              <span class="sk sk-field"></span>
+              <span class="sk sk-field"></span>
+              <span class="sk sk-field"></span>
+            </div>
+              </div>
+            </div>
+            <div class="code-block pg-snippet">
+              <span class="sk sk-code"></span>
+              <span class="sk sk-code"></span>
+              <span class="sk sk-code"></span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

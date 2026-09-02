@@ -109,8 +109,7 @@
     }
     .studio-hero .skill-cta-row { margin-top: 24px; gap: 11px; }
     .studio-hero .skill-btn {
-      height: 40px;
-      padding: 0 20px;
+      height: 32px;
       font-size: 13px;
       line-height: 13px;
       font-weight: 500;
@@ -118,28 +117,12 @@
     .studio-hero .skill-btn--primary {
       background: #e9e9e9;
       color: #17181c;
+      padding: 0 16px;
+      border-radius: 26px;
       box-shadow: none;
     }
     .studio-hero .skill-btn--primary:hover { background: #ffffff; }
     .studio-hero .skill-btn--primary:active { background: #dcdcdc; }
-    .studio-hero .skill-btn--secondary {
-      background: #2a2a2a;
-      color: #ffffff;
-      box-shadow:
-        0 1px 3px 0 rgba(0, 0, 0, 0.04),
-        inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
-        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
-        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
-        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
-    }
-    .studio-hero .skill-btn--secondary:hover { background: #323232; }
-    .studio-hero .skill-btn--secondary:active { background: #262626; }
-    .studio-hero-note {
-      margin: 16px 0 0;
-      font-size: 13px;
-      line-height: 18px;
-      color: var(--text-subtle);
-    }
     @media (max-width: 639px) {
       .studio-hero { padding-top: 40px; padding-bottom: 40px; }
       .studio-hero-title { font-size: 32px; }
@@ -331,58 +314,6 @@
       .home-section-title { font-size: 23px; margin-bottom: 28px; }
     }
 
-    /* Steps — numbered rows, refine's "How you use it". */
-    .studio-steps {
-      list-style: none;
-      margin: 0 auto;
-      padding: 0;
-      max-width: 640px;
-      display: flex;
-      flex-direction: column;
-    }
-    .studio-step {
-      display: flex;
-      align-items: flex-start;
-      gap: 16px;
-      padding: 18px 0;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-    }
-    .studio-step:last-child { border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
-    .studio-step-num {
-      flex: none;
-      width: 28px;
-      height: 28px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 50%;
-      background: #3e3e3e;
-      box-shadow:
-        0 1px 3px 0 rgba(0, 0, 0, 0.04),
-        inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
-        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
-        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
-        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
-      color: rgba(237, 237, 237, 0.8);
-      font-size: 12px;
-      line-height: 13px;
-      font-weight: 500;
-    }
-    .studio-step-body { padding-top: 3px; }
-    .studio-step-title {
-      margin: 0;
-      font-size: 15px;
-      font-weight: 500;
-      line-height: 22px;
-      color: var(--text);
-    }
-    .studio-step-text {
-      margin: 4px 0 0;
-      font-size: 14px;
-      line-height: 22px;
-      color: var(--text-muted);
-    }
-
     /* Features — 2-col cards on the quote surface. */
     .studio-features {
       list-style: none;
@@ -455,7 +386,8 @@
     }
     .t-acc-panel-inner p { margin: 0 0 16px; padding-right: 28px; font-size: 14px; line-height: 22px; color: var(--text-muted); }
     .t-acc-panel-inner code { font-family: var(--font-mono); font-size: 12px; line-height: 18px; padding: 1px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.06); color: var(--text); }
-    .t-acc-panel-inner a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
+    .t-acc-panel-inner a { color: var(--text); text-decoration: none; }
+    .t-acc-panel-inner a:hover { text-decoration: underline; text-underline-offset: 2px; }
     @media (prefers-reduced-motion: reduce) {
       .t-acc-panel, .t-acc-panel-inner, .t-acc-chevron { transition: none !important; }
     }
@@ -506,8 +438,9 @@
             <span class="brand-word"><span class="brand-word-strong">Libraries</span><span class="brand-word-dim">.dev</span></span>
           </a>
           <nav class="site-nav-menu" aria-label="Primary">
-            <a class="nav-pill" href="/#components">Libraries</a>
-            <a class="nav-pill nav-pill--active" href="/studio.html">Studio</a>
+            <a class="nav-pill" href="/beam.html">Libraries</a>
+            <a class="nav-pill" href="/how-to-use.html">How to use</a>
+            <a class="nav-pill nav-pill--active" href="/studio.html">Studio <span class="nav-pill-pro">Pro</span></a>
           </nav>
         </div>
         <div class="site-nav-right">
@@ -526,23 +459,9 @@
             </svg>
             <span class="pill-label" id="gh-stars-count">—</span>
           </a>
-          <a
-            class="icon-btn"
-            href="https://x.com/jakubantalik"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="X (Twitter)"
-          >
-            <svg class="icon-x" aria-hidden="true" viewBox="0 0 16 17" xmlns="http://www.w3.org/2000/svg">
-              <path
-                fill="currentColor"
-                d="M12.4041 1.39726H14.6953L9.69087 7.2591L15.5781 15.2368H10.9696L7.35741 10.3996L3.22921 15.2368H0.934687L6.28641 8.96575L0.642598 1.39726H5.36795L8.62962 5.81859L12.4041 1.39726ZM11.5992 13.8329H12.8682L4.67667 2.72798H3.31359L11.5992 13.8329Z"
-              />
-            </svg>
-          </a>
           <div class="pm-anchor" id="more-anchor">
             <button type="button" class="icon-btn" id="more-btn" aria-label="More" aria-haspopup="menu" aria-expanded="false">
-              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block">
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 8C6.66667 7.26362 7.26362 6.66667 8 6.66667C8.73638 6.66667 9.33333 7.26362 9.33333 8C9.33333 8.73638 8.73638 9.33333 8 9.33333C7.26362 9.33333 6.66667 8.73638 6.66667 8Z" fill="currentColor"/>
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 3.33333C6.66667 2.59695 7.26362 2 8 2C8.73638 2 9.33333 2.59695 9.33333 3.33333C9.33333 4.06971 8.73638 4.66667 8 4.66667C7.26362 4.66667 6.66667 4.06971 6.66667 3.33333Z" fill="currentColor"/>
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 12.6667C6.66667 11.9303 7.26362 11.3333 8 11.3333C8.73638 11.3333 9.33333 11.9303 9.33333 12.6667C9.33333 13.403 8.73638 14 8 14C7.26362 14 6.66667 13.403 6.66667 12.6667Z" fill="currentColor"/>
@@ -577,9 +496,9 @@
       <div class="mobile-menu-backdrop" id="mobile-menu-backdrop"></div>
       <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile">
         <ul class="mobile-menu-list">
-          <li><a class="mobile-menu-link mobile-menu-link--1" href="/#components">Libraries</a></li>
-          <li><a class="mobile-menu-link mobile-menu-link--2" href="/studio.html">Studio</a></li>
-          <li><a class="mobile-menu-link mobile-menu-link--3" href="/how-to-use.html">How to use</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--1" href="/beam.html">Libraries</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--2" href="/how-to-use.html">How to use</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--3" href="/studio.html">Studio</a></li>
           <li><a class="mobile-menu-link mobile-menu-link--4 mobile-menu-link--pro" href="/pro.html">Get Pro</a></li>
         </ul>
         <a class="mobile-menu-cta" id="mobile-signin" href="/pro.html">Sign in</a>
@@ -600,10 +519,8 @@
         code either way.
       </p>
       <div class="skill-cta-row">
-        <a class="skill-btn skill-btn--primary" href="/studio/app.html">Open Studio</a>
-        <a class="skill-btn skill-btn--secondary" href="/pro.html">Get Pro</a>
+        <a class="skill-btn skill-btn--primary" data-studio-cta href="/studio/app.html">Open Studio</a>
       </div>
-      <p class="studio-hero-note">Included in Libraries Pro · Beam, Orb, Gooey, Metal and Image</p>
     </header>
 
     <!-- App mock -->
@@ -665,48 +582,14 @@
       </div>
     </section>
 
-    <!-- How it works -->
-    <section class="home-section" aria-labelledby="studio-how-title">
-      <h2 class="home-section-title" id="studio-how-title">How you use it</h2>
-      <ol class="studio-steps">
-        <li class="studio-step">
-          <span class="studio-step-num" aria-hidden="true">1</span>
-          <div class="studio-step-body">
-            <h3 class="studio-step-title">Open the Studio and pick a library</h3>
-            <p class="studio-step-text">Beam, Orb, Gooey, Metal and Image sit side by side in one app — switch between them without losing your settings.</p>
-          </div>
-        </li>
-        <li class="studio-step">
-          <span class="studio-step-num" aria-hidden="true">2</span>
-          <div class="studio-step-body">
-            <h3 class="studio-step-title">Tune every parameter</h3>
-            <p class="studio-step-text">The full prop surface of each library — springs, wobble, trail, melt physics, hue ranges, shader scales — not just the handful the public playgrounds expose.</p>
-          </div>
-        </li>
-        <li class="studio-step">
-          <span class="studio-step-num" aria-hidden="true">3</span>
-          <div class="studio-step-body">
-            <h3 class="studio-step-title">Watch the real component respond</h3>
-            <p class="studio-step-text">The preview runs the same npm package you ship. Every drag updates the effect live — no approximations, no mock renders.</p>
-          </div>
-        </li>
-        <li class="studio-step">
-          <span class="studio-step-num" aria-hidden="true">4</span>
-          <div class="studio-step-body">
-            <h3 class="studio-step-title">Export the exact code</h3>
-            <p class="studio-step-text">Copy production-ready JSX with only the props you changed from their defaults — paste it straight into your project or hand it to your agent.</p>
-          </div>
-        </li>
-      </ol>
-    </section>
 
     <!-- Features -->
     <section class="home-section" aria-labelledby="studio-features-title">
       <h2 class="home-section-title" id="studio-features-title">Features</h2>
       <ul class="studio-features">
         <li class="studio-feature">
-          <h3 class="studio-feature-title">All five libraries</h3>
-          <p class="studio-feature-text">Beam, Orb, Gooey, Metal and Image in one workbench — one place to shape every effect on your product.</p>
+          <h3 class="studio-feature-title">Extra variants and types</h3>
+          <p class="studio-feature-text">States, sizes and effect types the detail pages hold back: the full set of orb states, every beam family, all four gooey effects.</p>
         </li>
         <li class="studio-feature">
           <h3 class="studio-feature-title">The full parameter surface</h3>
@@ -791,10 +674,9 @@
     <section class="home-section" aria-label="Open the Studio">
       <div class="studio-cta-band">
         <h2 class="studio-cta-band-title">Ready to make it yours?</h2>
-        <p class="studio-cta-band-sub">Open the Studio and start tuning — or get Libraries Pro to unlock it.</p>
+        <p class="studio-cta-band-sub">Open the Studio and start tuning every parameter of all five libraries.</p>
         <div class="skill-cta-row">
-          <a class="skill-btn skill-btn--primary" href="/studio/app.html">Open Studio</a>
-          <a class="skill-btn skill-btn--secondary" href="/pro.html">Get Pro</a>
+          <a class="skill-btn skill-btn--primary" data-studio-cta href="/studio/app.html">Open Studio</a>
         </div>
       </div>
     </section>
@@ -840,6 +722,60 @@
       <p class="footer-credit"><span class="footer-muted">Created by</span><a class="footer-name" href="https://x.com/jakubantalik" target="_blank" rel="noopener noreferrer">Jakub Antalik</a></p>
     </footer>
   </main>
+
+  <script>
+    /* Studio CTA follows auth state: signed-in visitors open the Studio,
+       signed-out ones go straight to Stripe Checkout via /checkout. The href
+       stays a real link to /pro.html as the no-JS / API-down fallback. */
+    (function () {
+      var ctas = document.querySelectorAll("[data-studio-cta]");
+      if (!ctas.length) return;
+
+      var AUTH_CACHE_KEY = "ldev:auth";
+      var AUTH_CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
+
+      // Same cache pro-client.js writes — paints the right CTA on the first
+      // frame instead of flashing the wrong one for a /me round-trip.
+      function cachedAuth() {
+        try {
+          var raw = localStorage.getItem(AUTH_CACHE_KEY);
+          if (!raw) return null;
+          var c = JSON.parse(raw);
+          if (!c || typeof c.t !== "number" || Date.now() - c.t > AUTH_CACHE_TTL) return null;
+          return !!c.a;
+        } catch (e) { return null; }
+      }
+
+      function paint(authed) {
+        Array.prototype.forEach.call(ctas, function (cta) {
+          cta.textContent = authed ? "Open Studio" : "Get access";
+          cta.setAttribute("href", authed ? "/studio/app.html" : "/pro.html");
+          if (authed) cta.removeAttribute("data-action");
+          else cta.setAttribute("data-action", "checkout");
+        });
+      }
+
+      var cached = cachedAuth();
+      if (cached !== null) paint(cached);
+
+      document.addEventListener("pro:me", function (e) {
+        var st = e.detail;
+        if (st && st.resolved) paint(!!st.authenticated);
+      });
+
+      Array.prototype.forEach.call(ctas, function (cta) {
+        cta.addEventListener("click", function (e) {
+          if (cta.getAttribute("data-action") !== "checkout") return;
+          var LP = window.LibrariesPro;
+          if (!LP || typeof LP.checkout !== "function") return; // href fallback
+          e.preventDefault();
+          cta.setAttribute("aria-busy", "true");
+          LP.checkout();
+          setTimeout(function () { cta.removeAttribute("aria-busy"); }, 8000);
+        });
+      });
+    })();
+  </script>
 
   <script>
     /* FAQ accordion (transitions-dev P21 — same wiring as the homepage). */

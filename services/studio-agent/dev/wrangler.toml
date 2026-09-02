@@ -15,3 +15,9 @@ port = 8787
 [[kv_namespaces]]
 binding = "STUDIO_USAGE"
 id = "studio_usage_local"
+
+# Anonymous prompt analytics (see recordPrompt in handler.ts). Local dev
+# accepts the writes and discards them.
+[[analytics_engine_datasets]]
+binding = "STUDIO_ANALYTICS"
+dataset = "studio_agent_prompts"
