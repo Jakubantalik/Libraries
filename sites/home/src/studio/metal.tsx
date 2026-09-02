@@ -1,5 +1,6 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { MetalFx, type MetalFxPreset, type MetalFxVariant } from "metal-fx-v1";
+import { checkGlsl, tpl, type CoreWiring } from "./core";
 import { ControlsPanel, PgTabs, PgSlider, PgToggles, PanelSep, Snippet, num, StageBar, PgGroup } from "./controls";
 
 /* Studio — Metal workbench. Public playground: variant/preset/strength/
@@ -26,6 +27,7 @@ const BASE_RING: Record<MetalFxVariant, number> = { button: 1, circle: 2 };
 
 /* Param key -> the knob's own label, for the agent's applied-change line. */
 const METAL_PARAM_LABELS: Record<string, string> = {
+  core: "Core",
   variant: "Type",
   preset: "Color",
   strength: "Strength",
@@ -35,6 +37,57 @@ const METAL_PARAM_LABELS: Record<string, string> = {
   disableReflection: "No Reflection",
   paused: "Paused",
 };
+
+/* ── Rebuilt core for the published v1 ────────────────────────────────
+   metal-fx v1 keeps its shader inside the bundle with no prop to swap it,
+   so the Studio reaches it the one way that is open: every fragment source
+   the page compiles passes through WebGLRenderingContext.shaderSource.
+   The interceptor captures v1's material (the source that writes
+   gl_FragColor with u_shaderOpacity) as the stock core, remembers the GL
+   context it compiled on, and while a custom core is set hands v1 that
+   source instead. A rebuild is applied by losing and restoring that
+   context: v1's own `webglcontextrestored` handler recompiles its pipeline
+   — through the interceptor — and restarts its loop. Studio-only; nothing
+   here ships.
+
+   v1 must never tear its shared renderer down while this page lives: its
+   teardown loses the old context, and that canvas's lost handler reads the
+   module-level renderer — by then the NEW one — and flags it lost, so a
+   remount paints nothing (the detail page never hits this: it always has
+   two instances). The stage therefore keeps a hidden keeper instance
+   mounted, so the instance count never reaches zero. */
+let stockMetalFrag = "";
+let customMetalFrag: string | null = null;
+let metalGl: WebGLRenderingContext | null = null;
+let shaderInterceptInstalled = false;
+function installShaderIntercept(): void {
+  if (shaderInterceptInstalled || typeof WebGLRenderingContext === "undefined") return;
+  /* ?stockgl leaves v1 untouched, to tell its own behaviour from ours. */
+  if (new URLSearchParams(location.search).has("stockgl")) return;
+  shaderInterceptInstalled = true;
+  const original = WebGLRenderingContext.prototype.shaderSource;
+  WebGLRenderingContext.prototype.shaderSource = function (this: WebGLRenderingContext, shader: WebGLShader, source: string) {
+    let src = source;
+    if (/u_shaderOpacity/.test(source) && /gl_FragColor/.test(source)) {
+      if (!stockMetalFrag) stockMetalFrag = source;
+      if (customMetalFrag) src = customMetalFrag;
+      metalGl = this;
+    }
+    return original.call(this, shader, src);
+  };
+}
+installShaderIntercept();
+
+/** Recompile v1's pipeline with whatever `customMetalFrag` now holds. */
+function recompileMetal(): void {
+  const gl = metalGl;
+  if (!gl || gl.isContextLost()) return;
+  const ext = gl.getExtension("WEBGL_lose_context");
+  if (!ext) return;
+  ext.loseContext();
+  /* The restore has to land after the lost event has been dispatched. */
+  setTimeout(() => ext.restoreContext(), 120);
+}
 
 function ArrowUpIcon() {
   return (
@@ -63,6 +116,23 @@ export function MetalStudio({ visible = true, theme = "dark" }: { visible?: bool
   const [paused, setPaused] = useState(false);
   const [disableGlow, setDisableGlow] = useState(false);
   const [disableReflection, setDisableReflection] = useState(false);
+  /* The agent's rebuilt fragment shader, or "" for v1's own. */
+  const [core, setCore] = useState("");
+  customMetalFrag = core || null;
+  const coreMounted = useRef(false);
+  useEffect(() => {
+    /* Nothing to recompile on first mount with the stock core. */
+    if (!coreMounted.current) {
+      coreMounted.current = true;
+      if (!core) return;
+    }
+    recompileMetal();
+  }, [core]);
+  const coreWiring: CoreWiring = {
+    lang: "glsl",
+    source: () => stockMetalFrag,
+    check: (code) => checkGlsl(code, { three: false }),
+  };
   const playPauseRef = useRef<HTMLButtonElement>(null);
   const searchRef = useRef<HTMLLabelElement>(null);
 
@@ -75,7 +145,7 @@ export function MetalStudio({ visible = true, theme = "dark" }: { visible?: bool
   /* Agent wiring — keys match the Worker's spec, which owns the ranges. */
   const agentParams: Record<string, unknown> = {
     variant, preset, strength, shaderScale, ring,
-    disableGlow, disableReflection, paused,
+    disableGlow, disableReflection, paused, core,
   };
 
   const applyAgentParams = useCallback((patch: Record<string, unknown>) => {
@@ -90,6 +160,7 @@ export function MetalStudio({ visible = true, theme = "dark" }: { visible?: bool
     if (typeof patch.disableGlow === "boolean") setDisableGlow(patch.disableGlow);
     if (typeof patch.disableReflection === "boolean") setDisableReflection(patch.disableReflection);
     if (typeof patch.paused === "boolean") setPaused(patch.paused);
+    if (typeof patch.core === "string") setCore(patch.core);
   }, []);
 
   const scaleTouched = shaderScale !== BASE_SHADER_SCALE[variant];
@@ -107,11 +178,16 @@ export function MetalStudio({ visible = true, theme = "dark" }: { visible?: bool
     variant === "circle"
       ? `  <button aria-label="Send"><ArrowUpIcon /></button>`
       : `  <button>Upgrade to Pro</button>`;
-  const snippet = `import { MetalFx } from 'metal-fx';\n\n<MetalFx ${props.join(" ")}>\n${child}\n</MetalFx>`;
+  /* v1 exposes no shader prop, so a rebuilt core ships beside the JSX as
+     the shader source to drop into a fork of the package. */
+  const coreDecl = core
+    ? `// Rebuilt fragment shader — metal-fx v1 has no shader prop yet; swap it into the package's shaders.ts\nconst metalShader = ${tpl(core)};\n\n`
+    : "";
+  const snippet = `import { MetalFx } from 'metal-fx';\n\n${coreDecl}<MetalFx ${props.join(" ")}>\n${child}\n</MetalFx>`;
 
   return (
     <div className="pg">
-      <StageBar library="Metal" prompt={{ pkg: "metal-fx", docsPath: "/metal.html", snippet }} />
+      <StageBar library="Metal" prompt={{ pkg: "metal-fx", docsPath: "/metal.html", snippet }} agent={{ libraryId: "metal", params: agentParams, labels: METAL_PARAM_LABELS, onApply: applyAgentParams }} />
       <div className="pg-stage">
         <div className="metal-stage-row">
           <label ref={searchRef} className="metal-search">
@@ -125,6 +201,15 @@ export function MetalStudio({ visible = true, theme = "dark" }: { visible?: bool
             />
           </label>
 
+          {/* Keeper: see the note above installShaderIntercept. Mounted for
+              the life of the page — not gated on `visible` — so v1's shared
+              renderer survives the real instance remounting or the library
+              being switched away and back. */}
+          <div aria-hidden="true" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", opacity: 0, pointerEvents: "none" }}>
+            <MetalFx preset="chromatic" variant="button" theme={theme} strength={0} disableGlow>
+              <span style={{ display: "block", width: 8, height: 8 }} />
+            </MetalFx>
+          </div>
           {/* key remounts the WebGL instance on variant/preset change */}
           {visible && (
           <MetalFx
@@ -170,8 +255,8 @@ export function MetalStudio({ visible = true, theme = "dark" }: { visible?: bool
           params: agentParams,
           labels: METAL_PARAM_LABELS,
           onApply: applyAgentParams,
+          core: coreWiring,
         }}
-        prompt={{ pkg: "metal-fx", docsPath: "/metal.html", snippet }}
       >
         <PgTabs label="Type" options={VARIANT_OPTIONS} value={variant} onChange={handleVariant} />
         <PgTabs label="Color" options={PRESET_OPTIONS} value={preset} onChange={setPreset} />

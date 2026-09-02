@@ -6,7 +6,7 @@ import {
   MockIconButton,
   MockSearchBar,
 } from "./examples/beam-mocks";
-import { CodeCopy } from "./examples/CodeCopy";
+import { CodeBlock } from "./examples/CodeCopy";
 import { StudioTeaser } from "./examples/StudioTeaser";
 
 /* Beam detail page — one React island rendering the whole playground grid
@@ -25,9 +25,7 @@ function CopyIcon() {
 
 function CheckIcon() {
   return (
-    <svg className="icon-check" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
+    <svg className="icon-check" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3.5 8.46889L6.26923 11.58L12.5 4.58" /></svg>
   );
 }
 
@@ -211,10 +209,7 @@ function BeamPlayground() {
         </div>
       </div>
 
-      <div className="code-block pg-snippet">
-        <pre>{snippet}</pre>
-        <CodeCopy text={snippet} label="Copy playground code" />
-      </div>
+      <CodeBlock code={snippet} label="Copy playground code" className="pg-snippet" />
     </>
   );
 }

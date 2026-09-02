@@ -138,6 +138,15 @@
     /* Design tokens — light (default) and dark                      */
     /* ============================================================ */
     :root {
+      /* Pro accents share the CTA blue (#0071fc): the nav Get Pro pill and the
+         Pro chips are tints and inks of that one hue. */
+      --pro-tint-bg: rgba(0, 113, 252, 0.10);
+      --pro-tint-bg-hover: rgba(0, 113, 252, 0.16);
+      --pro-tint-ink: #0062d6;
+      /* Inline code in prose: a chip with its own hairline (ported by value;
+         this page links no shared stylesheet). */
+      --code-chip-bg: rgba(0, 0, 0, 0.04);
+      --code-chip-ring: rgba(0, 0, 0, 0.08);
       color-scheme: light;
 
       --bg: #fdfdfd;
@@ -370,6 +379,11 @@
     }
 
     html[data-theme="dark"] {
+      --pro-tint-bg: rgba(0, 113, 252, 0.18);
+      --pro-tint-bg-hover: rgba(0, 113, 252, 0.26);
+      --pro-tint-ink: #7db4ff;
+      --code-chip-bg: rgba(255, 255, 255, 0.05);
+      --code-chip-ring: rgba(255, 255, 255, 0.09);
       color-scheme: dark;
 
       --bg: #121212;
@@ -682,7 +696,7 @@
       align-items: center;
       justify-content: center;
       height: 36px;
-      padding: 0 12px;
+      padding: 0 14px;
       border-radius: 50px;
       font-family: var(--font-sans);
       font-size: 13px;
@@ -703,8 +717,8 @@
       margin-left: 6px;
       padding: 0 6px;
       border-radius: 50px;
-      background: rgba(85, 207, 255, 0.14);
-      color: #7cd4ff;
+      background: var(--pro-tint-bg);
+      color: var(--pro-tint-ink);
       font-size: 11px;
       font-weight: 500;
       line-height: 14px;
@@ -715,6 +729,11 @@
         inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
         inset 0 0 0 1px rgba(196, 196, 196, 0.1);
     }
+
+    /* The Studio pill carries the Pro chip, whose own rounded fill reads as
+       padding — so its right side comes in to 9px against the 14px the text-only pills
+       carry on both sides. */
+    .nav-pill:has(.nav-pill-pro) { padding-right: 9px; }
     .nav-pill:hover { color: var(--text); background: rgba(0, 0, 0, 0.03); }
     html[data-theme="dark"] .nav-pill:hover { background: rgba(255, 255, 255, 0.06); }
     .nav-pill--active {
@@ -3680,15 +3699,16 @@
     .nav-get-pro {
       display: inline-flex; align-items: center; justify-content: center;
       height: 36px; padding: 0 16px; border: 0; border-radius: 50px;
-      background: rgba(0, 115, 255, 0.08); color: #0053e3;
+      background: var(--pro-tint-bg); color: var(--pro-tint-ink);
       font-family: var(--font-sans); font-size: 13px; font-weight: 500;
       text-decoration: none; white-space: nowrap; cursor: pointer;
       transition: background 150ms var(--ease-smooth-out);
       -webkit-tap-highlight-color: transparent;
     }
-    .nav-get-pro:hover { background: rgba(0, 115, 255, 0.14); }
-    html[data-theme="dark"] .nav-get-pro { background: rgba(85, 207, 255, 0.14); color: #7cd4ff; }
-    html[data-theme="dark"] .nav-get-pro:hover { background: rgba(85, 207, 255, 0.22); }
+    .nav-get-pro:hover { background: var(--pro-tint-bg-hover); }
+    /* The pill sets its own display, which outranks the UA's [hidden] rule —
+       pro-client.js hides it by attribute once a signed-in user is entitled. */
+    .nav-get-pro[hidden] { display: none; }
 
     /* ── 3-dot dropdown — exact Refine tool component ──────────── */
     :root {
@@ -4379,8 +4399,16 @@
       transition: opacity var(--acc-expand) var(--acc-ease), filter var(--acc-expand) var(--acc-ease);
     }
     .t-acc-panel-inner p { margin: 0 0 16px; padding-right: 28px; font-size: 14px; line-height: 22px; color: var(--text-muted); }
-    .t-acc-panel-inner code { font-family: var(--font-mono); font-size: 12px; line-height: 18px; padding: 1px 6px; border-radius: 6px; background: rgba(0, 0, 0, 0.04); color: var(--text); }
-    html[data-theme="dark"] .t-acc-panel-inner code { background: rgba(255, 255, 255, 0.06); }
+    .t-acc-panel-inner code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 18px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: var(--code-chip-bg);
+      box-shadow: inset 0 0 0 1px var(--code-chip-ring);
+      color: var(--text);
+    }
     .t-acc-panel-inner a { color: var(--text); text-decoration: none; }
     .t-acc-panel-inner a:hover { text-decoration: underline; text-underline-offset: 2px; }
     @media (prefers-reduced-motion: reduce) {
@@ -4556,6 +4584,12 @@
     }
     .settings-label { font-size: 13px; color: var(--text); }
     .settings-value { font-size: 13px; color: var(--text-muted, #6c6c6c); }
+    /* A row whose label needs a sentence of explanation under it. */
+    .settings-row:has(.settings-sub) { align-items: flex-start; padding: 12px 0; }
+    .settings-sub {
+      display: block; margin-top: 3px; max-width: 52ch;
+      font-size: 12px; line-height: 1.5; color: var(--text-muted, #6c6c6c);
+    }
 
     .account-note { margin: 16px 0 0; font-size: 13px; line-height: 1.4; }
     .account-note[data-kind="ok"] { color: #16a34a; }
@@ -4734,7 +4768,7 @@
             <span class="brand-word"><span class="brand-word-strong">Libraries</span><span class="brand-word-dim">.dev</span></span>
           </a>
           <nav class="site-nav-menu" aria-label="Primary">
-            <a class="nav-pill" href="/#components">Libraries</a>
+            <a class="nav-pill" href="/beam.html">Libraries</a>
             <a class="nav-pill" href="/how-to-use.html">How to use</a>
             <a class="nav-pill" href="/studio.html">Studio <span class="nav-pill-pro">Pro</span></a>
           </nav>
@@ -4757,7 +4791,7 @@
           </a>
           <div class="pm-anchor" id="more-anchor">
             <button type="button" class="icon-btn" id="more-btn" aria-label="More" aria-haspopup="menu" aria-expanded="false">
-              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block">
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 8C6.66667 7.26362 7.26362 6.66667 8 6.66667C8.73638 6.66667 9.33333 7.26362 9.33333 8C9.33333 8.73638 8.73638 9.33333 8 9.33333C7.26362 9.33333 6.66667 8.73638 6.66667 8Z" fill="currentColor"/>
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 3.33333C6.66667 2.59695 7.26362 2 8 2C8.73638 2 9.33333 2.59695 9.33333 3.33333C9.33333 4.06971 8.73638 4.66667 8 4.66667C7.26362 4.66667 6.66667 4.06971 6.66667 3.33333Z" fill="currentColor"/>
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 12.6667C6.66667 11.9303 7.26362 11.3333 8 11.3333C8.73638 11.3333 9.33333 11.9303 9.33333 12.6667C9.33333 13.403 8.73638 14 8 14C7.26362 14 6.66667 13.403 6.66667 12.6667Z" fill="currentColor"/>
@@ -4792,9 +4826,9 @@
       <div class="mobile-menu-backdrop" id="mobile-menu-backdrop"></div>
       <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile">
         <ul class="mobile-menu-list">
-          <li><a class="mobile-menu-link mobile-menu-link--1" href="/#components">Libraries</a></li>
-          <li><a class="mobile-menu-link mobile-menu-link--2" href="/studio.html">Studio</a></li>
-          <li><a class="mobile-menu-link mobile-menu-link--3" href="/how-to-use.html">How to use</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--1" href="/beam.html">Libraries</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--2" href="/how-to-use.html">How to use</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--3" href="/studio.html">Studio</a></li>
           <li><a class="mobile-menu-link mobile-menu-link--4 mobile-menu-link--pro" href="/pro.html">Get Pro</a></li>
         </ul>
         <a class="mobile-menu-cta" id="mobile-signin" href="/pro.html">Sign in</a>
@@ -4852,6 +4886,13 @@
             <div class="settings-row">
               <span class="settings-label">Email</span>
               <span class="settings-value" id="acc-email"></span>
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">
+                Studio agent analytics
+                <span class="settings-sub" id="acc-analytics-sub">Your Studio agent requests are stored anonymised, with personal details removed, to improve the agent. They carry no identifier and are deleted after three months.</span>
+              </span>
+              <button type="button" class="row-btn" id="acc-analytics">Turn off</button>
             </div>
             <div class="settings-row">
               <span class="settings-label">Log out of all devices</span>
@@ -4929,7 +4970,7 @@
                   <code id="acc-cmd-skill">npx libraries-pro skill</code>
                   <button type="button" class="card-copy" aria-label="Copy Pro skill install command" data-copy-target="#acc-cmd-skill">
                     <svg class="icon-copy" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
-                    <svg class="icon-check" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                    <svg class="icon-check" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.46889L6.26923 11.58L12.5 4.58" /></svg>
                   </button>
                 </div>
                 <p class="skill-section-note">Installs the Libraries Pro agent skill (all five libraries, React, TypeScript) into <code>~/.claude/skills/libraries-pro/</code>.</p>
@@ -4939,7 +4980,7 @@
                   <code id="acc-cmd-recipes">npx libraries-pro add --pro</code>
                   <button type="button" class="card-copy" aria-label="Copy Pro recipes install command" data-copy-target="#acc-cmd-recipes">
                     <svg class="icon-copy" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
-                    <svg class="icon-check" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                    <svg class="icon-check" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.46889L6.26923 11.58L12.5 4.58" /></svg>
                   </button>
                 </div>
                 <p class="skill-section-note">Copies every Pro preset and recipe straight into your project's <code>./libraries/</code>.</p>
@@ -5335,6 +5376,30 @@
       el("acc-adjust").addEventListener("click", function (e) { e.preventDefault(); portal(); });
       el("acc-cancel").addEventListener("click", portal);
       el("acc-portal").addEventListener("click", portal);
+
+      // Studio agent analytics opt-out. Kept in this browser (no account
+      // field): the record it governs carries no identifier, so there is
+      // nothing server-side to attach the choice to. The Studio reads this
+      // same key when it sends a turn (sites/home/src/studio/controls.tsx).
+      var ANALYTICS_KEY = "ldev:studio:agent-analytics";
+      function analyticsOn() {
+        try { return localStorage.getItem(ANALYTICS_KEY) !== "off"; } catch (e) { return true; }
+      }
+      function paintAnalytics() {
+        var on = analyticsOn();
+        el("acc-analytics").textContent = on ? "Turn off" : "Turn on";
+        el("acc-analytics-sub").textContent = on
+          ? "Your Studio agent requests are stored anonymised, with personal details removed, to improve the agent. They carry no identifier and are deleted after three months."
+          : "Your Studio agent requests are not stored. Only this browser remembers the choice.";
+      }
+      paintAnalytics();
+      el("acc-analytics").addEventListener("click", function () {
+        try {
+          if (analyticsOn()) localStorage.setItem(ANALYTICS_KEY, "off");
+          else localStorage.removeItem(ANALYTICS_KEY);
+        } catch (e) { /* private mode — nothing to persist */ }
+        paintAnalytics();
+      });
 
       el("acc-logout-all").addEventListener("click", function () {
         TP.logout(true).then(function () { location.href = "/"; });

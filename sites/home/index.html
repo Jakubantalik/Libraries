@@ -417,30 +417,56 @@
     }
     /* Fill and shadow come from the gallery card surface in site.css. */
     .howto-step {
-      display: flex; flex-direction: column; gap: 24px; min-width: 0;
+      display: flex; flex-direction: column; gap: 6px; min-width: 0;
       padding: 32px; border-radius: 24px;
     }
     .howto-step > * { position: relative; z-index: 2; }
-    .howto-step-meta { display: flex; align-items: center; gap: 10px; }
+    /* Badge above the title, matching the How to use cards: the halo needs
+       room, so align-items keeps the badge at its own width rather than
+       stretching it across the column. */
+    .howto-step-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+    }
     .howto-step-num {
-      flex: none; width: 28px; height: 28px; border-radius: 50px;
+      position: relative;
+      /* Own stacking context, or the halo's z-index -1 sinks behind the card. */
+      isolation: isolate;
+      flex: none; width: 21px; height: 21px; border-radius: 50px;
       display: inline-flex; align-items: center; justify-content: center;
-      background: #3e3e3e;
+      background: #0071fc;
       box-shadow:
         0 1px 3px 0 rgba(0, 0, 0, 0.04),
         inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
-        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
-        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
-        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
-      color: rgba(237, 237, 237, 0.8);
-      font-size: 12px; line-height: 13px; font-weight: 500;
+        inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      font-size: 11px; line-height: 12px; font-weight: 500;
+    }
+    /* The halo behind the disc (Figma 1418:38284): the same blue at
+       20 percent, reaching past each edge in the design's 3:2 ratio. */
+    .howto-step-num::before {
+      content: "";
+      position: absolute;
+      inset: -5.25px;
+      border-radius: 50px;
+      background: #0071fc;
+      opacity: 0.2;
+      z-index: -1;
     }
     .howto-step-title { margin: 0; font-size: 15px; font-weight: 500; line-height: 20px; color: #ededed; }
     .howto-step-text { margin: 0; font-size: 14px; line-height: 22px; color: var(--text-muted); overflow-wrap: anywhere; }
     .howto-step-text code {
-      font-family: var(--font-mono); font-size: 12px; line-height: 18px;
-      padding: 1px 6px; border-radius: 6px;
-      background: rgba(255, 255, 255, 0.06); color: var(--text); white-space: nowrap;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 18px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: var(--code-chip-bg);
+      box-shadow: inset 0 0 0 1px var(--code-chip-ring);
+      color: var(--text);
     }
     .howto-step-text a { color: var(--text); text-decoration: none; }
     .howto-step-text a:hover { text-decoration: underline; text-underline-offset: 2px; }
@@ -484,7 +510,16 @@
       transition: opacity var(--acc-expand) var(--acc-ease), filter var(--acc-expand) var(--acc-ease);
     }
     .t-acc-panel-inner p { margin: 0 0 16px; padding-right: 28px; font-size: 14px; line-height: 22px; color: var(--text-muted); }
-    .t-acc-panel-inner code { font-family: var(--font-mono); font-size: 12px; line-height: 18px; padding: 1px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.06); color: var(--text); }
+    .t-acc-panel-inner code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 18px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: var(--code-chip-bg);
+      box-shadow: inset 0 0 0 1px var(--code-chip-ring);
+      color: var(--text);
+    }
     .t-acc-panel-inner a { color: var(--text); text-decoration: none; }
     .t-acc-panel-inner a:hover { text-decoration: underline; text-underline-offset: 2px; }
     @media (prefers-reduced-motion: reduce) {
@@ -500,20 +535,18 @@
       line-height: 13px;
       font-weight: 500;
     }
-    .skill-cta-row .skill-btn--primary {
-      background: #e9e9e9;
-      color: #17181c;
-      padding: 0 16px;
-      border-radius: 26px;
-      box-shadow: none;
-    }
-    .skill-cta-row .skill-btn--primary:hover { background: #ffffff; }
-    .skill-cta-row .skill-btn--primary:active { background: #dcdcdc; }
-    .skill-cta-row .skill-btn--secondary {
-      background: #2a2a2a;
-      color: #ffffff;
+    /* Figma 1292:4277 Button/Small/Select/Primary/Token: both pills share
+       the body; Browse wears the grey token surface, Get Pro access the blue.
+       The class is doubled so these outrank site.css's theme-scoped
+       .skill-btn--* rules, which carry an attribute selector. */
+    .skill-cta-row .skill-btn.skill-btn--primary,
+    .skill-cta-row .skill-btn.skill-btn--secondary {
       padding: 0 12px;
       border-radius: 24px;
+      color: #ffffff;
+    }
+    .skill-cta-row .skill-btn.skill-btn--primary {
+      background: #2a2a2a;
       box-shadow:
         0 1px 3px 0 rgba(0, 0, 0, 0.04),
         inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
@@ -521,8 +554,18 @@
         inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
         inset 0 0 0 1px rgba(196, 196, 196, 0.1);
     }
-    .skill-cta-row .skill-btn--secondary:hover { background: #323232; }
-    .skill-cta-row .skill-btn--secondary:active { background: #262626; }
+    .skill-cta-row .skill-btn.skill-btn--primary:hover { background: #323232; }
+    .skill-cta-row .skill-btn.skill-btn--primary:active { background: #262626; }
+    .skill-cta-row .skill-btn.skill-btn--secondary {
+      background: #0071fc;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+    }
+    .skill-cta-row .skill-btn.skill-btn--secondary:hover { background: #1a7dff; }
+    .skill-cta-row .skill-btn.skill-btn--secondary:active { background: #0063e0; }
   </style>
 </head>
 <body>
@@ -540,7 +583,7 @@
             <span class="brand-word"><span class="brand-word-strong">Libraries</span><span class="brand-word-dim">.dev</span></span>
           </a>
           <nav class="site-nav-menu" aria-label="Primary">
-            <a class="nav-pill nav-pill--active" href="/#components">Libraries</a>
+            <a class="nav-pill" href="/beam.html">Libraries</a>
             <a class="nav-pill" href="/how-to-use.html">How to use</a>
             <a class="nav-pill" href="/studio.html">Studio <span class="nav-pill-pro">Pro</span></a>
           </nav>
@@ -563,7 +606,7 @@
           </a>
           <div class="pm-anchor" id="more-anchor">
             <button type="button" class="icon-btn" id="more-btn" aria-label="More" aria-haspopup="menu" aria-expanded="false">
-              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block">
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 8C6.66667 7.26362 7.26362 6.66667 8 6.66667C8.73638 6.66667 9.33333 7.26362 9.33333 8C9.33333 8.73638 8.73638 9.33333 8 9.33333C7.26362 9.33333 6.66667 8.73638 6.66667 8Z" fill="currentColor"/>
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 3.33333C6.66667 2.59695 7.26362 2 8 2C8.73638 2 9.33333 2.59695 9.33333 3.33333C9.33333 4.06971 8.73638 4.66667 8 4.66667C7.26362 4.66667 6.66667 4.06971 6.66667 3.33333Z" fill="currentColor"/>
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 12.6667C6.66667 11.9303 7.26362 11.3333 8 11.3333C8.73638 11.3333 9.33333 11.9303 9.33333 12.6667C9.33333 13.403 8.73638 14 8 14C7.26362 14 6.66667 13.403 6.66667 12.6667Z" fill="currentColor"/>
@@ -598,9 +641,9 @@
       <div class="mobile-menu-backdrop" id="mobile-menu-backdrop"></div>
       <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile">
         <ul class="mobile-menu-list">
-          <li><a class="mobile-menu-link mobile-menu-link--1" href="/#components">Libraries</a></li>
-          <li><a class="mobile-menu-link mobile-menu-link--2" href="/studio.html">Studio</a></li>
-          <li><a class="mobile-menu-link mobile-menu-link--3" href="/how-to-use.html">How to use</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--1" href="/beam.html">Libraries</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--2" href="/how-to-use.html">How to use</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--3" href="/studio.html">Studio</a></li>
           <li><a class="mobile-menu-link mobile-menu-link--4 mobile-menu-link--pro" href="/pro.html">Get Pro</a></li>
         </ul>
         <a class="mobile-menu-cta" id="mobile-signin" href="/pro.html">Sign in</a>
@@ -866,7 +909,7 @@
             <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
           </button>
           <div class="t-acc-panel"><div class="t-acc-panel-inner">
-            <p>Officially the packages target React. Community ports exist (Expo and React Native for the orbs, Svelte and Vue ports of Beam and Gooey), and SwiftUI plus React Native ports for Beam and Orb live in the main repository.</p>
+            <p>Every package targets React. Beam and Orb also ship SwiftUI and React Native versions. Support for the remaining libraries is coming soon.</p>
           </div></div>
         </div>
       </div>

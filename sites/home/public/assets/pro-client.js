@@ -53,6 +53,9 @@
       localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify({
         a: !!state.authenticated,
         p: !!state.pro,
+        // The avatar is the email's initial, so the optimistic paint needs it
+        // too — otherwise a returning user sees "?" until /me answers.
+        e: state.email || null,
         t: Date.now(),
       }));
     } catch (e) {}
@@ -83,6 +86,7 @@
     refreshGeo: refreshGeo,
     get ppp() { return state.ppp; },
     get team() { return team; },
+    get presets() { return presets; },
   };
 
   // ── Purchasing-power parity ───────────────────────────────────────────────────
@@ -197,7 +201,8 @@
     }
     // 3-dot "More" button becomes the user's avatar while signed in
     // (Figma 1425:38996) — the menu behind it stays the same and already
-    // reads Account / Sign out / Support in this state.
+    // reads Account / Sign out / Support in this state. There is no separate
+    // Account button in the nav; this avatar is the way in.
     var moreBtn = document.getElementById("more-btn");
     if (moreBtn) {
       var initial = moreBtn.querySelector(".nav-avatar-initial");
@@ -211,33 +216,23 @@
         initial.textContent = state.email.charAt(0);
         moreBtn.classList.add("icon-btn--avatar");
         moreBtn.setAttribute("aria-label", "Account menu");
+        moreBtn.setAttribute("title", state.email);
       } else {
         moreBtn.classList.remove("icon-btn--avatar");
         moreBtn.setAttribute("aria-label", "More");
+        moreBtn.removeAttribute("title");
         if (initial) initial.remove();
       }
     }
-    // Pro-page nav pill (replaces "Get Pro" there): Sign in -> Account.
-    var navSigninLabel = document.querySelector("#nav-signin-btn .pill-label");
-    if (navSigninLabel) {
-      navSigninLabel.textContent = state.authenticated ? "Account" : "Sign in";
-    }
+    // Pro-page "Sign in" pill: the avatar carries account access once signed
+    // in, so the pill only exists for visitors.
+    var navSignin = document.getElementById("nav-signin-btn");
+    if (navSignin) navSignin.hidden = state.authenticated;
     // "Get Pro" nav pill (every page except /pro): once the visitor is signed
-    // in AND entitled there is nothing left to sell, so the pill becomes a
-    // neutral "Account" link. data-state drives the styling swap.
+    // in AND entitled there is nothing left to sell, so the pill goes away —
+    // the avatar beside it is the account link.
     var getPro = document.querySelector(".nav-get-pro");
-    if (getPro) {
-      var entitled = state.authenticated && state.pro;
-      var getProLabel = getPro.querySelector(".nav-get-pro-label");
-      if (getProLabel) {
-        getProLabel.innerHTML = entitled
-          ? "Account"
-          : '<span class="nav-get-pro-word">Get </span>Pro';
-      }
-      getPro.setAttribute("href", entitled ? "account.html" : "/pro.html");
-      getPro.setAttribute("data-state", entitled ? "account" : "get-pro");
-      getPro.setAttribute("aria-label", entitled ? "Account" : "Get Libraries Pro");
-    }
+    if (getPro) getPro.hidden = state.authenticated && state.pro;
     // Same swap in the mobile menu.
     var mobilePro = document.querySelector(".mobile-menu-link--pro");
     if (mobilePro) {
@@ -312,6 +307,13 @@
   }
 
   // ── Team API ────────────────────────────────────────────────────────────────
+  // Studio presets on the account: one preset = { name, values: { dark, light } }.
+  var presets = {
+    list: function (library) { return apiJSON("/presets?library=" + encodeURIComponent(library)); },
+    save: function (library, name, values) { return apiJSON("/presets", "POST", { library: library, name: name, values: values }); },
+    remove: function (library, name) { return apiJSON("/presets/delete", "POST", { library: library, name: name }); },
+  };
+
   var team = {
     get: function () { return apiJSON("/team"); },
     invite: function (email, role) { return apiJSON("/team/invite", "POST", { email: email, role: role }); },
@@ -730,7 +732,7 @@
     if (navSignin) {
       navSignin.addEventListener("click", function (e) {
         e.preventDefault();
-        // Label reads "Account" once signed in — go there, don't re-prompt.
+        // Hidden once signed in; guard anyway so a stale click never re-prompts.
         if (state.authenticated) location.href = "account.html";
         else signIn();
       });
@@ -762,6 +764,7 @@
     if (cached) {
       state.authenticated = !!cached.a;
       state.pro = !!cached.p;
+      state.email = typeof cached.e === "string" ? cached.e : null;
       paintAuth();
       // Page gates (detail paywall, index badges) listen for pro:me — without
       // this they stayed locked until /me answered, so a returning Pro user saw

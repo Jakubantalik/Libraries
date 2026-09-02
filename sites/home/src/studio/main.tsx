@@ -41,6 +41,11 @@ declare global {
       signIn?: () => void;
       refresh?: () => void;
       logout?: (allDevices?: boolean) => Promise<unknown>;
+      presets?: {
+        list: (library: string) => Promise<{ presets?: Array<{ name: string; values: unknown; updated_at: number }>; error?: string }>;
+        save: (library: string, name: string, values: unknown) => Promise<{ ok?: boolean; error?: string }>;
+        remove: (library: string, name: string) => Promise<{ ok?: boolean; error?: string }>;
+      };
     };
   }
 }
@@ -230,8 +235,9 @@ function TopBar({ email, pro }: { email: string | null; pro: boolean }) {
           Studio <span className="st-top-chip">Pro</span>
         </span>
       </div>
+      {/* The address itself belongs on the account page — here the avatar
+          (and its Account item) is the identity. */}
       <div className="st-top-right">
-        {email && <span className="st-top-email">{email}</span>}
         {/* TEMP: signed-out fallback initial so the avatar is visible for
             testing before the auth Worker is deployed. */}
         <AvatarMenu email={email ?? "j"} />
@@ -244,7 +250,7 @@ const LIBS = [
   { id: "beam", label: "Border beam", icon: "/assets/icons/figma-beam.png" },
   { id: "orb", label: "Thinking orbs", icon: "/assets/icons/figma-orbs.svg" },
   { id: "gooey", label: "Gooey", icon: "/assets/icons/figma-gooey.svg" },
-  { id: "metal", label: "Metal", icon: "/assets/icons/figma-metal.svg" },
+  { id: "metal", label: "Metal", icon: "/assets/icons/figma-metal.png" },
   { id: "image", label: "Image", icon: "/assets/icons/figma-image.png" },
 ] as const;
 
@@ -307,14 +313,52 @@ function Workbench({ theme }: { theme: StudioTheme }) {
 
 /* ── Gate screens ──────────────────────────────────────────────── */
 
+/* The loading state is the workbench itself, unpainted: same sidebar, stage
+   bar, stage, controls panel and snippet, in the same grid — so the layout
+   does not jump when the real thing arrives. Structure is shared with the
+   pre-React markup in app.html; keep the two in step. */
 function Skeleton() {
   return (
-    <div className="st-gate">
-      <div className="st-skeleton" aria-hidden="true">
-        <span className="sk-line" />
-        <span className="sk-line" />
-        <span className="sk-line" />
-        <span className="sk-block" />
+    <div className="st-body st-skeleton" aria-hidden="true">
+      <div className="st-side">
+        <span className="sk sk-side-label" />
+        {LIBS.map((l) => (
+          <span className="sk sk-lib" key={l.id} />
+        ))}
+      </div>
+      <div className="st-main">
+        <div className="pg">
+          <div className="st-stage-bar" data-view="preview">
+            <span className="sk sk-tabs" />
+            <span className="st-stage-actions">
+              <span className="sk sk-preset" />
+              <span className="sk sk-icon-sm" />
+              <span className="sk sk-prompt" />
+            </span>
+          </div>
+          <div className="pg-stage" />
+          <div className="pg-controls">
+            <div className="st-panel-head">
+              <span className="sk sk-tabs" />
+              <span className="sk sk-icon" />
+            </div>
+            <div className="st-panel-body">
+              {[3, 4, 3].map((rows, i) => (
+                <div className="sk-section" key={i}>
+                  <span className="sk sk-label" />
+                  {Array.from({ length: rows }, (_, r) => (
+                    <span className="sk sk-field" key={r} />
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="code-block pg-snippet">
+            <span className="sk sk-code" />
+            <span className="sk sk-code" />
+            <span className="sk sk-code" />
+          </div>
+        </div>
       </div>
     </div>
   );

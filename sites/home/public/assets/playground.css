@@ -89,6 +89,21 @@
 /* Getting-started rows sit at the same near-white as the library rows. */
 .docs-link--muted { color: #ededed; }
 .docs-link:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
+/* Light rows (Figma 1433:39152): #4b4b4b labels, #111 on the active row,
+   which lifts to white on the 0 1px 3px black-4% drop and the three-part
+   inset ring; hover is a black-4% wash. */
+html[data-theme="light"] .docs-link { color: #4b4b4b; }
+html[data-theme="light"] .docs-link--muted { color: #4b4b4b; }
+html[data-theme="light"] .docs-link:hover { background: rgba(0, 0, 0, 0.04); }
+html[data-theme="light"] .docs-link.is-active {
+  background: #ffffff;
+  color: #111111;
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.04),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+    inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+}
 /* Icon card: the Figma export used verbatim (fill, rim, glyph and its
    soft 0 1px 1.5px drop all baked in). The 24px slot just positions it;
    the canvas is larger than the card (filter margins, and the beam's
@@ -110,16 +125,18 @@
   left: -3px;
   top: -2px;
 }
-/* Metal's export is the 46px card alone (no canvas padding) and carries a
-   baked background, so it fills the slot squarely and takes the card's own
-   radius to cut the corners the export left opaque. */
-.docs-link-icon[src*="figma-metal"] {
-  width: 24px;
-  height: 24px;
-  left: 0;
-  top: 0;
-  border-radius: 6px;
-}
+/* Light theme swaps in the light-baked cards (#f5f5f5 body, black-6%
+   ring) from the same Figma frame - both surfaces, one rule each. */
+html[data-theme="light"] .docs-link-icon[src*="figma-beam"],
+html[data-theme="light"] .st-lib-ico img[src*="figma-beam"] { content: url("/assets/icons/figma-beam-light.png"); }
+html[data-theme="light"] .docs-link-icon[src*="figma-orbs"],
+html[data-theme="light"] .st-lib-ico img[src*="figma-orbs"] { content: url("/assets/icons/figma-orbs-light.svg"); }
+html[data-theme="light"] .docs-link-icon[src*="figma-gooey"],
+html[data-theme="light"] .st-lib-ico img[src*="figma-gooey"] { content: url("/assets/icons/figma-gooey-light.svg"); }
+html[data-theme="light"] .docs-link-icon[src*="figma-metal"],
+html[data-theme="light"] .st-lib-ico img[src*="figma-metal"] { content: url("/assets/icons/figma-metal-light.png"); }
+html[data-theme="light"] .docs-link-icon[src*="figma-image"],
+html[data-theme="light"] .st-lib-ico img[src*="figma-image"] { content: url("/assets/icons/figma-image-light.png"); }
 
 
 .docs-main { position: relative; min-width: 0; }
@@ -217,10 +234,10 @@ html[data-theme="dark"] .detail-tabs.proto-modal-tabs {
   height: 30px;
   padding: 0 12px;
   border-radius: 36px;
-  color: var(--pg-label);
+  color: var(--pg-tabs-text);
 }
-.detail-tabs .proto-modal-tab:hover,
-.detail-tabs .proto-modal-tab[aria-selected="true"] { color: var(--pg-title); }
+.detail-tabs .proto-modal-tab:hover { color: var(--pg-tabs-text-hover); }
+.detail-tabs .proto-modal-tab[aria-selected="true"] { color: var(--pg-tabs-text-active); }
 
 /* The two head actions sit together, opposite the tabs. */
 .detail-head-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -466,6 +483,250 @@ html[data-theme="light"] .detail-prompt {
 html[data-theme="light"] .detail-prompt:hover { background: #fafafa; }
 html[data-theme="light"] .detail-prompt:active { background: #f1f1f1; }
 .detail-prompt-label { display: inline-block; }
+
+/* Install & Usage: the platform switch is the same pill bar as the view
+   tabs, and a caveat under an install block reads as a muted note. */
+/* Install & Usage, per Figma 1433:39150. The platform row is plain text
+   rather than a pill bar — the pills already carry Preview / Install &
+   Usage above, and a second set would read as the same control twice. */
+.st-platform-tabs { display: flex; align-items: center; gap: 21px; align-self: flex-start; }
+.st-platform-tab,
+html[data-theme="dark"] .st-platform-tab,
+html[data-theme="light"] .st-platform-tab {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 14px;
+  color: var(--pg-title);
+  opacity: 0.5;
+  cursor: pointer;
+  transition: opacity 140ms;
+}
+.st-platform-tab:hover { opacity: 0.75; }
+.st-platform-tab[data-active="true"],
+html[data-theme="dark"] .st-platform-tab[data-active="true"],
+html[data-theme="light"] .st-platform-tab[data-active="true"] { opacity: 1; }
+.st-code-note {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--pg-label);
+}
+
+/* Install & Usage: each block wears a plain section title over a compact
+   code surface — Figma 1433:39150. The surface is tighter and darker than
+   the detail pages' .code-block, so the overrides are scoped to the
+   Studio's stage panel and the shared rules stay untouched. */
+.st-code-group { display: flex; flex-direction: column; gap: 10px; }
+.st-code-title {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 14px;
+  color: var(--pg-title);
+}
+/* A step off the panel's card: lighter in dark (#171717 -> #1f1f1f), darker
+   in light, since near-white leaves no headroom to go lighter.
+
+   The light step is smaller than the dark one on purpose. The same
+   numerical difference is far more visible near white than near black, so
+   matching dark's 8 levels literally would make the block read as a heavy
+   grey slab; 6 levels and a 2% hairline (rather than 4%) land at the same
+   quietness as dark's 8 levels and 2% white. */
+.st-stage-panel .code-block,
+html[data-theme="dark"] .st-stage-panel .code-block {
+  border-radius: 10px;
+  background: #1f1f1f;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+html[data-theme="light"] .st-stage-panel .code-block {
+  background: #f3f3f4;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.02);
+}
+.st-stage-panel .code-block pre {
+  /* Right padding clears the copy button rather than running under it.
+     9.5px vertical puts a one-line block at 41px — the drawn height less
+     the 3px it was reading heavy by. */
+  padding: 9.5px 48px 9.5px 12px;
+  font-size: 14px;
+  line-height: 22.2px;
+  color: #ffffff;
+}
+/* The copy button floats over the scrolling code here, so the last 40px —
+   the glyph and its inset — are held fully transparent and the ramp runs
+   before them. Code fades out as it reaches the button rather than
+   colliding with it. */
+.st-stage-panel .code-block pre {
+  --code-fade: 56px;
+  --code-fade-end: 40px;
+}
+html[data-theme="light"] .st-stage-panel .code-block pre { color: var(--pg-title); }
+/* 4px inset on a 32px button puts the 16px glyph exactly 12px from the
+   block's top-right corner, as drawn, while keeping a real hit target. */
+.st-stage-panel .code-block .code-copy { top: 4px; right: 4px; }
+.st-stage-panel .code-block .code-copy svg { width: 16px; height: 16px; }
+/* Right-aligned so the pill grows leftward instead of overhanging the
+   block's corner, as on the detail pages. */
+.st-stage-panel .code-block .code-copy .code-copy-tooltip {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+/* Stage-bar action group: Presets ▾ · reset · Copy prompt, all 32px.
+   Figma 1432:39116 / 1432:39061 — both are ghosts at 60px radius: no fill
+   at rest, white-4% on hover and while pressed/open. The label rests at
+   #b8b8b8 with the icons and lifts to #fbfbfb on hover/open. 16px icons.
+   Presets pads 12 left / 8 right around its chevron; reset is a square
+   with 8px sides. Disabled drops the whole button to 60%.
+   Copy prompt keeps the filled pill so the one real action reads first. */
+.st-stage-actions { display: flex; align-items: center; gap: 4px; }
+.st-stage-actions .detail-prompt:not(.st-preset-btn) { margin-left: 4px; }
+.st-preset-btn,
+html[data-theme="dark"] .st-preset-btn,
+html[data-theme="light"] .st-preset-btn,
+.st-reset-btn,
+html[data-theme="dark"] .st-reset-btn {
+  height: 32px;
+  border: 0;
+  border-radius: 60px;
+  background: transparent;
+  box-shadow: none;
+  color: #b8b8b8;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 16px;
+  transition: background 140ms, color 140ms, opacity 140ms;
+}
+.st-preset-btn { gap: 4px; padding: 6px 8px 6px 12px; }
+.st-reset-btn { position: relative; width: 32px; padding: 6px 8px; }
+/* Theme-prefixed so these outrank the theme-scoped rest rules above. */
+.st-preset-btn:hover,
+.st-preset-btn[aria-expanded="true"],
+.st-preset-btn:active,
+.st-reset-btn:hover,
+.st-reset-btn:active,
+html[data-theme="dark"] .st-preset-btn:hover,
+html[data-theme="dark"] .st-preset-btn[aria-expanded="true"],
+html[data-theme="dark"] .st-preset-btn:active,
+html[data-theme="dark"] .st-reset-btn:hover,
+html[data-theme="dark"] .st-reset-btn:active {
+  background: rgba(255, 255, 255, 0.04);
+  color: #fbfbfb;
+}
+.st-preset-btn:disabled,
+.st-reset-btn:disabled { background: transparent; opacity: 0.6; cursor: default; }
+/* Light theme keeps dark's hierarchy: the filled Copy prompt pill carries
+   the full ink, the ghosts rest one step down on the control-text token
+   (dark rests them at #b8b8b8, its control text) and only reach the full
+   ink on hover, so the row reads as one primary and two secondaries. */
+html[data-theme="light"] .st-preset-btn,
+html[data-theme="light"] .st-reset-btn { color: var(--pg-control-text); }
+html[data-theme="light"] .st-preset-btn:hover,
+html[data-theme="light"] .st-preset-btn[aria-expanded="true"],
+html[data-theme="light"] .st-preset-btn:active,
+html[data-theme="light"] .st-reset-btn:hover,
+html[data-theme="light"] .st-reset-btn:active {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--pg-title);
+}
+/* Both glyphs are the frame's own 16px icons and take the button's own
+   color, so they rest and lift with the label. */
+.st-preset-chev { flex: none; width: 16px; height: 16px; color: currentColor; }
+.st-reset-btn svg,
+.st-reset-btn:hover svg { width: 16px; height: 16px; fill: none; color: currentColor; }
+@media (hover: hover) {
+  .st-reset-btn:hover .card-copy-tooltip,
+  .st-reset-btn:focus-visible .card-copy-tooltip {
+    opacity: 1;
+    visibility: visible;
+    filter: blur(0);
+    transition:
+      opacity 150ms cubic-bezier(0.22, 1, 0.36, 1) 50ms,
+      filter 150ms cubic-bezier(0.22, 1, 0.36, 1) 50ms,
+      visibility 0s linear 50ms;
+  }
+}
+/* Preset menu: the nav's tl-menu, with a save form under the list. */
+.st-preset-menu { width: 240px; }
+.st-preset-row .tl-menu-item-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Empty presets menu (Figma 1432:39119): centred, 8px between the two
+   lines, #fbfbfb 13px headline over a #b1b1b1 12px explainer. */
+.st-preset-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px 10px;
+  text-align: center;
+}
+.st-preset-empty-title,
+.st-preset-empty-sub {
+  margin: 0;
+  font-family: var(--font-sans);
+  line-height: 16px;
+}
+.st-preset-empty-title { font-size: 13px; font-weight: 500; color: #fbfbfb; }
+.st-preset-empty-sub { font-size: 12px; font-weight: 400; color: #b1b1b1; }
+html[data-theme="light"] .st-preset-empty-title { color: var(--pg-title); }
+html[data-theme="light"] .st-preset-empty-sub { color: var(--pg-label); }
+.st-preset-menu .st-preset-remove {
+  flex: none; width: 20px; height: 20px; border: 0; border-radius: 6px; padding: 0;
+  background: transparent; color: var(--text-muted); font-size: 14px; line-height: 1; cursor: pointer;
+}
+.st-preset-menu .st-preset-remove:hover { color: var(--text); background: var(--pg-control-bg-hover); }
+.st-preset-form { display: flex; flex-direction: column; gap: 6px; padding: 4px 2px 2px; }
+.st-preset-input {
+  height: 32px; padding: 0 10px; border: 0; border-radius: 8px;
+  background: var(--pg-control-bg); color: var(--pg-title);
+  font-family: var(--font-sans); font-size: 13px; outline: none;
+}
+.st-preset-input::placeholder { color: var(--pg-label); }
+.st-preset-input:focus-visible { box-shadow: 0 0 0 2px var(--text-muted); }
+/* Save — Figma 1418:38191: 32px pill on white-6%, lifted by a 1px inner
+   hairline and a top highlight, hover/active at white-10%, disabled at
+   50%. Same family as the panel's material pills. */
+.st-preset-save {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 36px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fbfbfb;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow:
+    0 1px 1px 0 rgba(0, 0, 0, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  transition: background 140ms;
+}
+.st-preset-save:hover,
+.st-preset-save:active { background: rgba(255, 255, 255, 0.1); }
+.st-preset-save:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
+.st-preset-save:disabled { opacity: 0.5; cursor: default; pointer-events: none; }
+html[data-theme="light"] .st-preset-save {
+  background: var(--pg-control-active-bg);
+  color: var(--pg-control-active-text);
+  box-shadow: var(--pg-control-active-shadow);
+}
+html[data-theme="light"] .st-preset-save:hover,
+html[data-theme="light"] .st-preset-save:active { background: #fafafa; }
 /* Leading icon, swapping copy -> check on the same cross-blur the code
    snippets' copy button uses (.card-copy in site.css). The two glyphs
    stack in one 16px slot so the pill's width never shifts. */
@@ -474,7 +735,8 @@ html[data-theme="light"] .detail-prompt:active { background: #f1f1f1; }
   flex: none;
   width: 16px;
   height: 16px;
-  margin-right: 6px;
+  /* Figma 1419:38547: 8px between the copy-03 glyph and the label. */
+  margin-right: 8px;
 }
 .detail-prompt-ico svg {
   position: absolute;
@@ -685,8 +947,13 @@ html[data-theme="dark"] .pg-stage { background: #171717; }
   --pg-tabs-ring: none;
   --pg-tabs-pill-bg: #ffffff;
   --pg-tabs-pill-shadow:
-    0 1px 3px 0 rgba(0, 0, 0, 0.06),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+    0 1px 3px 0 rgba(0, 0, 0, 0.04),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.1),
+    inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+  --pg-tabs-text: #828282;
+  --pg-tabs-text-hover: #2a2a2a;
+  --pg-tabs-text-active: #111111;
 }
 html[data-theme="dark"] {
   --pg-panel-bg: #1b1b1b;
@@ -721,6 +988,9 @@ html[data-theme="dark"] {
   --pg-tabs-pill-shadow:
     0 1px 1px 0 rgba(0, 0, 0, 0.12),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  --pg-tabs-text: #979797;
+  --pg-tabs-text-hover: #fbfbfb;
+  --pg-tabs-text-active: #fbfbfb;
 }
 
 /* Panel surface and rhythm from Figma 1418:38255: #1b1b1b at 16px radius,
@@ -904,8 +1174,11 @@ html[data-theme="dark"] {
      card entirely; here the <pre> does the rounding instead, which it can
      because it is the thing that scrolls. */
 }
-/* Same surface as the stage and the example cards: a flat #171717 card
-   with no border, reading against the #121212 page on its own. */
+/* Same surface as the stage and the example cards, in both themes: dark
+   is a flat #171717 against the #121212 page, light the stage's own
+   #f9f9f9 - and like the stage, no ring and no drop, so a snippet never
+   reads as a different kind of card from the preview above it. */
+.code-block { background: var(--stage-bg); box-shadow: none; }
 html[data-theme="dark"] .code-block {
   background: #171717;
   box-shadow: none;
@@ -924,18 +1197,60 @@ html[data-theme="dark"] .code-block {
   scrollbar-width: thin;
   scrollbar-color: var(--chip-bg-pressed) transparent;
 }
-/* Right-edge fade while the snippet scrolls horizontally: a mask on the
-   scroll container, fixed to its right edge (background-attachment: local
-   keeps the opaque half scrolling with the content, so the fade only shows
-   while there is more to the right and clears once the end is reached). */
+/* Edge fades while a snippet scrolls horizontally. The mask sits on the
+   scroll container, so it stays pinned to the visible edges while the code
+   moves under it, and each side is only drawn when there is actually more
+   code that way (useScrollFade sets data-fade).
+
+   Two lengths, because a fade has two jobs. `--code-fade` is the ramp: a
+   four-stop approximation of an ease rather than a straight line, since a
+   linear fade dies away too late and reads as a grey band laid over legible
+   text. `--code-fade-end` is a fully transparent margin held at the edge
+   itself — where a copy button sits over the scrolling code, the text has
+   to be gone before it reaches the glyph, not merely dimmed. */
 .code-block pre {
-  --code-fade: 40px;
-  mask-image: linear-gradient(to right, #000 calc(100% - var(--code-fade)), transparent 100%);
+  --code-fade: 72px;
+  --code-fade-end: 0px;
   mask-repeat: no-repeat;
-  mask-position: right center;
+  mask-position: center;
   mask-size: 100% 100%;
 }
-.code-block pre[data-scroll-end="true"] { mask-image: none; }
+.code-block pre[data-fade="right"] {
+  mask-image: linear-gradient(
+    to right,
+    #000 calc(100% - var(--code-fade) - var(--code-fade-end)),
+    rgba(0, 0, 0, 0.86) calc(100% - var(--code-fade) * 0.62 - var(--code-fade-end)),
+    rgba(0, 0, 0, 0.46) calc(100% - var(--code-fade) * 0.3 - var(--code-fade-end)),
+    rgba(0, 0, 0, 0.14) calc(100% - var(--code-fade) * 0.12 - var(--code-fade-end)),
+    transparent calc(100% - var(--code-fade-end))
+  );
+}
+/* Nothing overlays the left edge, so it ramps straight to the boundary. */
+.code-block pre[data-fade="left"] {
+  mask-image: linear-gradient(
+    to left,
+    #000 calc(100% - var(--code-fade)),
+    rgba(0, 0, 0, 0.86) calc(100% - var(--code-fade) * 0.62),
+    rgba(0, 0, 0, 0.46) calc(100% - var(--code-fade) * 0.3),
+    rgba(0, 0, 0, 0.14) calc(100% - var(--code-fade) * 0.12),
+    transparent 100%
+  );
+}
+.code-block pre[data-fade="both"] {
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    rgba(0, 0, 0, 0.14) calc(var(--code-fade) * 0.12),
+    rgba(0, 0, 0, 0.46) calc(var(--code-fade) * 0.3),
+    rgba(0, 0, 0, 0.86) calc(var(--code-fade) * 0.62),
+    #000 var(--code-fade),
+    #000 calc(100% - var(--code-fade) - var(--code-fade-end)),
+    rgba(0, 0, 0, 0.86) calc(100% - var(--code-fade) * 0.62 - var(--code-fade-end)),
+    rgba(0, 0, 0, 0.46) calc(100% - var(--code-fade) * 0.3 - var(--code-fade-end)),
+    rgba(0, 0, 0, 0.14) calc(100% - var(--code-fade) * 0.12 - var(--code-fade-end)),
+    transparent calc(100% - var(--code-fade-end))
+  );
+}
 
 .code-block pre::-webkit-scrollbar { width: 8px; height: 8px; }
 .code-block pre::-webkit-scrollbar-track { background: transparent; }
@@ -1233,7 +1548,7 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
 .st-panel-tab {
   position: relative; z-index: 1;
   font-family: var(--font-sans); font-size: 13px; font-weight: 500;
-  color: var(--pg-label);
+  color: var(--pg-tabs-text);
   background: transparent; border: 0;
   height: 30px; padding: 0 12px;
   border-radius: 36px;
@@ -1242,8 +1557,8 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   transition: color var(--tabs-dur) var(--tabs-ease);
   -webkit-tap-highlight-color: transparent;
 }
-.st-panel-tab:hover,
-.st-panel-tab[aria-selected="true"] { color: var(--pg-title); }
+.st-panel-tab:hover { color: var(--pg-tabs-text-hover); }
+.st-panel-tab[aria-selected="true"] { color: var(--pg-tabs-text-active); }
 .st-panel-tab:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1265,7 +1580,18 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   scrollbar-width: thin;
   scrollbar-color: var(--pg-swatch-ring) transparent;
 }
-.st-chat-empty { margin: 0; font-size: 13px; line-height: 20px; color: var(--text-subtle); }
+/* The empty chat is one line of guidance, so it sits in the middle of the
+   log rather than hanging from the top: `auto` margins centre it in the
+   flex column, and balanced wrapping keeps its lines even instead of
+   leaving a short last one. */
+.st-chat-empty {
+  margin: auto 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--text-subtle);
+  text-align: center;
+  text-wrap: balance;
+}
 .st-chat-msg {
   font-size: 13px;
   line-height: 20px;
@@ -1367,57 +1693,226 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
 .st-preset-remove:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 1px; }
 
 /* Three dots while the turn is in flight, gone once prose starts arriving. */
-.st-chat-thinking { display: flex; gap: 4px; padding: 6px 0; }
-.st-chat-thinking span {
-  width: 5px; height: 5px; border-radius: 50%;
-  background: var(--text-subtle);
-  animation: st-chat-blink 1.2s infinite ease-in-out;
+/* Pending turn: the 20px Working orb + transitions.dev P28 "Thinking
+   states" — a status line that shimmers while it holds, then swaps to the
+   next with the exit-up / enter-from-below cross-blur. The shimmer lives
+   on ::before (content: attr(data-text)), so text and data-text always
+   move together. Tokens carry the prototype's values; base/highlight
+   follow the theme. */
+.st-chat-thinking {
+  --think-hold: 2000ms;
+  --think-swap-dur: 150ms;
+  --think-swap-distance: 8px;
+  --think-swap-blur: 2px;
+  --think-shimmer-dur: 2000ms;
+  --think-band: 400%;
+  --think-ease: ease-in-out;
+  --think-base: #9a9a9a;
+  --think-highlight: #f5f5f5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
 }
-.st-chat-thinking span:nth-child(2) { animation-delay: 0.16s; }
-.st-chat-thinking span:nth-child(3) { animation-delay: 0.32s; }
-@keyframes st-chat-blink {
-  0%, 80%, 100% { opacity: 0.25; }
-  40% { opacity: 1; }
+html[data-theme="light"] .st-chat-thinking { --think-base: #7c7c7c; --think-highlight: #0d0d0d; }
+.st-think-orb { flex: none; width: 20px; height: 20px; display: block; }
+.st-think-orb canvas { display: block; }
+.st-think-swap {
+  position: relative;
+  display: inline-block;
+  text-align: left;
+  line-height: 18px;
+  min-width: 0;
+}
+.st-think-sizer {
+  display: block;
+  visibility: hidden;
+  white-space: nowrap;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 18px;
+}
+.st-think-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: block;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--think-base);
+  white-space: nowrap;
+  transform: translateY(0);
+  filter: blur(0);
+  opacity: 1;
+  transition:
+    transform var(--think-swap-dur) var(--think-ease),
+    filter var(--think-swap-dur) var(--think-ease),
+    opacity var(--think-swap-dur) var(--think-ease);
+  will-change: transform, filter, opacity;
+}
+.st-think-text::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    transparent 40%,
+    var(--think-highlight) 50%,
+    transparent 60%,
+    transparent 100%
+  );
+  background-size: var(--think-band) 100%;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: st-think-shimmer var(--think-shimmer-dur) var(--ease-linear) infinite;
+}
+@keyframes st-think-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: 0% 0; }
+}
+.st-think-text.is-exit {
+  transform: translateY(calc(var(--think-swap-distance) * -1));
+  filter: blur(var(--think-swap-blur));
+  opacity: 0;
+}
+.st-think-text.is-enter-start {
+  transition: none;
+  transform: translateY(var(--think-swap-distance));
+  filter: blur(var(--think-swap-blur));
+  opacity: 0;
 }
 @media (prefers-reduced-motion: reduce) {
-  .st-chat-thinking span { animation: none; opacity: 0.5; }
+  .st-think-text::before { animation: none; }
+  .st-think-text { transition: none; }
 }
 
+/* ── Agent composer: Figma 1434:39714 (dark) / 1434:39739 (light) ──
+   A 39px single-line field on a 12px radius, the 28px send button on
+   an 8px radius parked 6px from the right edge. Four states, read off
+   the frame's variants: rest, hover/focus (the field lifts), filled
+   (ink text, the button turns white), and busy (everything dims). */
 .st-chat-composer {
+  --cmp-bg: rgba(255, 255, 255, 0.04);
+  --cmp-bg-lift: rgba(255, 255, 255, 0.08);
+  --cmp-ring:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.04),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.06);
+  --cmp-ring-lift: var(--cmp-ring);
+  --cmp-drop: 0 0 0 0 rgba(0, 0, 0, 0);
+  --cmp-text: rgba(151, 151, 151, 0.7);
+  --cmp-text-filled: #f3f3f3;
+  --cmp-text-busy: rgba(151, 151, 151, 0.3);
+  --cmp-btn-bg: rgba(255, 255, 255, 0.04);
+  --cmp-btn-ring:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+  --cmp-btn-ink: rgba(255, 255, 255, 0.5);
+  --cmp-btn-bg-on: rgba(255, 255, 255, 0.95);
+  --cmp-btn-ring-on: var(--cmp-btn-ring);
+  --cmp-btn-ink-on: #151515;
+
+  position: relative;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 8px;
-  padding: 8px;
-  border-radius: 16px;
-  background: var(--chip-bg);
+  min-height: 39px;
+  padding: 0 6px 0 12px;
+  border-radius: 12px;
+  background: var(--cmp-bg);
+  box-shadow: var(--cmp-ring), var(--cmp-drop);
+  transition: background 140ms ease, box-shadow 140ms ease;
+}
+.st-chat-composer:hover,
+.st-chat-composer:focus-within {
+  background: var(--cmp-bg-lift);
+  box-shadow: var(--cmp-ring-lift), var(--cmp-drop);
+}
+.st-chat-composer[data-busy] {
+  background: var(--cmp-bg);
+  box-shadow: var(--cmp-ring), var(--cmp-drop);
 }
 .st-chat-input {
   flex: 1 1 auto;
   min-width: 0;
+  margin: 0;
+  padding: 0;
   border: 0;
   background: transparent;
   resize: none;
   font-family: var(--font-sans);
   font-size: 13px;
-  line-height: 19px;
-  color: var(--text);
+  line-height: 14px;
+  color: var(--cmp-text-filled);
+  /* One line, like the frame: no scrollbar can appear inside a 14px box. */
+  overflow: hidden;
+  transition: color 140ms ease;
 }
-.st-chat-input::placeholder { color: var(--text-subtle); }
+.st-chat-input::placeholder { color: var(--cmp-text); }
 .st-chat-input:focus { outline: none; }
+.st-chat-composer[data-busy] .st-chat-input,
+.st-chat-composer[data-busy] .st-chat-input::placeholder { color: var(--cmp-text-busy); }
 .st-chat-send {
   flex: none;
   width: 28px; height: 28px;
   display: inline-flex; align-items: center; justify-content: center;
-  border: 0; border-radius: 50%;
-  background: #ededed;
-  color: #17181c;
-  cursor: pointer;
-  transition: opacity 140ms ease, background 140ms ease;
+  border: 0; border-radius: 8px;
+  background: var(--cmp-btn-bg);
+  box-shadow: var(--cmp-btn-ring);
+  color: var(--cmp-btn-ink);
+  cursor: default;
+  transition: background 140ms ease, color 140ms ease, box-shadow 140ms ease;
+  -webkit-tap-highlight-color: transparent;
 }
 .st-chat-send svg { width: 16px; height: 16px; display: block; }
-.st-chat-send:hover { background: #ffffff; }
-.st-chat-send:disabled { opacity: 0.35; cursor: default; }
+/* Filled: the button turns white with the dark arrow. */
+.st-chat-send:not(:disabled) {
+  background: var(--cmp-btn-bg-on);
+  box-shadow: var(--cmp-btn-ring-on);
+  color: var(--cmp-btn-ink-on);
+  cursor: pointer;
+}
+.st-chat-send:not(:disabled):hover { background: #ffffff; }
 .st-chat-send:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
+
+/* Light (1434:39739): the field reads white-4% over the panel on a soft
+   0 1px 3px drop and a black-6% ring that hardens to black-10% on hover
+   and focus; text is #979797 at rest, #080808 when filled, both at 70%.
+   The button rests on black-4% with a black-4% ring. */
+html[data-theme="light"] .st-chat-composer {
+  --cmp-bg: rgba(255, 255, 255, 0.04);
+  --cmp-bg-lift: rgba(255, 255, 255, 0.04);
+  --cmp-ring:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+    inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+  --cmp-ring-lift:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.1),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+    inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+  --cmp-drop: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
+  --cmp-text: rgba(151, 151, 151, 0.7);
+  --cmp-text-filled: rgba(8, 8, 8, 0.7);
+  --cmp-text-busy: rgba(151, 151, 151, 0.5);
+  --cmp-btn-bg: rgba(0, 0, 0, 0.04);
+  --cmp-btn-ring:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+  --cmp-btn-ink: rgba(0, 0, 0, 0.5);
+  --cmp-btn-bg-on: rgba(255, 255, 255, 0.95);
+  --cmp-btn-ring-on:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+  --cmp-btn-ink-on: #151515;
+}
 
 /* ── Docs prose: the written pages in the docs shell ──────────
    Same sidebar + main column as a library page; the main column
@@ -1435,9 +1930,14 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
 .docs-prose a { color: var(--text); text-decoration: none; }
 .docs-prose a:hover { text-decoration: underline; text-underline-offset: 2px; }
 .docs-prose code {
-  font-family: var(--font-mono); font-size: 13px;
-  padding: 1px 6px; border-radius: 6px;
-  background: var(--chip-bg); color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 18px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--code-chip-bg);
+  box-shadow: inset 0 0 0 1px var(--code-chip-ring);
+  color: var(--text);
 }
 .docs-prose ol, .docs-prose ul { padding-left: 20px; }
 .docs-prose li { font-size: 14px; line-height: 23px; color: var(--text-muted); }
@@ -1461,3 +1961,35 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   background: var(--chip-bg); color: var(--text-muted);
   font-size: 12px; font-weight: 500;
 }
+
+/* ── Rebuilt core notice (Studio, manual panel) ───────────────────────
+   Sits at the top of the knob column while the agent's core is in place:
+   one line of label and a ghost "Restore stock" on the right. */
+.st-core-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 28px;
+}
+.st-core-text { font-size: 12px; line-height: 16px; color: var(--pg-label); }
+.st-core-restore,
+html[data-theme="dark"] .st-core-restore,
+html[data-theme="light"] .st-core-restore {
+  height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 60px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--pg-title);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  cursor: pointer;
+  transition: background 140ms;
+}
+.st-core-restore:hover,
+html[data-theme="dark"] .st-core-restore:hover { background: rgba(255, 255, 255, 0.04); }
+html[data-theme="light"] .st-core-restore:hover { background: rgba(0, 0, 0, 0.04); }

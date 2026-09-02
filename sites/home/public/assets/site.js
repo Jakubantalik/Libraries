@@ -375,3 +375,28 @@
     });
   });
 })();
+
+/* Edge fades on the static code blocks (the detail pages' Install & Usage,
+   how-to-use). The React playgrounds do this with a hook; these are plain
+   markup, so the same attribute is set here — playground.css draws a fade
+   only on the side that still has code beyond it. */
+(function () {
+  function wire(pre) {
+    function update() {
+      // 2px slack absorbs sub-pixel widths, which would otherwise leave a
+      // permanent fade on a block that is not actually scrollable.
+      var more = pre.scrollWidth - pre.clientWidth - pre.scrollLeft > 2;
+      var before = pre.scrollLeft > 2;
+      pre.setAttribute("data-fade", more && before ? "both" : more ? "right" : before ? "left" : "none");
+    }
+    update();
+    pre.addEventListener("scroll", update, { passive: true });
+    if (typeof ResizeObserver !== "undefined") new ResizeObserver(update).observe(pre);
+  }
+  function init() {
+    var list = document.querySelectorAll(".code-block pre");
+    for (var i = 0; i < list.length; i++) wire(list[i]);
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+})();

@@ -96,50 +96,231 @@
 
     /* Numbered step blocks — the homepage card material, one per row so
        each step has room for its code and detail. */
-    .howto-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 18px; }
+    /* Three cards abreast: each step reads top to bottom, and the row makes
+       the three-step arc legible at a glance instead of as a long scroll. */
+    .howto-list {
+      list-style: none; margin: 0; padding: 0;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      align-items: stretch;
+    }
     .howto-block {
       display: flex;
+      flex-direction: column;
       gap: 20px;
       padding: 32px;
       border-radius: 24px;
-      background: #141414;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 -1px 0 0 rgba(255, 255, 255, 0.03);
+      /* The testimonial card's material (site.css .pro-quote), so the two
+         card families read as one. */
+      background-color: #1a1a1a;
+      box-shadow:
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.02),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.02);
     }
     .howto-num {
-      flex: none;
-      width: 28px;
-      height: 28px;
-      border-radius: 50px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background: #3e3e3e;
+      position: relative;
+      /* Own stacking context, or the halo's z-index -1 sinks behind the card. */
+      isolation: isolate;
+      flex: none; width: 21px; height: 21px; border-radius: 50px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: #0071fc;
       box-shadow:
         0 1px 3px 0 rgba(0, 0, 0, 0.04),
         inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
-        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
-        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
-        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
-      color: rgba(237, 237, 237, 0.8);
-      font-size: 12px;
-      line-height: 13px;
-      font-weight: 500;
+        inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      font-size: 11px; line-height: 12px; font-weight: 500;
     }
-    .howto-body { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 12px; }
-    .howto-step-title { margin: 0; font-size: 17px; font-weight: 500; line-height: 24px; color: #ededed; }
-    .howto-text { margin: 0; font-size: 14px; line-height: 22px; color: var(--text-muted); overflow-wrap: anywhere; }
+    /* The halo behind the disc (Figma 1418:38284): the same blue at
+       20 percent, reaching past each edge in the design's 3:2 ratio. */
+    .howto-num::before {
+      content: "";
+      position: absolute;
+      inset: -5.25px;
+      border-radius: 50px;
+      background: #0071fc;
+      opacity: 0.2;
+      z-index: -1;
+    }
+    .howto-body { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 6px; }
+    .howto-step-title { margin: 0; font-size: 15px; font-weight: 500; line-height: 22px; color: #ededed; }
+    .howto-text { margin: 0 0 18px; font-size: 14px; line-height: 22px; color: var(--text-muted); overflow-wrap: anywhere; }
     .howto-text code {
-      font-family: var(--font-mono); font-size: 12px; line-height: 18px;
-      padding: 1px 6px; border-radius: 6px;
-      background: rgba(255, 255, 255, 0.06); color: var(--text); white-space: nowrap;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 18px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: var(--code-chip-bg);
+      box-shadow: inset 0 0 0 1px var(--code-chip-ring);
+      color: var(--text);
     }
     .howto-text a { color: var(--text); text-decoration: none; }
     .howto-text a:hover { text-decoration: underline; text-underline-offset: 2px; }
-    .howto-body .code-block { margin-top: 2px; }
-    /* No copy button here, so the block does not reserve room for one. */
-    .howto-body .code-block { padding-right: 18px; }
+    /* auto pushes the snippet to the card's foot, so the three code blocks
+       sit on one line however tall their prose runs. */
+    .howto-body .code-block { margin-top: auto; }
+    /* No copy button here, so the block does not reserve room for one. The
+       snippets are wider than a third-column card, so they scroll inside
+       themselves rather than stretching the grid. */
+    .howto-body .code-block { padding-right: 18px; overflow-x: auto; }
+    .howto-body .code-block pre { white-space: pre; }
+    @media (max-width: 1000px) {
+      .howto-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      /* Odd card out spans the row rather than leaving a gap. */
+      .howto-block:last-child:nth-child(odd) { grid-column: 1 / -1; }
+    }
     @media (max-width: 639px) {
+      .howto-list { grid-template-columns: minmax(0, 1fr); }
       .howto-block { padding: 24px; gap: 16px; }
+    }
+
+    /* Step 1's visual: the Studio's own toolbar, Copy prompt pill leading.
+       The shot is anchored so the pill sits top-left of the window with the
+       panel running off to the right, then fades out toward the card's foot
+       so the pill is the one thing in focus. */
+    .howto-shot {
+      /* Bleeds past the card's padding to its edges: the UI spans the full
+         card width, so it reads as the app's chrome rather than a cropped
+         inset. Bottom corners follow the card's own radius. */
+      margin: auto -32px -32px;
+      position: relative;
+      height: 220px;
+      overflow: hidden;
+      border-radius: 0 0 24px 24px;
+      -webkit-mask-image: linear-gradient(to bottom, #000 30%, transparent 100%);
+      mask-image: linear-gradient(to bottom, #000 30%, transparent 100%);
+      /* The screenshot carries the app's own darker page fill. Lighten keeps
+         whichever pixel is brighter, so everything darker than the card's
+         #1a1a1a (that fill, the empty stage) becomes the card and only the
+         chrome remains. It has to sit on this element: the mask above makes
+         it an isolated group, so a blend on the img inside would see only
+         the group's transparent backdrop and do nothing. */
+      mix-blend-mode: lighten;
+    }
+    /* The app's stage panel (rgb 23) is darker than the card (26), so the
+       lighten blend flattened it into the card. This plate sits under the
+       image on the panel's measured bounds (raster 57..1061 x 84..1051 at
+       1600px, mapped through the 741px render and its offsets) and the image
+       lightens against it, so the panel comes back a step above the card
+       while the page fill around it still drops to the card. */
+    .howto-shot::before {
+      content: "";
+      position: absolute;
+      left: -20px;
+      width: 191px;
+      top: 47px;
+      bottom: -20px;
+      border-radius: 0 16px 0 0;
+      background: #1f1f1f;
+    }
+    /* Anchored so the toolbar (Presets through Copy prompt) starts at the
+       card's edge; the empty stage to the left is what sits off-canvas.
+       8px of headroom keeps the toolbar whole. */
+    .howto-shot img {
+      position: absolute;
+      display: block;
+      max-width: none;
+      /* 30% up from the width that fit toolbar-to-panel exactly; the left
+         offset tracks it so the toolbar still starts at the card's edge,
+         and the panel now runs off the right. */
+      width: 741px;
+      height: auto;
+      left: -320px;
+      top: 8px;
+      pointer-events: none;
+      user-select: none;
+      /* Lightens against the plate inside the group; elsewhere the backdrop
+         is transparent, so the image passes through unchanged. */
+      mix-blend-mode: lighten;
+    }
+    @media (max-width: 639px) {
+      .howto-shot, .howto-agent { margin: auto -24px -24px; }
+    }
+
+    /* Step 3's visual: the Studio's agent panel, recreated. Header with the
+       tab pair and theme toggle, a sent bubble, and the thinking line with a
+       live orb (howto-agent.tsx). Fades out toward the card's foot like the
+       other step visuals. */
+    .howto-agent {
+      margin: auto -32px -32px;
+      position: relative;
+      height: 220px;
+      overflow: hidden;
+      border-radius: 0 0 24px 24px;
+      background: #171717;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06), inset 0 1px 0 0 rgba(255, 255, 255, 0.02);
+      -webkit-mask-image: linear-gradient(to bottom, #000 40%, transparent 100%);
+      mask-image: linear-gradient(to bottom, #000 40%, transparent 100%);
+      font-size: 13px;
+      color: #ededed;
+    }
+    /* The header is the app's own tab component (.st-panel-tabs from
+       playground.css). Its sliding pill is placed by JS in the app; here
+       the selected tab simply wears the pill's fill, which is the same
+       resting picture. */
+    /* Padding on the bar, not a margin on the head: a margin collapses out
+       through the bar's bottom and the divider ends up hugging the pill. */
+    .howto-agent-bar {
+      padding: 11px 12px;
+      box-shadow: inset 0 -1px 0 0 rgba(255, 255, 255, 0.06);
+    }
+    .howto-agent-bar .st-panel-head { margin-bottom: 0; }
+    /* playground.css styles these as <button>s; as spans they are inline,
+       which drops the 30px height and the pill's shape. */
+    .howto-agent-bar .st-panel-tab { display: inline-flex; align-items: center; cursor: default; }
+    .howto-agent-bar .st-theme-btn--panel { display: inline-flex; align-items: center; justify-content: center; }
+    .howto-agent-bar .st-panel-tab[aria-selected="true"] {
+      background: var(--pg-tabs-pill-bg);
+      box-shadow: var(--pg-tabs-pill-shadow);
+    }
+    .howto-agent-bar .st-theme-btn--panel { pointer-events: none; }
+    .howto-agent-body { display: flex; flex-direction: column; gap: 18px; padding: 18px 14px 0; }
+    .howto-agent-bubble {
+      align-self: flex-end;
+      max-width: 100%;
+      padding: 11px 14px;
+      border-radius: 50px;
+      background: #2a2a2a;
+      line-height: 16px;
+      white-space: nowrap;
+    }
+
+    /* Agent grid: a field of app tiles fading out at the edges, with the three
+       agents this step names lit in the middle row. The vignette is the
+       illustration — tiles dissolve toward the corners so the lit row reads as
+       the subject rather than a flat grid. */
+    .agent-grid {
+      margin-top: auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding: 4px;
+      -webkit-mask-image: radial-gradient(ellipse 68% 78% at 50% 50%, #000 30%, transparent 100%);
+      mask-image: radial-gradient(ellipse 68% 78% at 50% 50%, #000 30%, transparent 100%);
+    }
+    .agent-tile {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      aspect-ratio: 1;
+      border-radius: 14px;
+      background: #161616;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+    }
+    /* The named agents: a lift in fill and ring, nothing more. */
+    .agent-tile--lit {
+      background: #232323;
+      box-shadow:
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.09);
+    }
+    .agent-tile img { width: 22px; height: 22px; display: block; opacity: 0.92; }
+    @media (max-width: 639px) {
+      .agent-grid { gap: 8px; }
+      .agent-tile { border-radius: 12px; }
     }
 
     /* Library reference table */
@@ -155,9 +336,14 @@
     .howto-table a { color: var(--text); text-decoration: none; }
     .howto-table a:hover { text-decoration: underline; text-underline-offset: 2px; }
     .howto-table code {
-      font-family: var(--font-mono); font-size: 12px;
-      padding: 1px 6px; border-radius: 6px;
-      background: rgba(255, 255, 255, 0.06); color: var(--text); white-space: nowrap;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 18px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: var(--code-chip-bg);
+      box-shadow: inset 0 0 0 1px var(--code-chip-ring);
+      color: var(--text);
     }
 
     /* Section rhythm shared with the homepage */
@@ -206,7 +392,16 @@
       transition: opacity var(--acc-expand) var(--acc-ease), filter var(--acc-expand) var(--acc-ease);
     }
     .t-acc-panel-inner p { margin: 0 0 16px; padding-right: 28px; font-size: 14px; line-height: 22px; color: var(--text-muted); }
-    .t-acc-panel-inner code { font-family: var(--font-mono); font-size: 12px; line-height: 18px; padding: 1px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.06); color: var(--text); }
+    .t-acc-panel-inner code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 18px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: var(--code-chip-bg);
+      box-shadow: inset 0 0 0 1px var(--code-chip-ring);
+      color: var(--text);
+    }
     .t-acc-panel-inner a { color: var(--text); text-decoration: none; }
     .t-acc-panel-inner a:hover { text-decoration: underline; text-underline-offset: 2px; }
     @media (prefers-reduced-motion: reduce) {
@@ -244,9 +439,9 @@
             <span class="brand-word"><span class="brand-word-strong">Libraries</span><span class="brand-word-dim">.dev</span></span>
           </a>
           <nav class="site-nav-menu" aria-label="Primary">
-            <a class="nav-pill" href="/#components">Libraries</a>
-            <a class="nav-pill" href="/studio.html">Studio <span class="nav-pill-pro">Pro</span></a>
+            <a class="nav-pill" href="/beam.html">Libraries</a>
             <a class="nav-pill nav-pill--active" href="/how-to-use.html">How to use</a>
+            <a class="nav-pill" href="/studio.html">Studio <span class="nav-pill-pro">Pro</span></a>
           </nav>
         </div>
         <div class="site-nav-right">
@@ -267,7 +462,7 @@
           </a>
           <div class="pm-anchor" id="more-anchor">
             <button type="button" class="icon-btn" id="more-btn" aria-label="More" aria-haspopup="menu" aria-expanded="false">
-              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block">
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 8C6.66667 7.26362 7.26362 6.66667 8 6.66667C8.73638 6.66667 9.33333 7.26362 9.33333 8C9.33333 8.73638 8.73638 9.33333 8 9.33333C7.26362 9.33333 6.66667 8.73638 6.66667 8Z" fill="currentColor"/>
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 3.33333C6.66667 2.59695 7.26362 2 8 2C8.73638 2 9.33333 2.59695 9.33333 3.33333C9.33333 4.06971 8.73638 4.66667 8 4.66667C7.26362 4.66667 6.66667 4.06971 6.66667 3.33333Z" fill="currentColor"/>
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 12.6667C6.66667 11.9303 7.26362 11.3333 8 11.3333C8.73638 11.3333 9.33333 11.9303 9.33333 12.6667C9.33333 13.403 8.73638 14 8 14C7.26362 14 6.66667 13.403 6.66667 12.6667Z" fill="currentColor"/>
@@ -302,9 +497,9 @@
       <div class="mobile-menu-backdrop" id="mobile-menu-backdrop"></div>
       <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile">
         <ul class="mobile-menu-list">
-          <li><a class="mobile-menu-link mobile-menu-link--1" href="/#components">Libraries</a></li>
-          <li><a class="mobile-menu-link mobile-menu-link--2" href="/studio.html">Studio</a></li>
-          <li><a class="mobile-menu-link mobile-menu-link--3" href="/how-to-use.html">How to use</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--1" href="/beam.html">Libraries</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--2" href="/how-to-use.html">How to use</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--3" href="/studio.html">Studio</a></li>
           <li><a class="mobile-menu-link mobile-menu-link--4 mobile-menu-link--pro" href="/pro.html">Get Pro</a></li>
         </ul>
         <a class="mobile-menu-cta" id="mobile-signin" href="/pro.html">Sign in</a>
@@ -326,14 +521,11 @@
           <div class="howto-body">
             <h2 class="howto-step-title">Copy the prompt</h2>
             <p class="howto-text">
-              Every library page has a Copy prompt button. It packs the install
-              line, the usage and the full prop vocabulary into one paste, so
-              your agent knows the whole library, not just a snippet.
+              Every library page has a Copy prompt button. One paste gives
+              your agent the whole library.
             </p>
-            <div class="code-block">
-              <pre>Border beam is an animated rainbow glow that rides any border.
-Install border-beam from npm, wrap the element, then tune
-size, colorVariant, strength, duration and brightness&hellip;</pre>
+            <div class="howto-shot" aria-hidden="true">
+              <img src="/assets/shots/studio-shot-1.png" alt="" />
             </div>
           </div>
         </li>
@@ -343,18 +535,28 @@ size, colorVariant, strength, duration and brightness&hellip;</pre>
           <div class="howto-body">
             <h2 class="howto-step-title">Paste it in your agent</h2>
             <p class="howto-text">
-              Drop the prompt into Claude Code, Cursor or Codex. The agent
-              installs the package and wires the component into your app,
-              adapted to your theme. React 18+, light and dark mode built in,
-              server-rendering safe.
+              Drop it into Claude Code, Cursor or Codex. The agent installs
+              the package and wires it in, matched to your theme.
             </p>
-            <div class="code-block">
-              <pre>$ claude
-&rsaquo; [Pasted text #1 +42 lines]
-
-&#10003; npm install border-beam
-&#10003; components/ui/upgrade-card.tsx
-&#10003; wrapped &lt;Card&gt; in &lt;BorderBeam&gt;, matched to your theme</pre>
+            <div class="agent-grid" aria-hidden="true">
+              <span class="agent-tile"></span>
+              <span class="agent-tile"></span>
+              <span class="agent-tile"></span>
+              <span class="agent-tile"></span>
+              <span class="agent-tile agent-tile--lit">
+                <img src="/assets/icons/agent-claude.svg" alt="" width="22" height="22" />
+              </span>
+              <span class="agent-tile agent-tile--lit">
+                <img src="/assets/icons/agent-openai.svg" alt="" width="22" height="22" />
+              </span>
+              <span class="agent-tile agent-tile--lit">
+                <img src="/assets/icons/agent-cursor.svg" alt="" width="22" height="22" />
+              </span>
+              <span class="agent-tile"></span>
+              <span class="agent-tile"></span>
+              <span class="agent-tile"></span>
+              <span class="agent-tile"></span>
+              <span class="agent-tile"></span>
             </div>
           </div>
         </li>
@@ -364,13 +566,37 @@ size, colorVariant, strength, duration and brightness&hellip;</pre>
           <div class="howto-body">
             <h2 class="howto-step-title">Make it yours</h2>
             <p class="howto-text">
-              Every library page has a playground for its main knobs. For the
-              full parameter surface (physics, shader and glow internals)
-              open the <a href="/studio.html">Studio</a> with Pro, tune the real
-              component live, and copy the exact configuration as props.
+              Open the <a href="/studio.html">Studio</a> with Pro for every
+              knob, tune it live and copy the result as props.
             </p>
-            <div class="code-block">
-              <pre>&lt;BorderBeam size="line" colorVariant="ocean" duration={3.2} brightness={1.6} /&gt;</pre>
+            <div class="howto-agent" aria-hidden="true">
+              <div class="howto-agent-bar">
+                <div class="st-panel-head">
+                  <div class="st-panel-tabs" role="presentation">
+                    <span class="st-panel-tab" aria-selected="false">Manual controls</span>
+                    <span class="st-panel-tab" aria-selected="true">Agent</span>
+                  </div>
+                  <span class="icon-btn st-theme-btn st-theme-btn--panel">
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><circle cx="8" cy="8" r="2.6"/><path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/></svg>
+                  </span>
+                </div>
+              </div>
+              <div class="howto-agent-body">
+                <span class="howto-agent-bubble">Make it more subtle</span>
+                <div id="howto-agent-status">
+                  <!-- Static stand-in, in the app's own classes, until the
+                       island swaps in the live ThinkingStatus. -->
+                  <div class="st-chat-thinking">
+                    <span class="st-think-orb" aria-hidden="true">
+                      <svg viewBox="0 0 20 20" width="20" height="20" fill="#cfcfcf"><circle cx="4" cy="9" r="1.2"/><circle cx="9" cy="5" r="1.4"/><circle cx="14" cy="8" r="1"/><circle cx="8" cy="13" r="1.1"/><circle cx="13" cy="13" r="1.3"/></svg>
+                    </span>
+                    <span class="st-think-swap">
+                      <span class="st-think-sizer" aria-hidden="true">Weighing the change you asked for</span>
+                      <span class="st-think-text" data-text="Picking the knobs to move">Picking the knobs to move</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </li>
@@ -555,6 +781,7 @@ size, colorVariant, strength, duration and brightness&hellip;</pre>
       });
     });
   </script>
+  <script type="module" src="/src/howto-agent.tsx"></script>
   <script src="/assets/site.js" defer></script>
   <script src="/assets/pro-client.js" defer></script>
 </body>

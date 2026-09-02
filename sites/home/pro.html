@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark" />
 
   <title>Libraries Pro: Unlock the Studio for every library</title>
-  <meta name="description" content="Libraries Pro unlocks the Studio: deep customization of all five UI effect libraries (Beam, Orb, Gooey, Metal and Image), plus Pro content and every future update." />
+  <meta name="description" content="Libraries Pro unlocks the Studio: deep customization of all five UI effect libraries (Beam, Orb, Gooey, Metal and Image), plus Pro variants and every future update." />
   <meta name="keywords" content="Libraries Pro, Studio, UI effect libraries, React effects, WebGL, Beam, Orb, Gooey, Metal, Image" />
   <meta name="author" content="Libraries.dev" />
   <meta name="robots" content="index, follow, max-image-preview:large" />
@@ -29,11 +29,11 @@
   <meta property="og:url" content="https://libraries.dev/pro.html" />
   <meta property="og:locale" content="en_US" />
   <meta property="og:title" content="Libraries Pro: Unlock the Studio for every library" />
-  <meta property="og:description" content="Libraries Pro unlocks the Studio: deep customization of all five UI effect libraries (Beam, Orb, Gooey, Metal and Image), plus Pro content and every future update." />
+  <meta property="og:description" content="Libraries Pro unlocks the Studio: deep customization of all five UI effect libraries (Beam, Orb, Gooey, Metal and Image), plus Pro variants and every future update." />
 
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="Libraries Pro: Unlock the Studio for every library" />
-  <meta name="twitter:description" content="Libraries Pro unlocks the Studio: deep customization of all five UI effect libraries (Beam, Orb, Gooey, Metal and Image), plus Pro content and every future update." />
+  <meta name="twitter:description" content="Libraries Pro unlocks the Studio: deep customization of all five UI effect libraries (Beam, Orb, Gooey, Metal and Image), plus Pro variants and every future update." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -94,6 +94,15 @@
     /* Design tokens — light (default) and dark                      */
     /* ============================================================ */
     :root {
+      /* Pro accents share the CTA blue (#0071fc): the nav Get Pro pill and the
+         Pro chips are tints and inks of that one hue. */
+      --pro-tint-bg: rgba(0, 113, 252, 0.10);
+      --pro-tint-bg-hover: rgba(0, 113, 252, 0.16);
+      --pro-tint-ink: #0062d6;
+      /* Inline code in prose: a chip with its own hairline (ported by value;
+         this page links no shared stylesheet). */
+      --code-chip-bg: rgba(0, 0, 0, 0.04);
+      --code-chip-ring: rgba(0, 0, 0, 0.08);
       color-scheme: light;
 
       --bg: #fdfdfd;
@@ -354,6 +363,11 @@
     }
 
     html[data-theme="dark"] {
+      --pro-tint-bg: rgba(0, 113, 252, 0.18);
+      --pro-tint-bg-hover: rgba(0, 113, 252, 0.26);
+      --pro-tint-ink: #7db4ff;
+      --code-chip-bg: rgba(255, 255, 255, 0.05);
+      --code-chip-ring: rgba(255, 255, 255, 0.09);
       color-scheme: dark;
 
       --bg: #121212;
@@ -666,7 +680,7 @@
       align-items: center;
       justify-content: center;
       height: 36px;
-      padding: 0 12px;
+      padding: 0 14px;
       border-radius: 50px;
       font-family: var(--font-sans);
       font-size: 13px;
@@ -687,8 +701,8 @@
       margin-left: 6px;
       padding: 0 6px;
       border-radius: 50px;
-      background: rgba(85, 207, 255, 0.14);
-      color: #7cd4ff;
+      background: var(--pro-tint-bg);
+      color: var(--pro-tint-ink);
       font-size: 11px;
       font-weight: 500;
       line-height: 14px;
@@ -699,6 +713,11 @@
         inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
         inset 0 0 0 1px rgba(196, 196, 196, 0.1);
     }
+
+    /* The Studio pill carries the Pro chip, whose own rounded fill reads as
+       padding — so its right side comes in to 9px against the 14px the text-only pills
+       carry on both sides. */
+    .nav-pill:has(.nav-pill-pro) { padding-right: 9px; }
     .nav-pill:hover { color: var(--text); background: rgba(0, 0, 0, 0.03); }
     html[data-theme="dark"] .nav-pill:hover { background: rgba(255, 255, 255, 0.06); }
     .nav-pill--active {
@@ -833,7 +852,7 @@
     .mobile-menu-link--4 { transition-delay: 120ms; }
     /* "Get Pro" reads as the accent CTA in the list (Figma 2332:82664). */
     .mobile-menu-link--pro { color: #0053e3; }
-    html[data-theme="dark"] .mobile-menu-link--pro { color: #7cd4ff; }
+    html[data-theme="dark"] .mobile-menu-link--pro { color: var(--pro-tint-ink); }
     body.menu-open .mobile-menu-link {
       opacity: 1;
       transform: translateY(0);
@@ -3712,15 +3731,16 @@
     .nav-get-pro {
       display: inline-flex; align-items: center; justify-content: center;
       height: 36px; padding: 0 16px; border: 0; border-radius: 50px;
-      background: rgba(0, 115, 255, 0.08); color: #0053e3;
+      background: var(--pro-tint-bg); color: var(--pro-tint-ink);
       font-family: var(--font-sans); font-size: 13px; font-weight: 500;
       text-decoration: none; white-space: nowrap; cursor: pointer;
       transition: background 150ms var(--ease-smooth-out);
       -webkit-tap-highlight-color: transparent;
     }
-    .nav-get-pro:hover { background: rgba(0, 115, 255, 0.14); }
-    html[data-theme="dark"] .nav-get-pro { background: rgba(85, 207, 255, 0.14); color: #7cd4ff; }
-    html[data-theme="dark"] .nav-get-pro:hover { background: rgba(85, 207, 255, 0.22); }
+    .nav-get-pro:hover { background: var(--pro-tint-bg-hover); }
+    /* The pill sets its own display, which outranks the UA's [hidden] rule —
+       pro-client.js hides it by attribute once a signed-in user is entitled. */
+    .nav-get-pro[hidden] { display: none; }
 
     /* ── 3-dot dropdown — exact Refine tool component ──────────── */
     :root {
@@ -4914,8 +4934,16 @@
       transition: opacity var(--acc-expand) var(--acc-ease), filter var(--acc-expand) var(--acc-ease);
     }
     .t-acc-panel-inner p { margin: 0 0 16px; padding-right: 28px; font-size: 14px; line-height: 22px; color: var(--text-muted); }
-    .t-acc-panel-inner code { font-family: var(--font-mono); font-size: 12px; line-height: 18px; padding: 1px 6px; border-radius: 6px; background: rgba(0, 0, 0, 0.04); color: var(--text); }
-    html[data-theme="dark"] .t-acc-panel-inner code { background: rgba(255, 255, 255, 0.06); }
+    .t-acc-panel-inner code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 18px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: var(--code-chip-bg);
+      box-shadow: inset 0 0 0 1px var(--code-chip-ring);
+      color: var(--text);
+    }
     .t-acc-panel-inner a { color: var(--text); text-decoration: none; }
     .t-acc-panel-inner a:hover { text-decoration: underline; text-underline-offset: 2px; }
     @media (prefers-reduced-motion: reduce) {
@@ -4923,7 +4951,11 @@
     }
 
     /* ── Pro layout spacing ────────────────────────────────────── */
-    .pro-section { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+    /* `.app` is a centred flex column, so a section shrink-wraps its content
+       unless told to fill. Without this the testimonial grid sized to its
+       (short) text instead of the 1040 column, leaving its cards narrower
+       than the bento above them and than the same cards on the homepage. */
+    .pro-section { width: 100%; max-width: 1040px; margin: 0 auto; padding: 0 24px; }
     .pro-section-title { text-align: center; font-family: "Saans", var(--font-sans); font-size: 30px; font-weight: 500; letter-spacing: -0.01em; color: var(--text); margin: 0 0 40px; }
     .pro-block { margin-bottom: 96px; }
     /* Search collapses to an icon-only circle before the nav pills
@@ -4994,7 +5026,7 @@
             <span class="brand-word"><span class="brand-word-strong">Libraries</span><span class="brand-word-dim">.dev</span></span>
           </a>
           <nav class="site-nav-menu" aria-label="Primary">
-            <a class="nav-pill" href="/#components">Libraries</a>
+            <a class="nav-pill" href="/beam.html">Libraries</a>
             <a class="nav-pill" href="/how-to-use.html">How to use</a>
             <a class="nav-pill" href="/studio.html">Studio <span class="nav-pill-pro">Pro</span></a>
           </nav>
@@ -5017,7 +5049,7 @@
           </a>
           <div class="pm-anchor" id="more-anchor">
             <button type="button" class="icon-btn" id="more-btn" aria-label="More" aria-haspopup="menu" aria-expanded="false">
-              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block">
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 8C6.66667 7.26362 7.26362 6.66667 8 6.66667C8.73638 6.66667 9.33333 7.26362 9.33333 8C9.33333 8.73638 8.73638 9.33333 8 9.33333C7.26362 9.33333 6.66667 8.73638 6.66667 8Z" fill="currentColor"/>
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 3.33333C6.66667 2.59695 7.26362 2 8 2C8.73638 2 9.33333 2.59695 9.33333 3.33333C9.33333 4.06971 8.73638 4.66667 8 4.66667C7.26362 4.66667 6.66667 4.06971 6.66667 3.33333Z" fill="currentColor"/>
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 12.6667C6.66667 11.9303 7.26362 11.3333 8 11.3333C8.73638 11.3333 9.33333 11.9303 9.33333 12.6667C9.33333 13.403 8.73638 14 8 14C7.26362 14 6.66667 13.403 6.66667 12.6667Z" fill="currentColor"/>
@@ -5052,9 +5084,9 @@
       <div class="mobile-menu-backdrop" id="mobile-menu-backdrop"></div>
       <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile">
         <ul class="mobile-menu-list">
-          <li><a class="mobile-menu-link mobile-menu-link--1" href="/#components">Libraries</a></li>
-          <li><a class="mobile-menu-link mobile-menu-link--2" href="/studio.html">Studio</a></li>
-          <li><a class="mobile-menu-link mobile-menu-link--3" href="/how-to-use.html">How to use</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--1" href="/beam.html">Libraries</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--2" href="/how-to-use.html">How to use</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--3" href="/studio.html">Studio</a></li>
           <li><a class="mobile-menu-link mobile-menu-link--4 mobile-menu-link--pro" href="/pro.html">Get Pro</a></li>
         </ul>
         <a class="mobile-menu-cta" id="mobile-signin" href="/pro.html">Sign in</a>
@@ -5065,7 +5097,7 @@
       <h1 class="title">Libraries <span class="title-pro">Pro</span></h1>
       <p class="subtitle">
         Unlock the Studio: deep customization of all five libraries<br />
-        (Beam, Orb, Gooey, Metal and Image), plus Pro content<br />
+        (Beam, Orb, Gooey, Metal and Image), plus Pro variants<br />
         and every future update, right in your browser.
       </p>
     </header>
@@ -5195,7 +5227,7 @@
       <div class="pro-bento">
         <div class="pro-bento-card pro-bento-card--tall">
           <h3 class="pro-bento-title">Full library access</h3>
-          <p class="pro-bento-desc">All five libraries <span class="dim">(Beam, Orb, Gooey, Metal and Image) with every Pro preset, React and TypeScript ready, plus each future drop.</span></p>
+          <p class="pro-bento-desc">All five libraries <span class="dim">(Beam, Orb, Gooey, Metal and Image) with every Pro preset and variant, React and TypeScript ready, under a commercial license for unlimited projects, plus each future drop.</span></p>
           <div class="pro-lib-stage">
             <div class="lib-card" style="left:-148px; top:299px">
               <div class="card">
@@ -5258,7 +5290,7 @@
         </div>
 
         <div class="pro-bento-card pro-bento-card--tall">
-          <h3 class="pro-bento-title">Pro content</h3>
+          <h3 class="pro-bento-title">Studio access</h3>
           <p class="pro-bento-desc">Customize every library in detail in the Studio: tune parameters live, preview the result, and export the exact configuration. Plus extended docs, presets and recipes, and the Pro skill for your AI coding agent.</p>
           <div class="pro-refine-frame" aria-hidden="true">
             <div class="rf-topbar">

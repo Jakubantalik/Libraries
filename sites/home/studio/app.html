@@ -114,41 +114,38 @@
       gap: 8px;
       white-space: nowrap;
     }
-    /* Pro chip — transitions.dev's Pro blue (the same wash its "Get Pro"
-       pill wears in dark mode) at their eyebrow-badge proportions. */
-    html[data-theme="dark"] .st-top-chip {
-      background: rgba(85, 207, 255, 0.14);
-      color: #7cd4ff;
-    }
+    /* Light: the lockup's dark parts sit at #0e0e0e rather than the
+       page's near-black --text, so the mark and wordmark read a touch
+       softer against the white top bar. */
+    html[data-theme="light"] .st-top .brand-mark { color: #0e0e0e; }
+    html[data-theme="light"] .st-top .brand-word-strong,
+    html[data-theme="light"] .st-top-name { color: #0e0e0e; }
+
+    /* Pro chip — a flat blue wash with no ring in either theme
+       (transitions.dev's .detail-pro-badge); the material ring this used to
+       carry read as a grey slab on the light surface. The tint tokens carry
+       the theme swap, so it is the same blue the nav's Get Pro pill and
+       Studio chip wear. */
     .st-top-chip {
       display: inline-flex;
       align-items: center;
-      height: 22px;
-      padding: 0 8px;
+      justify-content: center;
+      height: 18px;
+      padding: 0 6px;
       border-radius: 50px;
-      background: rgba(0, 122, 175, 0.1);
-      color: #0f7ba5;
+      background: var(--pro-tint-bg);
+      color: var(--pro-tint-ink);
       font-family: var(--font-sans);
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 500;
-      line-height: 16px;
-      /* The raised-surface ring every card and pill here wears, so the chip
-         sits on the same material instead of reading as a flat wash. */
-      box-shadow: var(--material-shadow);
+      line-height: 1.4;
+      box-shadow: none;
     }
     .st-top-right { display: flex; align-items: center; gap: 8px; }
     /* Theme toggle sits with the avatar; same 36px chip as the nav icons. */
     .st-theme-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; }
     .st-theme-btn { color: var(--icon-color-muted); }
     .st-theme-btn:hover { color: var(--icon-color); }
-    .st-top-email {
-      font-size: 13px;
-      color: var(--text-muted);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 220px;
-    }
     .st-top-link {
       display: inline-flex;
       align-items: center;
@@ -226,11 +223,19 @@
       flex: none;
       width: 24px;
       height: 24px;
-      border-radius: 6px;
-      overflow: hidden;
-      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
     }
-    html[data-theme="dark"] .st-lib-ico { box-shadow: none; }
+    /* Light rows per Figma 1433:39152: #4b4b4b labels, the active row
+       white on #111 with the 0 1px 3px black-4% drop and the three-part
+       inset ring. */
+    html[data-theme="light"] .st-lib { color: #4b4b4b; }
+    html[data-theme="light"] .st-lib[data-active="true"] {
+      color: #111111;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+    }
     .st-lib-ico img {
       position: absolute;
       display: block;
@@ -263,7 +268,23 @@
     }
     /* Install / Usage code block takes the stage's grid cell; the CSS
        sibling switch mirrors the detail pages' data-detail-panel swap. */
-    .st-main .st-stage-panel { grid-column: 1; grid-row: 2; align-self: start; }
+    .st-main .st-stage-panel {
+      grid-column: 1;
+      grid-row: 2;
+      align-self: start;
+      display: flex;
+      flex-direction: column;
+      /* Figma 1433:39150: the whole panel sits on the stage's own card with
+         20px of padding (the tab bar starts 20px left of the content), then
+         25px from the platform row to the first group and 17px between the
+         two groups. */
+      padding: 20px;
+      border-radius: 16px;
+      background: var(--stage-bg);
+      gap: 17px;
+    }
+    html[data-theme="dark"] .st-main .st-stage-panel { background: #171717; }
+    .st-main .st-stage-panel > .st-platform-tabs { margin-bottom: 8px; }
     .st-main .st-stage-bar:not([data-view="preview"]) ~ .pg-stage,
     .st-main .st-stage-bar:not([data-view="preview"]) ~ .pg-snippet { display: none; }
     .st-main .pg-stage {
@@ -304,10 +325,19 @@
          taller than its divider. */
       margin-top: -16px;
       padding-top: 16px;
+      /* Same at the foot: without this the box ends at the panel's padding
+         edge, so scrolling content was cut 16px above the card and read as
+         cropped. Now it clips at the card's own edge, and the 16px comes
+         back as padding so the last row still has air at the end. */
+      margin-bottom: -16px;
+      padding-bottom: 16px;
     }
+    /* The rules run the card's full width: the scroll box carries the
+       panel's 16px inset as its own padding, so -16px lands exactly on the
+       card's edge — inside the box, so it neither clips nor scrolls. */
     .st-main .pg-controls .st-panel-body > .pg-field::before {
-      left: 0;
-      right: 0;
+      left: -16px;
+      right: -16px;
     }
     /* The head is the panel's sticky header: it sits outside the scroll box,
        so it holds while the knobs scroll under it. The rule that used to be
@@ -362,7 +392,6 @@
     }
     @media (max-width: 639px) {
       .st-app { padding: 0 12px 32px; }
-      .st-top-email { display: none; }
     }
 
     /* ── Gate states (shared look with /studio.html) ───────────── */
@@ -373,38 +402,42 @@
       justify-content: center;
       padding-top: 48px;
     }
-    .st-skeleton {
-      width: min(100%, 686px);
-      border-radius: 24px;
-      background: var(--card-bg);
-      box-shadow: inset 0 0 0 1px var(--card-border), var(--card-shadow);
-      padding: 28px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-    .st-skeleton .sk-line {
-      height: 14px;
-      border-radius: 7px;
+    /* Loading state: the workbench's own layout with unpainted pieces, so
+       nothing shifts when the real panel arrives. Shapes match the parts
+       they stand in for — 40px library rows, a 36px tab pill, 32px control
+       rows, the 480px stage. */
+    .st-skeleton .pg-stage { min-height: 480px; }
+    .sk {
+      display: block;
+      border-radius: 8px;
       background: var(--skeleton);
       animation: st-pulse 1.4s ease-in-out infinite;
     }
-    .st-skeleton .sk-line:nth-child(1) { width: 38%; }
-    .st-skeleton .sk-line:nth-child(2) { width: 82%; animation-delay: 120ms; }
-    .st-skeleton .sk-line:nth-child(3) { width: 64%; animation-delay: 240ms; }
-    .st-skeleton .sk-block {
-      height: 220px;
-      border-radius: 16px;
-      background: var(--skeleton);
-      animation: st-pulse 1.4s ease-in-out infinite;
-      animation-delay: 360ms;
-    }
+    .st-skeleton .sk-side-label { width: 56px; height: 11px; margin: 9px 8px; border-radius: 6px; }
+    .st-skeleton .sk-lib { height: 40px; border-radius: 12px; }
+    .st-skeleton .sk-lib:nth-of-type(2) { animation-delay: 80ms; }
+    .st-skeleton .sk-lib:nth-of-type(3) { animation-delay: 160ms; }
+    .st-skeleton .sk-lib:nth-of-type(4) { animation-delay: 240ms; }
+    .st-skeleton .sk-lib:nth-of-type(5) { animation-delay: 320ms; }
+    .st-skeleton .sk-tabs { width: 190px; height: 36px; border-radius: 48px; }
+    .st-skeleton .sk-prompt { width: 127px; height: 32px; border-radius: 36px; }
+    .st-skeleton .sk-icon { width: 30px; height: 30px; border-radius: 50%; }
+    .st-skeleton .sk-section { display: flex; flex-direction: column; gap: 12px; }
+    .st-skeleton .sk-label { width: 96px; height: 13px; border-radius: 6px; margin-bottom: 4px; }
+    .st-skeleton .sk-field { height: 32px; border-radius: 8px; animation-delay: 120ms; }
+    .st-skeleton .sk-preset { width: 86px; height: 32px; border-radius: 36px; }
+    .st-skeleton .sk-icon-sm { width: 32px; height: 32px; border-radius: 50%; }
+    .st-skeleton .pg-snippet { padding: 24px 26px; display: flex; flex-direction: column; gap: 12px; }
+    .st-skeleton .sk-code { height: 12px; border-radius: 6px; }
+    .st-skeleton .sk-code:nth-child(1) { width: 62%; }
+    .st-skeleton .sk-code:nth-child(2) { width: 88%; animation-delay: 120ms; }
+    .st-skeleton .sk-code:nth-child(3) { width: 74%; animation-delay: 240ms; }
     @keyframes st-pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.45; }
     }
     @media (prefers-reduced-motion: reduce) {
-      .st-skeleton .sk-line, .st-skeleton .sk-block { animation: none; }
+      .st-skeleton .sk { animation: none; }
     }
 
     .st-locked {
@@ -539,12 +572,60 @@
           <span class="st-top-name">Studio <span class="st-top-chip">Pro</span></span>
         </div>
       </div>
-      <div class="st-gate">
-        <div class="st-skeleton" aria-hidden="true">
-          <span class="sk-line"></span>
-          <span class="sk-line"></span>
-          <span class="sk-line"></span>
-          <span class="sk-block"></span>
+      <!-- Same structure as the React <Skeleton>: keep the two in step. -->
+      <div class="st-body st-skeleton" aria-hidden="true">
+        <div class="st-side">
+          <span class="sk sk-side-label"></span>
+          <span class="sk sk-lib"></span>
+          <span class="sk sk-lib"></span>
+          <span class="sk sk-lib"></span>
+          <span class="sk sk-lib"></span>
+          <span class="sk sk-lib"></span>
+        </div>
+        <div class="st-main">
+          <div class="pg">
+            <div class="st-stage-bar" data-view="preview">
+              <span class="sk sk-tabs"></span>
+              <span class="st-stage-actions">
+                <span class="sk sk-preset"></span>
+                <span class="sk sk-icon-sm"></span>
+                <span class="sk sk-prompt"></span>
+              </span>
+            </div>
+            <div class="pg-stage"></div>
+            <div class="pg-controls">
+              <div class="st-panel-head">
+                <span class="sk sk-tabs"></span>
+                <span class="sk sk-icon"></span>
+              </div>
+              <div class="st-panel-body">
+            <div class="sk-section">
+              <span class="sk sk-label"></span>
+              <span class="sk sk-field"></span>
+              <span class="sk sk-field"></span>
+              <span class="sk sk-field"></span>
+            </div>
+            <div class="sk-section">
+              <span class="sk sk-label"></span>
+              <span class="sk sk-field"></span>
+              <span class="sk sk-field"></span>
+              <span class="sk sk-field"></span>
+              <span class="sk sk-field"></span>
+            </div>
+            <div class="sk-section">
+              <span class="sk sk-label"></span>
+              <span class="sk sk-field"></span>
+              <span class="sk sk-field"></span>
+              <span class="sk sk-field"></span>
+            </div>
+              </div>
+            </div>
+            <div class="code-block pg-snippet">
+              <span class="sk sk-code"></span>
+              <span class="sk sk-code"></span>
+              <span class="sk sk-code"></span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

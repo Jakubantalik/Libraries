@@ -8,6 +8,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { Liquid } from "liquid-gooey";
+import { checkSvgFilter, tpl, type CoreWiring } from "./core";
 import { ControlsPanel, PgTabs, PgSlider, PgToggles, PgSwatches, PanelSep, Snippet, num, StageBar, PgGroup } from "./controls";
 import { StudioTeaser } from "../examples/StudioTeaser";
 
@@ -59,6 +60,7 @@ const FILL_OPTIONS_REST = [
    collapse back onto the same panel label — "Goo blur" belongs to both the
    shared surface and to melt, which never appear together. */
 const GOOEY_PARAM_LABELS: Record<string, string> = {
+  core: "Core",
   effect: "Effect",
   blur: "Goo blur",
   contrast: "Contrast",
@@ -191,7 +193,7 @@ const MORPH_DEFAULTS: MorphKnobs = {
 };
 
 
-export function MorphDemo({ group, knobs, theme = "dark" }: { group: GroupTuning; knobs: MorphKnobs; theme?: GooeyTheme }) {
+export function MorphDemo({ group, knobs, theme = "dark", filter }: { group: GroupTuning; knobs: MorphKnobs; theme?: GooeyTheme; filter?: string }) {
   const [open, setOpen] = useState(false);
   const [anticipating, setAnticipating] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -225,6 +227,7 @@ export function MorphDemo({ group, knobs, theme = "dark" }: { group: GroupTuning
 
   return (
     <Liquid
+      filter={filter}
       blur={group.blur}
       contrast={group.contrast}
       fill={fill}
@@ -292,7 +295,7 @@ interface MoveKnobs {
 }
 const MOVE_DEFAULTS: MoveKnobs = { springiness: 0.5, wobble: 0.5, stretch: 0.6, trail: 0.35 };
 
-export function MoveDemo({ group, knobs, theme = "dark" }: { group: GroupTuning; knobs: MoveKnobs; theme?: GooeyTheme }) {
+export function MoveDemo({ group, knobs, theme = "dark", filter }: { group: GroupTuning; knobs: MoveKnobs; theme?: GooeyTheme; filter?: string }) {
   const [x, setX] = useState(84);
   const drag = useRef<number | null>(null);
 
@@ -314,6 +317,7 @@ export function MoveDemo({ group, knobs, theme = "dark" }: { group: GroupTuning;
 
   return (
     <Liquid
+      filter={filter}
       blur={group.blur}
       contrast={group.contrast}
       fill={fillFor(group, "move", theme)}
@@ -355,7 +359,7 @@ interface BendKnobs {
 }
 const BEND_DEFAULTS: BendKnobs = { vertical: 0.6, horizontal: 0.35, content: 0.3 };
 
-export function BendDemo({ group, knobs, theme = "dark" }: { group: GroupTuning; knobs: BendKnobs; theme?: GooeyTheme }) {
+export function BendDemo({ group, knobs, theme = "dark", filter }: { group: GroupTuning; knobs: BendKnobs; theme?: GooeyTheme; filter?: string }) {
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const [releasing, setReleasing] = useState(false);
   const stageRef = useRef<HTMLDivElement | null>(null);
@@ -403,6 +407,7 @@ export function BendDemo({ group, knobs, theme = "dark" }: { group: GroupTuning;
   const fill = fillFor(group, "bend", theme);
   return (
     <Liquid
+      filter={filter}
       blur={group.blur}
       contrast={group.contrast}
       fill={fill}
@@ -507,7 +512,7 @@ function MeltCard({
   );
 }
 
-export function MeltDemo({ melt }: { melt: MeltKnobs }) {
+export function MeltDemo({ melt, filter }: { melt: MeltKnobs; filter?: string }) {
   const stageRef = useRef<HTMLDivElement | null>(null);
   const [a, setA] = useState<Pos>({ x: 0, y: (MELT_STAGE_H - MELT_CARD) / 2 });
   const [b, setB] = useState<Pos>({ x: MELT_CARD + 24, y: (MELT_STAGE_H - MELT_CARD) / 2 });
@@ -537,7 +542,7 @@ export function MeltDemo({ melt }: { melt: MeltKnobs }) {
   }, []);
 
   return (
-    <Liquid className="mp" style={{ width: "min(100%, 420px)", height: MELT_STAGE_H }} ref={stageRef}>
+    <Liquid filter={filter} className="mp" style={{ width: "min(100%, 420px)", height: MELT_STAGE_H }} ref={stageRef}>
       <MeltCard src="/images/melt-a.jpg" pos={a} setPos={setA} stageRef={stageRef} melt={melt} />
       <MeltCard src="/images/melt-b.jpg" pos={b} setPos={setB} stageRef={stageRef} melt={melt} />
     </Liquid>
@@ -680,6 +685,21 @@ export function GooeyStudio({
   const [move, setMove] = useState<MoveKnobs>(MOVE_DEFAULTS);
   const [bend, setBend] = useState<BendKnobs>(BEND_DEFAULTS);
   const [melt, setMelt] = useState<MeltKnobs>({ blur: 7, contrast: 40, reach: 0.8, fade: 17, warp: 0, mix: 1, mixBlur: 8, gravity: 1.9, waviness: 12 });
+  /* The agent's rebuilt filter chain (raw SVG primitives), or "" for the
+     library's goo chain. */
+  const [core, setCore] = useState("");
+  const coreWiring: CoreWiring = {
+    lang: "svg",
+    /* The chain the library rendered for the visible demo, read back from
+       its <filter> — the exact primitives the agent is replacing. */
+    source: () => {
+      const f = Array.from(document.querySelectorAll<SVGFilterElement>(".pg [data-gooey-svg] filter")).find(
+        (el) => ((el.closest(".pg") as HTMLElement | null)?.offsetWidth ?? 0) > 0
+      );
+      return f ? f.innerHTML.trim() : "";
+    },
+    check: checkSvgFilter,
+  };
 
   /* Every Gooey effect is hand-driven — click the menu, drag the thumb, the
      card, the photos. No idle loop and no play/pause pill. */
@@ -696,6 +716,7 @@ export function GooeyStudio({
      inert. */
   const agentParams: Record<string, unknown> = {
     effect,
+    core,
     blur: group.blur,
     contrast: group.contrast,
     waviness: group.waviness,
@@ -731,6 +752,7 @@ export function GooeyStudio({
     const n = (k: string) => (typeof patch[k] === "number" ? (patch[k] as number) : undefined);
 
     if (typeof patch.effect === "string") setEffect(patch.effect as EffectType);
+    if (typeof patch.core === "string") setCore(patch.core);
 
     setGroup((g) => ({
       ...g,
@@ -778,7 +800,10 @@ export function GooeyStudio({
     }));
   }, []);
 
-  const snippet = buildSnippet(effect, group, morph, move, bend, melt, theme);
+  const stockSnippet = buildSnippet(effect, group, morph, move, bend, melt, theme);
+  const snippet = core
+    ? stockSnippet.replace("\n\n<Liquid", `\n\nconst liquidFilter = ${tpl(core)}\n\n<Liquid filter={liquidFilter}`)
+    : stockSnippet;
 
   /* The public page skips ControlsPanel entirely, so the Agent tab never
      renders there rather than rendering hidden — which also means it never
@@ -789,12 +814,12 @@ export function GooeyStudio({
 
   return (
     <div className="pg">
-      {!isPublic && <StageBar library="Gooey" prompt={{ pkg: "liquid-gooey", docsPath: "/gooey.html", snippet }} />}
+      {!isPublic && <StageBar library="Gooey" prompt={{ pkg: "liquid-gooey", docsPath: "/gooey.html", snippet }} agent={{ libraryId: "gooey", params: agentParams, labels: GOOEY_PARAM_LABELS, onApply: applyAgentParams }} />}
       <div className="pg-stage">
-        {visible && effect === "morph" && <MorphDemo group={group} knobs={morph} theme={theme} />}
-        {visible && effect === "move" && <MoveDemo group={group} knobs={move} theme={theme} />}
-        {visible && effect === "bend" && <BendDemo group={group} knobs={bend} theme={theme} />}
-        {visible && effect === "melt" && <MeltDemo melt={melt} />}
+        {visible && effect === "morph" && <MorphDemo group={group} knobs={morph} theme={theme} filter={core || undefined} />}
+        {visible && effect === "move" && <MoveDemo group={group} knobs={move} theme={theme} filter={core || undefined} />}
+        {visible && effect === "bend" && <BendDemo group={group} knobs={bend} theme={theme} filter={core || undefined} />}
+        {visible && effect === "melt" && <MeltDemo melt={melt} filter={core || undefined} />}
       </div>
 
       {isPublic ? (
@@ -877,8 +902,8 @@ export function GooeyStudio({
             params: agentParams,
             labels: GOOEY_PARAM_LABELS,
             onApply: applyAgentParams,
+            core: coreWiring,
           }}
-          prompt={{ pkg: "liquid-gooey", docsPath: "/gooey.html", snippet }}
         >
           <PgTabs label="Effect" options={EFFECT_OPTIONS} value={effect} onChange={setEffect} />
 

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useScrollFade } from "./useScrollFade";
 
 /* The snippet card's copy button — transitions.dev's .detail-code-copy
    riding .card-copy, whose icon crossfade and tooltip already live in
@@ -73,18 +74,7 @@ export function CodeCopy({ text, label }: { text: string; label: string }) {
         <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
       </svg>
-      <svg
-        className="icon-check"
-        aria-hidden="true"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <polyline points="20 6 9 17 4 12" />
-      </svg>
+      <svg className="icon-check" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3.5 8.46889L6.26923 11.58L12.5 4.58" /></svg>
       <span className="card-copy-tooltip" aria-hidden="true">
         <span className="tt-text">
           Cop
@@ -99,5 +89,25 @@ export function CodeCopy({ text, label }: { text: string; label: string }) {
         </span>
       </span>
     </button>
+  );
+}
+
+/** The snippet card: a scrolling <pre> that fades at whichever edge still
+ *  has code beyond it, with the copy button above it. */
+export function CodeBlock({
+  code,
+  label,
+  className,
+}: {
+  code: string;
+  label: string;
+  className?: string;
+}) {
+  const preRef = useScrollFade(code);
+  return (
+    <div className={className ? `code-block ${className}` : "code-block"}>
+      <pre ref={preRef}>{code}</pre>
+      <CodeCopy text={code} label={label} />
+    </div>
   );
 }

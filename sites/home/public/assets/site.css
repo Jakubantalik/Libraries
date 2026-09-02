@@ -41,6 +41,15 @@
   --muted: #5e6073;
 
   --material-bg: #ffffff;
+  /* Inline code in prose: a chip with its own hairline, so a term like
+     prefers-reduced-motion reads as a key rather than a highlight. */
+  /* Pro accents share the CTA blue (#0071fc): the nav Get Pro pill and the
+     Pro chips are tints and inks of that one hue. */
+  --pro-tint-bg: rgba(0, 113, 252, 0.10);
+  --pro-tint-bg-hover: rgba(0, 113, 252, 0.16);
+  --pro-tint-ink: #0062d6;
+  --code-chip-bg: rgba(0, 0, 0, 0.04);
+  --code-chip-ring: rgba(0, 0, 0, 0.08);
   --material-shadow:
     0 4px 42px 0 rgba(0, 0, 0, 0.06),
     0 2px 6px 0 rgba(0, 0, 0, 0.05),
@@ -133,6 +142,11 @@ html[data-theme="dark"] {
   --muted: #767676;
 
   --material-bg: #181818;
+  --pro-tint-bg: rgba(0, 113, 252, 0.18);
+  --pro-tint-bg-hover: rgba(0, 113, 252, 0.26);
+  --pro-tint-ink: #7db4ff;
+  --code-chip-bg: rgba(255, 255, 255, 0.05);
+  --code-chip-ring: rgba(255, 255, 255, 0.09);
   --material-shadow:
     0 1px 3px 0 rgba(0, 0, 0, 0.04),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
@@ -291,13 +305,21 @@ html {
 /* Signed-in avatar — the 3-dot "More" button swaps to the user's initial
    (Figma 1425:38996: #2a2a2a chip, 12px Inter Medium initial, material ring).
    The dots stay in the DOM; the class just hides them and shows the letter. */
+/* Light: the same raised white control every other light surface here
+   wears (tabs, the active nav row, Copy prompt) - white on the black-6%
+   ring with dark ink - rather than a black disc, which read as a hole
+   in the white top bar. Dark keeps its own block below. */
 .icon-btn--avatar {
-  background: #17181c;
-  color: #ffffff;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
+  background: #ffffff;
+  color: #17181c;
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.04),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.1),
+    inset 0 0 0 1px rgba(196, 196, 196, 0.1);
 }
-.icon-btn--avatar:hover { background: #2a2a2a; }
-.icon-btn--avatar:active { background: #000000; }
+.icon-btn--avatar:hover { background: #fafafa; }
+.icon-btn--avatar:active { background: #f1f1f1; }
 html[data-theme="dark"] .icon-btn--avatar {
   background: #2a2a2a;
   color: #e8e8e8;
@@ -326,6 +348,7 @@ html[data-theme="dark"] .icon-btn--avatar:active { background: #262626; }
   height: 17px;
 }
 .icon-btn:hover svg { color: var(--icon-color); }
+
 
 .icon-btn-pill {
   display: inline-flex;
@@ -465,7 +488,7 @@ html[data-theme="dark"] .icon-btn--avatar:active { background: #262626; }
   align-items: center;
   justify-content: center;
   height: 36px;
-  padding: 0 12px;
+  padding: 0 14px;
   border-radius: 50px;
   font-family: var(--font-sans);
   font-size: 13px;
@@ -486,13 +509,18 @@ html[data-theme="dark"] .icon-btn--avatar:active { background: #262626; }
   margin-left: 6px;
   padding: 0 6px;
   border-radius: 50px;
-  background: rgba(85, 207, 255, 0.14);
-  color: #7cd4ff;
+  background: var(--pro-tint-bg);
+  color: var(--pro-tint-ink);
   font-size: 11px;
   font-weight: 500;
   line-height: 14px;
   box-shadow: var(--material-shadow);
 }
+
+/* The Studio pill carries the Pro chip, whose own rounded fill reads as
+   padding — so its right side comes in to 9px against the 14px the text-only pills
+   carry on both sides. */
+.nav-pill:has(.nav-pill-pro) { padding-right: 9px; }
 .nav-pill:hover { color: var(--text); background: rgba(0, 0, 0, 0.03); }
 html[data-theme="dark"] .nav-pill:hover { background: rgba(255, 255, 255, 0.06); }
 .nav-pill--active {
@@ -619,7 +647,7 @@ body.menu-open .mobile-menu { pointer-events: auto; }
 .mobile-menu-link--6 { transition-delay: 200ms; }
 .mobile-menu-link--7 { transition-delay: 240ms; }
 .mobile-menu-link--pro { color: #0053e3; }
-html[data-theme="dark"] .mobile-menu-link--pro { color: #7cd4ff; }
+html[data-theme="dark"] .mobile-menu-link--pro { color: var(--pro-tint-ink); }
 .mobile-menu-link--pro[data-state="account"] { color: var(--text); }
 html[data-theme="dark"] .mobile-menu-link--pro[data-state="account"] { color: var(--text); }
 body.menu-open .mobile-menu-link {
@@ -711,14 +739,15 @@ html[data-theme="dark"] .nav-search-kbd { color: rgba(154, 154, 154, 0.7); }
 .nav-get-pro {
   display: inline-flex; align-items: center; justify-content: center;
   height: 36px; padding: 0 16px; border: 0; border-radius: 50px;
-  background: rgba(0, 115, 255, 0.08); color: #0053e3;
+  background: var(--pro-tint-bg); color: var(--pro-tint-ink);
   font-family: var(--font-sans); font-size: 13px; font-weight: 500;
   text-decoration: none; white-space: nowrap; cursor: pointer;
   transition: background 150ms var(--nav-ease); -webkit-tap-highlight-color: transparent;
 }
-.nav-get-pro:hover { background: rgba(0, 115, 255, 0.14); }
-html[data-theme="dark"] .nav-get-pro { background: rgba(85, 207, 255, 0.14); color: #7cd4ff; }
-html[data-theme="dark"] .nav-get-pro:hover { background: rgba(85, 207, 255, 0.22); }
+.nav-get-pro:hover { background: var(--pro-tint-bg-hover); }
+/* The pill sets its own display, which outranks the UA's [hidden] rule —
+   pro-client.js hides it by attribute once a signed-in user is entitled. */
+.nav-get-pro[hidden] { display: none; }
 .nav-get-pro[data-state="account"] { background: var(--chip-bg); color: var(--text); }
 .nav-get-pro[data-state="account"]:hover { background: var(--chip-bg-hover); }
 html[data-theme="dark"] .nav-get-pro[data-state="account"] { background: var(--chip-bg); color: var(--text); }
@@ -1003,7 +1032,10 @@ html[data-theme="dark"] .card:hover {
    single hairline ring with a brighter top edge, and no drop shadow.
    Fill and shadow only; unlike .card they size themselves and are laid
    out by their own grid in index.html. */
-.pro-quote {
+.pro-quote,
+/* The accessibility/docs statement cards wear the same quote-card material,
+   so every card family on the site reads as one. */
+html[data-theme="dark"] .docs-card {
   background-color: #1a1a1a;
   box-shadow:
     inset 0 1px 0 0 rgba(255, 255, 255, 0.02),

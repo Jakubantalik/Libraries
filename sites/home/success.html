@@ -69,6 +69,11 @@
     /* Design tokens — light (default) and dark                      */
     /* ============================================================ */
     :root {
+      /* Pro accents share the CTA blue (#0071fc): the nav Get Pro pill and the
+         Pro chips are tints and inks of that one hue. */
+      --pro-tint-bg: rgba(0, 113, 252, 0.10);
+      --pro-tint-bg-hover: rgba(0, 113, 252, 0.16);
+      --pro-tint-ink: #0062d6;
       color-scheme: light;
 
       --bg: #fdfdfd;
@@ -296,6 +301,9 @@
     }
 
     html[data-theme="dark"] {
+      --pro-tint-bg: rgba(0, 113, 252, 0.18);
+      --pro-tint-bg-hover: rgba(0, 113, 252, 0.26);
+      --pro-tint-ink: #7db4ff;
       color-scheme: dark;
 
       --bg: #121212;
@@ -605,7 +613,7 @@
       align-items: center;
       justify-content: center;
       height: 36px;
-      padding: 0 12px;
+      padding: 0 14px;
       border-radius: 50px;
       font-family: var(--font-sans);
       font-size: 13px;
@@ -626,8 +634,8 @@
       margin-left: 6px;
       padding: 0 6px;
       border-radius: 50px;
-      background: rgba(85, 207, 255, 0.14);
-      color: #7cd4ff;
+      background: var(--pro-tint-bg);
+      color: var(--pro-tint-ink);
       font-size: 11px;
       font-weight: 500;
       line-height: 14px;
@@ -638,6 +646,11 @@
         inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
         inset 0 0 0 1px rgba(196, 196, 196, 0.1);
     }
+
+    /* The Studio pill carries the Pro chip, whose own rounded fill reads as
+       padding — so its right side comes in to 9px against the 14px the text-only pills
+       carry on both sides. */
+    .nav-pill:has(.nav-pill-pro) { padding-right: 9px; }
     .nav-pill:hover { color: var(--text); background: rgba(0, 0, 0, 0.03); }
     html[data-theme="dark"] .nav-pill:hover { background: rgba(255, 255, 255, 0.06); }
     .nav-pill--active {
@@ -3582,14 +3595,15 @@
     .nav-get-pro {
       display: inline-flex; align-items: center; justify-content: center;
       height: 36px; padding: 0 16px; border: 0; border-radius: 50px;
-      background: rgba(0, 115, 255, 0.08); color: #0053e3;
+      background: var(--pro-tint-bg); color: var(--pro-tint-ink);
       font-family: var(--font-sans); font-size: 13px; font-weight: 500;
       text-decoration: none; white-space: nowrap; cursor: pointer;
       transition: background 150ms var(--nav-ease); -webkit-tap-highlight-color: transparent;
     }
-    .nav-get-pro:hover { background: rgba(0, 115, 255, 0.14); }
-    html[data-theme="dark"] .nav-get-pro { background: rgba(85, 207, 255, 0.14); color: #7cd4ff; }
-    html[data-theme="dark"] .nav-get-pro:hover { background: rgba(85, 207, 255, 0.22); }
+    .nav-get-pro:hover { background: var(--pro-tint-bg-hover); }
+    /* The pill sets its own display, which outranks the UA's [hidden] rule —
+       pro-client.js hides it by attribute once a signed-in user is entitled. */
+    .nav-get-pro[hidden] { display: none; }
     /* Signed in with Pro: nothing left to buy, so the pill drops the accent
        and reads as a plain Account link (same grey as the GitHub pill). */
     .nav-get-pro[data-state="account"] { background: var(--chip-bg); color: var(--text); }
@@ -3745,7 +3759,7 @@
             <span class="brand-word"><span class="brand-word-strong">Libraries</span><span class="brand-word-dim">.dev</span></span>
           </a>
           <nav class="site-nav-menu" aria-label="Primary">
-            <a class="nav-pill" href="/#components">Libraries</a>
+            <a class="nav-pill" href="/beam.html">Libraries</a>
             <a class="nav-pill" href="/how-to-use.html">How to use</a>
             <a class="nav-pill" href="/studio.html">Studio <span class="nav-pill-pro">Pro</span></a>
           </nav>
@@ -3768,7 +3782,7 @@
           </a>
           <div class="pm-anchor" id="more-anchor">
             <button type="button" class="icon-btn" id="more-btn" aria-label="More" aria-haspopup="menu" aria-expanded="false">
-              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block">
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 8C6.66667 7.26362 7.26362 6.66667 8 6.66667C8.73638 6.66667 9.33333 7.26362 9.33333 8C9.33333 8.73638 8.73638 9.33333 8 9.33333C7.26362 9.33333 6.66667 8.73638 6.66667 8Z" fill="currentColor"/>
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 3.33333C6.66667 2.59695 7.26362 2 8 2C8.73638 2 9.33333 2.59695 9.33333 3.33333C9.33333 4.06971 8.73638 4.66667 8 4.66667C7.26362 4.66667 6.66667 4.06971 6.66667 3.33333Z" fill="currentColor"/>
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 12.6667C6.66667 11.9303 7.26362 11.3333 8 11.3333C8.73638 11.3333 9.33333 11.9303 9.33333 12.6667C9.33333 13.403 8.73638 14 8 14C7.26362 14 6.66667 13.403 6.66667 12.6667Z" fill="currentColor"/>
@@ -3803,9 +3817,9 @@
       <div class="mobile-menu-backdrop" id="mobile-menu-backdrop"></div>
       <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile">
         <ul class="mobile-menu-list">
-          <li><a class="mobile-menu-link mobile-menu-link--1" href="/#components">Libraries</a></li>
-          <li><a class="mobile-menu-link mobile-menu-link--2" href="/studio.html">Studio</a></li>
-          <li><a class="mobile-menu-link mobile-menu-link--3" href="/how-to-use.html">How to use</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--1" href="/beam.html">Libraries</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--2" href="/how-to-use.html">How to use</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--3" href="/studio.html">Studio</a></li>
           <li><a class="mobile-menu-link mobile-menu-link--4 mobile-menu-link--pro" href="/pro.html">Get Pro</a></li>
         </ul>
         <a class="mobile-menu-cta" id="mobile-signin" href="/pro.html">Sign in</a>
