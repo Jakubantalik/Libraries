@@ -19,13 +19,20 @@ import {
    breakpoints stay entirely in CSS. */
 
 interface Tile {
+  /* Several clips: the tile plays one of them, chosen on mount. */
+  videos?: string[];
   key: string;
   href: string;
   label: string;
 }
 
 const TILES: Tile[] = [
-  { key: "orb", href: "/orbs.html", label: "Thinking orbs" },
+  { key: "orb",
+    videos: [
+      "/assets/videos/orb-small-card-1.mp4",
+      "/assets/videos/orb-small-card-2.mp4",
+      "/assets/videos/orb-small-card-3.mp4",
+    ], href: "/orbs.html", label: "Thinking orbs" },
   { key: "beam", href: "/beam.html", label: "Border beam" },
   { key: "metal", href: "/metal.html", label: "Liquid metal" },
   { key: "gooey", href: "/gooey.html", label: "Gooey" },
@@ -124,6 +131,14 @@ function HeroTile({ tile, bounds }: { tile: Tile; bounds: () => DOMRect | null }
     }
   };
 
+  /* Chosen once per mount: a Math.random() in render would re-pick on
+     every drag update and restart the clip mid-gesture. */
+  const [clip] = useState(() =>
+    tile.videos && tile.videos.length
+      ? tile.videos[Math.floor(Math.random() * tile.videos.length)]
+      : null,
+  );
+
   const moved = pos.x !== 0 || pos.y !== 0;
   /* The offset rides in CSS vars, not a transform: the stylesheet composes
      them with its own hover lift, so a dropped tile still lifts on hover. */
@@ -151,7 +166,31 @@ function HeroTile({ tile, bounds }: { tile: Tile; bounds: () => DOMRect | null }
       onPointerCancel={endDrag}
       onClick={onClick}
     >
-      <span className="hero-tile-stage" />
+      <span className="hero-tile-stage">
+        {clip && (
+          <video
+            className="hero-tile-video"
+            src={clip}
+            /* React sets `muted` as a property after the element exists,
+               and Chrome's autoplay policy reads the attribute at insertion,
+               so a React-rendered muted video can still be refused. Set it
+               on the node itself and nudge play() once, swallowing the
+               rejection the policy would otherwise throw. */
+            ref={(el) => {
+              if (!el) return;
+              el.muted = true;
+              el.defaultMuted = true;
+              el.play().catch(() => {});
+            }}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            aria-hidden="true"
+          />
+        )}
+      </span>
       <span className="hero-tile-pill">
         {tile.label} {CHEVRON}
       </span>
