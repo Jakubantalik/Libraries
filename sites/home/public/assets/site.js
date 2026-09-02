@@ -297,6 +297,35 @@
     });
   });
 
+  /* ── Platform row under Install & Usage ───────────────────
+   * Beam and Orb ship ports, so the row swaps the whole install+usage
+   * pair — the same thing the Studio's StageBar does with its platform
+   * state. Pages without ports simply have no row. */
+  var platformBar = document.querySelector("[data-detail-platforms]");
+  if (platformBar) {
+    var pTabs = [].slice.call(platformBar.querySelectorAll("[data-platform-tab]"));
+    var pPanels = [].slice.call(document.querySelectorAll("[data-platform]"));
+
+    var selectPlatform = function (id) {
+      pTabs.forEach(function (t) {
+        var on = t.getAttribute("data-platform-tab") === id;
+        t.setAttribute("aria-selected", on ? "true" : "false");
+        if (on) t.setAttribute("data-active", "true");
+        else t.removeAttribute("data-active");
+      });
+      pPanels.forEach(function (panel) {
+        if (panel.getAttribute("data-platform") === id) panel.removeAttribute("hidden");
+        else panel.setAttribute("hidden", "");
+      });
+    };
+
+    pTabs.forEach(function (t) {
+      t.addEventListener("click", function () {
+        selectPlatform(t.getAttribute("data-platform-tab"));
+      });
+    });
+  }
+
   /* ── Detail-page tabs (Preview / Install / Usage) ──────────
    * The pill indicator is positioned from the selected button's own
    * box, so it stays correct when the label widths differ per page.

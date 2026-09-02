@@ -38,6 +38,10 @@
   <meta property="og:description" content="A real-time WebGL liquid-metal ring that wraps any button or icon in animated chrome. Try it live and install metal-fx from npm." />
 
   <meta name="twitter:card" content="summary_large_image" />
+  <meta property="og:image" content="https://libraries.dev/assets/og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:image" content="https://libraries.dev/assets/og-image.jpg" />
   <meta name="twitter:title" content="Metal: metal-fx playground | Libraries.dev" />
   <meta name="twitter:description" content="A real-time WebGL liquid-metal ring that wraps any button or icon in animated chrome. Try it live and install metal-fx from npm." />
 
@@ -220,8 +224,7 @@
             <div class="detail-tabs proto-modal-tabs" data-detail-tabs role="tablist" aria-label="View">
               <span class="proto-modal-tabs-indicator" aria-hidden="true"></span>
               <button type="button" class="proto-modal-tab" role="tab" data-detail-tab="preview" aria-selected="true">Preview</button>
-              <button type="button" class="proto-modal-tab" role="tab" data-detail-tab="install" aria-selected="false">Install</button>
-              <button type="button" class="proto-modal-tab" role="tab" data-detail-tab="usage" aria-selected="false">Usage</button>
+              <button type="button" class="proto-modal-tab" role="tab" data-detail-tab="code" aria-selected="false">Install &amp; Usage</button>
             </div>
 
             <div class="detail-head-actions">
@@ -250,8 +253,14 @@
             <div id="playground-root"></div>
           </div>
 
-          <div class="detail-panel" data-detail-panel="install" hidden>
-            <div class="code-block">
+          <!-- One tab, both blocks: the install line and the usage snippet read
+               together under their own titles, as the Studio's Install & Usage does. -->
+          <div class="detail-panel detail-panel--code" data-detail-panel="code" hidden>
+          <div class="st-stage-panel">
+          
+            <div class="st-code-group">
+              <span class="st-code-title">Installation</span>
+              <div class="code-block">
               <pre id="install-code">npm install metal-fx</pre>
               <button type="button" class="code-copy" data-copy-target="#install-code" aria-label="Copy install command">
                 <svg class="icon-copy" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -261,10 +270,10 @@
                 <svg class="icon-check" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.46889L6.26923 11.58L12.5 4.58" /></svg>
               </button>
             </div>
-          </div>
-
-          <div class="detail-panel" data-detail-panel="usage" hidden>
-            <div class="code-block">
+            </div>
+            <div class="st-code-group">
+              <span class="st-code-title">Usage</span>
+              <div class="code-block">
               <pre id="usage-code">import { MetalFx } from 'metal-fx';
 
 &lt;MetalFx preset="chromatic" strength={1}&gt;
@@ -278,8 +287,10 @@
                 <svg class="icon-check" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.46889L6.26923 11.58L12.5 4.58" /></svg>
               </button>
             </div>
+            </div>
           </div>
         </div>
+</div>
       </div>
     </div>
 
