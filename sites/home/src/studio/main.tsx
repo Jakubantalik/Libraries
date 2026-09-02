@@ -112,7 +112,19 @@ function TopBar({ email, pro }: { email: string | null; pro: boolean }) {
         </span>
       </div>
       <div className="st-top-right">
-        {email && <span className="st-top-email">{email}</span>}
+        {/* Same avatar the site nav shows once signed in (see pro-client.js);
+            here it is a plain link, since the app has no ⋮ menu to open. */}
+        {email && (
+          <a
+            className="icon-btn"
+            data-avatar="true"
+            href="/account.html"
+            title={email}
+            aria-label="Account"
+          >
+            <span className="nav-avatar" aria-hidden="true">{email.charAt(0)}</span>
+          </a>
+        )}
       </div>
     </div>
   );
