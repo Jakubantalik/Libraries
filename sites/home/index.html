@@ -369,6 +369,27 @@
       display: flex; flex-direction: column; gap: 24px; min-width: 0;
       min-height: 240px; padding: 32px; border-radius: 24px;
     }
+    /* A quiet X mark in the card's top-right corner, so the quotes read as
+       posts. Linked where the card already links to the author's profile;
+       decorative otherwise. */
+    .pro-quote { position: relative; }
+    .pro-quote-x {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      width: 14px;
+      height: 14px;
+      display: block;
+      color: rgba(255, 255, 255, 0.22);
+      text-decoration: none;
+      transition: color 150ms ease;
+    }
+    .pro-quote-x svg { width: 100%; height: 100%; display: block; }
+    /* The quote never runs under the mark. */
+    .pro-quote-text { padding-right: 28px; }
+    a.pro-quote-x:hover { color: rgba(255, 255, 255, 0.6); }
+    html[data-theme="light"] .pro-quote-x { color: rgba(0, 0, 0, 0.18); }
+    html[data-theme="light"] a.pro-quote-x:hover { color: rgba(0, 0, 0, 0.55); }
     .pro-quote-text { margin: 0; flex: 1 1 auto; font-size: 16px; line-height: 24.2px; color: #c9c9c9; overflow-wrap: anywhere; }
     .pro-quote-author { display: flex; align-items: center; gap: 11px; min-width: 0; }
     .pro-quote-avatar-link { flex: none; display: inline-flex; border-radius: 50px; text-decoration: none; transition: opacity 150ms var(--ease-smooth-out); }
@@ -766,6 +787,7 @@
       <h2 class="home-section-title" id="kind-words-title">Kind words from X</h2>
       <ul class="pro-quotes">
         <li class="pro-quote">
+          <span class="pro-quote-x" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span>
           <p class="pro-quote-text">Generational cook!</p>
           <div class="pro-quote-author">
             <span class="pro-quote-avatar" aria-hidden="true">G<img class="pro-quote-avatar-img" src="/assets/avatars/rauchg.jpg" alt="" onerror="this.remove()" /></span>
@@ -776,6 +798,7 @@
           </div>
         </li>
         <li class="pro-quote">
+          <span class="pro-quote-x" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span>
           <p class="pro-quote-text">Very cool</p>
           <div class="pro-quote-author">
             <span class="pro-quote-avatar" aria-hidden="true">D<img class="pro-quote-avatar-img" src="/assets/avatars/destraynor.jpg" alt="" onerror="this.remove()" /></span>
@@ -786,6 +809,7 @@
           </div>
         </li>
         <li class="pro-quote">
+          <span class="pro-quote-x" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span>
           <p class="pro-quote-text">INSANELY AMAZING</p>
           <div class="pro-quote-author">
             <span class="pro-quote-avatar" aria-hidden="true">K<img class="pro-quote-avatar-img" src="/assets/avatars/krispuckett.jpg" alt="" onerror="this.remove()" /></span>
@@ -796,6 +820,7 @@
           </div>
         </li>
         <li class="pro-quote">
+          <a class="pro-quote-x" href="https://x.com/witsdev" target="_blank" rel="noopener noreferrer" aria-label="wits on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
           <p class="pro-quote-text">Thank you for building an awesome library! :)</p>
           <div class="pro-quote-author">
             <a class="pro-quote-avatar-link" href="https://x.com/witsdev" target="_blank" rel="noopener noreferrer" aria-label="wits on X" tabindex="-1">
@@ -808,6 +833,7 @@
           </div>
         </li>
         <li class="pro-quote">
+          <a class="pro-quote-x" href="https://x.com/tranmautritam" target="_blank" rel="noopener noreferrer" aria-label="Tran Mau Tri Tam on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
           <p class="pro-quote-text">Your AI agent&rsquo;s &ldquo;thinking...&rdquo; state doesn&rsquo;t have to be a boring spinner. 6 animated orb types, zero dependencies, light + dark mode built in. npm install and you&rsquo;re done.</p>
           <div class="pro-quote-author">
             <a class="pro-quote-avatar-link" href="https://x.com/tranmautritam" target="_blank" rel="noopener noreferrer" aria-label="Tran Mau Tri Tam on X" tabindex="-1">
@@ -820,6 +846,7 @@
           </div>
         </li>
         <li class="pro-quote">
+          <a class="pro-quote-x" href="https://x.com/jakubantalik" target="_blank" rel="noopener noreferrer" aria-label="Jakub Antalik on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
           <p class="pro-quote-text">Using Beam, Orb, Gooey, Metal or Image somewhere nice? Tell me on X and I&rsquo;ll feature it here.</p>
           <div class="pro-quote-author">
             <a class="pro-quote-avatar-link" href="https://x.com/jakubantalik" target="_blank" rel="noopener noreferrer" aria-label="Jakub Antalik on X" tabindex="-1">

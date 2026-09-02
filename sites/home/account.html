@@ -551,6 +551,47 @@
       color: var(--icon-color-muted);
       transition: color 0.15s ease;
     }
+    /* (ported by value from site.css: this page links no shared sheet) */
+    /* Signed-in avatar — the 3-dot "More" button swaps to the user's initial
+       (Figma 1425:38996: #2a2a2a chip, 12px Inter Medium initial, material ring).
+       The dots stay in the DOM; the class just hides them and shows the letter. */
+    /* Light: the same raised white control every other light surface here
+       wears (tabs, the active nav row, Copy prompt) - white on the black-6%
+       ring with dark ink - rather than a black disc, which read as a hole
+       in the white top bar. Dark keeps its own block below. */
+    .icon-btn--avatar {
+      background: #ffffff;
+      color: #17181c;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.1),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+    }
+    .icon-btn--avatar:hover { background: #fafafa; }
+    .icon-btn--avatar:active { background: #f1f1f1; }
+    html[data-theme="dark"] .icon-btn--avatar {
+      background: #2a2a2a;
+      color: #e8e8e8;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+    }
+    html[data-theme="dark"] .icon-btn--avatar:hover { background: #323232; }
+    html[data-theme="dark"] .icon-btn--avatar:active { background: #262626; }
+    .icon-btn--avatar svg { display: none !important; }
+    .nav-avatar-initial {
+      display: none;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 13px;
+      text-transform: uppercase;
+    }
+    .icon-btn--avatar .nav-avatar-initial { display: block; }
     .icon-btn svg.icon-x {
       width: 16px;
       height: 17px;

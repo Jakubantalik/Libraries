@@ -468,6 +468,47 @@
       color: var(--icon-color-muted);
       transition: color 0.15s ease;
     }
+    /* (ported by value from site.css: this page links no shared sheet) */
+    /* Signed-in avatar — the 3-dot "More" button swaps to the user's initial
+       (Figma 1425:38996: #2a2a2a chip, 12px Inter Medium initial, material ring).
+       The dots stay in the DOM; the class just hides them and shows the letter. */
+    /* Light: the same raised white control every other light surface here
+       wears (tabs, the active nav row, Copy prompt) - white on the black-6%
+       ring with dark ink - rather than a black disc, which read as a hole
+       in the white top bar. Dark keeps its own block below. */
+    .icon-btn--avatar {
+      background: #ffffff;
+      color: #17181c;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.1),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+    }
+    .icon-btn--avatar:hover { background: #fafafa; }
+    .icon-btn--avatar:active { background: #f1f1f1; }
+    html[data-theme="dark"] .icon-btn--avatar {
+      background: #2a2a2a;
+      color: #e8e8e8;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+    }
+    html[data-theme="dark"] .icon-btn--avatar:hover { background: #323232; }
+    html[data-theme="dark"] .icon-btn--avatar:active { background: #262626; }
+    .icon-btn--avatar svg { display: none !important; }
+    .nav-avatar-initial {
+      display: none;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 13px;
+      text-transform: uppercase;
+    }
+    .icon-btn--avatar .nav-avatar-initial { display: block; }
     .icon-btn svg.icon-x {
       width: 16px;
       height: 17px;
@@ -3831,11 +3872,6 @@
     </header>
 
     <header class="header">
-      <div class="header-icon-wrap" aria-hidden="true" style="display:flex;align-items:center;justify-content:center;">
-        <svg width="104" height="68" viewBox="0 0 22.6705 14.6705" fill="none" xmlns="http://www.w3.org/2000/svg" style="color:#fff">
-          <path d="M21.3352 10.3354L6.89079 13.3354L18.0019 7.33536L1.33524 9.33536L19.3352 1.33536L1.33524 4.33536L9.33524 1.33536" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
       <h1 class="title">You are all set, thank you!</h1>
       <p class="subtitle">
         You now have full access to Libraries Pro. Open the
@@ -3845,18 +3881,43 @@
       </p>
       <p class="success-signin" id="success-signin" role="status" hidden></p>
       <div class="skill-cta-row">
-        <a class="skill-btn skill-btn--primary" href="/studio.html">Open the Studio</a>
+        <!-- Sign in opens the auth modal; the href is the no-JS fallback. -->
+        <a class="skill-btn skill-btn--primary" id="success-cta-signin" href="/pro.html">Sign in</a>
         <a class="skill-btn skill-btn--secondary" href="/#components">Browse libraries</a>
       </div>
-      <p class="success-foot">You can also <a href="account.html">download</a> everything from your account.</p>
       <style>
         /* Two small text lines beneath the shared hero — styled with the page's
            existing tokens so they read as part of it, not a bolted-on block. */
         .header .subtitle a { color: var(--text); font-weight: 500; text-decoration: none; }
         .header .subtitle a:hover { text-decoration: underline; }
-        .success-foot { margin: 22px 0 0; max-width: 460px; font-size: 13px; line-height: 1.6; color: var(--text-muted); text-align: center; }
-        .success-foot a { color: var(--text); font-weight: 500; text-decoration: none; }
-        .success-foot a:hover { text-decoration: underline; }
+        /* The homepage hero's pair (Figma 1292:4277): Sign in on the blue token
+           surface, Browse on the grey. Class doubled to outrank the page's own
+           theme-scoped .skill-btn--* rules. */
+        .header .skill-cta-row { gap: 11px; }
+        .header .skill-cta-row .skill-btn { height: 32px; font-size: 13px; line-height: 13px; font-weight: 500; }
+        .header .skill-cta-row .skill-btn.skill-btn--primary,
+        .header .skill-cta-row .skill-btn.skill-btn--secondary { padding: 0 12px; border-radius: 24px; color: #ffffff; }
+        .header .skill-cta-row .skill-btn.skill-btn--primary {
+          background: #0071fc;
+          box-shadow:
+            0 1px 3px 0 rgba(0, 0, 0, 0.04),
+            inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+        .header .skill-cta-row .skill-btn.skill-btn--primary:hover { background: #1a7dff; }
+        .header .skill-cta-row .skill-btn.skill-btn--primary:active { background: #0063e0; }
+        .header .skill-cta-row .skill-btn.skill-btn--secondary {
+          background: #2a2a2a;
+          box-shadow:
+            0 1px 3px 0 rgba(0, 0, 0, 0.04),
+            inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+            inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+            inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+            inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+        }
+        .header .skill-cta-row .skill-btn.skill-btn--secondary:hover { background: #323232; }
+        .header .skill-cta-row .skill-btn.skill-btn--secondary:active { background: #262626; }
         .success-signin { margin: 16px 0 0; max-width: 460px; font-size: 14px; line-height: 1.5; color: var(--text-muted); text-align: center; }
         .success-signin[hidden] { display: none; }
         .success-signin strong { color: var(--text); font-weight: 600; }
@@ -3914,8 +3975,17 @@
       var TP = window.LibrariesPro;
       var note = document.getElementById("success-signin");
       var sid = new URLSearchParams(location.search).get("session_id");
-      if (!TP || !sid || !note) return;
+      if (!TP) return;
       function esc(x){ var d=document.createElement("div"); d.textContent=x; return d.innerHTML; }
+      var signin = document.getElementById("success-cta-signin");
+      if (signin) {
+        signin.addEventListener("click", function (e) {
+          e.preventDefault();
+          if (TP.state && TP.state.authenticated) location.href = "account.html";
+          else TP.signIn();
+        });
+      }
+      if (!sid || !note) return;
       TP.refresh().then(function (state) {
         if (state && state.authenticated) return; // already signed in
         TP.signInFromCheckout(sid).then(function (r) {

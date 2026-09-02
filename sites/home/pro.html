@@ -535,6 +535,47 @@
       color: var(--icon-color-muted);
       transition: color 0.15s ease;
     }
+    /* (ported by value from site.css: this page links no shared sheet) */
+    /* Signed-in avatar — the 3-dot "More" button swaps to the user's initial
+       (Figma 1425:38996: #2a2a2a chip, 12px Inter Medium initial, material ring).
+       The dots stay in the DOM; the class just hides them and shows the letter. */
+    /* Light: the same raised white control every other light surface here
+       wears (tabs, the active nav row, Copy prompt) - white on the black-6%
+       ring with dark ink - rather than a black disc, which read as a hole
+       in the white top bar. Dark keeps its own block below. */
+    .icon-btn--avatar {
+      background: #ffffff;
+      color: #17181c;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.1),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+    }
+    .icon-btn--avatar:hover { background: #fafafa; }
+    .icon-btn--avatar:active { background: #f1f1f1; }
+    html[data-theme="dark"] .icon-btn--avatar {
+      background: #2a2a2a;
+      color: #e8e8e8;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+    }
+    html[data-theme="dark"] .icon-btn--avatar:hover { background: #323232; }
+    html[data-theme="dark"] .icon-btn--avatar:active { background: #262626; }
+    .icon-btn--avatar svg { display: none !important; }
+    .nav-avatar-initial {
+      display: none;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 13px;
+      text-transform: uppercase;
+    }
+    .icon-btn--avatar .nav-avatar-initial { display: block; }
     .icon-btn svg.icon-x {
       width: 16px;
       height: 17px;
@@ -4390,6 +4431,27 @@
       background: #141414;
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 -1px 0 0 rgba(255, 255, 255, 0.03);
     }
+    /* A quiet X mark in the card's top-right corner, so the quotes read as
+       posts. Linked where the card already links to the author's profile;
+       decorative otherwise. */
+    .pro-quote { position: relative; }
+    .pro-quote-x {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      width: 14px;
+      height: 14px;
+      display: block;
+      color: rgba(255, 255, 255, 0.22);
+      text-decoration: none;
+      transition: color 150ms ease;
+    }
+    .pro-quote-x svg { width: 100%; height: 100%; display: block; }
+    /* The quote never runs under the mark. */
+    .pro-quote-text { padding-right: 28px; }
+    a.pro-quote-x:hover { color: rgba(255, 255, 255, 0.6); }
+    html[data-theme="light"] .pro-quote-x { color: rgba(0, 0, 0, 0.18); }
+    html[data-theme="light"] a.pro-quote-x:hover { color: rgba(0, 0, 0, 0.55); }
     .pro-quote-text {
       margin: 0;
       /* The author row is pinned to the card's bottom edge in Figma, so
@@ -4796,43 +4858,18 @@
     /* Refine tool — timeline panel (recreated from Figma refine card).
        A cropped top-left corner of the Refine timeline: Selected header,
        ruler with time ticks, and property rows with drag handles + tracks. */
-    .pro-refine-frame {
-      position: absolute; left: 32px; right: -150px; top: 132px; bottom: -24px;
-      background: #fff; border: 1px solid var(--card-border);
-      border-radius: 10px 0 0 0; box-shadow: var(--card-shadow); overflow: hidden;
-      font-family: var(--font-sans);
+    /* The Studio card sits in the mock's old slot and runs off the card's
+       right and bottom edges; the bento clips it and draws its own ring on
+       top. The export carries its corners and ring, so no chrome here. */
+    /* Right-anchored at the design's 767px render: the panel (the rightmost
+       236px of the shot) sits fully inside the card's padding, the toolbar
+       beside it, and the stage bleeds off the left. The card clips the rest
+       and draws its ring on top. */
+    .pro-studio-shot {
+      position: absolute; right: 32px; top: 132px;
+      width: 767px; height: 604px;
     }
-    html[data-theme="dark"] .pro-refine-frame { background: #191919; border-color: rgba(255,255,255,0.07); }
-    .rf-topbar { display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 10px; border-bottom: 1px solid #f0f0f0; }
-    html[data-theme="dark"] .rf-topbar { border-bottom-color: #2a2a2a; }
-    .rf-tb-label { font-size: 10px; color: #696969; white-space: nowrap; }
-    html[data-theme="dark"] .rf-tb-label { color: #8b8b8b; }
-    .rf-tb-pill { display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 7px; border-radius: 7px;
-      background: rgba(0,0,0,0.03); font-size: 10px; font-weight: 500; color: #1b1b1b; white-space: nowrap; }
-    html[data-theme="dark"] .rf-tb-pill { background: rgba(255,255,255,0.06); color: #fbfbfb; }
-    .rf-tb-pill .rf-dim { color: #979797; }
-    .rf-tb-pill svg { width: 10px; height: 10px; color: #696969; }
-    .rf-tb-count { margin-left: auto; font-size: 10px; color: #9b9b9b; white-space: nowrap; }
-    .rf-rows { position: relative; }
-    .rf-divider { position: absolute; top: 0; bottom: 0; left: 84px; width: 1px; background: #f0f0f0; z-index: 2; }
-    html[data-theme="dark"] .rf-divider { background: #2a2a2a; }
-    .rf-row { display: flex; align-items: center; height: 26px; }
-    .rf-row + .rf-row { box-shadow: inset 0 1px 0 0 #f4f4f4; }
-    html[data-theme="dark"] .rf-row + .rf-row { box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.03); }
-    .rf-row-label { width: 84px; flex: none; display: flex; align-items: center; gap: 7px; padding-left: 10px; font-size: 10px; font-weight: 500; color: #171717; }
-    html[data-theme="dark"] .rf-row-label { color: #e6e6e6; }
-    .rf-dots { width: 8px; height: 8px; flex: none; color: #cfcfcf;
-      background-image: radial-gradient(currentColor 42%, transparent 46%); background-size: 4px 4px; background-position: 0 0; }
-    html[data-theme="dark"] .rf-dots { color: #4a4a4a; }
-    .rf-lane { position: relative; flex: 1; align-self: stretch; }
-    .rf-bar { position: absolute; top: 50%; transform: translateY(-50%); height: 14px; border-radius: 7px;
-      background: #eeeeef; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06), inset 0 -0.5px 0 0 rgba(0,0,0,0.1); }
-    html[data-theme="dark"] .rf-bar { background: rgba(255,255,255,0.1); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06); }
-    .rf-ruler { position: relative; height: 18px; }
-    .rf-ruler-ticks { position: absolute; left: 92px; right: 8px; top: 9px; height: 4px;
-      background-image: repeating-linear-gradient(90deg, #dcdce0 0 1px, transparent 1px 12px); }
-    html[data-theme="dark"] .rf-ruler-ticks { background-image: repeating-linear-gradient(90deg, #333 0 1px, transparent 1px 12px); }
-    .rf-ruler-lbl { position: absolute; top: 4px; font-size: 8px; color: #8b9099; transform: translateX(-1px); }
+    .pro-studio-shot img { display: block; width: 100%; height: 100%; }
 
     @media (max-width: 720px) {
       /* Single column; rows size to their own card (grid-auto-rows:1fr
@@ -4847,28 +4884,10 @@
          card clips) so they always start below the description. */
       .pro-bento-card--sm { display: flex; flex-direction: column; }
       .pro-bento-card--sm .pro-bento-code,
-      .pro-bento-card--sm .pro-refine-frame {
-        position: relative;
-        left: auto;
-        top: auto;
-        bottom: auto;
-        /* basis 0 so the art fills the leftover height rather than its own
-           content height — otherwise the long code snippet stretches this
-           card far taller than its neighbour. Both are already clipped
-           (overflow + fade mask), so showing less of it is fine. */
-        flex: 1 1 0;
-        min-height: 120px;
-        margin-top: 16px;
-      }
       .pro-bento-card--sm .pro-bento-code {
         right: auto;
         margin-right: -32px;
         margin-bottom: -28px;
-      }
-      .pro-bento-card--sm .pro-refine-frame {
-        right: auto;
-        margin-right: -182px;
-        margin-bottom: -52px;
       }
       .pro-bento-title { font-size: 18px; }
       /* Square minis on mobile: 320×320 native (296×296 stage keeps the
@@ -5192,6 +5211,7 @@
     <section class="pro-section pro-block" aria-label="Kind words">
       <ul class="pro-quotes">
         <li class="pro-quote">
+          <span class="pro-quote-x" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span>
           <p class="pro-quote-text">Generational cook!</p>
           <div class="pro-quote-author">
             <span class="pro-quote-avatar" aria-hidden="true">G<img class="pro-quote-avatar-img" src="/assets/avatars/rauchg.jpg" alt="" onerror="this.remove()" /></span>
@@ -5202,6 +5222,7 @@
           </div>
         </li>
         <li class="pro-quote">
+          <span class="pro-quote-x" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span>
           <p class="pro-quote-text">Very cool</p>
           <div class="pro-quote-author">
             <span class="pro-quote-avatar" aria-hidden="true">D<img class="pro-quote-avatar-img" src="/assets/avatars/destraynor.jpg" alt="" onerror="this.remove()" /></span>
@@ -5212,6 +5233,7 @@
           </div>
         </li>
         <li class="pro-quote">
+          <span class="pro-quote-x" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span>
           <p class="pro-quote-text">INSANELY AMAZING</p>
           <div class="pro-quote-author">
             <span class="pro-quote-avatar" aria-hidden="true">K<img class="pro-quote-avatar-img" src="/assets/avatars/krispuckett.jpg" alt="" onerror="this.remove()" /></span>
@@ -5296,28 +5318,12 @@
         <div class="pro-bento-card pro-bento-card--tall">
           <h3 class="pro-bento-title">Studio access</h3>
           <p class="pro-bento-desc">Customize every library in detail in the Studio: tune parameters live, preview the result, and export the exact configuration. Plus extended docs, presets and recipes, and the Pro skill for your AI coding agent.</p>
-          <div class="pro-refine-frame" aria-hidden="true">
-            <div class="rf-topbar">
-              <span class="rf-tb-label">Selected library</span>
-              <span class="rf-tb-pill">Beam <span class="rf-dim">rainbow</span>
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5L8 10.5L12 6.5" /></svg>
-              </span>
-              <span class="rf-tb-count">5 libraries found</span>
-            </div>
-            <div class="rf-rows">
-              <div class="rf-divider"></div>
-              <div class="rf-ruler">
-                <div class="rf-ruler-ticks"></div>
-                <span class="rf-ruler-lbl" style="left:92px">0s</span>
-                <span class="rf-ruler-lbl" style="left:150px">5s</span>
-                <span class="rf-ruler-lbl" style="left:208px">10s</span>
-                <span class="rf-ruler-lbl" style="left:266px">15s</span>
-              </div>
-              <div class="rf-row"><span class="rf-row-label"><span class="rf-dots"></span>Speed</span><span class="rf-lane"><span class="rf-bar" style="left:8px;width:56px"></span></span></div>
-              <div class="rf-row"><span class="rf-row-label"><span class="rf-dots"></span>Glow</span><span class="rf-lane"><span class="rf-bar" style="left:8px;width:182px"></span></span></div>
-              <div class="rf-row"><span class="rf-row-label"><span class="rf-dots"></span>Opacity</span><span class="rf-lane"><span class="rf-bar" style="left:40px;width:66px"></span></span></div>
-              <div class="rf-row"><span class="rf-row-label"><span class="rf-dots"></span>Radius</span><span class="rf-lane"><span class="rf-bar" style="left:8px;width:120px"></span></span></div>
-            </div>
+          <!-- The Studio screenshot itself (not the Studio page's framed card),
+               anchored to the bento's right edge so the control panel is whole
+               and the stage runs off the left. -->
+          <div class="pro-studio-shot" aria-hidden="true">
+            <img src="/assets/shots/studio-shot-1.png" alt="" width="767" height="604" loading="lazy" decoding="async" />
+          </div>
           </div>
         </div>
 
@@ -5344,7 +5350,7 @@
             <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
           </button>
           <div class="t-acc-panel"><div class="t-acc-panel-inner">
-            <p>The free libraries are open source and stay free. Install them from npm and use them anywhere. Pro adds the Studio (deep, per-library customization beyond the public playgrounds), the Pro presets and recipes for every library, and priority updates for the life of your plan.</p>
+            <p>The free libraries are open source and stay free. Install them from npm and use them anywhere. Pro adds the Studio (deep, per-library customization beyond the public playgrounds), the Pro presets and recipes for every library, priority updates for the life of your plan, and a commercial license covering unlimited projects, client work included.</p>
           </div></div>
         </div>
 
