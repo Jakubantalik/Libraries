@@ -619,7 +619,7 @@ const THINK_HOLD = 2000;
 const THINK_SWAP = 150;
 const THINK_GAP = 50;
 
-function ThinkingStatus() {
+export function ThinkingStatus() {
   const theme = useContext(StudioThemeContext)?.theme ?? "dark";
   const [idx, setIdx] = useState(0);
   const [leaving, setLeaving] = useState<string | null>(null);

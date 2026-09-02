@@ -41,6 +41,15 @@
   --muted: #5e6073;
 
   --material-bg: #ffffff;
+  /* Inline code in prose: a chip with its own hairline, so a term like
+     prefers-reduced-motion reads as a key rather than a highlight. */
+  /* Pro accents share the CTA blue (#0071fc): the nav Get Pro pill and the
+     Pro chips are tints and inks of that one hue. */
+  --pro-tint-bg: rgba(0, 113, 252, 0.10);
+  --pro-tint-bg-hover: rgba(0, 113, 252, 0.16);
+  --pro-tint-ink: #0062d6;
+  --code-chip-bg: rgba(0, 0, 0, 0.04);
+  --code-chip-ring: rgba(0, 0, 0, 0.08);
   --material-shadow:
     0 4px 42px 0 rgba(0, 0, 0, 0.06),
     0 2px 6px 0 rgba(0, 0, 0, 0.05),
@@ -133,6 +142,11 @@ html[data-theme="dark"] {
   --muted: #767676;
 
   --material-bg: #181818;
+  --pro-tint-bg: rgba(0, 113, 252, 0.18);
+  --pro-tint-bg-hover: rgba(0, 113, 252, 0.26);
+  --pro-tint-ink: #7db4ff;
+  --code-chip-bg: rgba(255, 255, 255, 0.05);
+  --code-chip-ring: rgba(255, 255, 255, 0.09);
   --material-shadow:
     0 1px 3px 0 rgba(0, 0, 0, 0.04),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
@@ -495,8 +509,8 @@ html[data-theme="dark"] .icon-btn--avatar:active { background: #262626; }
   margin-left: 6px;
   padding: 0 6px;
   border-radius: 50px;
-  background: rgba(85, 207, 255, 0.14);
-  color: #7cd4ff;
+  background: var(--pro-tint-bg);
+  color: var(--pro-tint-ink);
   font-size: 11px;
   font-weight: 500;
   line-height: 14px;
@@ -633,7 +647,7 @@ body.menu-open .mobile-menu { pointer-events: auto; }
 .mobile-menu-link--6 { transition-delay: 200ms; }
 .mobile-menu-link--7 { transition-delay: 240ms; }
 .mobile-menu-link--pro { color: #0053e3; }
-html[data-theme="dark"] .mobile-menu-link--pro { color: #7cd4ff; }
+html[data-theme="dark"] .mobile-menu-link--pro { color: var(--pro-tint-ink); }
 .mobile-menu-link--pro[data-state="account"] { color: var(--text); }
 html[data-theme="dark"] .mobile-menu-link--pro[data-state="account"] { color: var(--text); }
 body.menu-open .mobile-menu-link {
@@ -725,14 +739,12 @@ html[data-theme="dark"] .nav-search-kbd { color: rgba(154, 154, 154, 0.7); }
 .nav-get-pro {
   display: inline-flex; align-items: center; justify-content: center;
   height: 36px; padding: 0 16px; border: 0; border-radius: 50px;
-  background: rgba(0, 115, 255, 0.08); color: #0053e3;
+  background: var(--pro-tint-bg); color: var(--pro-tint-ink);
   font-family: var(--font-sans); font-size: 13px; font-weight: 500;
   text-decoration: none; white-space: nowrap; cursor: pointer;
   transition: background 150ms var(--nav-ease); -webkit-tap-highlight-color: transparent;
 }
-.nav-get-pro:hover { background: rgba(0, 115, 255, 0.10); }
-html[data-theme="dark"] .nav-get-pro { background: rgba(85, 207, 255, 0.14); color: #7cd4ff; }
-html[data-theme="dark"] .nav-get-pro:hover { background: rgba(85, 207, 255, 0.17); }
+.nav-get-pro:hover { background: var(--pro-tint-bg-hover); }
 /* The pill sets its own display, which outranks the UA's [hidden] rule —
    pro-client.js hides it by attribute once a signed-in user is entitled. */
 .nav-get-pro[hidden] { display: none; }
@@ -740,97 +752,6 @@ html[data-theme="dark"] .nav-get-pro:hover { background: rgba(85, 207, 255, 0.17
 .nav-get-pro[data-state="account"]:hover { background: var(--chip-bg-hover); }
 html[data-theme="dark"] .nav-get-pro[data-state="account"] { background: var(--chip-bg); color: var(--text); }
 html[data-theme="dark"] .nav-get-pro[data-state="account"]:hover { background: var(--chip-bg-hover); }
-
-/* Get Pro hover: the Tune in Studio button's rim wash (playground.css
-   .t-pro-btn::before), ported so pages without that sheet get it too. The
-   seven Figma radial layers orbit the rim under a centre-clearing mask; at
-   rest the layer is invisible and its orbit paused, and hover fades it in
-   and lets it run. Tuning lives on the pill so the recipe is self-contained. */
-.nav-get-pro {
-  position: relative;
-  overflow: hidden;
-  --probtn-strength:  0.5;
-  --probtn-core:      50%;
-  --probtn-core-blur: 150%;
-  --probtn-blur:      6px;
-  --probtn-hue-dur:   4000ms;
-  --probtn-drift-dur: 5000ms;
-}
-.nav-get-pro-label { position: relative; z-index: 1; }
-.nav-get-pro::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background-image:
-    url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='0.88'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(0.34726 -1.3118e-7 8.6482e-7 0.89585 33.5 21)'><stop stop-color='rgba(0,110,245,1)' offset='0'/><stop stop-color='rgba(0,110,245,0)' offset='1'/></radialGradient></defs></svg>"),
-    url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='0.5'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(-1.3 0.25 -1.2633 -2.7471 33.5 21)'><stop stop-color='rgba(0,110,245,1)' offset='0'/><stop stop-color='rgba(0,110,245,0)' offset='1'/></radialGradient></defs></svg>"),
-    url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='0.4'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(1.05 -0.8 0.46018 3.6184 33.5 21)'><stop stop-color='rgba(204,0,167,1)' offset='0'/><stop stop-color='rgba(170,0,204,0)' offset='0.71709'/></radialGradient></defs></svg>"),
-    url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(-0.51067 -3.3275e-16 -4.3352e-14 -1.1396 33.5 21)'><stop stop-color='rgba(204,0,167,1)' offset='0'/><stop stop-color='rgba(170,0,204,0)' offset='1'/></radialGradient></defs></svg>"),
-    url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(-0.45 -0.75 1.9052 -0.7091 33.5 21)'><stop stop-color='rgba(255,173,85,1)' offset='0'/><stop stop-color='rgba(255,173,85,0)' offset='1'/></radialGradient></defs></svg>"),
-    url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(1.25 -0.35 -0.4013 3.5959 33.5 21)'><stop stop-color='rgba(0,204,68,1)' offset='0'/><stop stop-color='rgba(0,196,102,0.75)' offset='0.25'/><stop stop-color='rgba(0,187,136,0.5)' offset='0.5'/><stop stop-color='rgba(0,170,204,0)' offset='1'/></radialGradient></defs></svg>"),
-    url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(-0.87391 0.73043 -4.1482 -1.9503 33.5 21)'><stop stop-color='rgba(0,170,204,1)' offset='0'/><stop stop-color='rgba(0,170,204,0)' offset='1'/></radialGradient></defs></svg>");
-  background-size: 180% 180%, 180% 180%, 180% 180%, 180% 180%,
-                   180% 180%, 180% 180%, 180% 180%;
-  background-repeat: no-repeat;
-  /* Rim-only wash: the mask clears the centre so the label sits on
-     clean white and the colour reads as a glow creeping in from the
-     edges. The ellipse is deliberately smaller than the pill (46%)
-     so full opacity is reached INSIDE the border — sizing it past
-     the edge would clip the opaque end of the ramp and leave the
-     whole wash near-invisible. */
-  -webkit-mask-image: radial-gradient(
-    ellipse 46% 46% at 50% 50%,
-    transparent var(--probtn-core),
-    black calc(var(--probtn-core) + var(--probtn-core-blur))
-  );
-  mask-image: radial-gradient(
-    ellipse 46% 46% at 50% 50%,
-    transparent var(--probtn-core),
-    black calc(var(--probtn-core) + var(--probtn-core-blur))
-  );
-  opacity: 0;
-  transition: opacity 200ms cubic-bezier(0.22, 1, 0.36, 1);
-  animation:
-    nav-pro-hue var(--probtn-hue-dur) linear infinite,
-    nav-pro-drift var(--probtn-drift-dur) ease-in-out infinite;
-  animation-play-state: paused;
-}
-.nav-get-pro:hover::before {
-  opacity: var(--probtn-strength);
-  animation-play-state: running;
-}
-@keyframes nav-pro-hue {
-  from { filter: hue-rotate(0deg) saturate(1.3) blur(var(--probtn-blur)); }
-  to   { filter: hue-rotate(-360deg) saturate(1.3) blur(var(--probtn-blur)); }
-}
-@keyframes nav-pro-drift {
-  0%, 100% {
-    background-position:
-      100% 0%, 0% 50%, 100% 50%, 0% 100%,
-      0% 0%, 50% 0%, 50% 100%;
-  }
-  25% {
-    background-position:
-      100% 100%, 50% 0%, 50% 100%, 0% 0%,
-      100% 0%, 100% 50%, 0% 50%;
-  }
-  50% {
-    background-position:
-      0% 100%, 100% 0%, 0% 100%, 100% 0%,
-      100% 100%, 100% 100%, 0% 0%;
-  }
-  75% {
-    background-position:
-      0% 0%, 100% 100%, 0% 0%, 100% 100%,
-      50% 100%, 0% 100%, 100% 50%;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  /* The wash still appears on hover, frozen on its first frame. */
-  .nav-get-pro::before { animation: none; }
-}
 
 .pm-anchor { position: relative; display: inline-flex; }
 .tl-menu {
@@ -1111,7 +1032,10 @@ html[data-theme="dark"] .card:hover {
    single hairline ring with a brighter top edge, and no drop shadow.
    Fill and shadow only; unlike .card they size themselves and are laid
    out by their own grid in index.html. */
-.pro-quote {
+.pro-quote,
+/* The accessibility/docs statement cards wear the same quote-card material,
+   so every card family on the site reads as one. */
+html[data-theme="dark"] .docs-card {
   background-color: #1a1a1a;
   box-shadow:
     inset 0 1px 0 0 rgba(255, 255, 255, 0.02),

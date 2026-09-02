@@ -38,6 +38,10 @@
   <meta property="og:description" content="Home of Jakub Antalik's UI effect libraries: Beam, Orb, Gooey, Metal and Image." />
 
   <meta name="twitter:card" content="summary_large_image" />
+  <meta property="og:image" content="https://libraries.dev/assets/og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:image" content="https://libraries.dev/assets/og-image.jpg" />
   <meta name="twitter:title" content="Libraries.dev: High-crafted UI libraries for AI agents" />
   <meta name="twitter:description" content="Home of Jakub Antalik's UI effect libraries: Beam, Orb, Gooey, Metal and Image." />
 
@@ -366,6 +370,27 @@
       display: flex; flex-direction: column; gap: 24px; min-width: 0;
       min-height: 240px; padding: 32px; border-radius: 24px;
     }
+    /* A quiet X mark in the card's top-right corner, so the quotes read as
+       posts. Linked where the card already links to the author's profile;
+       decorative otherwise. */
+    .pro-quote { position: relative; }
+    .pro-quote-x {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      width: 14px;
+      height: 14px;
+      display: block;
+      color: rgba(255, 255, 255, 0.22);
+      text-decoration: none;
+      transition: color 150ms ease;
+    }
+    .pro-quote-x svg { width: 100%; height: 100%; display: block; }
+    /* The quote never runs under the mark. */
+    .pro-quote-text { padding-right: 28px; }
+    a.pro-quote-x:hover { color: rgba(255, 255, 255, 0.6); }
+    html[data-theme="light"] .pro-quote-x { color: rgba(0, 0, 0, 0.18); }
+    html[data-theme="light"] a.pro-quote-x:hover { color: rgba(0, 0, 0, 0.55); }
     .pro-quote-text { margin: 0; flex: 1 1 auto; font-size: 16px; line-height: 24.2px; color: #c9c9c9; overflow-wrap: anywhere; }
     .pro-quote-author { display: flex; align-items: center; gap: 11px; min-width: 0; }
     .pro-quote-avatar-link { flex: none; display: inline-flex; border-radius: 50px; text-decoration: none; transition: opacity 150ms var(--ease-smooth-out); }
@@ -418,30 +443,56 @@
     }
     /* Fill and shadow come from the gallery card surface in site.css. */
     .howto-step {
-      display: flex; flex-direction: column; gap: 24px; min-width: 0;
+      display: flex; flex-direction: column; gap: 6px; min-width: 0;
       padding: 32px; border-radius: 24px;
     }
     .howto-step > * { position: relative; z-index: 2; }
-    .howto-step-meta { display: flex; align-items: center; gap: 10px; }
+    /* Badge above the title, matching the How to use cards: the halo needs
+       room, so align-items keeps the badge at its own width rather than
+       stretching it across the column. */
+    .howto-step-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+    }
     .howto-step-num {
-      flex: none; width: 28px; height: 28px; border-radius: 50px;
+      position: relative;
+      /* Own stacking context, or the halo's z-index -1 sinks behind the card. */
+      isolation: isolate;
+      flex: none; width: 21px; height: 21px; border-radius: 50px;
       display: inline-flex; align-items: center; justify-content: center;
-      background: #3e3e3e;
+      background: #0071fc;
       box-shadow:
         0 1px 3px 0 rgba(0, 0, 0, 0.04),
         inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
-        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
-        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
-        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
-      color: rgba(237, 237, 237, 0.8);
-      font-size: 12px; line-height: 13px; font-weight: 500;
+        inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      font-size: 11px; line-height: 12px; font-weight: 500;
+    }
+    /* The halo behind the disc (Figma 1418:38284): the same blue at
+       20 percent, reaching past each edge in the design's 3:2 ratio. */
+    .howto-step-num::before {
+      content: "";
+      position: absolute;
+      inset: -5.25px;
+      border-radius: 50px;
+      background: #0071fc;
+      opacity: 0.2;
+      z-index: -1;
     }
     .howto-step-title { margin: 0; font-size: 15px; font-weight: 500; line-height: 20px; color: #ededed; }
     .howto-step-text { margin: 0; font-size: 14px; line-height: 22px; color: var(--text-muted); overflow-wrap: anywhere; }
     .howto-step-text code {
-      font-family: var(--font-mono); font-size: 12px; line-height: 18px;
-      padding: 1px 6px; border-radius: 6px;
-      background: rgba(255, 255, 255, 0.06); color: var(--text); white-space: nowrap;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 18px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: var(--code-chip-bg);
+      box-shadow: inset 0 0 0 1px var(--code-chip-ring);
+      color: var(--text);
     }
     .howto-step-text a { color: var(--text); text-decoration: none; }
     .howto-step-text a:hover { text-decoration: underline; text-underline-offset: 2px; }
@@ -485,7 +536,16 @@
       transition: opacity var(--acc-expand) var(--acc-ease), filter var(--acc-expand) var(--acc-ease);
     }
     .t-acc-panel-inner p { margin: 0 0 16px; padding-right: 28px; font-size: 14px; line-height: 22px; color: var(--text-muted); }
-    .t-acc-panel-inner code { font-family: var(--font-mono); font-size: 12px; line-height: 18px; padding: 1px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.06); color: var(--text); }
+    .t-acc-panel-inner code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 18px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: var(--code-chip-bg);
+      box-shadow: inset 0 0 0 1px var(--code-chip-ring);
+      color: var(--text);
+    }
     .t-acc-panel-inner a { color: var(--text); text-decoration: none; }
     .t-acc-panel-inner a:hover { text-decoration: underline; text-underline-offset: 2px; }
     @media (prefers-reduced-motion: reduce) {
@@ -501,20 +561,18 @@
       line-height: 13px;
       font-weight: 500;
     }
-    .skill-cta-row .skill-btn--primary {
-      background: #e9e9e9;
-      color: #17181c;
-      padding: 0 16px;
-      border-radius: 26px;
-      box-shadow: none;
-    }
-    .skill-cta-row .skill-btn--primary:hover { background: #ffffff; }
-    .skill-cta-row .skill-btn--primary:active { background: #dcdcdc; }
-    .skill-cta-row .skill-btn--secondary {
-      background: #2a2a2a;
-      color: #ffffff;
+    /* Figma 1292:4277 Button/Small/Select/Primary/Token: both pills share
+       the body; Browse wears the grey token surface, Get Pro access the blue.
+       The class is doubled so these outrank site.css's theme-scoped
+       .skill-btn--* rules, which carry an attribute selector. */
+    .skill-cta-row .skill-btn.skill-btn--primary,
+    .skill-cta-row .skill-btn.skill-btn--secondary {
       padding: 0 12px;
       border-radius: 24px;
+      color: #ffffff;
+    }
+    .skill-cta-row .skill-btn.skill-btn--primary {
+      background: #2a2a2a;
       box-shadow:
         0 1px 3px 0 rgba(0, 0, 0, 0.04),
         inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
@@ -522,8 +580,18 @@
         inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
         inset 0 0 0 1px rgba(196, 196, 196, 0.1);
     }
-    .skill-cta-row .skill-btn--secondary:hover { background: #323232; }
-    .skill-cta-row .skill-btn--secondary:active { background: #262626; }
+    .skill-cta-row .skill-btn.skill-btn--primary:hover { background: #323232; }
+    .skill-cta-row .skill-btn.skill-btn--primary:active { background: #262626; }
+    .skill-cta-row .skill-btn.skill-btn--secondary {
+      background: #0071fc;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+    }
+    .skill-cta-row .skill-btn.skill-btn--secondary:hover { background: #1a7dff; }
+    .skill-cta-row .skill-btn.skill-btn--secondary:active { background: #0063e0; }
   </style>
 </head>
 <body>
@@ -720,6 +788,7 @@
       <h2 class="home-section-title" id="kind-words-title">Kind words from X</h2>
       <ul class="pro-quotes">
         <li class="pro-quote">
+          <span class="pro-quote-x" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span>
           <p class="pro-quote-text">Generational cook!</p>
           <div class="pro-quote-author">
             <span class="pro-quote-avatar" aria-hidden="true">G<img class="pro-quote-avatar-img" src="/assets/avatars/rauchg.jpg" alt="" onerror="this.remove()" /></span>
@@ -730,6 +799,7 @@
           </div>
         </li>
         <li class="pro-quote">
+          <span class="pro-quote-x" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span>
           <p class="pro-quote-text">Very cool</p>
           <div class="pro-quote-author">
             <span class="pro-quote-avatar" aria-hidden="true">D<img class="pro-quote-avatar-img" src="/assets/avatars/destraynor.jpg" alt="" onerror="this.remove()" /></span>
@@ -740,6 +810,7 @@
           </div>
         </li>
         <li class="pro-quote">
+          <span class="pro-quote-x" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span>
           <p class="pro-quote-text">INSANELY AMAZING</p>
           <div class="pro-quote-author">
             <span class="pro-quote-avatar" aria-hidden="true">K<img class="pro-quote-avatar-img" src="/assets/avatars/krispuckett.jpg" alt="" onerror="this.remove()" /></span>
@@ -750,6 +821,7 @@
           </div>
         </li>
         <li class="pro-quote">
+          <a class="pro-quote-x" href="https://x.com/witsdev" target="_blank" rel="noopener noreferrer" aria-label="wits on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
           <p class="pro-quote-text">Thank you for building an awesome library! :)</p>
           <div class="pro-quote-author">
             <a class="pro-quote-avatar-link" href="https://x.com/witsdev" target="_blank" rel="noopener noreferrer" aria-label="wits on X" tabindex="-1">
@@ -762,6 +834,7 @@
           </div>
         </li>
         <li class="pro-quote">
+          <a class="pro-quote-x" href="https://x.com/tranmautritam" target="_blank" rel="noopener noreferrer" aria-label="Tran Mau Tri Tam on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
           <p class="pro-quote-text">Your AI agent&rsquo;s &ldquo;thinking...&rdquo; state doesn&rsquo;t have to be a boring spinner. 6 animated orb types, zero dependencies, light + dark mode built in. npm install and you&rsquo;re done.</p>
           <div class="pro-quote-author">
             <a class="pro-quote-avatar-link" href="https://x.com/tranmautritam" target="_blank" rel="noopener noreferrer" aria-label="Tran Mau Tri Tam on X" tabindex="-1">
@@ -774,6 +847,7 @@
           </div>
         </li>
         <li class="pro-quote">
+          <a class="pro-quote-x" href="https://x.com/jakubantalik" target="_blank" rel="noopener noreferrer" aria-label="Jakub Antalik on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
           <p class="pro-quote-text">Using Beam, Orb, Gooey, Metal or Image somewhere nice? Tell me on X and I&rsquo;ll feature it here.</p>
           <div class="pro-quote-author">
             <a class="pro-quote-avatar-link" href="https://x.com/jakubantalik" target="_blank" rel="noopener noreferrer" aria-label="Jakub Antalik on X" tabindex="-1">

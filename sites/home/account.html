@@ -29,7 +29,11 @@
   <meta property="og:title" content="Account · Libraries.dev" />
   <meta property="og:description" content="Manage your Libraries Pro plan — billing, team seats, and downloads." />
 
-  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta property="og:image" content="https://libraries.dev/assets/og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:image" content="https://libraries.dev/assets/og-image.jpg" />
   <meta name="twitter:title" content="Account · Libraries.dev" />
   <meta name="twitter:description" content="Manage your Libraries Pro plan — billing, team seats, and downloads." />
 
@@ -60,7 +64,7 @@
        production. Installs a fetch() shim (before pro-client.js runs)
        that answers the Pro API from static data — so the whole normal
        code path renders signed-in and survives reloads, with no Worker
-       / magic-link login needed. Runs on localhost only.
+       / sign-in code needed. Runs on localhost only.
        ───────────────────────────────────────────────────────────── */
     (function () {
       var mock = new URLSearchParams(location.search).get("mock");
@@ -138,6 +142,15 @@
     /* Design tokens — light (default) and dark                      */
     /* ============================================================ */
     :root {
+      /* Pro accents share the CTA blue (#0071fc): the nav Get Pro pill and the
+         Pro chips are tints and inks of that one hue. */
+      --pro-tint-bg: rgba(0, 113, 252, 0.10);
+      --pro-tint-bg-hover: rgba(0, 113, 252, 0.16);
+      --pro-tint-ink: #0062d6;
+      /* Inline code in prose: a chip with its own hairline (ported by value;
+         this page links no shared stylesheet). */
+      --code-chip-bg: rgba(0, 0, 0, 0.04);
+      --code-chip-ring: rgba(0, 0, 0, 0.08);
       color-scheme: light;
 
       --bg: #fdfdfd;
@@ -370,6 +383,11 @@
     }
 
     html[data-theme="dark"] {
+      --pro-tint-bg: rgba(0, 113, 252, 0.18);
+      --pro-tint-bg-hover: rgba(0, 113, 252, 0.26);
+      --pro-tint-ink: #7db4ff;
+      --code-chip-bg: rgba(255, 255, 255, 0.05);
+      --code-chip-ring: rgba(255, 255, 255, 0.09);
       color-scheme: dark;
 
       --bg: #121212;
@@ -533,6 +551,47 @@
       color: var(--icon-color-muted);
       transition: color 0.15s ease;
     }
+    /* (ported by value from site.css: this page links no shared sheet) */
+    /* Signed-in avatar — the 3-dot "More" button swaps to the user's initial
+       (Figma 1425:38996: #2a2a2a chip, 12px Inter Medium initial, material ring).
+       The dots stay in the DOM; the class just hides them and shows the letter. */
+    /* Light: the same raised white control every other light surface here
+       wears (tabs, the active nav row, Copy prompt) - white on the black-6%
+       ring with dark ink - rather than a black disc, which read as a hole
+       in the white top bar. Dark keeps its own block below. */
+    .icon-btn--avatar {
+      background: #ffffff;
+      color: #17181c;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.1),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+    }
+    .icon-btn--avatar:hover { background: #fafafa; }
+    .icon-btn--avatar:active { background: #f1f1f1; }
+    html[data-theme="dark"] .icon-btn--avatar {
+      background: #2a2a2a;
+      color: #e8e8e8;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+    }
+    html[data-theme="dark"] .icon-btn--avatar:hover { background: #323232; }
+    html[data-theme="dark"] .icon-btn--avatar:active { background: #262626; }
+    .icon-btn--avatar svg { display: none !important; }
+    .nav-avatar-initial {
+      display: none;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 13px;
+      text-transform: uppercase;
+    }
+    .icon-btn--avatar .nav-avatar-initial { display: block; }
     .icon-btn svg.icon-x {
       width: 16px;
       height: 17px;
@@ -703,8 +762,8 @@
       margin-left: 6px;
       padding: 0 6px;
       border-radius: 50px;
-      background: rgba(85, 207, 255, 0.14);
-      color: #7cd4ff;
+      background: var(--pro-tint-bg);
+      color: var(--pro-tint-ink);
       font-size: 11px;
       font-weight: 500;
       line-height: 14px;
@@ -3685,107 +3744,13 @@
     .nav-get-pro {
       display: inline-flex; align-items: center; justify-content: center;
       height: 36px; padding: 0 16px; border: 0; border-radius: 50px;
-      background: rgba(0, 115, 255, 0.08); color: #0053e3;
+      background: var(--pro-tint-bg); color: var(--pro-tint-ink);
       font-family: var(--font-sans); font-size: 13px; font-weight: 500;
       text-decoration: none; white-space: nowrap; cursor: pointer;
       transition: background 150ms var(--ease-smooth-out);
       -webkit-tap-highlight-color: transparent;
     }
-    .nav-get-pro:hover { background: rgba(0, 115, 255, 0.10); }
-    html[data-theme="dark"] .nav-get-pro { background: rgba(85, 207, 255, 0.14); color: #7cd4ff; }
-    html[data-theme="dark"] .nav-get-pro:hover { background: rgba(85, 207, 255, 0.17); }
-
-    /* (ported by value: no shared stylesheet here)
-       Get Pro hover: the Tune in Studio button's rim wash (playground.css
-       .t-pro-btn::before), ported so pages without that sheet get it too. The
-       seven Figma radial layers orbit the rim under a centre-clearing mask; at
-       rest the layer is invisible and its orbit paused, and hover fades it in
-       and lets it run. Tuning lives on the pill so the recipe is self-contained. */
-    .nav-get-pro {
-      position: relative;
-      overflow: hidden;
-      --probtn-strength:  0.5;
-      --probtn-core:      50%;
-      --probtn-core-blur: 150%;
-      --probtn-blur:      6px;
-      --probtn-hue-dur:   4000ms;
-      --probtn-drift-dur: 5000ms;
-    }
-    .nav-get-pro-label { position: relative; z-index: 1; }
-    .nav-get-pro::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      pointer-events: none;
-      background-image:
-        url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='0.88'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(0.34726 -1.3118e-7 8.6482e-7 0.89585 33.5 21)'><stop stop-color='rgba(0,110,245,1)' offset='0'/><stop stop-color='rgba(0,110,245,0)' offset='1'/></radialGradient></defs></svg>"),
-        url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='0.5'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(-1.3 0.25 -1.2633 -2.7471 33.5 21)'><stop stop-color='rgba(0,110,245,1)' offset='0'/><stop stop-color='rgba(0,110,245,0)' offset='1'/></radialGradient></defs></svg>"),
-        url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='0.4'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(1.05 -0.8 0.46018 3.6184 33.5 21)'><stop stop-color='rgba(204,0,167,1)' offset='0'/><stop stop-color='rgba(170,0,204,0)' offset='0.71709'/></radialGradient></defs></svg>"),
-        url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(-0.51067 -3.3275e-16 -4.3352e-14 -1.1396 33.5 21)'><stop stop-color='rgba(204,0,167,1)' offset='0'/><stop stop-color='rgba(170,0,204,0)' offset='1'/></radialGradient></defs></svg>"),
-        url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(-0.45 -0.75 1.9052 -0.7091 33.5 21)'><stop stop-color='rgba(255,173,85,1)' offset='0'/><stop stop-color='rgba(255,173,85,0)' offset='1'/></radialGradient></defs></svg>"),
-        url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(1.25 -0.35 -0.4013 3.5959 33.5 21)'><stop stop-color='rgba(0,204,68,1)' offset='0'/><stop stop-color='rgba(0,196,102,0.75)' offset='0.25'/><stop stop-color='rgba(0,187,136,0.5)' offset='0.5'/><stop stop-color='rgba(0,170,204,0)' offset='1'/></radialGradient></defs></svg>"),
-        url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(-0.87391 0.73043 -4.1482 -1.9503 33.5 21)'><stop stop-color='rgba(0,170,204,1)' offset='0'/><stop stop-color='rgba(0,170,204,0)' offset='1'/></radialGradient></defs></svg>");
-      background-size: 180% 180%, 180% 180%, 180% 180%, 180% 180%,
-                       180% 180%, 180% 180%, 180% 180%;
-      background-repeat: no-repeat;
-      /* Rim-only wash: the mask clears the centre so the label sits on
-         clean white and the colour reads as a glow creeping in from the
-         edges. The ellipse is deliberately smaller than the pill (46%)
-         so full opacity is reached INSIDE the border — sizing it past
-         the edge would clip the opaque end of the ramp and leave the
-         whole wash near-invisible. */
-      -webkit-mask-image: radial-gradient(
-        ellipse 46% 46% at 50% 50%,
-        transparent var(--probtn-core),
-        black calc(var(--probtn-core) + var(--probtn-core-blur))
-      );
-      mask-image: radial-gradient(
-        ellipse 46% 46% at 50% 50%,
-        transparent var(--probtn-core),
-        black calc(var(--probtn-core) + var(--probtn-core-blur))
-      );
-      opacity: 0;
-      transition: opacity 200ms cubic-bezier(0.22, 1, 0.36, 1);
-      animation:
-        nav-pro-hue var(--probtn-hue-dur) linear infinite,
-        nav-pro-drift var(--probtn-drift-dur) ease-in-out infinite;
-      animation-play-state: paused;
-    }
-    .nav-get-pro:hover::before {
-      opacity: var(--probtn-strength);
-      animation-play-state: running;
-    }
-    @keyframes nav-pro-hue {
-      from { filter: hue-rotate(0deg) saturate(1.3) blur(var(--probtn-blur)); }
-      to   { filter: hue-rotate(-360deg) saturate(1.3) blur(var(--probtn-blur)); }
-    }
-    @keyframes nav-pro-drift {
-      0%, 100% {
-        background-position:
-          100% 0%, 0% 50%, 100% 50%, 0% 100%,
-          0% 0%, 50% 0%, 50% 100%;
-      }
-      25% {
-        background-position:
-          100% 100%, 50% 0%, 50% 100%, 0% 0%,
-          100% 0%, 100% 50%, 0% 50%;
-      }
-      50% {
-        background-position:
-          0% 100%, 100% 0%, 0% 100%, 100% 0%,
-          100% 100%, 100% 100%, 0% 0%;
-      }
-      75% {
-        background-position:
-          0% 0%, 100% 100%, 0% 0%, 100% 100%,
-          50% 100%, 0% 100%, 100% 50%;
-      }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      /* The wash still appears on hover, frozen on its first frame. */
-      .nav-get-pro::before { animation: none; }
-    }
+    .nav-get-pro:hover { background: var(--pro-tint-bg-hover); }
     /* The pill sets its own display, which outranks the UA's [hidden] rule —
        pro-client.js hides it by attribute once a signed-in user is entitled. */
     .nav-get-pro[hidden] { display: none; }
@@ -4479,8 +4444,16 @@
       transition: opacity var(--acc-expand) var(--acc-ease), filter var(--acc-expand) var(--acc-ease);
     }
     .t-acc-panel-inner p { margin: 0 0 16px; padding-right: 28px; font-size: 14px; line-height: 22px; color: var(--text-muted); }
-    .t-acc-panel-inner code { font-family: var(--font-mono); font-size: 12px; line-height: 18px; padding: 1px 6px; border-radius: 6px; background: rgba(0, 0, 0, 0.04); color: var(--text); }
-    html[data-theme="dark"] .t-acc-panel-inner code { background: rgba(255, 255, 255, 0.06); }
+    .t-acc-panel-inner code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 18px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: var(--code-chip-bg);
+      box-shadow: inset 0 0 0 1px var(--code-chip-ring);
+      color: var(--text);
+    }
     .t-acc-panel-inner a { color: var(--text); text-decoration: none; }
     .t-acc-panel-inner a:hover { text-decoration: underline; text-underline-offset: 2px; }
     @media (prefers-reduced-motion: reduce) {

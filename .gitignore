@@ -48,3 +48,6 @@ packages/border-beam/ports/ios/BorderBeamShowcase/BorderBeamShowcase.xcodeproj/
 
 # Wrangler local dev state
 .wrangler/
+
+# Fundraising material: kept out of the public repo.
+docs/vc-pitch.md
