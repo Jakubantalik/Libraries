@@ -409,7 +409,9 @@
       object-fit: cover; border-radius: inherit; display: block;
     }
     .pro-quote-id { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-    .pro-quote-name { align-self: flex-start; font-size: 13px; line-height: 16px; font-weight: 500; color: #ededed; text-decoration: underline; text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, currentColor 50%, transparent); transition: text-decoration-color 180ms ease; }
+    .pro-quote-name { align-self: flex-start; font-size: 13px; line-height: 16px; font-weight: 500; color: #ededed; text-decoration: none; }
+    /* Only the ones that link out are underlined; a plain name is not a link. */
+    a.pro-quote-name { text-decoration: underline; text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, currentColor 50%, transparent); transition: text-decoration-color 180ms ease; }
     a.pro-quote-name:hover { text-decoration-color: currentColor; }
     .pro-quote-role { font-size: 13px; line-height: 16px; color: #737373; overflow-wrap: anywhere; }
     @media (max-width: 900px) {

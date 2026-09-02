@@ -4502,16 +4502,17 @@
       object-fit: cover; border-radius: inherit; display: block;
     }
     .pro-quote-id { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-    /* Name links through to the person's X profile — same "text colour,
-       underline on hover" treatment the docs links use. */
+    /* A name that links through to the person's X profile is underlined;
+       a name that is just a name stays plain text. */
     .pro-quote-name {
       align-self: flex-start;
       font-size: 13px;
       line-height: 16px;
       font-weight: 500;
       color: #0d0d0d;
-      text-decoration: underline; text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, currentColor 50%, transparent); transition: text-decoration-color 180ms ease;
+      text-decoration: none;
     }
+    a.pro-quote-name { text-decoration: underline; text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, currentColor 50%, transparent); transition: text-decoration-color 180ms ease; }
     a.pro-quote-name:hover { text-decoration-color: currentColor; }
     html[data-theme="dark"] .pro-quote-name { color: #ededed; }
     .pro-quote-role { font-size: 13px; line-height: 16px; color: #737373; overflow-wrap: anywhere; }
