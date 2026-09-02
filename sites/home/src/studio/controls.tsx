@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { describePatch, streamAgentTurn, type ChatTurn } from "./agent";
+import { ThinkingOrb } from "thinking-orbs";
 
 /* App-level theme plumbing: the Studio shell provides it, and every
    ControlsPanel renders the dark/light toggle in its own top-right corner.
@@ -593,6 +594,85 @@ const AGENT_UNAVAILABLE =
   "Your message is kept here. Switch to Manual control to tune by hand, or use " +
   "Copy prompt on the library page to hand the whole library to your own coding agent.";
 
+/* What the agent is doing while a turn is pending: the 20px "Working" orb
+   beside one status line that shimmers while it holds, then swaps to the
+   next line with the text-swap motion — transitions.dev prototype 28
+   ("Thinking states"), ported to React. The sizer keeps the box at the
+   widest line so the row never reflows; the live line sits over it and
+   the one leaving is lifted out of flow to exit up while the next enters
+   from below. Reduced motion holds the first line, orb frozen by the
+   library's own reduced-motion handling. */
+const THINKING_LINES = [
+  "Reading the current settings",
+  "Weighing the change you asked for",
+  "Picking the knobs to move",
+  "Checking the result",
+];
+const THINK_HOLD = 2000;
+const THINK_SWAP = 150;
+const THINK_GAP = 50;
+
+function ThinkingStatus() {
+  const theme = useContext(StudioThemeContext)?.theme ?? "dark";
+  const [idx, setIdx] = useState(0);
+  const [leaving, setLeaving] = useState<string | null>(null);
+  const [entering, setEntering] = useState(false);
+  const timers = useRef<number[]>([]);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let i = 0;
+    const later = (fn: () => void, ms: number) => {
+      timers.current.push(window.setTimeout(fn, ms));
+    };
+    const cycle = () => {
+      later(() => {
+        const from = THINKING_LINES[i];
+        i = (i + 1) % THINKING_LINES.length;
+        /* Outgoing line floats over the box and exits; the incoming one
+           mounts in its start pose, then releases a frame later so the
+           transition runs from below. */
+        setLeaving(from);
+        setIdx(i);
+        setEntering(true);
+        later(() => setEntering(false), THINK_GAP);
+        later(() => {
+          setLeaving(null);
+          cycle();
+        }, THINK_SWAP + THINK_GAP);
+      }, THINK_HOLD);
+    };
+    cycle();
+    return () => {
+      timers.current.forEach((t) => window.clearTimeout(t));
+      timers.current = [];
+    };
+  }, []);
+
+  const widest = THINKING_LINES.reduce((a, b) => (b.length > a.length ? b : a), "");
+  const text = THINKING_LINES[idx];
+  return (
+    <div className="st-chat-thinking" role="status" aria-live="polite">
+      <span className="st-think-orb" aria-hidden="true">
+        <ThinkingOrb state="working" size={20} theme={theme} />
+      </span>
+      <span className="st-think-swap">
+        <span className="st-think-sizer" aria-hidden="true">{widest}</span>
+        {leaving !== null && (
+          <span className="st-think-text is-exit" data-text={leaving} aria-hidden="true">{leaving}</span>
+        )}
+        <span
+          className={`st-think-text${entering ? " is-enter-start" : ""}`}
+          data-text={text}
+          key={idx}
+        >
+          {text}
+        </span>
+      </span>
+    </div>
+  );
+}
+
 function AgentChat({ library, wiring }: { library: string; wiring?: AgentWiring }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
@@ -741,11 +821,7 @@ function AgentChat({ library, wiring }: { library: string; wiring?: AgentWiring 
             </div>
           ))
         )}
-        {busy && !streaming && (
-          <div className="st-chat-thinking" role="status">
-            <span /><span /><span />
-          </div>
-        )}
+        {busy && !streaming && <ThinkingStatus />}
       </div>
 
       <div className="st-chat-composer">
@@ -786,9 +862,15 @@ function AgentChat({ library, wiring }: { library: string; wiring?: AgentWiring 
  * account sync would upload verbatim, so when that Worker exists this
  * becomes a fetch and nothing here changes shape. */
 
+/* One preset carries a value set per theme: the same tuning rarely reads
+   the same on both surfaces, so the Studio saves whichever it is in and
+   applies the matching side back. Signed in, presets live on the account
+   (the Worker's /presets); signed out they fall back to localStorage. */
+type PresetTheme = "dark" | "light";
+type PresetValues = Record<PresetTheme, Record<string, unknown>>;
 interface StoredPreset {
   name: string;
-  params: Record<string, unknown>;
+  values: PresetValues;
   savedAt: number;
 }
 
@@ -800,10 +882,20 @@ function readPresets(libraryId: string): StoredPreset[] {
   try {
     const raw = localStorage.getItem(presetKey(libraryId));
     const list = raw ? JSON.parse(raw) : [];
-    return Array.isArray(list) ? list : [];
+    if (!Array.isArray(list)) return [];
+    /* Presets saved before values were split per theme carried a single
+       `params` map — read them as the same values on both sides. */
+    return list.map((x: { name: string; savedAt?: number; values?: PresetValues; params?: Record<string, unknown> }) =>
+      x.values ? (x as StoredPreset) : { name: x.name, savedAt: x.savedAt ?? 0, values: { dark: x.params ?? {}, light: x.params ?? {} } }
+    );
   } catch {
     return [];
   }
+}
+
+function accountPresets() {
+  const LP = window.LibrariesPro;
+  return LP && LP.state?.authenticated && LP.presets ? LP.presets : null;
 }
 
 function writePresets(libraryId: string, presets: StoredPreset[]) {
@@ -816,6 +908,17 @@ function writePresets(libraryId: string, presets: StoredPreset[]) {
 
 /** The coding-agent prompt, same shape as the detail pages' hidden
     #agent-prompt block, but the Usage section is the live tuned snippet. */
+/** One extra platform for the Install & Usage tab (React is always first). */
+export interface PlatformSnippet {
+  id: string;
+  label: string;
+  installTitle: string;
+  install: string;
+  /** A caveat under the install block — e.g. a port not yet on npm. */
+  note?: string;
+  usage: string;
+}
+
 export interface PromptMeta {
   /** npm package name, e.g. "border-beam". */
   pkg: string;
@@ -823,6 +926,9 @@ export interface PromptMeta {
   docsPath: string;
   /** The live snippet string the studio already renders. */
   snippet: string;
+  /** Ports of the same library — each with its own install line and a
+      usage snippet built from the same live knobs. */
+  platforms?: PlatformSnippet[];
 }
 
 function buildAgentPrompt(library: string, meta: PromptMeta): string {
@@ -841,15 +947,27 @@ function buildAgentPrompt(library: string, meta: PromptMeta): string {
   ].join("\n");
 }
 
-type StageView = "preview" | "install" | "usage";
+type StageView = "preview" | "code";
 
 /** Bar above the stage: the detail pages' Preview / Install / Usage tabs
     (same .detail-tabs / .proto-modal-tabs pill bar) on the left, and their
     .detail-prompt Copy-prompt pill on the right. Install and Usage swap the
     stage + live snippet for the matching code block, exactly like the
     detail pages' data-detail-panel switch. */
-export function StageBar({ library, prompt }: { library: string; prompt?: PromptMeta }) {
+export function StageBar({
+  library,
+  prompt,
+  agent,
+}: {
+  library: string;
+  prompt?: PromptMeta;
+  /** Preset save/apply and reset need the live params; optional so a
+      library without agent wiring still gets the bar. */
+  agent?: AgentWiring;
+}) {
   const [view, setView] = useState<StageView>("preview");
+  /* Platform under Install & Usage: "react" is the web package itself. */
+  const [platform, setPlatform] = useState("react");
   const barRef2 = useRef<HTMLDivElement | null>(null);
   const indRef = useRef<HTMLSpanElement | null>(null);
   const viewRef = useRef<StageView>("preview");
@@ -901,6 +1019,121 @@ export function StageBar({ library, prompt }: { library: string; prompt?: Prompt
   const timer = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
+  /* ── Presets + reset ─────────────────────────────────────────────
+     The values the studio mounted with ARE its defaults (every knob's
+     useState starts there), so "adjusted" is simply params !== defaults. */
+  const agentRef = useRef(agent);
+  agentRef.current = agent;
+  const defaultsRef = useRef<Record<string, unknown> | null>(agent ? { ...agent.params } : null);
+  const libraryId = agent?.libraryId ?? "";
+  const theme: PresetTheme = useContext(StudioThemeContext)?.theme ?? "dark";
+  const [presets, setPresets] = useState<StoredPreset[]>(() => (libraryId ? readPresets(libraryId) : []));
+
+  /* Account presets replace the local list once the session is known —
+     and again whenever it changes (sign-in / sign-out fire "pro:me"). */
+  useEffect(() => {
+    if (!libraryId) return;
+    let live = true;
+    const load = () => {
+      const api = accountPresets();
+      if (!api) {
+        setPresets(readPresets(libraryId));
+        return;
+      }
+      api.list(libraryId).then((r) => {
+        if (!live || !r || !Array.isArray(r.presets)) return;
+        setPresets(r.presets.map((x) => ({ name: x.name, values: x.values as PresetValues, savedAt: x.updated_at })));
+      }).catch(() => {});
+    };
+    load();
+    document.addEventListener("pro:me", load);
+    return () => {
+      live = false;
+      document.removeEventListener("pro:me", load);
+    };
+  }, [libraryId]);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuClosing, setMenuClosing] = useState(false);
+  const [draftName, setDraftName] = useState("");
+  const menuAnchor = useRef<HTMLDivElement | null>(null);
+  const menuTimer = useRef<number | undefined>(undefined);
+  const dirty = !!agent && !!defaultsRef.current && JSON.stringify(agent.params) !== JSON.stringify(defaultsRef.current);
+  const nextName = `New preset ${presets.length + 1}`;
+
+  const closeMenu = useCallback(() => {
+    setMenuOpen(false);
+    setMenuClosing(true);
+    window.clearTimeout(menuTimer.current);
+    menuTimer.current = window.setTimeout(() => setMenuClosing(false), 150);
+  }, []);
+  const openMenu = useCallback(() => {
+    setDraftName(nextName);
+    setMenuOpen(true);
+  }, [nextName]);
+  useEffect(() => () => window.clearTimeout(menuTimer.current), []);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      if (menuAnchor.current && !menuAnchor.current.contains(e.target as Node)) closeMenu();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeMenu();
+    };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen, closeMenu]);
+
+  const savePreset = useCallback(() => {
+    const a = agentRef.current;
+    if (!a) return;
+    const name = draftName.trim() || nextName;
+    /* The side being tuned takes the live values; the other side keeps
+       what the preset already had, or starts from the same values so the
+       preset is never half-empty. */
+    const prev = presets.find((x) => x.name === name);
+    const other: PresetTheme = theme === "dark" ? "light" : "dark";
+    const values: PresetValues = {
+      dark: { ...a.params },
+      light: { ...a.params },
+    };
+    values[other] = { ...(prev?.values[other] ?? a.params) };
+    values[theme] = { ...a.params };
+    const entry: StoredPreset = { name, values, savedAt: Date.now() };
+    const next = [...presets.filter((x) => x.name !== name), entry];
+    setPresets(next);
+    const api = accountPresets();
+    if (api) api.save(a.libraryId, name, values).catch(() => {});
+    else writePresets(a.libraryId, next);
+    closeMenu();
+  }, [draftName, nextName, presets, theme, closeMenu]);
+  const applyPreset = useCallback(
+    (x: StoredPreset) => {
+      const side = x.values[theme] ?? x.values[theme === "dark" ? "light" : "dark"];
+      agentRef.current?.onApply({ ...side });
+      closeMenu();
+    },
+    [theme, closeMenu]
+  );
+  const removePreset = useCallback(
+    (name: string) => {
+      const a = agentRef.current;
+      if (!a) return;
+      const next = presets.filter((x) => x.name !== name);
+      setPresets(next);
+      const api = accountPresets();
+      if (api) api.remove(a.libraryId, name).catch(() => {});
+      else writePresets(a.libraryId, next);
+    },
+    [presets]
+  );
+  const resetAll = useCallback(() => {
+    if (defaultsRef.current) agentRef.current?.onApply({ ...defaultsRef.current });
+  }, []);
+
   const copy = useCallback(() => {
     if (!prompt) return;
     const text = buildAgentPrompt(library, prompt);
@@ -917,7 +1150,7 @@ export function StageBar({ library, prompt }: { library: string; prompt?: Prompt
     <div className="st-stage-bar" data-view={view}>
       <div className="detail-tabs proto-modal-tabs" ref={barRef2} role="tablist" aria-label="View">
         <span className="proto-modal-tabs-indicator" ref={indRef} aria-hidden="true" />
-        {(["preview", "install", "usage"] as const).map((v) => (
+        {(["preview", "code"] as const).map((v) => (
           <button
             key={v}
             type="button"
@@ -927,10 +1160,96 @@ export function StageBar({ library, prompt }: { library: string; prompt?: Prompt
             aria-selected={view === v}
             onClick={() => selectView(v)}
           >
-            {v === "preview" ? "Preview" : v === "install" ? "Install" : "Usage"}
+            {v === "preview" ? "Preview" : "Install & Usage"}
           </button>
         ))}
       </div>
+      <div className="st-stage-actions">
+      {agent && (
+        <div className="pm-anchor" ref={menuAnchor}>
+          <button
+            type="button"
+            className="detail-prompt st-preset-btn"
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            onClick={(e) => {
+              e.stopPropagation();
+              menuOpen ? closeMenu() : openMenu();
+            }}
+          >
+            <span className="detail-prompt-label">Preset</span>
+            <svg className="st-preset-chev" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M5 6.5L8 9.5L11 6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          <div
+            className={`tl-menu t-dropdown st-preset-menu${menuOpen ? " is-open" : ""}${menuClosing ? " is-closing" : ""}`}
+            data-origin="top-right"
+            role="menu"
+            aria-label="Presets"
+          >
+            {presets.length === 0 && !dirty && (
+              <div className="tl-menu-item st-preset-empty" aria-disabled="true">
+                <span className="tl-menu-item-label">No saved presets</span>
+              </div>
+            )}
+            {presets.map((x) => (
+              <div className="tl-menu-item st-preset-row" role="menuitem" tabIndex={0} key={x.name}
+                onClick={() => applyPreset(x)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") applyPreset(x); }}
+              >
+                <span className="tl-menu-item-label">{x.name}</span>
+                <button
+                  type="button"
+                  className="st-preset-remove"
+                  aria-label={`Delete preset ${x.name}`}
+                  onClick={(e) => { e.stopPropagation(); removePreset(x.name); }}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+            {dirty && (
+              <>
+                {presets.length > 0 && <div className="tl-menu-divider" />}
+                {/* Something was tuned: offer to keep it. */}
+                <div className="st-preset-form">
+                  <input
+                    className="st-preset-input"
+                    value={draftName}
+                    aria-label="Preset name"
+                    onFocus={(e) => e.currentTarget.select()}
+                    onChange={(e) => setDraftName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && draftName.trim()) savePreset(); }}
+                  />
+                  <button
+                    type="button"
+                    className="st-preset-save"
+                    onClick={savePreset}
+                    disabled={!draftName.trim()}
+                  >
+                    Save preset
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+      {agent && (
+        <button
+          type="button"
+          className="icon-btn st-reset-btn"
+          onClick={resetAll}
+          aria-label="Reset to default"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M3 12a9 9 0 1 0 3-6.7" />
+            <path d="M3 4v5h5" />
+          </svg>
+          <span className="card-copy-tooltip" aria-hidden="true"><span className="tt-text">Reset to default</span></span>
+        </button>
+      )}
       {prompt && (
         <button
           type="button"
@@ -951,145 +1270,56 @@ export function StageBar({ library, prompt }: { library: string; prompt?: Prompt
           <span className="detail-prompt-label">Copy prompt</span>
         </button>
       )}
+      </div>
     </div>
-    {prompt && view === "install" && (
-      <div className="code-block st-stage-panel">
-        <pre>{`npm install ${prompt.pkg}`}</pre>
-        <CodeCopy text={`npm install ${prompt.pkg}`} label="Copy install command" />
-      </div>
-    )}
-    {prompt && view === "usage" && (
-      <div className="code-block st-stage-panel">
-        <pre>{prompt.snippet}</pre>
-        <CodeCopy text={prompt.snippet} label="Copy usage example" />
-      </div>
-    )}
-    </>
-  );
-}
-
-function StudioActions({
-  library,
-  libraryId,
-  agent,
-  prompt,
-}: {
-  /** Display name for the prompt text ("Beam"); libraryId keys storage. */
-  library: string;
-  libraryId: string;
-  agent: AgentWiring;
-  prompt?: PromptMeta;
-}) {
-  const [presets, setPresets] = useState<StoredPreset[]>(() => readPresets(libraryId));
-  const [naming, setNaming] = useState(false);
-  const [name, setName] = useState("");
-  const [copied, setCopied] = useState(false);
-  const copyTimer = useRef<number | undefined>(undefined);
-  useEffect(() => () => window.clearTimeout(copyTimer.current), []);
-
-  /* The values the studio mounted with ARE its defaults — every knob's
-     useState starts there — so reset needs no per-library default table. */
-  const defaultsRef = useRef<Record<string, unknown>>({ ...agent.params });
-  const agentRef = useRef(agent);
-  agentRef.current = agent;
-
-  const saveCurrent = useCallback(() => {
-    const trimmed = name.trim() || `Preset ${presets.length + 1}`;
-    const next: StoredPreset[] = [
-      ...presets.filter((p) => p.name !== trimmed),
-      { name: trimmed, params: { ...agentRef.current.params }, savedAt: Date.now() },
-    ];
-    setPresets(next);
-    writePresets(libraryId, next);
-    setNaming(false);
-    setName("");
-  }, [name, presets, libraryId]);
-
-  const removePreset = useCallback(
-    (presetName: string) => {
-      const next = presets.filter((p) => p.name !== presetName);
-      setPresets(next);
-      writePresets(libraryId, next);
-    },
-    [presets, libraryId]
-  );
-
-  const copyPrompt = useCallback(() => {
-    if (!prompt) return;
-    const text = buildAgentPrompt(library, prompt);
-    if (typeof navigator !== "undefined" && navigator.clipboard) {
-      navigator.clipboard.writeText(text).catch(() => {});
-    }
-    setCopied(true);
-    window.clearTimeout(copyTimer.current);
-    copyTimer.current = window.setTimeout(() => setCopied(false), 1600);
-  }, [prompt]);
-
-  return (
-    <div className="st-actions">
-      <div className="st-actions-row">
-        {naming ? (
-          <input
-            className="st-actions-name"
-            autoFocus
-            value={name}
-            placeholder={`Preset ${presets.length + 1}`}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") saveCurrent();
-              if (e.key === "Escape") { setNaming(false); setName(""); }
-            }}
-            onBlur={() => { setNaming(false); setName(""); }}
-            aria-label="Preset name"
-          />
-        ) : (
-          <button type="button" className="st-actions-btn" onClick={() => setNaming(true)}>
-            Save preset
-          </button>
-        )}
-        <button
-          type="button"
-          className="st-actions-btn"
-          onClick={() => agentRef.current.onApply({ ...defaultsRef.current })}
-        >
-          Reset
-        </button>
-        {prompt && (
-          <button
-            type="button"
-            className="st-actions-btn"
-            onClick={copyPrompt}
-            data-copied={copied ? "true" : undefined}
-          >
-            {copied ? "Copied" : "Copy prompt"}
-          </button>
-        )}
-      </div>
-      {presets.length > 0 && (
-        <div className="st-actions-presets" role="list" aria-label="Saved presets">
-          {presets.map((p) => (
-            <span className="st-preset-chip" role="listitem" key={p.name}>
-              <button
-                type="button"
-                className="st-preset-apply"
-                onClick={() => agentRef.current.onApply({ ...p.params })}
-                title={`Apply ${p.name}`}
-              >
-                {p.name}
-              </button>
-              <button
-                type="button"
-                className="st-preset-remove"
-                onClick={() => removePreset(p.name)}
-                aria-label={`Delete preset ${p.name}`}
-              >
-                ×
-              </button>
-            </span>
-          ))}
+    {/* One tab, both blocks: the install line and the usage snippet are
+        read together, each under its own subtitle and copy button. The
+        usage subtitle says the snippet is the live tuning, because it is —
+        it carries whatever the knobs currently read. */}
+    {prompt && view === "code" && (() => {
+      const ports = prompt.platforms ?? [];
+      const active = ports.find((x) => x.id === platform);
+      const installTitle = active ? active.installTitle : `Install ${prompt.pkg} from npm`;
+      const install = active ? active.install : `npm install ${prompt.pkg}`;
+      const usage = active ? active.usage : prompt.snippet;
+      return (
+        <div className="st-stage-panel">
+          {ports.length > 0 && (
+            <div className="detail-tabs proto-modal-tabs st-platform-tabs" role="tablist" aria-label="Platform">
+              {[{ id: "react", label: "React" }, ...ports].map((x) => (
+                <button
+                  key={x.id}
+                  type="button"
+                  className="proto-modal-tab"
+                  role="tab"
+                  aria-selected={platform === x.id}
+                  data-active={platform === x.id ? "true" : undefined}
+                  onClick={() => setPlatform(x.id)}
+                >
+                  {x.label}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="st-code-group">
+            <span className="st-code-title">{installTitle}</span>
+            <div className="code-block">
+              <pre>{install}</pre>
+              <CodeCopy text={install} label="Copy install command" />
+            </div>
+            {active?.note && <span className="st-code-note">{active.note}</span>}
+          </div>
+          <div className="st-code-group">
+            <span className="st-code-title">Use it with your current settings</span>
+            <div className="code-block">
+              <pre>{usage}</pre>
+              <CodeCopy text={usage} label="Copy usage example" />
+            </div>
+          </div>
         </div>
-      )}
-    </div>
+      );
+    })()}
+    </>
   );
 }
 
@@ -1099,12 +1329,10 @@ function StudioActions({
 export function ControlsPanel({
   library,
   agent,
-  prompt,
   children,
 }: {
   library: string;
   agent?: AgentWiring;
-  prompt?: PromptMeta;
   children: ReactNode;
 }) {
   const [tab, setTab] = useState<PanelTab>("manual");
@@ -1205,12 +1433,6 @@ export function ControlsPanel({
         <AgentChat library={library} wiring={agent} />
       </div>
 
-      {/* Presets / reset / copy prompt sit under both tabs — a preset saved
-          from a manual tuning session and one saved from an agent session
-          are the same thing. */}
-      {agent && (
-        <StudioActions library={library} libraryId={agent.libraryId} agent={agent} prompt={prompt} />
-      )}
     </div>
   );
 }

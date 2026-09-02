@@ -85,9 +85,44 @@ export function OrbStudio({ visible = true, theme = "dark" }: { visible?: boolea
   if (dots !== 1) props.push(`dots={${num(dots)}}`);
   const snippet = `import { ThinkingOrb } from 'thinking-orbs';\n\n<ThinkingOrb ${props.join(" ")} />`;
 
+  /* The ports take state / size / theme / speed / paused only
+     (thinking-orbs-native/src/types.ts, ThinkingOrbsKit/ThinkingOrb.swift):
+     the web-only color tint and dot-count multiplier are left out, and
+     size 32 has no port preset — the tuned presets are 64 and 20 — so the
+     snippet falls back to 64 and says so. Both ports default to theme
+     auto, so no theme is written. */
+  const portSize: 64 | 20 = size === 20 ? 20 : 64;
+  const sizeNote = size === 32 ? "// size 32 is web-only; the ports ship the 64 and 20 presets\n" : "";
+  const rn: string[] = [`state="${state}"`, `size={${portSize}}`];
+  if (speed !== 100) rn.push(`speed={${num(speed / 100)}}`);
+  if (paused) rn.push("paused");
+  const rnSnippet = `import { ThinkingOrb } from 'thinking-orbs-native';\n\n${sizeNote}<ThinkingOrb ${rn.join(" ")} />`;
+  const sw: string[] = [`state: .${state}`, `size: .px${portSize}`];
+  if (speed !== 100) sw.push(`speed: ${num(speed / 100)}`);
+  if (paused) sw.push("paused: true");
+  const swiftSnippet = `import ThinkingOrbsKit\n\n${sizeNote}ThinkingOrb(${sw.join(", ")})`;
+
+  const platforms = [
+    {
+      id: "rn",
+      label: "React Native",
+      installTitle: "Install thinking-orbs-native with Skia and Reanimated",
+      install: "npm install thinking-orbs-native @shopify/react-native-skia react-native-reanimated",
+      note: "thinking-orbs-native is not on npm yet — it lives in this repo at packages/thinking-orbs/ports/react-native/thinking-orbs-native. Expo needs expo run:ios / run:android (native modules).",
+      usage: rnSnippet,
+    },
+    {
+      id: "swift",
+      label: "Swift",
+      installTitle: "Add ThinkingOrbsKit as a local Swift package (iOS 15+, no dependencies)",
+      install: `// Package.swift — or Xcode: File › Add Package Dependencies… › Add Local…\n.package(path: "packages/thinking-orbs/ports/ios/ThinkingOrbsKit")`,
+      usage: swiftSnippet,
+    },
+  ];
+
   return (
     <div className="pg">
-      <StageBar library="Thinking orbs" prompt={{ pkg: "thinking-orbs", docsPath: "/orbs.html", snippet }} />
+      <StageBar library="Thinking orbs" prompt={{ pkg: "thinking-orbs", docsPath: "/orbs.html", snippet, platforms }} agent={{ libraryId: "orb", params: agentParams, labels: ORB_PARAM_LABELS, onApply: applyAgentParams }} />
       <div className="pg-stage">
         {/* key remounts the canvas on state/size change, matching the live playground */}
         {visible && (
@@ -120,7 +155,6 @@ export function OrbStudio({ visible = true, theme = "dark" }: { visible?: boolea
           labels: ORB_PARAM_LABELS,
           onApply: applyAgentParams,
         }}
-        prompt={{ pkg: "thinking-orbs", docsPath: "/orbs.html", snippet }}
       >
         <PgTabs label="State" options={STATE_OPTIONS} value={state} onChange={setState} />
         <PgTabs

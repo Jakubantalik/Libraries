@@ -789,7 +789,7 @@ export function GooeyStudio({
 
   return (
     <div className="pg">
-      {!isPublic && <StageBar library="Gooey" prompt={{ pkg: "liquid-gooey", docsPath: "/gooey.html", snippet }} />}
+      {!isPublic && <StageBar library="Gooey" prompt={{ pkg: "liquid-gooey", docsPath: "/gooey.html", snippet }} agent={{ libraryId: "gooey", params: agentParams, labels: GOOEY_PARAM_LABELS, onApply: applyAgentParams }} />}
       <div className="pg-stage">
         {visible && effect === "morph" && <MorphDemo group={group} knobs={morph} theme={theme} />}
         {visible && effect === "move" && <MoveDemo group={group} knobs={move} theme={theme} />}
@@ -878,7 +878,6 @@ export function GooeyStudio({
             labels: GOOEY_PARAM_LABELS,
             onApply: applyAgentParams,
           }}
-          prompt={{ pkg: "liquid-gooey", docsPath: "/gooey.html", snippet }}
         >
           <PgTabs label="Effect" options={EFFECT_OPTIONS} value={effect} onChange={setEffect} />
 

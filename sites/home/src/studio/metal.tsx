@@ -111,7 +111,7 @@ export function MetalStudio({ visible = true, theme = "dark" }: { visible?: bool
 
   return (
     <div className="pg">
-      <StageBar library="Metal" prompt={{ pkg: "metal-fx", docsPath: "/metal.html", snippet }} />
+      <StageBar library="Metal" prompt={{ pkg: "metal-fx", docsPath: "/metal.html", snippet }} agent={{ libraryId: "metal", params: agentParams, labels: METAL_PARAM_LABELS, onApply: applyAgentParams }} />
       <div className="pg-stage">
         <div className="metal-stage-row">
           <label ref={searchRef} className="metal-search">
@@ -171,7 +171,6 @@ export function MetalStudio({ visible = true, theme = "dark" }: { visible?: bool
           labels: METAL_PARAM_LABELS,
           onApply: applyAgentParams,
         }}
-        prompt={{ pkg: "metal-fx", docsPath: "/metal.html", snippet }}
       >
         <PgTabs label="Type" options={VARIANT_OPTIONS} value={variant} onChange={handleVariant} />
         <PgTabs label="Color" options={PRESET_OPTIONS} value={preset} onChange={setPreset} />

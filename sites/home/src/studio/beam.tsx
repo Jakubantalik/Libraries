@@ -213,10 +213,67 @@ export function BeamStudio({ visible = true, theme = "dark" }: { visible?: boole
   const attrs = props.length ? "\n  " + props.join("\n  ") + "\n" : "";
   const snippet = `import { BorderBeam } from 'border-beam';\n\n<BorderBeam${attrs}>\n  <Card>Content</Card>\n</BorderBeam>`;
 
+  /* The ports mirror the web props (border-beam-native/src/types.ts,
+     BorderBeamKit/BorderBeam.swift) with two differences the snippets
+     honor: neither auto-detects the child's radius, so borderRadius is
+     always written; and glowSize plus the CSS-variable tuning are web-only,
+     so they are left out rather than invented. Both ports default to the
+     dark theme, so light is spelled out when the Studio is in light. */
+  const rn: string[] = [];
+  if (size !== "md") rn.push(`size="${size}"`);
+  if (colorVariant !== "colorful") rn.push(`colorVariant="${colorVariant}"`);
+  if (theme === "light") rn.push(`theme="light"`);
+  rn.push(`borderRadius={${num(radius)}}`);
+  if (strength !== 100) rn.push(`strength={${num(strength / 100)}}`);
+  if (duration !== defaultDuration) rn.push(`duration={${num(duration)}}`);
+  if (brightness !== 1.3) rn.push(`brightness={${num(brightness)}}`);
+  if (saturation !== 1.2) rn.push(`saturation={${num(saturation)}}`);
+  if (hueRange !== 30) rn.push(`hueRange={${num(hueRange)}}`);
+  if (staticColors) rn.push("staticColors");
+  if (!active) rn.push("active={false}");
+  const rnAttrs = "\n  " + rn.join("\n  ") + "\n";
+  const rnSnippet = `import { BorderBeam } from 'border-beam-native';\n\n<BorderBeam${rnAttrs}>\n  <Card />\n</BorderBeam>`;
+
+  const swiftSize: Record<BorderBeamSize, string> = {
+    sm: ".sm", md: ".md", line: ".line", "pulse-outside": ".pulseOutside", "pulse-inner": ".pulseInner",
+  };
+  const sw: string[] = [];
+  if (size !== "md") sw.push(`size: ${swiftSize[size]}`);
+  if (colorVariant !== "colorful") sw.push(`colorVariant: .${colorVariant}`);
+  if (theme === "light") sw.push("theme: .light");
+  sw.push(`borderRadius: ${num(radius)}`);
+  if (strength !== 100) sw.push(`strength: ${num(strength / 100)}`);
+  if (duration !== defaultDuration) sw.push(`duration: ${num(duration)}`);
+  if (brightness !== 1.3) sw.push(`brightness: ${num(brightness)}`);
+  if (saturation !== 1.2) sw.push(`saturation: ${num(saturation)}`);
+  if (hueRange !== 30) sw.push(`hueRange: ${num(hueRange)}`);
+  if (staticColors) sw.push("staticColors: true");
+  if (!active) sw.push("active: false");
+  const swiftSnippet = `import BorderBeamKit\n\nBorderBeam(\n    ${sw.join(",\n    ")}\n) {\n    Card()\n}`;
+
+  const platforms = [
+    {
+      id: "rn",
+      label: "React Native",
+      installTitle: "Install border-beam-native with Skia and Reanimated",
+      install: "npm install border-beam-native @shopify/react-native-skia react-native-reanimated",
+      note: "border-beam-native is not on npm yet — it lives in this repo at packages/border-beam/ports/react-native/border-beam-native. Expo needs expo run:ios / run:android (native modules).",
+      usage: rnSnippet,
+    },
+    {
+      id: "swift",
+      label: "Swift",
+      installTitle: "Add BorderBeamKit as a local Swift package (iOS 17+)",
+      install: `// Package.swift — or Xcode: File › Add Package Dependencies… › Add Local…\n.package(path: "packages/border-beam/ports/ios/BorderBeamKit")`,
+      note: "Build through Xcode: the Metal shader is compiled by Xcode's build system, not by SwiftPM alone.",
+      usage: swiftSnippet,
+    },
+  ];
+
   return (
     <>
       <div className="pg">
-        <StageBar library="Border beam" prompt={{ pkg: "border-beam", docsPath: "/beam.html", snippet }} />
+        <StageBar library="Border beam" prompt={{ pkg: "border-beam", docsPath: "/beam.html", snippet, platforms }} agent={{ libraryId: "beam", params: agentParams, labels: BEAM_PARAM_LABELS, onApply: applyAgentParams }} />
         <div className="pg-stage">
           {visible && (
           <BorderBeam
@@ -255,7 +312,6 @@ export function BeamStudio({ visible = true, theme = "dark" }: { visible?: boole
             labels: BEAM_PARAM_LABELS,
             onApply: applyAgentParams,
           }}
-          prompt={{ pkg: "border-beam", docsPath: "/beam.html", snippet }}
         >
           <PgTabs label="Family" options={FAMILY_OPTIONS} value={family} onChange={handleFamilyChange} />
           <PgTabs label="Type" options={SIZE_OPTIONS_BY_FAMILY[family]} value={size} onChange={handleSizeChange} />

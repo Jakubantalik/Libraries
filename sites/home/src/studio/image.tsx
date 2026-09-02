@@ -177,7 +177,7 @@ export function ImageStudio({ visible = true, theme = "dark" }: { visible?: bool
 
   return (
     <div className="pg">
-      <StageBar library="Image" prompt={{ pkg: "img-fx", docsPath: "/image.html", snippet }} />
+      <StageBar library="Image" prompt={{ pkg: "img-fx", docsPath: "/image.html", snippet }} agent={{ libraryId: "image", params: agentParams, labels: IMAGE_PARAM_LABELS, onApply: applyAgentParams }} />
       <div className="pg-stage pg-stage--image">
         {visible && (
         <ImageGeneration
@@ -244,7 +244,6 @@ export function ImageStudio({ visible = true, theme = "dark" }: { visible?: bool
           labels: IMAGE_PARAM_LABELS,
           onApply: applyAgentParams,
         }}
-        prompt={{ pkg: "img-fx", docsPath: "/image.html", snippet }}
       >
         <PgTabs label="Type" options={PRESET_OPTIONS} value={preset} onChange={setPreset} />
         <PanelSep />

@@ -81,6 +81,7 @@
     refreshGeo: refreshGeo,
     get ppp() { return state.ppp; },
     get team() { return team; },
+    get presets() { return presets; },
   };
 
   // ── Purchasing-power parity ───────────────────────────────────────────────────
@@ -310,6 +311,13 @@
   }
 
   // ── Team API ────────────────────────────────────────────────────────────────
+  // Studio presets on the account: one preset = { name, values: { dark, light } }.
+  var presets = {
+    list: function (library) { return apiJSON("/presets?library=" + encodeURIComponent(library)); },
+    save: function (library, name, values) { return apiJSON("/presets", "POST", { library: library, name: name, values: values }); },
+    remove: function (library, name) { return apiJSON("/presets/delete", "POST", { library: library, name: name }); },
+  };
+
   var team = {
     get: function () { return apiJSON("/team"); },
     invite: function (email, role) { return apiJSON("/team/invite", "POST", { email: email, role: role }); },

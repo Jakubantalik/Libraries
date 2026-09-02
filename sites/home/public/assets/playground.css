@@ -466,6 +466,155 @@ html[data-theme="light"] .detail-prompt {
 html[data-theme="light"] .detail-prompt:hover { background: #fafafa; }
 html[data-theme="light"] .detail-prompt:active { background: #f1f1f1; }
 .detail-prompt-label { display: inline-block; }
+
+/* Install & Usage: the platform switch is the same pill bar as the view
+   tabs, and a caveat under an install block reads as a muted note. */
+.st-platform-tabs { align-self: flex-start; }
+.st-code-note {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--pg-label);
+}
+
+/* Install & Usage: each block wears the panel's section title. */
+.st-code-group { display: flex; flex-direction: column; gap: 8px; }
+.st-code-title {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 14px;
+  color: var(--pg-title);
+}
+
+/* Stage-bar action group: Preset ▾ · reset · Copy prompt, all 32px.
+   Preset and reset are the design system's ghost button (Figma
+   1432:39019): 32px at 36px radius, 12px sides, no fill or ring at rest
+   with #cecece text; white-4% on hover and white-6% on press, both
+   lifting the text to #fbfbfb; disabled keeps the rest fill at 50%.
+   Copy prompt keeps the filled pill so the one real action reads first. */
+.st-stage-actions { display: flex; align-items: center; gap: 4px; }
+.st-stage-actions .detail-prompt:not(.st-preset-btn) { margin-left: 4px; }
+.st-ghost-btn,
+.st-preset-btn,
+html[data-theme="dark"] .st-preset-btn,
+html[data-theme="light"] .st-preset-btn,
+.st-reset-btn,
+html[data-theme="dark"] .st-reset-btn {
+  height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 36px;
+  background: transparent;
+  box-shadow: none;
+  color: #cecece;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 14px;
+  transition: background 140ms, color 140ms;
+}
+/* Theme-prefixed so these outrank the theme-scoped rest rule above. */
+.st-preset-btn:hover,
+.st-preset-btn[aria-expanded="true"],
+.st-reset-btn:hover,
+html[data-theme="dark"] .st-preset-btn:hover,
+html[data-theme="dark"] .st-preset-btn[aria-expanded="true"],
+html[data-theme="dark"] .st-reset-btn:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: #fbfbfb;
+}
+.st-preset-btn:active,
+.st-reset-btn:active,
+html[data-theme="dark"] .st-preset-btn:active,
+html[data-theme="dark"] .st-reset-btn:active {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fbfbfb;
+}
+.st-preset-btn:disabled,
+.st-reset-btn:disabled { background: transparent; color: rgba(251, 251, 251, 0.5); cursor: default; }
+/* Light theme: the same ghost, inked for a light surface. */
+html[data-theme="light"] .st-preset-btn,
+html[data-theme="light"] .st-reset-btn { color: var(--pg-label); }
+html[data-theme="light"] .st-preset-btn:hover,
+html[data-theme="light"] .st-preset-btn[aria-expanded="true"],
+html[data-theme="light"] .st-reset-btn:hover { background: rgba(0, 0, 0, 0.04); color: var(--pg-title); }
+html[data-theme="light"] .st-preset-btn:active,
+html[data-theme="light"] .st-reset-btn:active { background: rgba(0, 0, 0, 0.06); color: var(--pg-title); }
+.st-preset-btn { gap: 4px; padding-right: 10px; }
+/* The chevron and the reset glyph take the button's own text color. */
+.st-preset-chev { flex: none; color: currentColor; }
+.st-reset-btn { position: relative; width: 32px; padding: 0; }
+.st-reset-btn svg,
+.st-reset-btn:hover svg { width: 16px; height: 16px; fill: none; stroke: currentColor; color: currentColor; }
+@media (hover: hover) {
+  .st-reset-btn:hover .card-copy-tooltip,
+  .st-reset-btn:focus-visible .card-copy-tooltip {
+    opacity: 1;
+    visibility: visible;
+    filter: blur(0);
+    transition:
+      opacity 150ms cubic-bezier(0.22, 1, 0.36, 1) 50ms,
+      filter 150ms cubic-bezier(0.22, 1, 0.36, 1) 50ms,
+      visibility 0s linear 50ms;
+  }
+}
+/* Preset menu: the nav's tl-menu, with a save form under the list. */
+.st-preset-menu { width: 240px; }
+.st-preset-row .tl-menu-item-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.st-preset-empty { color: var(--text-muted); cursor: default; }
+.st-preset-empty:hover { background: transparent; }
+.st-preset-menu .st-preset-remove {
+  flex: none; width: 20px; height: 20px; border: 0; border-radius: 6px; padding: 0;
+  background: transparent; color: var(--text-muted); font-size: 14px; line-height: 1; cursor: pointer;
+}
+.st-preset-menu .st-preset-remove:hover { color: var(--text); background: var(--pg-control-bg-hover); }
+.st-preset-form { display: flex; flex-direction: column; gap: 6px; padding: 4px 2px 2px; }
+.st-preset-input {
+  height: 32px; padding: 0 10px; border: 0; border-radius: 8px;
+  background: var(--pg-control-bg); color: var(--pg-title);
+  font-family: var(--font-sans); font-size: 13px; outline: none;
+}
+.st-preset-input::placeholder { color: var(--pg-label); }
+.st-preset-input:focus-visible { box-shadow: 0 0 0 2px var(--text-muted); }
+/* Save — Figma 1418:38191: 32px pill on white-6%, lifted by a 1px inner
+   hairline and a top highlight, hover/active at white-10%, disabled at
+   50%. Same family as the panel's material pills. */
+.st-preset-save {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 36px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fbfbfb;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow:
+    0 1px 1px 0 rgba(0, 0, 0, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  transition: background 140ms;
+}
+.st-preset-save:hover,
+.st-preset-save:active { background: rgba(255, 255, 255, 0.1); }
+.st-preset-save:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
+.st-preset-save:disabled { opacity: 0.5; cursor: default; pointer-events: none; }
+html[data-theme="light"] .st-preset-save {
+  background: var(--pg-control-active-bg);
+  color: var(--pg-control-active-text);
+  box-shadow: var(--pg-control-active-shadow);
+}
+html[data-theme="light"] .st-preset-save:hover,
+html[data-theme="light"] .st-preset-save:active { background: #fafafa; }
 /* Leading icon, swapping copy -> check on the same cross-blur the code
    snippets' copy button uses (.card-copy in site.css). The two glyphs
    stack in one 16px slot so the pill's width never shifts. */
@@ -1367,20 +1516,106 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
 .st-preset-remove:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 1px; }
 
 /* Three dots while the turn is in flight, gone once prose starts arriving. */
-.st-chat-thinking { display: flex; gap: 4px; padding: 6px 0; }
-.st-chat-thinking span {
-  width: 5px; height: 5px; border-radius: 50%;
-  background: var(--text-subtle);
-  animation: st-chat-blink 1.2s infinite ease-in-out;
+/* Pending turn: the 20px Working orb + transitions.dev P28 "Thinking
+   states" — a status line that shimmers while it holds, then swaps to the
+   next with the exit-up / enter-from-below cross-blur. The shimmer lives
+   on ::before (content: attr(data-text)), so text and data-text always
+   move together. Tokens carry the prototype's values; base/highlight
+   follow the theme. */
+.st-chat-thinking {
+  --think-hold: 2000ms;
+  --think-swap-dur: 150ms;
+  --think-swap-distance: 8px;
+  --think-swap-blur: 2px;
+  --think-shimmer-dur: 2000ms;
+  --think-band: 400%;
+  --think-ease: ease-in-out;
+  --think-base: #9a9a9a;
+  --think-highlight: #f5f5f5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
 }
-.st-chat-thinking span:nth-child(2) { animation-delay: 0.16s; }
-.st-chat-thinking span:nth-child(3) { animation-delay: 0.32s; }
-@keyframes st-chat-blink {
-  0%, 80%, 100% { opacity: 0.25; }
-  40% { opacity: 1; }
+html[data-theme="light"] .st-chat-thinking { --think-base: #7c7c7c; --think-highlight: #0d0d0d; }
+.st-think-orb { flex: none; width: 20px; height: 20px; display: block; }
+.st-think-orb canvas { display: block; }
+.st-think-swap {
+  position: relative;
+  display: inline-block;
+  text-align: left;
+  line-height: 18px;
+  min-width: 0;
+}
+.st-think-sizer {
+  display: block;
+  visibility: hidden;
+  white-space: nowrap;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 18px;
+}
+.st-think-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: block;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--think-base);
+  white-space: nowrap;
+  transform: translateY(0);
+  filter: blur(0);
+  opacity: 1;
+  transition:
+    transform var(--think-swap-dur) var(--think-ease),
+    filter var(--think-swap-dur) var(--think-ease),
+    opacity var(--think-swap-dur) var(--think-ease);
+  will-change: transform, filter, opacity;
+}
+.st-think-text::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    transparent 40%,
+    var(--think-highlight) 50%,
+    transparent 60%,
+    transparent 100%
+  );
+  background-size: var(--think-band) 100%;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: st-think-shimmer var(--think-shimmer-dur) var(--ease-linear) infinite;
+}
+@keyframes st-think-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: 0% 0; }
+}
+.st-think-text.is-exit {
+  transform: translateY(calc(var(--think-swap-distance) * -1));
+  filter: blur(var(--think-swap-blur));
+  opacity: 0;
+}
+.st-think-text.is-enter-start {
+  transition: none;
+  transform: translateY(var(--think-swap-distance));
+  filter: blur(var(--think-swap-blur));
+  opacity: 0;
 }
 @media (prefers-reduced-motion: reduce) {
-  .st-chat-thinking span { animation: none; opacity: 0.5; }
+  .st-think-text::before { animation: none; }
+  .st-think-text { transition: none; }
 }
 
 .st-chat-composer {
