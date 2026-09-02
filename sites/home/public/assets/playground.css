@@ -1795,41 +1795,124 @@ html[data-theme="light"] .st-chat-thinking { --think-base: #7c7c7c; --think-high
   .st-think-text { transition: none; }
 }
 
+/* ── Agent composer: Figma 1434:39714 (dark) / 1434:39739 (light) ──
+   A 39px single-line field on a 12px radius, the 28px send button on
+   an 8px radius parked 6px from the right edge. Four states, read off
+   the frame's variants: rest, hover/focus (the field lifts), filled
+   (ink text, the button turns white), and busy (everything dims). */
 .st-chat-composer {
+  --cmp-bg: rgba(255, 255, 255, 0.04);
+  --cmp-bg-lift: rgba(255, 255, 255, 0.08);
+  --cmp-ring:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.04),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.06);
+  --cmp-ring-lift: var(--cmp-ring);
+  --cmp-drop: 0 0 0 0 rgba(0, 0, 0, 0);
+  --cmp-text: rgba(151, 151, 151, 0.7);
+  --cmp-text-filled: #f3f3f3;
+  --cmp-text-busy: rgba(151, 151, 151, 0.3);
+  --cmp-btn-bg: rgba(255, 255, 255, 0.04);
+  --cmp-btn-ring:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+  --cmp-btn-ink: rgba(255, 255, 255, 0.5);
+  --cmp-btn-bg-on: rgba(255, 255, 255, 0.95);
+  --cmp-btn-ring-on: var(--cmp-btn-ring);
+  --cmp-btn-ink-on: #151515;
+
+  position: relative;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 8px;
-  padding: 8px;
-  border-radius: 16px;
-  background: var(--chip-bg);
+  min-height: 39px;
+  padding: 0 6px 0 12px;
+  border-radius: 12px;
+  background: var(--cmp-bg);
+  box-shadow: var(--cmp-ring), var(--cmp-drop);
+  transition: background 140ms ease, box-shadow 140ms ease;
+}
+.st-chat-composer:hover,
+.st-chat-composer:focus-within {
+  background: var(--cmp-bg-lift);
+  box-shadow: var(--cmp-ring-lift), var(--cmp-drop);
+}
+.st-chat-composer[data-busy] {
+  background: var(--cmp-bg);
+  box-shadow: var(--cmp-ring), var(--cmp-drop);
 }
 .st-chat-input {
   flex: 1 1 auto;
   min-width: 0;
+  margin: 0;
+  padding: 0;
   border: 0;
   background: transparent;
   resize: none;
   font-family: var(--font-sans);
   font-size: 13px;
-  line-height: 19px;
-  color: var(--text);
+  line-height: 14px;
+  color: var(--cmp-text-filled);
+  /* One line, like the frame: no scrollbar can appear inside a 14px box. */
+  overflow: hidden;
+  transition: color 140ms ease;
 }
-.st-chat-input::placeholder { color: var(--text-subtle); }
+.st-chat-input::placeholder { color: var(--cmp-text); }
 .st-chat-input:focus { outline: none; }
+.st-chat-composer[data-busy] .st-chat-input,
+.st-chat-composer[data-busy] .st-chat-input::placeholder { color: var(--cmp-text-busy); }
 .st-chat-send {
   flex: none;
   width: 28px; height: 28px;
   display: inline-flex; align-items: center; justify-content: center;
-  border: 0; border-radius: 50%;
-  background: #ededed;
-  color: #17181c;
-  cursor: pointer;
-  transition: opacity 140ms ease, background 140ms ease;
+  border: 0; border-radius: 8px;
+  background: var(--cmp-btn-bg);
+  box-shadow: var(--cmp-btn-ring);
+  color: var(--cmp-btn-ink);
+  cursor: default;
+  transition: background 140ms ease, color 140ms ease, box-shadow 140ms ease;
+  -webkit-tap-highlight-color: transparent;
 }
 .st-chat-send svg { width: 16px; height: 16px; display: block; }
-.st-chat-send:hover { background: #ffffff; }
-.st-chat-send:disabled { opacity: 0.35; cursor: default; }
+/* Filled: the button turns white with the dark arrow. */
+.st-chat-send:not(:disabled) {
+  background: var(--cmp-btn-bg-on);
+  box-shadow: var(--cmp-btn-ring-on);
+  color: var(--cmp-btn-ink-on);
+  cursor: pointer;
+}
+.st-chat-send:not(:disabled):hover { background: #ffffff; }
 .st-chat-send:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
+
+/* Light (1434:39739): the field reads white-4% over the panel on a soft
+   0 1px 3px drop and a black-6% ring that hardens to black-10% on hover
+   and focus; text is #979797 at rest, #080808 when filled, both at 70%.
+   The button rests on black-4% with a black-4% ring. */
+html[data-theme="light"] .st-chat-composer {
+  --cmp-bg: rgba(255, 255, 255, 0.04);
+  --cmp-bg-lift: rgba(255, 255, 255, 0.04);
+  --cmp-ring:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+    inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+  --cmp-ring-lift:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.1),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+    inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+  --cmp-drop: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
+  --cmp-text: rgba(151, 151, 151, 0.7);
+  --cmp-text-filled: rgba(8, 8, 8, 0.7);
+  --cmp-text-busy: rgba(151, 151, 151, 0.5);
+  --cmp-btn-bg: rgba(0, 0, 0, 0.04);
+  --cmp-btn-ring:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+  --cmp-btn-ink: rgba(0, 0, 0, 0.5);
+  --cmp-btn-bg-on: rgba(255, 255, 255, 0.95);
+  --cmp-btn-ring-on:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+  --cmp-btn-ink-on: #151515;
+}
 
 /* ── Docs prose: the written pages in the docs shell ──────────
    Same sidebar + main column as a library page; the main column

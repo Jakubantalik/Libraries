@@ -874,13 +874,13 @@ function AgentChat({ library, wiring }: { library: string; wiring?: AgentWiring 
         {busy && !streaming && <ThinkingStatus />}
       </div>
 
-      <div className="st-chat-composer">
+      <div className="st-chat-composer" data-filled={draft.trim() ? "" : undefined} data-busy={busy ? "" : undefined}>
         <textarea
           className="st-chat-input"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={onKeyDown}
-          rows={2}
+          rows={1}
           placeholder={`Ask for a change to ${library}…`}
           aria-label={`Ask the agent to change ${library}`}
         />
@@ -891,9 +891,7 @@ function AgentChat({ library, wiring }: { library: string; wiring?: AgentWiring 
           disabled={!draft.trim() || busy}
           aria-label="Send message"
         >
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M8 13V3M4 6.5 8 2.5l4 4" />
-          </svg>
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7.99967 12.6667V3.33337M12.6663 8.00004L7.99967 3.33337L3.33301 8.00004" /></svg>
         </button>
       </div>
     </div>
