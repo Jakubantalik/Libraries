@@ -89,6 +89,21 @@
 /* Getting-started rows sit at the same near-white as the library rows. */
 .docs-link--muted { color: #ededed; }
 .docs-link:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
+/* Light rows (Figma 1433:39152): #4b4b4b labels, #111 on the active row,
+   which lifts to white on the 0 1px 3px black-4% drop and the three-part
+   inset ring; hover is a black-4% wash. */
+html[data-theme="light"] .docs-link { color: #4b4b4b; }
+html[data-theme="light"] .docs-link--muted { color: #4b4b4b; }
+html[data-theme="light"] .docs-link:hover { background: rgba(0, 0, 0, 0.04); }
+html[data-theme="light"] .docs-link.is-active {
+  background: #ffffff;
+  color: #111111;
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.04),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+    inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+}
 /* Icon card: the Figma export used verbatim (fill, rim, glyph and its
    soft 0 1px 1.5px drop all baked in). The 24px slot just positions it;
    the canvas is larger than the card (filter margins, and the beam's
@@ -110,6 +125,18 @@
   left: -3px;
   top: -2px;
 }
+/* Light theme swaps in the light-baked cards (#f5f5f5 body, black-6%
+   ring) from the same Figma frame - both surfaces, one rule each. */
+html[data-theme="light"] .docs-link-icon[src*="figma-beam"],
+html[data-theme="light"] .st-lib-ico img[src*="figma-beam"] { content: url("/assets/icons/figma-beam-light.png"); }
+html[data-theme="light"] .docs-link-icon[src*="figma-orbs"],
+html[data-theme="light"] .st-lib-ico img[src*="figma-orbs"] { content: url("/assets/icons/figma-orbs-light.svg"); }
+html[data-theme="light"] .docs-link-icon[src*="figma-gooey"],
+html[data-theme="light"] .st-lib-ico img[src*="figma-gooey"] { content: url("/assets/icons/figma-gooey-light.svg"); }
+html[data-theme="light"] .docs-link-icon[src*="figma-metal"],
+html[data-theme="light"] .st-lib-ico img[src*="figma-metal"] { content: url("/assets/icons/figma-metal-light.png"); }
+html[data-theme="light"] .docs-link-icon[src*="figma-image"],
+html[data-theme="light"] .st-lib-ico img[src*="figma-image"] { content: url("/assets/icons/figma-image-light.png"); }
 
 
 .docs-main { position: relative; min-width: 0; }
@@ -207,10 +234,10 @@ html[data-theme="dark"] .detail-tabs.proto-modal-tabs {
   height: 30px;
   padding: 0 12px;
   border-radius: 36px;
-  color: var(--pg-label);
+  color: var(--pg-tabs-text);
 }
-.detail-tabs .proto-modal-tab:hover,
-.detail-tabs .proto-modal-tab[aria-selected="true"] { color: var(--pg-title); }
+.detail-tabs .proto-modal-tab:hover { color: var(--pg-tabs-text-hover); }
+.detail-tabs .proto-modal-tab[aria-selected="true"] { color: var(--pg-tabs-text-active); }
 
 /* The two head actions sit together, opposite the tabs. */
 .detail-head-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -521,9 +548,12 @@ html[data-theme="dark"] .st-reset-btn:active {
 }
 .st-preset-btn:disabled,
 .st-reset-btn:disabled { background: transparent; opacity: 0.6; cursor: default; }
-/* Light theme: the same ghost, inked for a light surface. */
+/* Light theme keeps dark's hierarchy: the filled Copy prompt pill carries
+   the full ink, the ghosts rest one step down on the control-text token
+   (dark rests them at #b8b8b8, its control text) and only reach the full
+   ink on hover, so the row reads as one primary and two secondaries. */
 html[data-theme="light"] .st-preset-btn,
-html[data-theme="light"] .st-reset-btn { color: var(--pg-title); }
+html[data-theme="light"] .st-reset-btn { color: var(--pg-control-text); }
 html[data-theme="light"] .st-preset-btn:hover,
 html[data-theme="light"] .st-preset-btn[aria-expanded="true"],
 html[data-theme="light"] .st-preset-btn:active,
@@ -843,8 +873,13 @@ html[data-theme="dark"] .pg-stage { background: #171717; }
   --pg-tabs-ring: none;
   --pg-tabs-pill-bg: #ffffff;
   --pg-tabs-pill-shadow:
-    0 1px 3px 0 rgba(0, 0, 0, 0.06),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+    0 1px 3px 0 rgba(0, 0, 0, 0.04),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.1),
+    inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+  --pg-tabs-text: #828282;
+  --pg-tabs-text-hover: #2a2a2a;
+  --pg-tabs-text-active: #111111;
 }
 html[data-theme="dark"] {
   --pg-panel-bg: #1b1b1b;
@@ -879,6 +914,9 @@ html[data-theme="dark"] {
   --pg-tabs-pill-shadow:
     0 1px 1px 0 rgba(0, 0, 0, 0.12),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  --pg-tabs-text: #979797;
+  --pg-tabs-text-hover: #fbfbfb;
+  --pg-tabs-text-active: #fbfbfb;
 }
 
 /* Panel surface and rhythm from Figma 1418:38255: #1b1b1b at 16px radius,
@@ -1062,8 +1100,11 @@ html[data-theme="dark"] {
      card entirely; here the <pre> does the rounding instead, which it can
      because it is the thing that scrolls. */
 }
-/* Same surface as the stage and the example cards: a flat #171717 card
-   with no border, reading against the #121212 page on its own. */
+/* Same surface as the stage and the example cards, in both themes: dark
+   is a flat #171717 against the #121212 page, light the stage's own
+   #f9f9f9, so a snippet never reads as a different kind of card from the
+   preview above it. */
+.code-block { background: var(--stage-bg); }
 html[data-theme="dark"] .code-block {
   background: #171717;
   box-shadow: none;
@@ -1391,7 +1432,7 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
 .st-panel-tab {
   position: relative; z-index: 1;
   font-family: var(--font-sans); font-size: 13px; font-weight: 500;
-  color: var(--pg-label);
+  color: var(--pg-tabs-text);
   background: transparent; border: 0;
   height: 30px; padding: 0 12px;
   border-radius: 36px;
@@ -1400,8 +1441,8 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   transition: color var(--tabs-dur) var(--tabs-ease);
   -webkit-tap-highlight-color: transparent;
 }
-.st-panel-tab:hover,
-.st-panel-tab[aria-selected="true"] { color: var(--pg-title); }
+.st-panel-tab:hover { color: var(--pg-tabs-text-hover); }
+.st-panel-tab[aria-selected="true"] { color: var(--pg-tabs-text-active); }
 .st-panel-tab:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
 
 @media (prefers-reduced-motion: reduce) {
