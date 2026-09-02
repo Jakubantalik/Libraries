@@ -291,13 +291,21 @@ html {
 /* Signed-in avatar — the 3-dot "More" button swaps to the user's initial
    (Figma 1425:38996: #2a2a2a chip, 12px Inter Medium initial, material ring).
    The dots stay in the DOM; the class just hides them and shows the letter. */
+/* Light: the same raised white control every other light surface here
+   wears (tabs, the active nav row, Copy prompt) - white on the black-6%
+   ring with dark ink - rather than a black disc, which read as a hole
+   in the white top bar. Dark keeps its own block below. */
 .icon-btn--avatar {
-  background: #17181c;
-  color: #ffffff;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
+  background: #ffffff;
+  color: #17181c;
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.04),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.1),
+    inset 0 0 0 1px rgba(196, 196, 196, 0.1);
 }
-.icon-btn--avatar:hover { background: #2a2a2a; }
-.icon-btn--avatar:active { background: #000000; }
+.icon-btn--avatar:hover { background: #fafafa; }
+.icon-btn--avatar:active { background: #f1f1f1; }
 html[data-theme="dark"] .icon-btn--avatar {
   background: #2a2a2a;
   color: #e8e8e8;

@@ -1176,9 +1176,9 @@ html[data-theme="dark"] {
 }
 /* Same surface as the stage and the example cards, in both themes: dark
    is a flat #171717 against the #121212 page, light the stage's own
-   #f9f9f9, so a snippet never reads as a different kind of card from the
-   preview above it. */
-.code-block { background: var(--stage-bg); }
+   #f9f9f9 - and like the stage, no ring and no drop, so a snippet never
+   reads as a different kind of card from the preview above it. */
+.code-block { background: var(--stage-bg); box-shadow: none; }
 html[data-theme="dark"] .code-block {
   background: #171717;
   box-shadow: none;
