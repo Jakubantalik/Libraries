@@ -233,6 +233,14 @@
       left: -3px;
       top: -2px;
     }
+    /* Metal's export is the card alone with no canvas padding, so it fills
+       the slot squarely (same rule the docs sidebar carries). */
+    .st-lib-ico img[src*="figma-metal"] {
+      width: 24px;
+      height: 24px;
+      left: 0;
+      top: 0;
+    }
 
     .st-main { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
     .st-main .pg { grid-template-columns: minmax(0, 1fr) 320px; grid-template-rows: auto auto 1fr; gap: 12px; align-items: start; }
