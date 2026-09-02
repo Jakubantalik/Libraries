@@ -181,16 +181,19 @@
 }
 
     /* Processor table */
+    /* See how-to-use.html: kept out of the collapsed-border algorithm so the
+       hairline matches across engines. */
     .proc {
       width: 100%;
-      border-collapse: collapse;
+      border-collapse: separate;
+      border-spacing: 0;
       margin: 4px 0 14px;
       font-size: 14px;
     }
     .proc th, .proc td {
       text-align: left;
       padding: 10px 12px;
-      border-bottom: 1px solid var(--rule);
+      box-shadow: inset 0 -1px 0 0 var(--rule);
       vertical-align: top;
       line-height: 1.5;
     }
