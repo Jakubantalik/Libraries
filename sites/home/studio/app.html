@@ -262,8 +262,17 @@
       align-self: start;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      /* Figma 1433:39150: the whole panel sits on the stage's own card with
+         20px of padding (the tab bar starts 20px left of the content), then
+         25px from the platform row to the first group and 17px between the
+         two groups. */
+      padding: 20px;
+      border-radius: 16px;
+      background: var(--stage-bg);
+      gap: 17px;
     }
+    html[data-theme="dark"] .st-main .st-stage-panel { background: #171717; }
+    .st-main .st-stage-panel > .st-platform-tabs { margin-bottom: 8px; }
     .st-main .st-stage-bar:not([data-view="preview"]) ~ .pg-stage,
     .st-main .st-stage-bar:not([data-view="preview"]) ~ .pg-snippet { display: none; }
     .st-main .pg-stage {

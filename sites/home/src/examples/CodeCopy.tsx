@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useScrollFade } from "./useScrollFade";
 
 /* The snippet card's copy button — transitions.dev's .detail-code-copy
    riding .card-copy, whose icon crossfade and tooltip already live in
@@ -99,5 +100,25 @@ export function CodeCopy({ text, label }: { text: string; label: string }) {
         </span>
       </span>
     </button>
+  );
+}
+
+/** The snippet card: a scrolling <pre> that fades at whichever edge still
+ *  has code beyond it, with the copy button above it. */
+export function CodeBlock({
+  code,
+  label,
+  className,
+}: {
+  code: string;
+  label: string;
+  className?: string;
+}) {
+  const preRef = useScrollFade(code);
+  return (
+    <div className={className ? `code-block ${className}` : "code-block"}>
+      <pre ref={preRef}>{code}</pre>
+      <CodeCopy text={code} label={label} />
+    </div>
   );
 }

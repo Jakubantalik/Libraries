@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { CodeCopy } from "./examples/CodeCopy";
+import { CodeBlock } from "./examples/CodeCopy";
 import { MetalExamples } from "./examples/metal-examples";
 import { StudioTeaser } from "./examples/StudioTeaser";
 import { MetalFx, type MetalFxPreset, type MetalFxVariant } from "metal-fx-v1";
@@ -192,10 +192,7 @@ function MetalPlayground() {
 
       </div>
 
-      <div className="code-block pg-snippet">
-        <pre>{snippet}</pre>
-        <CodeCopy text={snippet} label="Copy playground snippet" />
-      </div>
+      <CodeBlock code={snippet} label="Copy playground snippet" className="pg-snippet" />
     </>
   );
 }
