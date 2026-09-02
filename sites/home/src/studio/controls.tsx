@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { describePatch, streamAgentTurn, type ChatTurn } from "./agent";
+import type { CoreWiring } from "./core";
 import { ThinkingOrb } from "thinking-orbs";
 
 /* App-level theme plumbing: the Studio shell provides it, and every
@@ -584,6 +585,22 @@ export interface AgentWiring {
   /** Param key -> the knob's own label, for the applied-change line. */
   labels: Record<string, string>;
   onApply: (patch: Record<string, unknown>) => void;
+  /** Present when the agent may rewrite this library's core (`params.core`). */
+  core?: CoreWiring;
+}
+
+/* Anonymous prompt analytics opt-out. The switch lives on the account page
+   (account.html, "Studio agent analytics"); this only reads what it wrote,
+   at send time rather than on mount, so a change made in another tab is
+   picked up by the next message. "off" is the only value that means
+   anything; absent or anything else is on. */
+const ANALYTICS_KEY = "ldev:studio:agent-analytics";
+function readAnalyticsPref(): boolean {
+  try {
+    return localStorage.getItem(ANALYTICS_KEY) !== "off";
+  } catch {
+    return true;
+  }
 }
 
 /* A library whose controls aren't wired to the agent yet says so plainly
@@ -702,6 +719,10 @@ function AgentChat({ library, wiring }: { library: string; wiring?: AgentWiring 
   const abortRef = useRef<AbortController | null>(null);
   useEffect(() => () => abortRef.current?.abort(), []);
 
+  /* Why the last rebuilt core was refused by the browser's check. Sent with
+     the next turn so the model fixes it instead of guessing. */
+  const coreErrorRef = useRef<string | undefined>(undefined);
+
   const send = useCallback(() => {
     const text = draft.trim();
     if (!text || busy) return;
@@ -745,11 +766,17 @@ function AgentChat({ library, wiring }: { library: string; wiring?: AgentWiring 
     let bubbleId: number | null = null;
     let bubbleText = "";
 
+    const coreError = coreErrorRef.current;
+    coreErrorRef.current = undefined;
+
     streamAgentTurn(
       {
         library: active.libraryId,
         params: before,
         messages: turns,
+        coreSource: active.core?.source(),
+        coreError,
+        analytics: readAnalyticsPref(),
         signal: controller.signal,
       },
       {
@@ -768,7 +795,28 @@ function AgentChat({ library, wiring }: { library: string; wiring?: AgentWiring 
           const snapshot = bubbleText;
           setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, text: snapshot } : m)));
         },
-        onParams: (patch) => {
+        onParams: (incoming) => {
+          let patch = incoming;
+          /* A rebuilt core is compiled here before it reaches the preview.
+             A failure is shown, remembered for the next turn, and dropped
+             from the patch — the knobs in the same patch still land. */
+          const coreWiring = wiringRef.current?.core;
+          if (coreWiring && typeof patch.core === "string" && patch.core) {
+            const problem = coreWiring.check(patch.core);
+            if (problem) {
+              coreErrorRef.current = problem;
+              const { core: _dropped, ...rest } = patch;
+              patch = rest;
+              const line: ChatMessage = {
+                id: nextId(),
+                role: "error",
+                text: `The rebuilt core didn't apply — ${problem}. Ask again and the agent will fix it.`,
+              };
+              setMessages((prev) => (prev.some((m) => m.id === line.id) ? prev : [...prev, line]));
+              bubbleId = null;
+              if (!Object.keys(patch).length) return;
+            }
+          }
           wiringRef.current?.onApply(patch);
           const line: ChatMessage = {
             id: nextId(),
@@ -782,6 +830,18 @@ function AgentChat({ library, wiring }: { library: string; wiring?: AgentWiring 
         },
       }
     )
+      .then((result) => {
+        /* A turn that produced neither prose nor a change leaves the log
+           looking ignored; say so instead. */
+        if (bubbleId === null && !Object.keys(result.patch).length) {
+          const line: ChatMessage = {
+            id: nextId(),
+            role: "agent",
+            text: "The agent didn't return a change that time. Try again, or ask for a smaller step.",
+          };
+          setMessages((prev) => (prev.some((m) => m.id === line.id) ? prev : [...prev, line]));
+        }
+      })
       .catch((err: unknown) => {
         if ((err as Error)?.name === "AbortError") return;
         const line: ChatMessage = {
@@ -1030,7 +1090,10 @@ export function StageBar({
   const [presets, setPresets] = useState<StoredPreset[]>(() => (libraryId ? readPresets(libraryId) : []));
 
   /* Account presets replace the local list once the session is known —
-     and again whenever it changes (sign-in / sign-out fire "pro:me"). */
+     and again whenever it changes (sign-in / sign-out fire "pro:me").
+     A failed call keeps whatever is stored locally rather than blanking
+     the menu: the session can look live from the optimistic auth cache
+     while the API is unreachable. */
   useEffect(() => {
     if (!libraryId) return;
     let live = true;
@@ -1041,9 +1104,15 @@ export function StageBar({
         return;
       }
       api.list(libraryId).then((r) => {
-        if (!live || !r || !Array.isArray(r.presets)) return;
+        if (!live) return;
+        if (!r || !Array.isArray(r.presets)) {
+          setPresets(readPresets(libraryId));
+          return;
+        }
         setPresets(r.presets.map((x) => ({ name: x.name, values: x.values as PresetValues, savedAt: x.updated_at })));
-      }).catch(() => {});
+      }).catch(() => {
+        if (live) setPresets(readPresets(libraryId));
+      });
     };
     load();
     document.addEventListener("pro:me", load);
@@ -1105,9 +1174,20 @@ export function StageBar({
     const entry: StoredPreset = { name, values, savedAt: Date.now() };
     const next = [...presets.filter((x) => x.name !== name), entry];
     setPresets(next);
+    /* Whatever the agent moved is already in `a.params` — the chat applies
+       its patch through the same setters the knobs use — so an agent-tuned
+       look saves exactly like a hand-tuned one. If the account write does
+       not land, keep the preset locally rather than losing it. */
     const api = accountPresets();
-    if (api) api.save(a.libraryId, name, values).catch(() => {});
-    else writePresets(a.libraryId, next);
+    if (api) {
+      api.save(a.libraryId, name, values)
+        .then((r) => {
+          if (!r || !r.ok) writePresets(a.libraryId, next);
+        })
+        .catch(() => writePresets(a.libraryId, next));
+    } else {
+      writePresets(a.libraryId, next);
+    }
     closeMenu();
   }, [draftName, nextName, presets, theme, closeMenu]);
   const applyPreset = useCallback(
@@ -1125,8 +1205,17 @@ export function StageBar({
       const next = presets.filter((x) => x.name !== name);
       setPresets(next);
       const api = accountPresets();
-      if (api) api.remove(a.libraryId, name).catch(() => {});
-      else writePresets(a.libraryId, next);
+      if (api) {
+        api.remove(a.libraryId, name)
+          .then((r) => {
+            if (!r || !r.ok) writePresets(a.libraryId, next);
+          })
+          .catch(() => writePresets(a.libraryId, next));
+      } else {
+        writePresets(a.libraryId, next);
+      }
+      /* Mirror the deletion locally too, so a fallback copy cannot resurrect. */
+      writePresets(a.libraryId, next);
     },
     [presets]
   );
@@ -1442,6 +1531,16 @@ export function ControlsPanel({
           resets neither what the user tuned nor the conversation that
           tuned it. */}
       <div className="st-panel-body" hidden={tab !== "manual"}>
+        {/* A rebuilt core changes what the knobs below are tuning, so say
+            so where the knobs are, with the way back. */}
+        {agent && typeof agent.params.core === "string" && agent.params.core !== "" && (
+          <div className="st-core-row" role="status">
+            <span className="st-core-text">Core rebuilt by the agent</span>
+            <button type="button" className="st-core-restore" onClick={() => agent.onApply({ core: "" })}>
+              Restore stock
+            </button>
+          </div>
+        )}
         {children}
       </div>
       <div className="st-panel-body st-panel-body--chat" hidden={tab !== "agent"}>

@@ -1,4 +1,6 @@
 import type { CSSProperties, CanvasHTMLAttributes } from 'react';
+import type { ModeOpts } from './engine/profiles';
+import type { ModeFrame } from './engine/types';
 
 /**
  * The nine shipped states — each a hand-tuned animation:
@@ -86,6 +88,35 @@ export interface ThinkingOrbProps extends Omit<CanvasHTMLAttributes<HTMLCanvasEl
    * `2` doubles it. Clamped to a 0.1 floor.
    */
   dots?: number;
+
+  /**
+   * Radius multiplier for every dot, applied with the same scaler the size
+   * presets use so near/far falloff keeps its proportion. `1` (default) is
+   * the tuned mark; `0.7` reads finer, `1.5` bolder.
+   */
+  dotSize?: number;
+
+  /**
+   * Advanced: raw draw options merged over the resolved preset, last. These
+   * are the engine's own knobs, so they reach past the tuned surface — the
+   * orbit paths' `ghostA` and `particles` (working), the globe's `scanMul`
+   * and `dimBase` (searching), the constellation's `thr`, `signals`, `lineW`
+   * and `spread` (connecting), the plait's `turns` (weaving), the sash's
+   * `wobMul`, `bandMul` and `spin` (composing, breathing), and the outline's
+   * `spread` and `shape` (shaping — `shape` 0 / 1 / 2 holds the circle,
+   * triangle or square instead of cycling). Unknown keys are ignored; a key
+   * the current state does not read does nothing.
+   */
+  opts?: ModeOpts;
+
+  /**
+   * Escape hatch below `opts`: replace the state's geometry outright. The
+   * function gets `(size, t, opts)` and returns the frame to paint — the
+   * same contract every built-in mode implements (see `MODE_FRAMES` and the
+   * helpers exported alongside it). The painter, theme, tint, pause and
+   * offscreen handling all stay the library's.
+   */
+  frame?: ModeFrame;
 
   style?: CSSProperties;
 }

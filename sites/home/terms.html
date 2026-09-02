@@ -175,6 +175,12 @@
       font-weight: 600;
       letter-spacing: -0.01em;
     }
+    h3 {
+      margin: 22px 0 8px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
     p {
       margin: 0 0 14px;
       font-size: 15px;
@@ -334,7 +340,7 @@
       <header class="doc-head">
         <p class="eyebrow"><a href="/">Libraries.dev</a></p>
         <h1>Terms &amp; License</h1>
-        <p class="updated">Last updated August 2026</p>
+        <p class="updated">Last updated September 2026</p>
         <p class="lede">
           These terms cover using Libraries.dev — the free, open-source effect libraries
           (Beam, Orb, Gooey, Metal and Image), the Libraries&nbsp;Pro subscription with the
@@ -429,6 +435,24 @@
         <p>
           Configurations and code you export from the Studio are yours to use under
           <strong>Using the libraries</strong> above.
+        </p>
+        <h3>The Studio agent and its monthly allowance</h3>
+        <p>
+          The Agent tab sends your request to an AI model that tunes, or rebuilds, the effect for
+          you. Its use is <strong>limited per account per calendar month</strong>: at most
+          <strong>150 agent requests</strong>, and an <strong>agent-cost allowance of about $3</strong>
+          worth of model usage (measured in the tokens the model reads and writes). A simple tuning
+          request uses a small fraction of a cent; a request that rebuilds an effect's core can use a
+          few cents to around twenty. When either limit is reached the agent stops answering until the
+          first day of the next month, while the manual controls, presets and everything else in the
+          Studio keep working. Unused allowance does not carry over, is not refundable, and is not a
+          quota you own — we may change the limits, and the model behind the agent, as the Beta
+          evolves. The agent may also decline requests unrelated to the effect in front of you.
+        </p>
+        <p>
+          Code the agent writes (a rebuilt core) runs in your browser and, if you export it, in your
+          app; it is provided as-is under <strong>No warranty</strong> below, and it is yours to use
+          under <strong>Using the libraries</strong> above.
         </p>
       </section>
 

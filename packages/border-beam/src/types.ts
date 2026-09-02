@@ -172,6 +172,15 @@ export interface BorderBeamProps extends Omit<HTMLAttributes<HTMLDivElement>, 'c
   style?: CSSProperties;
 
   /**
+   * Extra CSS appended after the beam's own generated stylesheet, so it can
+   * override or add layers and keyframes. Write `{id}` wherever the
+   * instance id belongs — the root is `[data-beam="{id}"]`, its layers are
+   * the `::before` / `::after` pseudo-elements and `[data-beam-bloom]`, and
+   * keyframes are named `*-{id}` — and it is substituted per instance.
+   */
+  css?: string;
+
+  /**
    * Callback when fade-in animation completes
    */
   onActivate?: () => void;

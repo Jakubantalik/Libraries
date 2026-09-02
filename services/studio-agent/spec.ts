@@ -25,7 +25,21 @@ export type ParamSpec =
       when?: string;
     }
   | { kind: "enum"; values: readonly string[]; describe: string; when?: string }
-  | { kind: "boolean"; describe: string; when?: string };
+  | { kind: "boolean"; describe: string; when?: string }
+  /** Any #rgb / #rrggbb colour. The knob offers swatches plus a picker, so
+      the agent gets the same reach: name a few good swatches in `describe`
+      but accept any hex the request calls for. */
+  | { kind: "color"; describe: string; when?: string }
+  /** The library's core, as source the agent may rewrite: the orb's frame
+      function, the beam's stylesheet, the goo filter chain, a fragment
+      shader. `contract` is the whole brief for writing one — what it
+      receives, what it must return, what it must keep. An empty string
+      restores the stock core. Validation is static (size and a hygiene
+      blocklist); the browser compiles it and reports a failure back on the
+      next turn. */
+  | { kind: "code"; lang: CodeLang; describe: string; contract: string; when?: string };
+
+export type CodeLang = "js" | "css" | "glsl" | "svg";
 
 export interface LibrarySpec {
   /** Display name, used in the system prompt. */
@@ -48,7 +62,11 @@ export const BEAM_SPEC: LibrarySpec = {
     "the 'pulse' family (pulse-inner, pulse-outside) breathes a glow in or out from it. " +
     "Perceived calm comes mostly from duration (longer is calmer) and strength; " +
     "perceived warmth or coolness comes from hueShift and colorVariant; " +
-    "perceived weight comes from brightness, saturation and the glow spreads.",
+    "perceived weight comes from brightness, saturation and the glow spreads. " +
+    "Every type is built from three stacked layers, each with its own opacity multiplier: the stroke " +
+    "(a crisp 1px hairline running along the card's edge), the inner glow (soft light hugging the edge) " +
+    "and the bloom (the wide, diffuse outer halo). A request about one part of the glow — 'drop the thin " +
+    "line', 'less halo', 'only the hairline' — is a per-layer move on those multipliers, not a strength change.",
   params: {
     size: {
       kind: "enum",
@@ -80,6 +98,42 @@ export const BEAM_SPEC: LibrarySpec = {
       describe:
         "Seconds for one full travel. This is the strongest lever on how frantic or calm the effect feels — " +
         "raise it for 'calmer', 'slower', 'more relaxed'; lower it for 'snappier', 'more urgent'.",
+    },
+    glowSize: {
+      kind: "number",
+      min: 0.25,
+      max: 3,
+      step: 0.05,
+      describe:
+        "Multiplies the blur radius of every glow layer. Below 1 reads tighter and crisper; above 1 the halo " +
+        "spreads wider and softer.",
+    },
+    strokeOpacity: {
+      kind: "number",
+      min: 0,
+      max: 2,
+      step: 0.05,
+      describe:
+        "Opacity multiplier for the stroke layer — the crisp 1px hairline along the card's edge. " +
+        "0 removes the hairline entirely and leaves only the soft glow; above 1 hardens the edge.",
+    },
+    innerOpacity: {
+      kind: "number",
+      min: 0,
+      max: 2,
+      step: 0.05,
+      describe:
+        "Opacity multiplier for the inner glow — the soft light hugging the edge just inside the hairline. " +
+        "0 removes it; above 1 makes the edge read lit from within.",
+    },
+    bloomOpacity: {
+      kind: "number",
+      min: 0,
+      max: 2,
+      step: 0.05,
+      describe:
+        "Opacity multiplier for the bloom — the wide, diffuse outer halo. 0 removes the halo and keeps the " +
+        "beam tight to the edge; above 1 spills more light onto the surroundings.",
     },
     brightness: {
       kind: "number",
@@ -158,6 +212,23 @@ export const BEAM_SPEC: LibrarySpec = {
       describe: "Overall gain on the pulse glow.",
       when: "size is pulse-inner or pulse-outside",
     },
+    core: {
+      kind: "code",
+      lang: "css",
+      describe:
+        "The beam's stylesheet, rebuilt. Use it when the request changes what the beam IS — a different " +
+        "shape of light, a layer the library does not draw, motion the knobs cannot express — while keeping " +
+        "the selected type.",
+      contract:
+        "Write CSS that is appended after the library's generated stylesheet for this instance, so it can " +
+        "override any rule or add new ones. Write {id} wherever the instance id belongs and it is " +
+        "substituted per instance: the root is [data-beam=\"{id}\"], the light layers are its ::before " +
+        "and ::after pseudo-elements plus the child [data-beam-bloom], and every keyframe is named " +
+        "<name>-{id}. The stock stylesheet you are shown uses the same {id} placeholder. Keep the " +
+        "--beam-* custom properties meaningful where you can (strength, hue, the per-layer opacities), " +
+        "keep the layers pointer-events: none and inside the root, and keep to plain CSS: no url(), " +
+        "@import or vendor hacks. Redefine a keyframe under the same name to change its motion.",
+    },
     cardScale: {
       kind: "enum",
       values: ["s", "m", "l"],
@@ -178,12 +249,17 @@ export const BEAM_SPEC: LibrarySpec = {
       "colorVariant",
       "strength",
       "duration",
+      "glowSize",
+      "strokeOpacity",
+      "innerOpacity",
+      "bloomOpacity",
       "brightness",
       "saturation",
       "staticColors",
       "radius",
       "active",
     ];
+    keys.push("core");
     if (!staticColors) keys.push("hueRange", "hueShift");
     if (size === "line") keys.push("spikes");
     if (isPulse) keys.push("glowSx", "glowSy", "glowBoost");
@@ -198,7 +274,12 @@ export const ORB_SPEC: LibrarySpec = {
     "ThinkingOrb is the small animated blob an assistant shows while it is working. " +
     "Nine hand-authored states each have their own character — the state is the effect, " +
     "not a parameter of it, so a request about what the orb is 'doing' usually means changing state. " +
-    "Speed governs urgency, ink governs mood, dots governs how dense and busy it reads.",
+    "Speed governs urgency, ink governs mood, dots governs how dense and busy it reads. " +
+    "Beyond those, each state exposes its own engine knobs (listed with the state they apply to): the " +
+    "orbit paths and particle count of working, the scan of searching, the wiring of connecting, the " +
+    "plait of weaving, the sash of composing and breathing, and the outline of shaping — which can hold " +
+    "a circle, triangle or square instead of cycling. A request for a shape the orb does not have " +
+    "('square', 'triangle') means switching to shaping and holding that shape, in one call.",
   params: {
     state: {
       kind: "enum",
@@ -214,10 +295,10 @@ export const ORB_SPEC: LibrarySpec = {
     },
     size: {
       kind: "enum",
-      values: ["64", "20"],
+      values: ["64", "32", "20"],
       describe:
-        "Pixel size. Only these two exist — each is hand-tuned, so there is no in-between. " +
-        "64 is the standalone orb, 20 is the inline-with-text size.",
+        "Pixel size. 64 is the standalone orb and 20 the inline-with-text size, each hand-tuned; " +
+        "32 is the compact avatar size interpolated between them. Nothing in between these three.",
     },
     speed: {
       kind: "number",
@@ -229,12 +310,12 @@ export const ORB_SPEC: LibrarySpec = {
         "above ~150 reads urgent or frantic. The main lever for 'calmer' and 'more energetic'.",
     },
     ink: {
-      kind: "enum",
-      values: ["#ededed", "#7cd4ff", "#ffd28f", "#ff9ec9", "#9fe8a8"],
+      kind: "color",
       describe:
-        "Colour. #ededed is the stock neutral grey (most restrained), #7cd4ff sky blue (cool, technical), " +
-        "#ffd28f amber (warm), #ff9ec9 pink (playful), #9fe8a8 mint (fresh, calm). " +
-        "Use the hex value, not the name.",
+        "Ink colour as a hex value; the depth shading is kept on top of it. The panel's swatches are " +
+        "#ededed neutral grey (stock, most restrained), #7cd4ff sky blue (cool, technical), #ffd28f amber (warm), " +
+        "#ff9ec9 pink (playful), #9fe8a8 mint (fresh, calm) — but any hex works, so a named colour " +
+        "('deep purple', 'brand red') gets the hex that matches it, not the nearest swatch.",
     },
     dots: {
       kind: "number",
@@ -244,14 +325,164 @@ export const ORB_SPEC: LibrarySpec = {
       describe:
         "Density multiplier for the particles. Below 1 reads sparse and minimal; above 1 reads dense and busy.",
     },
+    dotSize: {
+      kind: "number",
+      min: 0.5,
+      max: 2,
+      step: 0.05,
+      describe:
+        "Radius multiplier for every dot. Below 1 reads finer and more delicate; above 1 reads bolder " +
+        "and heavier. Independent of dots, which sets how many there are.",
+    },
+    shape: {
+      kind: "enum",
+      values: ["cycle", "circle", "triangle", "square"],
+      describe:
+        "What the dotted outline holds. cycle is the tuned circle → triangle → square loop; the other " +
+        "three freeze on that one shape (it still breathes). The only way to get a square or triangle orb.",
+      when: "state is shaping",
+    },
+    spread: {
+      kind: "number",
+      min: 0.8,
+      max: 2,
+      step: 0.05,
+      describe: "How far the figure spreads from the centre — its overall footprint inside the canvas.",
+      when: "state is shaping or connecting",
+    },
+    ghostOpacity: {
+      kind: "number",
+      min: 0,
+      max: 1,
+      step: 0.05,
+      describe:
+        "Opacity of the faint orbit paths the particles run on. 0 leaves only the moving particles, " +
+        "which reads sparser and more mysterious; 1 draws the full cage of rings.",
+      when: "state is working",
+    },
+    particles: {
+      kind: "number",
+      min: 1,
+      max: 8,
+      step: 1,
+      describe: "Particles per orbit. More reads busier and more effortful.",
+      when: "state is working",
+    },
+    scanSpeed: {
+      kind: "number",
+      min: 0.5,
+      max: 8,
+      step: 0.1,
+      describe: "How fast the scan meridian sweeps the globe relative to its spin. Higher reads more urgent.",
+      when: "state is searching",
+    },
+    scanDim: {
+      kind: "number",
+      min: 0.1,
+      max: 1,
+      step: 0.05,
+      describe:
+        "Brightness of the dots the scan is not touching. Low values fade the globe so only the sweep " +
+        "reads; 1 shows the whole globe evenly.",
+      when: "state is searching",
+    },
+    linkThreshold: {
+      kind: "number",
+      min: 0.3,
+      max: 1.2,
+      step: 0.02,
+      describe:
+        "How close two nodes must be to grow an edge. Low values give a sparse, barely-connected " +
+        "constellation; high values a dense mesh.",
+      when: "state is connecting",
+    },
+    signals: {
+      kind: "number",
+      min: 0,
+      max: 12,
+      step: 1,
+      describe: "Bright packets running along the wiring. 0 is a still constellation.",
+      when: "state is connecting",
+    },
+    lineWidth: {
+      kind: "number",
+      min: 0.3,
+      max: 2.5,
+      step: 0.1,
+      describe: "Thickness of the edges between nodes.",
+      when: "state is connecting",
+    },
+    turns: {
+      kind: "number",
+      min: 1,
+      max: 6,
+      step: 0.5,
+      describe: "How many times each strand wraps pole to pole. Fewer reads looser; more reads tightly plaited.",
+      when: "state is weaving",
+    },
+    wobble: {
+      kind: "number",
+      min: 0,
+      max: 2.5,
+      step: 0.05,
+      describe:
+        "Depth of the undulation running through the band. 0 is a clean, still band or ring; " +
+        "high values read stormy.",
+      when: "state is composing or breathing",
+    },
+    bandWidth: {
+      kind: "number",
+      min: 1,
+      max: 6,
+      step: 0.1,
+      describe: "Width of the band, as a multiplier on its lanes. Narrow reads as a thin ring; wide as a sash.",
+      when: "state is composing or breathing",
+    },
+    spin: {
+      kind: "number",
+      min: 0,
+      max: 2,
+      step: 0.05,
+      describe:
+        "3D tumble of the band's plane. 0 (the tuned default) keeps it fixed with only the undulation " +
+        "travelling; above 0 sets the whole band precessing.",
+      when: "state is composing or breathing",
+    },
     paused: {
       kind: "boolean",
       describe: "Freeze the animation. Set true only if the user asks to pause or stop it.",
     },
+    core: {
+      kind: "code",
+      lang: "js",
+      describe:
+        "The selected state's geometry, rebuilt as a new frame function. Use it when the request changes " +
+        "what the orb IS — a cube instead of a sphere, a spiral, a different figure — while keeping the " +
+        "selected state's character and motion. Prefer this over switching state.",
+      contract:
+        "Write the BODY of a JavaScript function with the signature (size, t, o, h): `size` is the canvas " +
+        "size in CSS px, `t` the animation clock in seconds (already multiplied by the state's speed), `o` " +
+        "the resolved draw options (the same keys the stock function reads — keep honouring them), and `h` " +
+        "a helper object with finalizeFrame(dots, lines, rMin), makeProj(yaw, tilt, cx, cy, scale) -> " +
+        "(x, y, z) => [px, py, z], radiusScale(size, pow), fibDir(i, n), hashD(a, b), vnoise(x, y), " +
+        "lerp(a, b, f), frac(x) and angleDelta(a, b) — exactly the toolkit the stock function is written " +
+        "with, called as h.finalizeFrame(...) and so on. Return h.finalizeFrame(dots, lines, o.rMin), where " +
+        "each dot is {x, y, z, r, white, a?} in canvas pixels (white 0..1 is the ink value, 0 darkest on " +
+        "paper; a is optional alpha) and each line is {x1, y1, x2, y2, white, a?, w}. Plain JavaScript, " +
+        "no types, no imports, no DOM or globals, Math only; keep it under ~120 lines and start from the " +
+        "stock source you are shown so the state's motion survives the new geometry.",
+    },
   },
-  relevant() {
-    // Every orb control is live in every combination.
-    return ["state", "size", "speed", "ink", "dots", "paused"];
+  relevant(params) {
+    const state = String(params.state ?? "working");
+    const keys = ["state", "size", "speed", "ink", "dots", "dotSize", "paused", "core"];
+    if (state === "shaping") keys.push("shape", "spread");
+    if (state === "connecting") keys.push("spread", "linkThreshold", "signals", "lineWidth");
+    if (state === "working") keys.push("ghostOpacity", "particles");
+    if (state === "searching") keys.push("scanSpeed", "scanDim");
+    if (state === "weaving") keys.push("turns");
+    if (state === "composing" || state === "breathing") keys.push("wobble", "bandWidth", "spin");
+    return keys;
   },
 };
 
@@ -286,14 +517,6 @@ export const METAL_SPEC: LibrarySpec = {
         "Intensity of the metal effect, in percent. The single strongest lever on how loud the whole thing " +
         "reads — drop it for 'subtler', 'calmer', 'more premium'.",
     },
-    glow: {
-      kind: "number",
-      min: 0,
-      max: 100,
-      step: 1,
-      describe: "Glow intensity in percent. High values read hot and attention-seeking.",
-      when: "disableGlow is false",
-    },
     shaderScale: {
       kind: "number",
       min: 0.6,
@@ -326,13 +549,26 @@ export const METAL_SPEC: LibrarySpec = {
       kind: "boolean",
       describe: "Freeze the shader. Set true only if the user asks to pause or stop it.",
     },
+    core: {
+      kind: "code",
+      lang: "glsl",
+      describe:
+        "The metal's fragment shader, rebuilt. Use it when the request changes the material itself — a " +
+        "different flow, pattern or lighting the knobs cannot express — while keeping the selected shape " +
+        "and colour preset.",
+      contract:
+        "Write a complete WebGL 1 fragment shader (GLSL ES 1.00: `precision highp float;`, `gl_FragColor`, " +
+        "`texture2D`). Keep every uniform declaration from the stock source with the same names and types " +
+        "— the engine uploads exactly those — and keep writing gl_FragColor with alpha multiplied by " +
+        "u_shaderOpacity so strength still works. Start from the stock source you are shown; it is the " +
+        "material the presets were tuned on.",
+    },
   },
   relevant(params) {
     const keys = [
       "variant", "preset", "strength", "shaderScale", "ring",
-      "disableGlow", "disableReflection", "paused",
+      "disableGlow", "disableReflection", "paused", "core",
     ];
-    if (params.disableGlow !== true) keys.push("glow");
     return keys;
   },
 };
@@ -378,11 +614,12 @@ export const IMAGE_SPEC: LibrarySpec = {
         "oranges and reds; mono is greyscale (the most restrained). The lever for 'warmer' and 'cooler'.",
     },
     cardBg: {
-      kind: "enum",
-      values: ["#1B1B1B", "#101018", "#1a2330", "#241a2e"],
+      kind: "color",
       describe:
-        "Card background the shader sits on. #1B1B1B is neutral charcoal, #101018 near-black ink (deepest), " +
-        "#1a2330 navy (cool), #241a2e plum (warm). Use the hex value, not the name.",
+        "Card background the shader sits on, as a hex value. It shows as \"default\" while untouched — the " +
+        "theme's own card colour (#242424 dark, #EEEEEF light). The panel's swatches are #1B1B1B neutral " +
+        "charcoal, #101018 near-black ink (deepest), #1a2330 navy (cool), #241a2e plum (warm), but any hex " +
+        "works. Keep it dark on the dark theme and light on the light one, or the reveal loses contrast.",
     },
     pixelScale: {
       kind: "number",
@@ -397,9 +634,28 @@ export const IMAGE_SPEC: LibrarySpec = {
       kind: "boolean",
       describe: "Freeze the animation. Set true only if the user asks to pause or stop it.",
     },
+    core: {
+      kind: "code",
+      lang: "glsl",
+      describe:
+        "The effect's fragment shader, rebuilt. Use it when the request changes what the effect IS — a " +
+        "different cell shape, a new pattern, a different reveal texture — while keeping the selected preset.",
+      contract:
+        "The stock shader you are shown has two halves: a prelude (uniforms, noise, palette, and " +
+        "computeEffect(), which colours a point for the selected preset) and main(), which lays that " +
+        "colour onto the card as the cell mosaic — grid, cell mask, highlight, edge fade, alpha. You send " +
+        "ONLY the second half: your source must start at `void main() {` (any new helper functions you " +
+        "need go before it, in your source) and it is appended after the stock prelude, so every uniform " +
+        "and helper the prelude declares is already in scope — do not redeclare them. GLSL ES 1.00 " +
+        "syntax (`gl_FragColor`; three.js adds the version line and precision — do not write them). Keep " +
+        "writing gl_FragColor with alpha multiplied by u_shaderOpacity, keep computeEffect() as the colour " +
+        "source and honour u_dotMode, u_cellSize and u_gap so the knobs still act. A different cell " +
+        "shape, mask or layout is a rewrite of main()'s mosaic block; a different colour field is a new " +
+        "helper called from main() in place of computeEffect().",
+    },
   },
   relevant(params) {
-    const keys = ["preset", "strength", "speed", "palette", "cardBg", "paused"];
+    const keys = ["preset", "strength", "speed", "palette", "cardBg", "paused", "core"];
     // The gradient preset has no pixel grid for this to act on.
     if (params.preset !== "sweep-gradient") keys.push("pixelScale");
     return keys;
@@ -615,10 +871,28 @@ export const GOOEY_SPEC: LibrarySpec = {
       describe: "Downward pull on the liquid. Higher makes it sag and drip; 0 leaves it weightless.",
       when: "effect is melt",
     },
+    core: {
+      kind: "code",
+      lang: "svg",
+      describe:
+        "The liquid's SVG filter chain, rebuilt. Use it when the request changes the surface itself — a " +
+        "different edge, a texture, a lighting model, a shape the goo maths cannot make — while keeping " +
+        "the selected effect.",
+      contract:
+        "Write the SVG filter primitives that replace the library's goo chain inside its <filter>. The " +
+        "input is SourceGraphic (the crisp silhouettes of every piece); the LAST primitive's output is " +
+        "what paints, so end with the result you want shown. The stock chain you are shown blurs, then " +
+        "raises alpha contrast (the goo), then optionally displaces (waviness), then composites the " +
+        "silhouette back and layers shadows; keep the result name `shape` for the merged silhouette if " +
+        "you keep shadows, since inset and spread passes read a binarised copy of it. Only fe* elements " +
+        "(feGaussianBlur, feColorMatrix, feComposite, feMorphology, feOffset, feFlood, feTurbulence, " +
+        "feDisplacementMap, feDiffuseLighting, feSpecularLighting, feMerge/feMergeNode, feImage is NOT " +
+        "allowed) with plain attributes — no scripts, no hrefs, no event attributes.",
+    },
   },
   relevant(params) {
     const effect = String(params.effect ?? "morph");
-    const keys = ["effect"];
+    const keys = ["core", "effect"];
     if (effect !== "melt") keys.push("blur", "contrast", "waviness", "fill");
     if (effect === "morph") {
       keys.push("morphDuration", "morphEasing", "morphStagger", "morphSpread", "morphAnticipation");
@@ -657,6 +931,13 @@ export function toolSchema(spec: LibrarySpec) {
       properties[key] = { type: "number", minimum: p.min, maximum: p.max, description };
     } else if (p.kind === "enum") {
       properties[key] = { type: "string", enum: [...p.values], description };
+    } else if (p.kind === "color") {
+      properties[key] = { type: "string", pattern: HEX_COLOR.source, description };
+    } else if (p.kind === "code") {
+      properties[key] = {
+        type: "string",
+        description: `${description} Send the complete ${CODE_LABEL[p.lang]}; send "" to restore the stock core.`,
+      };
     } else {
       properties[key] = { type: "boolean", description };
     }
@@ -668,6 +949,37 @@ export function toolSchema(spec: LibrarySpec) {
      from validate() below instead, which also enforces the conditional
      rules ("spikes only on line") that JSON Schema cannot express here. */
   return { type: "object", properties, additionalProperties: false };
+}
+
+/** #rgb or #rrggbb — what every colour knob in the Studio produces. */
+export const HEX_COLOR = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+
+export const CODE_LABEL: Record<CodeLang, string> = {
+  js: "JavaScript function body",
+  css: "stylesheet",
+  glsl: "fragment shader",
+  svg: "SVG filter primitives",
+};
+
+/* Static hygiene only — the browser is where the code is compiled and run,
+   and it reports a failure back on the next turn. Each blocklist names
+   what has no business in that kind of core: the frame function must be
+   pure math, the stylesheet must not fetch, the filter chain must be
+   primitives only. */
+export const CODE_MAX_CHARS = 24_000;
+const CODE_FORBIDDEN: Record<CodeLang, RegExp> = {
+  js: /\b(import|require|fetch|XMLHttpRequest|WebSocket|document|window|globalThis|self|eval|Function|localStorage|sessionStorage|indexedDB|navigator|postMessage|setTimeout|setInterval|Promise|async|await)\b|<\s*\/?\s*script/i,
+  css: /url\s*\(|@import|expression\s*\(|behavior\s*:|-moz-binding|<\s*\/?\s*script/i,
+  glsl: /<\s*\/?\s*script/i,
+  svg: /<\s*script|<\s*\/?\s*(?!fe[A-Z])[a-zA-Z]+[\s>\/]|\son[a-z]+\s*=|href\s*=|xlink:/,
+};
+
+export function checkCode(lang: CodeLang, code: string): string | null {
+  if (code.length > CODE_MAX_CHARS) return `longer than ${CODE_MAX_CHARS} characters`;
+  const hit = code.match(CODE_FORBIDDEN[lang]);
+  if (hit) return `must not contain ${JSON.stringify(hit[0].trim())}`;
+  if (lang === "js" && !/\breturn\b/.test(code)) return "must return a frame";
+  return null;
 }
 
 export interface Validated {
@@ -713,6 +1025,24 @@ export function validate(
         continue;
       }
       applied[key] = raw;
+    } else if (p.kind === "color") {
+      if (typeof raw !== "string" || !HEX_COLOR.test(raw.trim())) {
+        rejected.push({ key, reason: "must be a hex colour like #7cd4ff" });
+        continue;
+      }
+      applied[key] = raw.trim().toLowerCase();
+    } else if (p.kind === "code") {
+      if (typeof raw !== "string") {
+        rejected.push({ key, reason: "must be a string of source" });
+        continue;
+      }
+      const code = raw.trim();
+      const problem = code ? checkCode(p.lang, code) : null;
+      if (problem) {
+        rejected.push({ key, reason: problem });
+        continue;
+      }
+      applied[key] = code;
     } else {
       if (typeof raw !== "boolean") {
         rejected.push({ key, reason: "must be true or false" });

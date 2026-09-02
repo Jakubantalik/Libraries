@@ -4656,6 +4656,12 @@
     }
     .settings-label { font-size: 13px; color: var(--text); }
     .settings-value { font-size: 13px; color: var(--text-muted, #6c6c6c); }
+    /* A row whose label needs a sentence of explanation under it. */
+    .settings-row:has(.settings-sub) { align-items: flex-start; padding: 12px 0; }
+    .settings-sub {
+      display: block; margin-top: 3px; max-width: 52ch;
+      font-size: 12px; line-height: 1.5; color: var(--text-muted, #6c6c6c);
+    }
 
     .account-note { margin: 16px 0 0; font-size: 13px; line-height: 1.4; }
     .account-note[data-kind="ok"] { color: #16a34a; }
@@ -4952,6 +4958,13 @@
             <div class="settings-row">
               <span class="settings-label">Email</span>
               <span class="settings-value" id="acc-email"></span>
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">
+                Studio agent analytics
+                <span class="settings-sub" id="acc-analytics-sub">Your Studio agent requests are stored anonymised, with personal details removed, to improve the agent. They carry no identifier and are deleted after three months.</span>
+              </span>
+              <button type="button" class="row-btn" id="acc-analytics">Turn off</button>
             </div>
             <div class="settings-row">
               <span class="settings-label">Log out of all devices</span>
@@ -5435,6 +5448,30 @@
       el("acc-adjust").addEventListener("click", function (e) { e.preventDefault(); portal(); });
       el("acc-cancel").addEventListener("click", portal);
       el("acc-portal").addEventListener("click", portal);
+
+      // Studio agent analytics opt-out. Kept in this browser (no account
+      // field): the record it governs carries no identifier, so there is
+      // nothing server-side to attach the choice to. The Studio reads this
+      // same key when it sends a turn (sites/home/src/studio/controls.tsx).
+      var ANALYTICS_KEY = "ldev:studio:agent-analytics";
+      function analyticsOn() {
+        try { return localStorage.getItem(ANALYTICS_KEY) !== "off"; } catch (e) { return true; }
+      }
+      function paintAnalytics() {
+        var on = analyticsOn();
+        el("acc-analytics").textContent = on ? "Turn off" : "Turn on";
+        el("acc-analytics-sub").textContent = on
+          ? "Your Studio agent requests are stored anonymised, with personal details removed, to improve the agent. They carry no identifier and are deleted after three months."
+          : "Your Studio agent requests are not stored. Only this browser remembers the choice.";
+      }
+      paintAnalytics();
+      el("acc-analytics").addEventListener("click", function () {
+        try {
+          if (analyticsOn()) localStorage.setItem(ANALYTICS_KEY, "off");
+          else localStorage.removeItem(ANALYTICS_KEY);
+        } catch (e) { /* private mode — nothing to persist */ }
+        paintAnalytics();
+      });
 
       el("acc-logout-all").addEventListener("click", function () {
         TP.logout(true).then(function () { location.href = "/"; });

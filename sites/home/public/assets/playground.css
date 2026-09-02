@@ -488,10 +488,11 @@ html[data-theme="light"] .detail-prompt:active { background: #f1f1f1; }
 }
 
 /* Stage-bar action group: Presets ▾ · reset · Copy prompt, all 32px.
-   Figma 1432:39116 — both are ghosts at 60px radius: no fill at rest,
-   white-4% on hover and while pressed/open, #fbfbfb label at 13px/16px,
-   16px icons. Presets pads 12 left / 8 right around its chevron; reset is
-   a square with 8px sides. Disabled drops the whole button to 60%.
+   Figma 1432:39116 / 1432:39061 — both are ghosts at 60px radius: no fill
+   at rest, white-4% on hover and while pressed/open. The label rests at
+   #b8b8b8 with the icons and lifts to #fbfbfb on hover/open. 16px icons.
+   Presets pads 12 left / 8 right around its chevron; reset is a square
+   with 8px sides. Disabled drops the whole button to 60%.
    Copy prompt keeps the filled pill so the one real action reads first. */
 .st-stage-actions { display: flex; align-items: center; gap: 4px; }
 .st-stage-actions .detail-prompt:not(.st-preset-btn) { margin-left: 4px; }
@@ -505,12 +506,12 @@ html[data-theme="dark"] .st-reset-btn {
   border-radius: 60px;
   background: transparent;
   box-shadow: none;
-  color: #fbfbfb;
+  color: #b8b8b8;
   font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 500;
   line-height: 16px;
-  transition: background 140ms, opacity 140ms;
+  transition: background 140ms, color 140ms, opacity 140ms;
 }
 .st-preset-btn { gap: 4px; padding: 6px 8px 6px 12px; }
 .st-reset-btn { position: relative; width: 32px; padding: 6px 8px; }
@@ -524,7 +525,10 @@ html[data-theme="dark"] .st-preset-btn:hover,
 html[data-theme="dark"] .st-preset-btn[aria-expanded="true"],
 html[data-theme="dark"] .st-preset-btn:active,
 html[data-theme="dark"] .st-reset-btn:hover,
-html[data-theme="dark"] .st-reset-btn:active { background: rgba(255, 255, 255, 0.04); }
+html[data-theme="dark"] .st-reset-btn:active {
+  background: rgba(255, 255, 255, 0.04);
+  color: #fbfbfb;
+}
 .st-preset-btn:disabled,
 .st-reset-btn:disabled { background: transparent; opacity: 0.6; cursor: default; }
 /* Light theme: the same ghost, inked for a light surface. */
@@ -534,14 +538,15 @@ html[data-theme="light"] .st-preset-btn:hover,
 html[data-theme="light"] .st-preset-btn[aria-expanded="true"],
 html[data-theme="light"] .st-preset-btn:active,
 html[data-theme="light"] .st-reset-btn:hover,
-html[data-theme="light"] .st-reset-btn:active { background: rgba(0, 0, 0, 0.04); }
-/* Both glyphs are the frame's own 16px icons, at the icon grey the export
-   carries (#b8b8b8) rather than the label's #fbfbfb. */
-.st-preset-chev { flex: none; width: 16px; height: 16px; color: #b8b8b8; }
+html[data-theme="light"] .st-reset-btn:active {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--pg-title);
+}
+/* Both glyphs are the frame's own 16px icons and take the button's own
+   color, so they rest and lift with the label. */
+.st-preset-chev { flex: none; width: 16px; height: 16px; color: currentColor; }
 .st-reset-btn svg,
-.st-reset-btn:hover svg { width: 16px; height: 16px; fill: none; color: #b8b8b8; }
-html[data-theme="light"] .st-preset-chev,
-html[data-theme="light"] .st-reset-btn svg { color: var(--pg-label); }
+.st-reset-btn:hover svg { width: 16px; height: 16px; fill: none; color: currentColor; }
 @media (hover: hover) {
   .st-reset-btn:hover .card-copy-tooltip,
   .st-reset-btn:focus-visible .card-copy-tooltip {
@@ -1428,7 +1433,18 @@ html[data-theme="dark"] .detail-code-copy:hover { background: var(--chip-bg-hove
   scrollbar-width: thin;
   scrollbar-color: var(--pg-swatch-ring) transparent;
 }
-.st-chat-empty { margin: 0; font-size: 13px; line-height: 20px; color: var(--text-subtle); }
+/* The empty chat is one line of guidance, so it sits in the middle of the
+   log rather than hanging from the top: `auto` margins centre it in the
+   flex column, and balanced wrapping keeps its lines even instead of
+   leaving a short last one. */
+.st-chat-empty {
+  margin: auto 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--text-subtle);
+  text-align: center;
+  text-wrap: balance;
+}
 .st-chat-msg {
   font-size: 13px;
   line-height: 20px;
@@ -1710,3 +1726,35 @@ html[data-theme="light"] .st-chat-thinking { --think-base: #7c7c7c; --think-high
   background: var(--chip-bg); color: var(--text-muted);
   font-size: 12px; font-weight: 500;
 }
+
+/* ── Rebuilt core notice (Studio, manual panel) ───────────────────────
+   Sits at the top of the knob column while the agent's core is in place:
+   one line of label and a ghost "Restore stock" on the right. */
+.st-core-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 28px;
+}
+.st-core-text { font-size: 12px; line-height: 16px; color: var(--pg-label); }
+.st-core-restore,
+html[data-theme="dark"] .st-core-restore,
+html[data-theme="light"] .st-core-restore {
+  height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 60px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--pg-title);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  cursor: pointer;
+  transition: background 140ms;
+}
+.st-core-restore:hover,
+html[data-theme="dark"] .st-core-restore:hover { background: rgba(255, 255, 255, 0.04); }
+html[data-theme="light"] .st-core-restore:hover { background: rgba(0, 0, 0, 0.04); }

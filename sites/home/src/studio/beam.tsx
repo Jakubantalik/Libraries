@@ -1,13 +1,28 @@
 import { useCallback, useState, type CSSProperties } from "react";
 import { BorderBeam, type BorderBeamSize, type BorderBeamColorVariant } from "border-beam";
 import { ControlsPanel, PgTabs, PgSlider, PanelSep, Snippet, num, StageBar, PgGroup } from "./controls";
+import { checkCss, tpl, type CoreWiring } from "./core";
+
+/* The stylesheet the library generated for the visible beam, with its
+   instance id swapped for the {id} placeholder the `css` prop substitutes —
+   what the agent reads before rewriting it. */
+function stockBeamCss(): string {
+  const root = Array.from(document.querySelectorAll<HTMLElement>(".pg-stage [data-beam]")).find((e) => e.offsetWidth > 0);
+  const id = root?.getAttribute("data-beam");
+  const style = root?.previousElementSibling;
+  if (!root || !id || !style || style.tagName !== "STYLE") return "";
+  return (style.textContent ?? "").split(id).join("{id}");
+}
 
 /* Studio — Beam workbench. The public playground exposes family/type/color/
    strength; the Studio adds the rest of the prop surface (duration,
    brightness, saturation, hue range, static colors, corner radius) plus the
    overridable CSS hooks: --beam-hue-base (palette hue shift),
-   --beam-spike-mul (line-type spike prominence) and the --pulse-glow-*
-   glow-shaping vars of the pulse family. */
+   --beam-spike-mul (line-type spike prominence), the per-layer opacity
+   multipliers --beam-stroke-opacity / --beam-inner-opacity /
+   --beam-bloom-opacity (hairline, inner glow, outer halo — the library
+   reads each with a fallback of 1) and the --pulse-glow-* glow-shaping
+   vars of the pulse family. */
 
 type BeamFamily = "rotate" | "pulse";
 
@@ -63,6 +78,10 @@ const BEAM_PARAM_LABELS: Record<string, string> = {
   colorVariant: "Color theme",
   strength: "Strength",
   duration: "Duration",
+  glowSize: "Glow size",
+  strokeOpacity: "Stroke",
+  innerOpacity: "Inner glow",
+  bloomOpacity: "Bloom",
   brightness: "Brightness",
   saturation: "Saturation",
   hueRange: "Hue range",
@@ -73,6 +92,7 @@ const BEAM_PARAM_LABELS: Record<string, string> = {
   glowSx: "Glow spread X",
   glowSy: "Glow spread Y",
   glowBoost: "Glow boost",
+  core: "Core",
   active: "Playing",
 };
 
@@ -107,10 +127,17 @@ export function BeamStudio({ visible = true, theme = "dark" }: { visible?: boole
   const [radius, setRadius] = useState(16);
   const [spikes, setSpikes] = useState(1);
   const [glowSize, setGlowSize] = useState(1);
+  const [strokeOpacity, setStrokeOpacity] = useState(1);
+  const [innerOpacity, setInnerOpacity] = useState(1);
+  const [bloomOpacity, setBloomOpacity] = useState(1);
   const [glowSx, setGlowSx] = useState(1);
   const [glowSy, setGlowSy] = useState(1);
   const [glowBoost, setGlowBoost] = useState(1);
   const [active, setActive] = useState(true);
+  /* The agent's rebuilt stylesheet, appended after the generated one; ""
+     is stock. */
+  const [core, setCore] = useState("");
+  const coreWiring: CoreWiring = { lang: "css", source: stockBeamCss, check: checkCss };
 
   /* An untouched duration follows the type's own default across switches
      (md 1.96s vs line 2.4s), so the snippet never emits a duration the
@@ -138,9 +165,10 @@ export function BeamStudio({ visible = true, theme = "dark" }: { visible?: boole
    * which owns the ranges and rejects anything out of them, so nothing is
    * re-validated here. */
   const agentParams: Record<string, unknown> = {
-    size, colorVariant, strength, duration, brightness, saturation,
+    size, colorVariant, strength, duration, glowSize,
+    strokeOpacity, innerOpacity, bloomOpacity, brightness, saturation,
     hueRange, hueShift, staticColors, radius, spikes,
-    glowSx, glowSy, glowBoost, active,
+    glowSx, glowSy, glowBoost, active, core,
   };
 
   const applyAgentParams = useCallback(
@@ -157,6 +185,10 @@ export function BeamStudio({ visible = true, theme = "dark" }: { visible?: boole
       if (typeof patch.colorVariant === "string") setColorVariant(patch.colorVariant as BorderBeamColorVariant);
       if (typeof patch.strength === "number") setStrength(patch.strength);
       if (typeof patch.duration === "number") setDuration(patch.duration);
+      if (typeof patch.glowSize === "number") setGlowSize(patch.glowSize);
+      if (typeof patch.strokeOpacity === "number") setStrokeOpacity(patch.strokeOpacity);
+      if (typeof patch.innerOpacity === "number") setInnerOpacity(patch.innerOpacity);
+      if (typeof patch.bloomOpacity === "number") setBloomOpacity(patch.bloomOpacity);
       if (typeof patch.brightness === "number") setBrightness(patch.brightness);
       if (typeof patch.saturation === "number") setSaturation(patch.saturation);
       if (typeof patch.hueRange === "number") setHueRange(patch.hueRange);
@@ -168,6 +200,7 @@ export function BeamStudio({ visible = true, theme = "dark" }: { visible?: boole
       if (typeof patch.glowSy === "number") setGlowSy(patch.glowSy);
       if (typeof patch.glowBoost === "number") setGlowBoost(patch.glowBoost);
       if (typeof patch.active === "boolean") setActive(patch.active);
+      if (typeof patch.core === "string") setCore(patch.core);
     },
     [handleSizeChange]
   );
@@ -181,6 +214,9 @@ export function BeamStudio({ visible = true, theme = "dark" }: { visible?: boole
   const varStyle: Record<string, string | number> = {};
   if (hueShift !== 0 && !staticColors) varStyle["--beam-hue-base"] = `${hueShift}deg`;
   if (isLine && spikes !== 1) varStyle["--beam-spike-mul"] = num(spikes);
+  if (strokeOpacity !== 1) varStyle["--beam-stroke-opacity"] = num(strokeOpacity);
+  if (innerOpacity !== 1) varStyle["--beam-inner-opacity"] = num(innerOpacity);
+  if (bloomOpacity !== 1) varStyle["--beam-bloom-opacity"] = num(bloomOpacity);
   if (isPulse && glowSx !== 1) varStyle["--pulse-glow-sx"] = num(glowSx);
   if (isPulse && glowSy !== 1) varStyle["--pulse-glow-sy"] = num(glowSy);
   if (isPulse && glowBoost !== 1) varStyle["--pulse-glow-boost"] = num(glowBoost);
@@ -210,8 +246,10 @@ export function BeamStudio({ visible = true, theme = "dark" }: { visible?: boole
       .join(", ");
     props.push(`style={{ ${varLines} }}`);
   }
+  if (core) props.push("css={beamCss}");
   const attrs = props.length ? "\n  " + props.join("\n  ") + "\n" : "";
-  const snippet = `import { BorderBeam } from 'border-beam';\n\n<BorderBeam${attrs}>\n  <Card>Content</Card>\n</BorderBeam>`;
+  const coreDecl = core ? `const beamCss = ${tpl(core)};\n\n` : "";
+  const snippet = `import { BorderBeam } from 'border-beam';\n\n${coreDecl}<BorderBeam${attrs}>\n  <Card>Content</Card>\n</BorderBeam>`;
 
   /* The ports mirror the web props (border-beam-native/src/types.ts,
      BorderBeamKit/BorderBeam.swift) with two differences the snippets
@@ -290,6 +328,7 @@ export function BeamStudio({ visible = true, theme = "dark" }: { visible?: boole
             borderRadius={radius !== 16 ? radius : undefined}
             staticColors={staticColors}
             style={beamStyle}
+            css={core || undefined}
           >
             <DemoCard size={size} />
           </BorderBeam>
@@ -311,6 +350,7 @@ export function BeamStudio({ visible = true, theme = "dark" }: { visible?: boole
             params: agentParams,
             labels: BEAM_PARAM_LABELS,
             onApply: applyAgentParams,
+            core: coreWiring,
           }}
         >
           <PgTabs label="Family" options={FAMILY_OPTIONS} value={family} onChange={handleFamilyChange} />
@@ -328,6 +368,11 @@ export function BeamStudio({ visible = true, theme = "dark" }: { visible?: boole
             <PgSlider label="Size" value={glowSize} min={0.25} max={3} step={0.05} display={`${num(glowSize)}×`} onChange={setGlowSize} />
             <PgSlider label="Brightness" value={brightness} min={0.5} max={2.2} step={0.05} display={`${num(brightness)}×`} onChange={setBrightness} />
             <PgSlider label="Saturation" value={saturation} min={0.4} max={2.2} step={0.05} display={`${num(saturation)}×`} onChange={setSaturation} />
+            {/* The three stacked layers, each on its own multiplier: the
+                1px hairline, the soft light inside it, the outer halo. */}
+            <PgSlider label="Stroke" value={strokeOpacity} min={0} max={2} step={0.05} display={`${num(strokeOpacity)}×`} onChange={setStrokeOpacity} />
+            <PgSlider label="Inner glow" value={innerOpacity} min={0} max={2} step={0.05} display={`${num(innerOpacity)}×`} onChange={setInnerOpacity} />
+            <PgSlider label="Bloom" value={bloomOpacity} min={0} max={2} step={0.05} display={`${num(bloomOpacity)}×`} onChange={setBloomOpacity} />
             {!staticColors && (
               <>
                 <PgSlider label="Hue range" value={hueRange} min={0} max={120} step={1} display={`${hueRange}°`} onChange={setHueRange} />

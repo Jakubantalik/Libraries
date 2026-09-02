@@ -1,4 +1,6 @@
-import { PRESETS } from "img-fx";
+import { PRESETS,
+  IMAGE_FRAGMENT_SHADER,
+} from "img-fx";
 import { useCallback, useRef, useState } from "react";
 import {
   ImageGeneration,
@@ -6,6 +8,7 @@ import {
   type ImageGenerationHandle,
   type ImageGenerationPreset,
 } from "img-fx";
+import { checkGlsl, tpl, type CoreWiring } from "./core";
 import { ControlsPanel, PgTabs, PgSlider, PgSwatches, PgGroup, PanelSep, Snippet, num, StageBar } from "./controls";
 
 /* Studio — Image workbench. Public playground: preset + strength. The Studio
@@ -95,8 +98,12 @@ function paletteColors(
 
 const IMAGE_POOL = ["/images/gen-1.jpg", "/images/gen-2.jpg", "/images/gen-3.jpg"];
 
+/* The bundled shader up to main(): what a rebuilt core is appended to. */
+const SHADER_PRELUDE = IMAGE_FRAGMENT_SHADER.slice(0, IMAGE_FRAGMENT_SHADER.indexOf("void main()"));
+
 /* Param key -> the knob's own label, for the agent's applied-change line. */
 const IMAGE_PARAM_LABELS: Record<string, string> = {
+  core: "Core",
   preset: "Type",
   strength: "Strength",
   speed: "Speed",
@@ -116,6 +123,20 @@ export function ImageStudio({ visible = true, theme = "dark" }: { visible?: bool
   const [palette, setPalette] = useState<PaletteKey>("preset");
   const [cardBg, setCardBg] = useState<string>(CARD_BG_DEFAULT);
   const [paused, setPaused] = useState(false);
+  /* The agent's rebuilt mosaic stage — everything from main() on — or ""
+     for the bundled one. The stock prelude (uniforms, noise, palette,
+     computeEffect) is kept and the core is appended after it, so the
+     agent writes ~150 lines rather than the whole 600-line shader. */
+  const [core, setCore] = useState("");
+  const coreWiring: CoreWiring = {
+    lang: "glsl",
+    source: () => IMAGE_FRAGMENT_SHADER,
+    check: (code) => {
+      if (!/void\s+main\s*\(/.test(code)) return "the core must contain void main() — send everything from main() on";
+      return checkGlsl(SHADER_PRELUDE + code, { three: true });
+    },
+  };
+  const customShader = core ? SHADER_PRELUDE + "\n" + core : undefined;
   const [imageRevealed, setImageRevealed] = useState(false);
   const handleRef = useRef<ImageGenerationHandle | null>(null);
 
@@ -137,7 +158,7 @@ export function ImageStudio({ visible = true, theme = "dark" }: { visible?: bool
 
   /* Agent wiring — keys match the Worker's spec, which owns the ranges. */
   const agentParams: Record<string, unknown> = {
-    preset, strength, speed, palette, cardBg, pixelScale, paused,
+    preset, strength, speed, palette, cardBg, pixelScale, paused, core,
   };
 
   const applyAgentParams = useCallback((patch: Record<string, unknown>) => {
@@ -148,6 +169,7 @@ export function ImageStudio({ visible = true, theme = "dark" }: { visible?: bool
     if (typeof patch.cardBg === "string") setCardBg(patch.cardBg);
     if (typeof patch.pixelScale === "number") setPixelScale(patch.pixelScale);
     if (typeof patch.paused === "boolean") setPaused(patch.paused);
+    if (typeof patch.core === "string") setCore(patch.core);
   }, []);
 
   const colors = paletteColors(preset, theme, palette);
@@ -167,7 +189,23 @@ export function ImageStudio({ visible = true, theme = "dark" }: { visible?: bool
     "  <div style={{ width: 200, height: 200, borderRadius: 20 }} />",
     "</ImageGeneration>"
   );
-  const snippet = lines.join("\n");
+  /* With a rebuilt core the shader goes above the JSX and the prop on the
+     element; `lines` is [import, "", "<ImageGeneration", ...props]. */
+  const snippet = (
+    core
+      ? [
+          lines[0].replace("{ ImageGeneration }", "{ ImageGeneration, IMAGE_FRAGMENT_SHADER }"),
+          "",
+          "// The bundled prelude (uniforms, noise, palette, computeEffect) plus a rebuilt mosaic stage.",
+          "const prelude = IMAGE_FRAGMENT_SHADER.slice(0, IMAGE_FRAGMENT_SHADER.indexOf('void main()'));",
+          `const imageShader = prelude + ${tpl(core)};`,
+          "",
+          lines[2],
+          "  fragmentShader={imageShader}",
+          ...lines.slice(3),
+        ]
+      : lines
+  ).join("\n");
 
   const effCardBg = cardBg === CARD_BG_DEFAULT ? CARD_BG_DEFAULTS[theme] : cardBg;
   const cardBgOptions = [
@@ -191,6 +229,7 @@ export function ImageStudio({ visible = true, theme = "dark" }: { visible?: bool
           pixelScale={pixelScale}
           images={IMAGE_POOL}
           paused={paused}
+          fragmentShader={customShader}
           onCycle={onCycle}
         >
           <div style={{ width: 200, height: 200, borderRadius: 20 }} />
@@ -243,6 +282,7 @@ export function ImageStudio({ visible = true, theme = "dark" }: { visible?: bool
           params: agentParams,
           labels: IMAGE_PARAM_LABELS,
           onApply: applyAgentParams,
+          core: coreWiring,
         }}
       >
         <PgTabs label="Type" options={PRESET_OPTIONS} value={preset} onChange={setPreset} />
