@@ -1950,8 +1950,9 @@ html[data-theme="light"] .st-chat-composer {
   color: var(--text);
 }
 .docs-prose h3 { margin-top: 24px; font-size: 15px; font-weight: 500; line-height: 22px; color: var(--text); }
-.docs-prose a { color: var(--text); text-decoration: none; }
-.docs-prose a:hover { text-decoration: underline; text-underline-offset: 2px; }
+/* Inline links: a 50% underline at rest that reaches full ink on hover, like transitions.dev. */
+.docs-prose a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, currentColor 50%, transparent); transition: text-decoration-color 180ms ease; }
+.docs-prose a:hover { text-decoration-color: currentColor; }
 .docs-prose code {
   font-family: var(--font-mono);
   font-size: 12px;

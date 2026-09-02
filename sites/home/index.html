@@ -409,8 +409,8 @@
       object-fit: cover; border-radius: inherit; display: block;
     }
     .pro-quote-id { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-    .pro-quote-name { align-self: flex-start; font-size: 13px; line-height: 16px; font-weight: 500; color: #ededed; text-decoration: none; }
-    a.pro-quote-name:hover { text-decoration: underline; text-underline-offset: 2px; }
+    .pro-quote-name { align-self: flex-start; font-size: 13px; line-height: 16px; font-weight: 500; color: #ededed; text-decoration: underline; text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, currentColor 50%, transparent); transition: text-decoration-color 180ms ease; }
+    a.pro-quote-name:hover { text-decoration-color: currentColor; }
     .pro-quote-role { font-size: 13px; line-height: 16px; color: #737373; overflow-wrap: anywhere; }
     @media (max-width: 900px) {
       .pro-quotes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -494,8 +494,9 @@
       box-shadow: inset 0 0 0 1px var(--code-chip-ring);
       color: var(--text);
     }
-    .howto-step-text a { color: var(--text); text-decoration: none; }
-    .howto-step-text a:hover { text-decoration: underline; text-underline-offset: 2px; }
+    /* Inline links: a 50% underline at rest that reaches full ink on hover, like transitions.dev. */
+    .howto-step-text a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, currentColor 50%, transparent); transition: text-decoration-color 180ms ease; }
+    .howto-step-text a:hover { text-decoration-color: currentColor; }
     @media (max-width: 900px) {
       .howto-title { font-size: 30px; }
       .howto-steps { grid-template-columns: minmax(0, 1fr); gap: 12px; }
@@ -546,8 +547,9 @@
       box-shadow: inset 0 0 0 1px var(--code-chip-ring);
       color: var(--text);
     }
-    .t-acc-panel-inner a { color: var(--text); text-decoration: none; }
-    .t-acc-panel-inner a:hover { text-decoration: underline; text-underline-offset: 2px; }
+    /* Inline links: a 50% underline at rest that reaches full ink on hover, like transitions.dev. */
+    .t-acc-panel-inner a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, currentColor 50%, transparent); transition: text-decoration-color 180ms ease; }
+    .t-acc-panel-inner a:hover { text-decoration-color: currentColor; }
     @media (prefers-reduced-motion: reduce) {
       .t-acc-panel, .t-acc-panel-inner, .t-acc-chevron, .hero-tile { transition: none !important; }
     }

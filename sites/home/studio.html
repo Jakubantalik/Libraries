@@ -323,8 +323,9 @@
       box-shadow: inset 0 0 0 1px var(--code-chip-ring);
       color: var(--text);
     }
-    .t-acc-panel-inner a { color: var(--text); text-decoration: none; }
-    .t-acc-panel-inner a:hover { text-decoration: underline; text-underline-offset: 2px; }
+    /* Inline links: a 50% underline at rest that reaches full ink on hover, like transitions.dev. */
+    .t-acc-panel-inner a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, currentColor 50%, transparent); transition: text-decoration-color 180ms ease; }
+    .t-acc-panel-inner a:hover { text-decoration-color: currentColor; }
     @media (prefers-reduced-motion: reduce) {
       .t-acc-panel, .t-acc-panel-inner, .t-acc-chevron { transition: none !important; }
     }

@@ -1529,15 +1529,17 @@
       color: var(--text);
     }
     /* No underline at rest; it appears on hover, like every other link. */
+    /* 50% of the text colour at rest, 100% on hover; color-mix with
+       currentColor keeps it theme-agnostic, like transitions.dev's. */
     .course-cta-headline a {
       color: inherit;
-      text-decoration: none;
+      text-decoration: underline;
       text-underline-offset: 2px;
-      text-decoration-color: currentColor;
+      text-decoration-color: color-mix(in srgb, currentColor 50%, transparent);
       transition: text-decoration-color 180ms ease;
     }
     .course-cta-headline a:hover {
-      text-decoration: underline;
+      text-decoration-color: currentColor;
     }
     .course-cta-byline {
       margin: 0;
@@ -4508,9 +4510,9 @@
       line-height: 16px;
       font-weight: 500;
       color: #0d0d0d;
-      text-decoration: none;
+      text-decoration: underline; text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, currentColor 50%, transparent); transition: text-decoration-color 180ms ease;
     }
-    a.pro-quote-name:hover { text-decoration: underline; text-underline-offset: 2px; }
+    a.pro-quote-name:hover { text-decoration-color: currentColor; }
     html[data-theme="dark"] .pro-quote-name { color: #ededed; }
     .pro-quote-role { font-size: 13px; line-height: 16px; color: #737373; overflow-wrap: anywhere; }
     @media (max-width: 900px) {
@@ -4967,8 +4969,9 @@
       box-shadow: inset 0 0 0 1px var(--code-chip-ring);
       color: var(--text);
     }
-    .t-acc-panel-inner a { color: var(--text); text-decoration: none; }
-    .t-acc-panel-inner a:hover { text-decoration: underline; text-underline-offset: 2px; }
+    /* Inline links: a 50% underline at rest that reaches full ink on hover, like transitions.dev. */
+    .t-acc-panel-inner a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, currentColor 50%, transparent); transition: text-decoration-color 180ms ease; }
+    .t-acc-panel-inner a:hover { text-decoration-color: currentColor; }
     @media (prefers-reduced-motion: reduce) {
       .t-acc-panel, .t-acc-panel-inner, .t-acc-chevron { transition: none !important; }
     }

@@ -1414,15 +1414,17 @@
       color: var(--text);
     }
     /* No underline at rest; it appears on hover, like every other link. */
+    /* 50% of the text colour at rest, 100% on hover; color-mix with
+       currentColor keeps it theme-agnostic, like transitions.dev's. */
     .course-cta-headline a {
       color: inherit;
-      text-decoration: none;
+      text-decoration: underline;
       text-underline-offset: 2px;
-      text-decoration-color: currentColor;
+      text-decoration-color: color-mix(in srgb, currentColor 50%, transparent);
       transition: text-decoration-color 180ms ease;
     }
     .course-cta-headline a:hover {
-      text-decoration: underline;
+      text-decoration-color: currentColor;
     }
     .course-cta-byline {
       margin: 0;
@@ -3887,8 +3889,8 @@
       <style>
         /* Two small text lines beneath the shared hero — styled with the page's
            existing tokens so they read as part of it, not a bolted-on block. */
-        .header .subtitle a { color: var(--text); font-weight: 500; text-decoration: none; }
-        .header .subtitle a:hover { text-decoration: underline; }
+        .header .subtitle a { color: var(--text); font-weight: 500; text-decoration: underline; text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, currentColor 50%, transparent); transition: text-decoration-color 180ms ease; }
+        .header .subtitle a:hover { text-decoration-color: currentColor; }
         /* The homepage hero's pair (Figma 1292:4277): Sign in on the blue token
            surface, Browse on the grey. Class doubled to outrank the page's own
            theme-scoped .skill-btn--* rules. */

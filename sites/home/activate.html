@@ -242,8 +242,8 @@
       line-height: 16px;
       color: #17181c;
     }
-    .card-foot a { color: inherit; font-weight: 500; text-decoration: none; }
-    .card-foot a:hover { text-decoration: underline; }
+    .card-foot a { color: inherit; font-weight: 500; text-decoration: underline; text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, currentColor 50%, transparent); transition: text-decoration-color 180ms ease; }
+    .card-foot a:hover { text-decoration-color: currentColor; }
     html[data-theme="dark"] .card-foot { color: #e5e5e5; }
 
     .card-note { margin: 0; font-size: 13px; line-height: 1.4; }

@@ -195,7 +195,8 @@
     }
     p:last-child { margin-bottom: 0; }
     strong { color: var(--text); font-weight: 600; }
-    a { color: var(--link); }
+    a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, currentColor 50%, transparent); transition: text-decoration-color 180ms ease; }
+    a:hover { text-decoration-color: currentColor; }
 
     ul {
       margin: 0 0 14px;
