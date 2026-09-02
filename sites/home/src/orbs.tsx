@@ -1,6 +1,6 @@
 import { StrictMode, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { CodeCopy } from "./examples/CodeCopy";
+import { CodeBlock } from "./examples/CodeCopy";
 import { StudioTeaser } from "./examples/StudioTeaser";
 import { ThinkingOrb, type OrbSize, type OrbState } from "thinking-orbs";
 
@@ -194,10 +194,7 @@ function OrbPlayground() {
 
       </div>
 
-      <div className="code-block pg-snippet">
-        <pre>{snippet}</pre>
-        <CodeCopy text={snippet} label="Copy playground snippet" />
-      </div>
+      <CodeBlock code={snippet} label="Copy playground snippet" className="pg-snippet" />
     </>
   );
 }

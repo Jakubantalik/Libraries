@@ -6,7 +6,7 @@ import {
   MockIconButton,
   MockSearchBar,
 } from "./examples/beam-mocks";
-import { CodeCopy } from "./examples/CodeCopy";
+import { CodeBlock } from "./examples/CodeCopy";
 import { StudioTeaser } from "./examples/StudioTeaser";
 
 /* Beam detail page — one React island rendering the whole playground grid
@@ -209,10 +209,7 @@ function BeamPlayground() {
         </div>
       </div>
 
-      <div className="code-block pg-snippet">
-        <pre>{snippet}</pre>
-        <CodeCopy text={snippet} label="Copy playground code" />
-      </div>
+      <CodeBlock code={snippet} label="Copy playground code" className="pg-snippet" />
     </>
   );
 }

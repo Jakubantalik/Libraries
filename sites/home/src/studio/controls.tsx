@@ -12,6 +12,7 @@ import {
 } from "react";
 import { describePatch, streamAgentTurn, type ChatTurn } from "./agent";
 import type { CoreWiring } from "./core";
+import { useScrollFade } from "../examples/useScrollFade";
 import { ThinkingOrb } from "thinking-orbs";
 
 /* App-level theme plumbing: the Studio shell provides it, and every
@@ -125,7 +126,7 @@ export function CodeCopy({ text, label }: { text: string; label: string }) {
     >
       <CopyIcon />
       <CheckIcon />
-      <span className="card-copy-tooltip" aria-hidden="true">
+      <span className="code-copy-tooltip" aria-hidden="true">
         <span className="tt-text">
           Cop
           <span className="tt-swap" ref={swapRef} data-state={copied ? "copied" : undefined}>
@@ -138,37 +139,28 @@ export function CodeCopy({ text, label }: { text: string; label: string }) {
   );
 }
 
-/** Live-updating snippet block, full playground width. */
-export function Snippet({ code }: { code: string }) {
-  const preRef = useRef<HTMLPreElement | null>(null);
-
-  /* The right-edge fade (playground.css) is masked off once the snippet is
-     scrolled to its end, or when it doesn't overflow at all — so the hint
-     only shows while there IS more code to the right. */
-  useEffect(() => {
-    const pre = preRef.current;
-    if (!pre) return;
-    const update = () => {
-      const atEnd = pre.scrollLeft + pre.clientWidth >= pre.scrollWidth - 1;
-      if (atEnd) pre.setAttribute("data-scroll-end", "true");
-      else pre.removeAttribute("data-scroll-end");
-    };
-    update();
-    pre.addEventListener("scroll", update, { passive: true });
-    const ro = new ResizeObserver(update);
-    ro.observe(pre);
-    return () => {
-      pre.removeEventListener("scroll", update);
-      ro.disconnect();
-    };
-  }, [code]);
-
+/** One code surface: the scrolling <pre>, its fades, and the copy button. */
+export function CodeBlock({
+  code,
+  label,
+  className,
+}: {
+  code: string;
+  label: string;
+  className?: string;
+}) {
+  const preRef = useScrollFade(code);
   return (
-    <div className="code-block pg-snippet">
+    <div className={className ? `code-block ${className}` : "code-block"}>
       <pre ref={preRef}>{code}</pre>
-      <CodeCopy text={code} label="Copy Studio code" />
+      <CodeCopy text={code} label={label} />
     </div>
   );
+}
+
+/** Live-updating snippet block, full playground width. */
+export function Snippet({ code }: { code: string }) {
+  return <CodeBlock code={code} label="Copy Studio code" className="pg-snippet" />;
 }
 
 /** Uppercase section title inside the controls column. */
@@ -1379,18 +1371,23 @@ export function StageBar({
     {prompt && view === "code" && (() => {
       const ports = prompt.platforms ?? [];
       const active = ports.find((x) => x.id === platform);
-      const installTitle = active ? active.installTitle : `Install ${prompt.pkg} from npm`;
       const install = active ? active.install : `npm install ${prompt.pkg}`;
       const usage = active ? active.usage : prompt.snippet;
+      /* Figma 1433:39150 titles the blocks plainly, so what a port needs —
+         its version floor, its extra packages — moves to the note under the
+         install block rather than being lost with the old heading. */
+      const note = active
+        ? [active.installTitle.replace(/[.\s]*$/, "."), active.note].filter(Boolean).join(" ")
+        : "";
       return (
         <div className="st-stage-panel">
           {ports.length > 0 && (
-            <div className="detail-tabs proto-modal-tabs st-platform-tabs" role="tablist" aria-label="Platform">
+            <div className="st-platform-tabs" role="tablist" aria-label="Platform">
               {[{ id: "react", label: "React" }, ...ports].map((x) => (
                 <button
                   key={x.id}
                   type="button"
-                  className="proto-modal-tab"
+                  className="st-platform-tab"
                   role="tab"
                   aria-selected={platform === x.id}
                   data-active={platform === x.id ? "true" : undefined}
@@ -1402,19 +1399,13 @@ export function StageBar({
             </div>
           )}
           <div className="st-code-group">
-            <span className="st-code-title">{installTitle}</span>
-            <div className="code-block">
-              <pre>{install}</pre>
-              <CodeCopy text={install} label="Copy install command" />
-            </div>
-            {active?.note && <span className="st-code-note">{active.note}</span>}
+            <span className="st-code-title">Installation</span>
+            <CodeBlock code={install} label="Copy install command" />
+            {note && <span className="st-code-note">{note}</span>}
           </div>
           <div className="st-code-group">
-            <span className="st-code-title">Use it with your current settings</span>
-            <div className="code-block">
-              <pre>{usage}</pre>
-              <CodeCopy text={usage} label="Copy usage example" />
-            </div>
+            <span className="st-code-title">Usage</span>
+            <CodeBlock code={usage} label="Copy usage example" />
           </div>
         </div>
       );

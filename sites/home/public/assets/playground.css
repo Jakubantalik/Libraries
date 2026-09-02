@@ -486,7 +486,31 @@ html[data-theme="light"] .detail-prompt:active { background: #f1f1f1; }
 
 /* Install & Usage: the platform switch is the same pill bar as the view
    tabs, and a caveat under an install block reads as a muted note. */
-.st-platform-tabs { align-self: flex-start; }
+/* Install & Usage, per Figma 1433:39150. The platform row is plain text
+   rather than a pill bar — the pills already carry Preview / Install &
+   Usage above, and a second set would read as the same control twice. */
+.st-platform-tabs { display: flex; align-items: center; gap: 21px; align-self: flex-start; }
+.st-platform-tab,
+html[data-theme="dark"] .st-platform-tab,
+html[data-theme="light"] .st-platform-tab {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 14px;
+  color: var(--pg-title);
+  opacity: 0.5;
+  cursor: pointer;
+  transition: opacity 140ms;
+}
+.st-platform-tab:hover { opacity: 0.75; }
+.st-platform-tab[data-active="true"],
+html[data-theme="dark"] .st-platform-tab[data-active="true"],
+html[data-theme="light"] .st-platform-tab[data-active="true"] { opacity: 1; }
 .st-code-note {
   font-family: var(--font-sans);
   font-size: 12px;
@@ -494,14 +518,64 @@ html[data-theme="light"] .detail-prompt:active { background: #f1f1f1; }
   color: var(--pg-label);
 }
 
-/* Install & Usage: each block wears the panel's section title. */
-.st-code-group { display: flex; flex-direction: column; gap: 8px; }
+/* Install & Usage: each block wears a plain section title over a compact
+   code surface — Figma 1433:39150. The surface is tighter and darker than
+   the detail pages' .code-block, so the overrides are scoped to the
+   Studio's stage panel and the shared rules stay untouched. */
+.st-code-group { display: flex; flex-direction: column; gap: 10px; }
 .st-code-title {
   font-family: var(--font-sans);
   font-size: 13px;
-  font-weight: 400;
+  font-weight: 500;
   line-height: 14px;
   color: var(--pg-title);
+}
+/* A step off the panel's card: lighter in dark (#171717 -> #1f1f1f), darker
+   in light, since near-white leaves no headroom to go lighter.
+
+   The light step is smaller than the dark one on purpose. The same
+   numerical difference is far more visible near white than near black, so
+   matching dark's 8 levels literally would make the block read as a heavy
+   grey slab; 6 levels and a 2% hairline (rather than 4%) land at the same
+   quietness as dark's 8 levels and 2% white. */
+.st-stage-panel .code-block,
+html[data-theme="dark"] .st-stage-panel .code-block {
+  border-radius: 10px;
+  background: #1f1f1f;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+html[data-theme="light"] .st-stage-panel .code-block {
+  background: #f3f3f4;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.02);
+}
+.st-stage-panel .code-block pre {
+  /* Right padding clears the copy button rather than running under it.
+     9.5px vertical puts a one-line block at 41px — the drawn height less
+     the 3px it was reading heavy by. */
+  padding: 9.5px 48px 9.5px 12px;
+  font-size: 14px;
+  line-height: 22.2px;
+  color: #ffffff;
+}
+/* The copy button floats over the scrolling code here, so the last 40px —
+   the glyph and its inset — are held fully transparent and the ramp runs
+   before them. Code fades out as it reaches the button rather than
+   colliding with it. */
+.st-stage-panel .code-block pre {
+  --code-fade: 56px;
+  --code-fade-end: 40px;
+}
+html[data-theme="light"] .st-stage-panel .code-block pre { color: var(--pg-title); }
+/* 4px inset on a 32px button puts the 16px glyph exactly 12px from the
+   block's top-right corner, as drawn, while keeping a real hit target. */
+.st-stage-panel .code-block .code-copy { top: 4px; right: 4px; }
+.st-stage-panel .code-block .code-copy svg { width: 16px; height: 16px; }
+/* Right-aligned so the pill grows leftward instead of overhanging the
+   block's corner, as on the detail pages. */
+.st-stage-panel .code-block .code-copy .code-copy-tooltip {
+  left: auto;
+  right: 0;
+  transform: none;
 }
 
 /* Stage-bar action group: Presets ▾ · reset · Copy prompt, all 32px.
@@ -1123,18 +1197,60 @@ html[data-theme="dark"] .code-block {
   scrollbar-width: thin;
   scrollbar-color: var(--chip-bg-pressed) transparent;
 }
-/* Right-edge fade while the snippet scrolls horizontally: a mask on the
-   scroll container, fixed to its right edge (background-attachment: local
-   keeps the opaque half scrolling with the content, so the fade only shows
-   while there is more to the right and clears once the end is reached). */
+/* Edge fades while a snippet scrolls horizontally. The mask sits on the
+   scroll container, so it stays pinned to the visible edges while the code
+   moves under it, and each side is only drawn when there is actually more
+   code that way (useScrollFade sets data-fade).
+
+   Two lengths, because a fade has two jobs. `--code-fade` is the ramp: a
+   four-stop approximation of an ease rather than a straight line, since a
+   linear fade dies away too late and reads as a grey band laid over legible
+   text. `--code-fade-end` is a fully transparent margin held at the edge
+   itself — where a copy button sits over the scrolling code, the text has
+   to be gone before it reaches the glyph, not merely dimmed. */
 .code-block pre {
-  --code-fade: 40px;
-  mask-image: linear-gradient(to right, #000 calc(100% - var(--code-fade)), transparent 100%);
+  --code-fade: 72px;
+  --code-fade-end: 0px;
   mask-repeat: no-repeat;
-  mask-position: right center;
+  mask-position: center;
   mask-size: 100% 100%;
 }
-.code-block pre[data-scroll-end="true"] { mask-image: none; }
+.code-block pre[data-fade="right"] {
+  mask-image: linear-gradient(
+    to right,
+    #000 calc(100% - var(--code-fade) - var(--code-fade-end)),
+    rgba(0, 0, 0, 0.86) calc(100% - var(--code-fade) * 0.62 - var(--code-fade-end)),
+    rgba(0, 0, 0, 0.46) calc(100% - var(--code-fade) * 0.3 - var(--code-fade-end)),
+    rgba(0, 0, 0, 0.14) calc(100% - var(--code-fade) * 0.12 - var(--code-fade-end)),
+    transparent calc(100% - var(--code-fade-end))
+  );
+}
+/* Nothing overlays the left edge, so it ramps straight to the boundary. */
+.code-block pre[data-fade="left"] {
+  mask-image: linear-gradient(
+    to left,
+    #000 calc(100% - var(--code-fade)),
+    rgba(0, 0, 0, 0.86) calc(100% - var(--code-fade) * 0.62),
+    rgba(0, 0, 0, 0.46) calc(100% - var(--code-fade) * 0.3),
+    rgba(0, 0, 0, 0.14) calc(100% - var(--code-fade) * 0.12),
+    transparent 100%
+  );
+}
+.code-block pre[data-fade="both"] {
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    rgba(0, 0, 0, 0.14) calc(var(--code-fade) * 0.12),
+    rgba(0, 0, 0, 0.46) calc(var(--code-fade) * 0.3),
+    rgba(0, 0, 0, 0.86) calc(var(--code-fade) * 0.62),
+    #000 var(--code-fade),
+    #000 calc(100% - var(--code-fade) - var(--code-fade-end)),
+    rgba(0, 0, 0, 0.86) calc(100% - var(--code-fade) * 0.62 - var(--code-fade-end)),
+    rgba(0, 0, 0, 0.46) calc(100% - var(--code-fade) * 0.3 - var(--code-fade-end)),
+    rgba(0, 0, 0, 0.14) calc(100% - var(--code-fade) * 0.12 - var(--code-fade-end)),
+    transparent calc(100% - var(--code-fade-end))
+  );
+}
 
 .code-block pre::-webkit-scrollbar { width: 8px; height: 8px; }
 .code-block pre::-webkit-scrollbar-track { background: transparent; }

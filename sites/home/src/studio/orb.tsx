@@ -275,7 +275,7 @@ export function OrbStudio({ visible = true, theme = "dark" }: { visible?: boolea
     },
     {
       id: "swift",
-      label: "Swift",
+      label: "Swift UI",
       installTitle: "Add ThinkingOrbsKit as a local Swift package (iOS 15+, no dependencies)",
       install: `// Package.swift — or Xcode: File › Add Package Dependencies… › Add Local…\n.package(path: "packages/thinking-orbs/ports/ios/ThinkingOrbsKit")`,
       usage: swiftSnippet,
