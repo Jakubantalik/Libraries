@@ -518,6 +518,29 @@ html[data-theme="light"] .st-platform-tab[data-active="true"] { opacity: 1; }
   color: var(--pg-label);
 }
 
+/* Detail pages' merged Install & Usage panel: the same content on the same
+   card as the Studio's (StageBar's view === "code" on .st-stage-panel), so
+   it reads identically in both places. The .st-stage-panel .code-block
+   overrides below apply here too, since the wrapper carries that class. */
+.detail-panel--code .st-stage-panel {
+  display: flex;
+  flex-direction: column;
+  /* Figma 1433:39150, as the Studio's app.html carries it: 20px of card
+     padding, 25px from the platform row to the first group (17px gap plus
+     the row's 8px), 17px between the two groups. */
+  padding: 20px;
+  border-radius: 16px;
+  background: var(--stage-bg);
+  gap: 17px;
+}
+html[data-theme="dark"] .detail-panel--code .st-stage-panel { background: #171717; }
+.detail-panel--code .detail-platform {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+}
+.detail-panel--code .st-stage-panel > .st-platform-tabs { margin-bottom: 8px; }
+
 /* Install & Usage: each block wears a plain section title over a compact
    code surface — Figma 1433:39150. The surface is tighter and darker than
    the detail pages' .code-block, so the overrides are scoped to the
