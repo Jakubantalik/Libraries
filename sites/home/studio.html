@@ -53,6 +53,7 @@
     crossorigin
   />
   <link rel="stylesheet" href="/assets/site.css" />
+  <link rel="stylesheet" href="/assets/playground.css" />
   <style>
     /* Studio marketing page — everything else comes from the design system. */
 
@@ -179,6 +180,38 @@
       object-fit: cover;
       pointer-events: none;
       user-select: none;
+    }
+    /* Live overlays: each is a patch in the screenshot's own surface colour
+       covering the static version of the element, with the real component
+       mounted on top at the measured spot. Positions are in the card's 1x
+       frame; the raster is 2x, so its samples halve. */
+    .studio-live { position: absolute; overflow: hidden; }
+    .studio-live--status {
+      left: 0; top: 160px; width: 260px; height: 40px;
+      background: #1b1b1b;
+    }
+    .studio-live--status .st-chat-thinking { position: absolute; left: 8px; top: 6px; }
+    .studio-live--beam {
+      left: 0; top: 195px; width: 112px; height: 106px;
+      background: #171717;
+    }
+    #studio-beam-live { position: absolute; left: -96px; top: 14px; width: 200px; height: 84px; }
+    #studio-beam-live > * { width: 100%; height: 100%; border-radius: 16px; }
+    .st-beam-mock {
+      position: relative; width: 100%; height: 100%;
+      border-radius: 16px; background: #1e1e1e;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    }
+    .st-beam-mock i {
+      position: absolute; left: 116px; height: 6px; border-radius: 3px;
+      background: rgba(255, 255, 255, 0.16);
+    }
+    .st-beam-mock i:first-child { top: 32px; width: 64px; }
+    .st-beam-mock i:last-child { top: 46px; width: 40px; }
+    @media (max-width: 900px) {
+      /* The overlays are pinned to the design's fixed card frame; once the
+         cards scale, the screenshot alone carries them. */
+      .studio-live { display: none; }
     }
     @media (max-width: 900px) {
       .studio-shot-grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; }
@@ -399,9 +432,17 @@
       <div class="studio-shot-grid">
         <div class="studio-card studio-card--tall">
           <img src="/assets/shots/studio-card-tall.png" alt="The Studio's manual controls: family, type, colour theme, motion and glow styling for Border beam." />
+          <!-- Live BorderBeam over the screenshot's demo card (studio-live.tsx). -->
+          <div class="studio-live studio-live--beam" aria-hidden="true">
+            <div id="studio-beam-live"></div>
+          </div>
         </div>
         <div class="studio-card studio-card--agent">
           <img src="/assets/shots/studio-card-agent.png" alt="The Studio's agent tab answering a request to make an effect more subtle." aria-hidden="true" />
+          <!-- Live ThinkingStatus over the screenshot's status row (studio-live.tsx). -->
+          <div class="studio-live studio-live--status" aria-hidden="true">
+            <div id="studio-agent-live"></div>
+          </div>
         </div>
         <div class="studio-card studio-card--presets">
           <img src="/assets/shots/studio-card-presets.png" alt="The Studio's presets menu, with saved presets and a field to name a new one." aria-hidden="true" />
@@ -587,6 +628,7 @@
       });
     })();
   </script>
+  <script type="module" src="/src/studio-live.tsx"></script>
   <script src="/assets/site.js" defer></script>
   <script src="/assets/pro-client.js" defer></script>
 </body>
