@@ -1701,7 +1701,6 @@ html[data-theme="dark"] .footer-name:hover {
 }
 @media (max-width: 639px) {
   .app { --app-gutter: 12px; padding: 0 var(--app-gutter) 48px; }
-  .site-nav .brand-word { display: none; }
   .site-nav-menu { display: none; }
   #more-anchor { display: none; }
   .nav-burger { display: inline-flex; }
