@@ -1512,6 +1512,12 @@ html[data-theme='light'] .footer-name:hover {
   height: 44px;
 }
 
+/* The pair's surface: the shared dark fill (#202020) lifted 30% — with no
+   icon to catch the eye, the circle itself has to. Light keeps the white. */
+html:not([data-theme='light']) .sp {
+  --sp-fill: #2a2a2a;
+}
+
 /* ---- Dev / recording mode (?dev) ----
    Strips the hero of its card fills and sets the page to a flat #101010, so
    the liquid pieces can be captured against a clean, uniform ground. */

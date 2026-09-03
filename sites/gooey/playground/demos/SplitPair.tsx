@@ -1,14 +1,16 @@
 import { Liquid } from 'liquid-gooey'
-import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useState } from 'react'
 import type { DemoProps } from '../App'
 
 /** The plus menu's sibling, stripped to the motion itself: one blank
  *  circle that, on click, divides into two circles side by side — the
  *  liquid necks, stretches and lets go between them — and merges back on
  *  the next click. No icons: the morph is the whole content. Same curves as
- *  the plus menu (bouncy open, snappy close, anticipation nudge on the way
- *  back) at 1.5x its durations, so the two read as one family with the
- *  blank one giving its neck time to be seen. */
+ *  the plus menu (bouncy open, snappy close) at 1.5x its durations, and no
+ *  anticipation nudge — the blank pair reads cleanest when the retraction
+ *  is just the retraction. Its surface sits 30% brighter than the shared
+ *  dark fill, with the inset hairlines lifted by the same 30%: with no
+ *  icon to catch the eye, the circle itself has to. */
 
 const EASES = {
   open: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
@@ -23,31 +25,17 @@ const DEFAULTS = {
   closeDur: 375,
   /** Half the resting gap between the two circles' centres, px. */
   spread: 34,
-  anticipDist: 5,
-  anticipDur: 700,
 }
 
-export function SplitPair({ blur, contrast, shadow, pro, bare }: DemoProps) {
+/** Dark hairlines x1.3: the two light inset layers (0.04 ring, 0.03 top
+ *  highlight) become 0.052 / 0.039. The black outer chain is left alone. */
+const brightenHairlines = (shadow: string) =>
+  shadow.replace(/0\.04\)/g, '0.052)').replace(/0\.03\)/g, '0.039)')
+
+export function SplitPair({ blur, contrast, shadow, dark, pro, bare }: DemoProps) {
   const [open, setOpen] = useState(false)
-  const [anticipating, setAnticipating] = useState(false)
   const [st, setSt] = useState(DEFAULTS)
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  useEffect(() => () => { if (timer.current) clearTimeout(timer.current) }, [])
-
-  const toggle = () => {
-    if (open && st.anticipDist > 0) {
-      if (timer.current) clearTimeout(timer.current)
-      setAnticipating(false)
-      requestAnimationFrame(() => setAnticipating(true))
-      timer.current = setTimeout(() => setAnticipating(false), st.anticipDur)
-    }
-    setOpen(o => !o)
-  }
-
-  const vars = {
-    '--pm-anticip': `${st.anticipDist}px`,
-    '--pm-anticip-dur': `${st.anticipDur}ms`,
-  } as CSSProperties
+  const toggle = () => setOpen(o => !o)
 
   const phase = open
     ? { dur: st.openDur, ease: EASES.open }
@@ -57,10 +45,9 @@ export function SplitPair({ blur, contrast, shadow, pro, bare }: DemoProps) {
     <Liquid
       blur={blur}
       contrast={contrast}
-      fill="var(--modal-bg)"
-      shadow={shadow}
-      className={`pm sp ${open ? 'pm-open' : ''} ${anticipating ? 'pm-anticipating' : ''}`}
-      style={vars}
+      fill="var(--sp-fill, var(--modal-bg))"
+      shadow={dark ? brightenHairlines(shadow) : shadow}
+      className={`pm sp ${open ? 'pm-open' : ''}`}
     >
       {/* Two items sharing one resting spot: stacked they are one circle,
           and the symmetric x offsets pull them apart along the horizontal —
@@ -104,7 +91,6 @@ export function SplitPair({ blur, contrast, shadow, pro, bare }: DemoProps) {
                 ['Open (ms)', 'openDur', 80, 1200, 10],
                 ['Close (ms)', 'closeDur', 80, 1200, 10],
                 ['Spread (px)', 'spread', 12, 80, 1],
-                ['Anticipation (px)', 'anticipDist', 0, 24, 1],
               ] as const
             ).map(([label, key, min, max, step]) => (
               <div className="cp-row" key={key}>
