@@ -385,6 +385,13 @@
     /* ── Library grid cards (Figma 1413-37519): icon + meta row ── */
     .lib-card-hit { position: absolute; inset: 0; z-index: 6; border-radius: 24px; }
     .lib-video { width: 100%; height: 100%; object-fit: cover; display: block; }
+    /* The beam and orb clips are 1.66:1, wider than the small card's 1.17
+       slot, so below the wide grid they crop at the sides. Their subject
+       sits at the left edge - anchor there rather than centring, which was
+       cutting the composer in half. At the wide size nothing crops
+       horizontally, so this is a no-op there. */
+    .lib-card[data-lib="beam"] .lib-video,
+    .lib-card[data-lib="orb"] .lib-video { object-position: left center; }
     /* 254 leaves 16px between the stage and the icon — the same gap the
        meta keeps below itself, so the card breathes evenly. */
     .lib-card .card-stage { height: 254px; }
