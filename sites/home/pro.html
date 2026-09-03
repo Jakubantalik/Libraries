@@ -4598,7 +4598,20 @@
     .pro-bento-card--tall .pro-bento-desc { margin-bottom: 32px; }
     .pro-bento-card--tall .pro-lib-stage,
     .pro-bento-card--tall .pro-studio-shot-box { position: relative; inset: auto; flex: 1 1 0; min-height: 0; margin: 0 -32px -28px; }
-    .pro-studio-shot-box { overflow: hidden; }
+    /* Same treatment as the How-to-use card's screenshot: it bleeds to the
+       card's edges, its bottom corners follow the card's radius, it fades
+       out towards the bottom, and it blends with `lighten` - so every
+       pixel darker than the card's own surface (the app's page fill, the
+       empty stage) becomes the card, and only the chrome shows. The blend
+       has to sit on the box: the mask makes it an isolated group. */
+    .pro-studio-shot-box {
+      overflow: hidden;
+      border-radius: 0 0 24px 24px;
+      -webkit-mask-image: linear-gradient(to bottom, #000 30%, transparent 100%);
+      mask-image: linear-gradient(to bottom, #000 30%, transparent 100%);
+      mix-blend-mode: lighten;
+    }
+    .pro-studio-shot img { mix-blend-mode: lighten; }
 
     /* Pro skill — SKILL.md code snippet */
     .pro-bento-code {
@@ -4633,7 +4646,7 @@
     }
     .stage-inner--no-btn { padding-bottom: 0; }
     /* Each mini plays its library's main-card clip, filling the stage. */
-    .lib-card .card-stage { position: relative; overflow: hidden; }
+    .lib-card .card-stage { overflow: hidden; }
     .pro-mini-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: left center; display: block; }
 
     /* Card stack (pro2) — three 78×78 photo squares that fan on hover. */
@@ -4917,6 +4930,7 @@
       .pro-bento-card--tall { grid-row: auto; min-height: 360px; }
       .pro-bento-card--tall { display: block; }
       .pro-bento-card--tall .pro-lib-stage { position: absolute; inset: 0; margin: 0; }
+      .pro-bento-card--tall .pro-studio-shot-box { height: 220px; margin: 0 -32px -28px; }
       .pro-bento-card--sm { min-height: 300px; }
       /* The two mockups are absolutely positioned at a fixed top offset
          that assumes ~2 lines of copy. Narrow screens wrap the text to 4,
