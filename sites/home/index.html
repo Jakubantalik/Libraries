@@ -738,13 +738,38 @@
         </div>
       </div>
       <script type="module" src="/src/hero-tiles.tsx"></script>
+      <script>
+        /* Library cards play on hover and hold their frame on leave, so a
+           second hover picks up where the first stopped. Without a hover
+           (touch), they simply autoplay as before. */
+        (function () {
+          /* This script sits in the hero, above the cards in source order,
+             so it has to wait for the rest of the document to parse. */
+          if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", arguments.callee);
+            return;
+          }
+          var canHover = window.matchMedia("(hover: hover)").matches;
+          document.querySelectorAll(".lib-card").forEach(function (card) {
+            var v = card.querySelector(".lib-video");
+            if (!v) return;
+            if (!canHover) { v.play().catch(function () {}); return; }
+            var play = function () { v.play().catch(function () {}); };
+            var pause = function () { v.pause(); };
+            card.addEventListener("pointerenter", play);
+            card.addEventListener("pointerleave", pause);
+            card.addEventListener("focusin", play);
+            card.addEventListener("focusout", pause);
+          });
+        })();
+      </script>
     </header>
 
     <section class="cards" id="components" aria-label="Effect libraries" style="scroll-margin-top: 24px;">
       <article class="card lib-card" data-lib="beam">
         <a class="lib-card-hit" href="/beam.html" aria-label="Border beam playground"></a>
         <div class="card-stage">
-          <video class="lib-video" src="/assets/videos/beam-main-card.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
+          <video class="lib-video" src="/assets/videos/beam-main-card.mp4" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
         </div>
         <div class="lib-meta">
           <span class="lib-ico"><img src="/assets/icons/tile-beam.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
@@ -758,7 +783,7 @@
       <article class="card lib-card" data-lib="orb">
         <a class="lib-card-hit" href="/orbs.html" aria-label="Thinking orbs playground"></a>
         <div class="card-stage">
-          <video class="lib-video" src="/assets/videos/orb-main-card.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
+          <video class="lib-video" src="/assets/videos/orb-main-card.mp4" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
         </div>
         <div class="lib-meta">
           <span class="lib-ico"><img src="/assets/icons/tile-orbs.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
@@ -772,7 +797,7 @@
       <article class="card lib-card" data-lib="gooey">
         <a class="lib-card-hit" href="/gooey.html" aria-label="Gooey playground"></a>
         <div class="card-stage">
-          <video class="lib-video" src="/assets/videos/gooey.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
+          <video class="lib-video" src="/assets/videos/gooey.mp4" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
         </div>
         <div class="lib-meta">
           <span class="lib-ico"><img src="/assets/icons/tile-gooey.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
@@ -786,7 +811,7 @@
       <article class="card lib-card" data-lib="metal">
         <a class="lib-card-hit" href="/metal.html" aria-label="Liquid Metal playground"></a>
         <div class="card-stage">
-          <video class="lib-video" src="/assets/videos/metal.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
+          <video class="lib-video" src="/assets/videos/metal.mp4" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
         </div>
         <div class="lib-meta">
           <span class="lib-ico"><img src="/assets/icons/tile-metal.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
@@ -800,7 +825,7 @@
       <article class="card lib-card" data-lib="image">
         <a class="lib-card-hit" href="/image.html" aria-label="Image generation playground"></a>
         <div class="card-stage">
-          <video class="lib-video" src="/assets/videos/image.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
+          <video class="lib-video" src="/assets/videos/image.mp4" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
         </div>
         <div class="lib-meta">
           <span class="lib-ico"><img class="lib-ico-img--pad" src="/assets/icons/tile-image.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
