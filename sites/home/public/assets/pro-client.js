@@ -228,18 +228,38 @@
     // in, so the pill only exists for visitors.
     var navSignin = document.getElementById("nav-signin-btn");
     if (navSignin) navSignin.hidden = state.authenticated;
-    // "Get Pro" nav pill (every page except /pro): once the visitor is signed
-    // in AND entitled there is nothing left to sell, so the pill goes away —
-    // the avatar beside it is the account link.
+    // The nav pill (every page except /pro): nothing left to sell once the
+    // visitor is signed in AND entitled, so the same pill becomes the way
+    // into the Studio — same style, same position. A signed-in visitor
+    // without Pro still sees the offer. The narrow-screen rule hides
+    // .nav-get-pro-word, so the leading word carries it either way and the
+    // pill reads "Pro" / "Studio" when space is tight.
+    var entitled = state.authenticated && state.pro;
     var getPro = document.querySelector(".nav-get-pro");
-    if (getPro) getPro.hidden = state.authenticated && state.pro;
+    if (getPro) {
+      var getProLabel = getPro.querySelector(".nav-get-pro-label");
+      if (getProLabel) {
+        getProLabel.innerHTML = entitled
+          ? '<span class="nav-get-pro-word">Open </span>Studio'
+          : '<span class="nav-get-pro-word">Get </span>Pro';
+      }
+      getPro.setAttribute("href", entitled ? "/studio/app.html" : "/pro.html");
+      getPro.setAttribute("aria-label", entitled ? "Open the Studio" : "Get Libraries Pro");
+      /* data-entitled-only: pages where the offer makes no sense (the
+         post-checkout success page) carry the pill for its Studio state
+         alone and stay bare otherwise. */
+      getPro.hidden = getPro.hasAttribute("data-entitled-only") && !entitled;
+      /* The account state repaints the pill grey; the Studio link keeps the
+         Pro tint the offer wears. */
+      getPro.removeAttribute("data-state");
+    }
     // Same swap in the mobile menu.
     var mobilePro = document.querySelector(".mobile-menu-link--pro");
     if (mobilePro) {
-      var mobileEntitled = state.authenticated && state.pro;
-      mobilePro.textContent = mobileEntitled ? "Account" : "Get Pro";
-      mobilePro.setAttribute("href", mobileEntitled ? "account.html" : "/pro.html");
-      mobilePro.setAttribute("data-state", mobileEntitled ? "account" : "get-pro");
+      mobilePro.textContent = entitled ? "Open Studio" : "Get Pro";
+      mobilePro.setAttribute("href", entitled ? "/studio/app.html" : "/pro.html");
+      mobilePro.setAttribute("data-state", entitled ? "studio" : "get-pro");
+      if (mobilePro.hasAttribute("data-entitled-only")) mobilePro.hidden = !entitled;
     }
     // Footer "Sign in" link (present on every page): label follows auth state.
     var footerLink = document.getElementById("footer-signin");

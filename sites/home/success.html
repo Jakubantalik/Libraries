@@ -3829,7 +3829,9 @@
           </nav>
         </div>
         <div class="site-nav-right">
-          <a class="nav-get-pro" href="/pro.html"><span class="nav-get-pro-label"><span class="nav-get-pro-word">Get </span>Pro</span></a>
+          <!-- Studio state only: a visitor who has just paid should never be
+               offered Pro again, so this stays hidden until entitled. -->
+          <a class="nav-get-pro" data-entitled-only hidden href="/studio/app.html"><span class="nav-get-pro-label"><span class="nav-get-pro-word">Open </span>Studio</span></a>
           <a
             class="icon-btn-pill"
             id="gh-stars-btn"
@@ -3884,7 +3886,7 @@
           <li><a class="mobile-menu-link mobile-menu-link--1" href="/beam.html">Libraries</a></li>
           <li><a class="mobile-menu-link mobile-menu-link--2" href="/how-to-use.html">How to use</a></li>
           <li><a class="mobile-menu-link mobile-menu-link--3" href="/studio.html">Studio</a></li>
-          <li><a class="mobile-menu-link mobile-menu-link--4 mobile-menu-link--pro" href="/pro.html">Get Pro</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--4 mobile-menu-link--pro" data-entitled-only hidden href="/studio/app.html">Open Studio</a></li>
         </ul>
         <a class="mobile-menu-cta" id="mobile-signin" href="/pro.html">Sign in</a>
       </nav>
@@ -3906,6 +3908,10 @@
       <style>
         /* Two small text lines beneath the shared hero — styled with the page's
            existing tokens so they read as part of it, not a bolted-on block. */
+        /* Wraps at 460px, matching the sign-in note below it, so the copy
+           holds a tight column under the title instead of the 560px the
+           shared rule gives it. */
+        .header .subtitle { max-width: 460px; }
         .header .subtitle a { color: var(--text); font-weight: 500; text-decoration: underline; text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, currentColor 50%, transparent); transition: text-decoration-color 180ms ease; }
         .header .subtitle a:hover { text-decoration-color: currentColor; }
         /* The homepage hero's pair (Figma 1292:4277): Sign in on the blue token
@@ -3953,7 +3959,7 @@
             </span>
             <span class="brand-word"><span class="brand-word-strong">Libraries</span><span class="brand-word-dim">.dev</span></span>
           </a>
-          <p class="footer-tagline">Production-ready UI effect libraries for React</p>
+          <p class="footer-tagline">High-crafted UI libraries for AI agents</p>
         </div>
         <nav class="footer-cols" aria-label="Footer">
           <div class="footer-col">

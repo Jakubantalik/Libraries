@@ -1,0 +1,16 @@
+# Cloudflare Pages headers.
+#
+# The shared scripts and stylesheets are referenced by a fixed path (no
+# content hash), so the default 4-hour browser cache meant a deploy could
+# leave visitors on the previous pro-client.js / site.js until it expired.
+# Ask the browser to revalidate every time; the ETag keeps it a cheap 304.
+/assets/site.js
+  Cache-Control: public, max-age=0, must-revalidate
+/assets/pro-client.js
+  Cache-Control: public, max-age=0, must-revalidate
+/assets/site.css
+  Cache-Control: public, max-age=0, must-revalidate
+/assets/playground.css
+  Cache-Control: public, max-age=0, must-revalidate
+/assets/examples.css
+  Cache-Control: public, max-age=0, must-revalidate
