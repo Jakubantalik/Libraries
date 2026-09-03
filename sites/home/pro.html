@@ -5039,6 +5039,11 @@
       .pro-section-title { font-size: 23px; margin-bottom: 28px; }
       .pro-block { margin-bottom: 64px; }
       .pro-price-wrap { margin-bottom: 32px; }
+      /* The card runs the same width as the testimonial cards below it:
+         the wrap takes the section's 16px side padding and the card fills
+         it, instead of sitting as a 325px island. */
+      .pro-price-wrap { padding: 0 16px; }
+      .pro-price-card { width: 100%; }
       .cmdk-overlay { padding: 8vh 12px 12px; }
       /* Parity bar: let the sentence wrap to two centred lines instead
          of clipping off the right edge. */
