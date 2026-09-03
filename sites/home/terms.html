@@ -11,6 +11,12 @@
     .skip-link { position: absolute; left: -9999px; }
     .brand-mark svg, .footer-brand-logo svg { width: 22px; height: 14px; }
     .mobile-menu, .mobile-menu-backdrop, .tl-menu, .t-dropdown { display: none; }
+      .footer-byline { display: flex; flex-direction: column; gap: 6px; }
+    /* A second, quieter line under the byline: 11px in the faint ink, the
+       linked name only a shade brighter on hover. */
+    .footer-thanks { margin: 0; font-size: 11px; line-height: 16px; color: var(--text-faint); }
+    .footer-thanks a { color: inherit; text-decoration: underline; text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, currentColor 50%, transparent); transition: text-decoration-color 180ms ease; }
+    .footer-thanks a:hover { text-decoration-color: currentColor; }
   </style>
   <!-- Paint gate. Firefox has painted before the external stylesheets applied
        on navigation, so the body stays invisible on the site's ground until
@@ -601,7 +607,10 @@
             </div>
           </nav>
         </div>
+        <div class="footer-byline">
         <p class="footer-credit"><span class="footer-muted">Created by</span><a class="footer-name" href="https://x.com/jakubantalik" target="_blank" rel="noopener noreferrer">Jakub Antalik</a></p>
+        <p class="footer-thanks">Made with help from <a href="https://x.com/a_brinza" target="_blank" rel="noopener noreferrer">Alexandr Brinza</a> (Orbs) and Martin Petercak (Metal)</p>
+      </div>
       </footer>
     </div>
   </main>
