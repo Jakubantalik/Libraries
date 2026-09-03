@@ -263,7 +263,10 @@ html {
   max-width: 1240px;
   margin: 0 auto;
   width: 100%;
-  padding: 0 24px 64px;
+  /* The gutter as a token, so full-bleed rows (the docs library strip on
+     phones) can cancel it without hardcoding the two widths. */
+  --app-gutter: 24px;
+  padding: 0 var(--app-gutter) 64px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1697,7 +1700,7 @@ html[data-theme="dark"] .footer-name:hover {
   .cards { grid-template-columns: minmax(0, 1fr); gap: 16px; max-width: none; }
 }
 @media (max-width: 639px) {
-  .app { padding: 0 12px 48px; }
+  .app { --app-gutter: 12px; padding: 0 var(--app-gutter) 48px; }
   .site-nav .brand-word { display: none; }
   .site-nav-menu { display: none; }
   #more-anchor { display: none; }

@@ -809,7 +809,24 @@ html[data-theme="light"] .st-preset-save:active { background: #fafafa; }
   .docs-group--links { display: none; }
   .docs-list { flex-direction: row; gap: 6px; }
   .docs-group-label { display: none; }
+  /* The row scrolls sideways instead of squeezing: every link keeps its
+     natural width (the desktop rule stretches it to 100% and ellipsises),
+     so five labels overflow the sidebar and the overflow-x above takes
+     over. The row bleeds to the viewport edge so a half-visible last pill
+     reads as "more this way" and the scroll runs edge to edge. */
+  .docs-sidebar {
+    margin: 0 calc(-1 * var(--app-gutter, 24px));
+    padding: 0 var(--app-gutter, 24px) 8px;
+    scroll-padding: 0 var(--app-gutter, 24px);
+    -webkit-overflow-scrolling: touch;
+  }
+  .docs-group, .docs-list { flex: none; }
+  .docs-link { flex: none; width: auto; overflow: visible; text-overflow: clip; }
   .detail-topbar { display: none; }
+  /* Studio is desktop-only, so its entry point leaves the library header
+     on phones. Scoped to the header: the paywall teaser reuses
+     .detail-studio for its Get access pill and keeps it. */
+  .detail-head-actions .detail-studio { display: none; }
 }
 
 /* ── Studio teaser (Figma 1425:38896) ──────────────────────────
