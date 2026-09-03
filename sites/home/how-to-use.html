@@ -769,23 +769,9 @@
   </main>
 
   <script>
-    /* Copy buttons on the static code blocks, and the FAQ accordion — the
-       same wiring the detail pages and the homepage use. */
+    /* FAQ accordion — the same wiring the homepage uses. (The code blocks'
+       copy buttons are wired by site.js, with the Studio's tooltip.) */
     document.addEventListener("DOMContentLoaded", function () {
-      document.querySelectorAll(".code-copy[data-copy-static]").forEach(function (btn) {
-        var timer = null;
-        btn.addEventListener("click", function () {
-          var block = btn.closest(".code-block");
-          var pre = block && block.querySelector("pre");
-          if (!pre) return;
-          var text = pre.textContent || "";
-          if (navigator.clipboard) navigator.clipboard.writeText(text).catch(function () {});
-          btn.setAttribute("data-copied", "true");
-          clearTimeout(timer);
-          timer = setTimeout(function () { btn.removeAttribute("data-copied"); }, 1600);
-        });
-      });
-
       document.querySelectorAll(".faq-list .t-acc").forEach(function (acc) {
         var head = acc.querySelector(".t-acc-head");
         if (!head) return;
@@ -800,5 +786,7 @@
   <script type="module" src="/src/howto-agent.tsx"></script>
   <script src="/assets/site.js" defer></script>
   <script src="/assets/pro-client.js" defer></script>
+  <!-- GoatCounter: privacy-friendly page views, no cookies. -->
+  <script data-goatcounter="https://libraries.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>

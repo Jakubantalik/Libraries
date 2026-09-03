@@ -5,6 +5,7 @@ import { EmailInput } from './demos/EmailInput'
 import { MeltPair } from './demos/MeltPair'
 import { PlusMenu } from './demos/PlusMenu'
 import { Slider } from './demos/Slider'
+import { SplitPair } from './demos/SplitPair'
 import { SHADOWS, getSystemTheme, type Theme } from './theme'
 
 /* Structure, classes and behaviors ported 1:1 from the img-fx demo page
@@ -12,6 +13,8 @@ import { SHADOWS, getSystemTheme, type Theme } from './theme'
  * Only `.header` is renamed to `.dm-header` (the lab stylesheet already
  * owns `.header`), and the img-fx shader cards are replaced by the
  * library's own liquid demos. */
+
+const DEV = new URLSearchParams(window.location.search).has('dev')
 
 function CopyIcon(): JSX.Element {
   return (
@@ -351,7 +354,10 @@ const TYPE_OPTIONS: Array<{ value: EffectType; label: string }> = [
 ]
 
 export function DemoPage(): JSX.Element {
-  const [theme, setTheme] = useState<Theme>(getSystemTheme)
+  // ?dev is a DARK recording ground: it paints the page #101010, and the
+  // light theme's logo is a JPG with a white field — left to the system
+  // preference it drew a white box behind the icon. Force dark.
+  const [theme, setTheme] = useState<Theme>(() => (DEV ? 'dark' : getSystemTheme()))
   const userOverrodeThemeRef = useRef(false)
   const [effect, setEffect] = useState<EffectType>('morph')
   const [gooBlur, setGooBlur] = useState(6)
@@ -531,6 +537,11 @@ export function SliderThumb({ x }: { x: number }) {
             <div className="example-cell">
               <EmailInput {...heroProps} />
             </div>
+          </div>
+          {/* The plus menu's sibling: the same morph, reduced to one blank
+              circle dividing into two. */}
+          <div className="example-row-full example-row-short">
+            <SplitPair {...heroProps} />
           </div>
           {/* Melt's showcase: two photos running molten into each other —
               the full-width slot, since the effect needs room to be dragged. */}

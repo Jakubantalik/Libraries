@@ -539,6 +539,9 @@ html[data-theme="dark"] .detail-panel--code .st-stage-panel { background: #17171
   flex-direction: column;
   gap: 17px;
 }
+/* The flex above outranks the UA's [hidden] rule, so the inactive ports
+   need it spelled out — otherwise all three pairs stack in view. */
+.detail-panel--code .detail-platform[hidden] { display: none; }
 .detail-panel--code .st-stage-panel > .st-platform-tabs { margin-bottom: 8px; }
 
 /* Install & Usage: each block wears a plain section title over a compact
@@ -782,7 +785,8 @@ html[data-theme="light"] .st-preset-save:active { background: #fafafa; }
   .detail-prompt-ico svg { transition: none; }
 }
 
-.detail-body { margin-top: 24px; }
+/* 16px from the tab row to whichever panel is open. */
+.detail-body { margin-top: 16px; }
 /* The cards and content run the full docs-main column — no measure cap. */
 .detail-panel { position: relative; min-width: 0; }
 .detail-examples,
