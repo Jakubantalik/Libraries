@@ -1686,14 +1686,15 @@ html[data-theme="dark"] .footer-name:hover {
 @media (max-width: 900px) {
   .nav-search-label, .nav-search-kbd { display: none; }
   .nav-search { width: 36px; padding: 0; gap: 0; justify-content: center; }
-  .nav-get-pro-word { display: none; }
   .site-nav-right #gh-stars-btn,
   .site-nav-right a[href*="x.com"] { display: none; }
   .site-nav-right { gap: 8px; }
   .cmdk-overlay { padding: 8vh 12px 12px; }
 }
 @media (max-width: 740px) {
-  .cards { grid-template-columns: minmax(0, 1fr); gap: 16px; max-width: 320px; }
+  /* Single column, and the cards run edge to edge of the page gutter — the
+     same width the testimonial cards take — rather than a 320px island. */
+  .cards { grid-template-columns: minmax(0, 1fr); gap: 16px; max-width: none; }
 }
 @media (max-width: 639px) {
   .app { padding: 0 12px 48px; }

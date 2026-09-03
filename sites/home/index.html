@@ -331,22 +331,50 @@
 
       .hero-tile-pill { display: none; }
       .hero-tiles-row { display: contents; }
+      /* The tile size follows the viewport height so the whole hero — cluster,
+         copy and CTAs — fits above the fold even with the browser chrome
+         open. 130px is the desktop size; three rows of 130px tiles plus the
+         copy need ~810px, which Safari and Firefox on a phone do not have.
+         The 420px is the space the copy, paddings and nav take; whatever
+         height is left is split across the three tile rows, floored at 84px
+         so the previews stay legible. */
+      .header {
+        --hero-tile: clamp(84px, calc((100dvh - 420px) / 3), 130px);
+        --hero-tile-gap: 16px;
+      }
+      .hero-tile {
+        width: var(--hero-tile); height: var(--hero-tile);
+        border-radius: calc(var(--hero-tile) * 24 / 130);
+      }
+      .hero-tile-stage {
+        inset: calc(var(--hero-tile) * 11 / 130);
+        border-radius: calc(var(--hero-tile) * 14 / 130);
+      }
       .hero-tiles-box {
         order: -1;
         position: relative;
         flex: none;
         width: 100%;
-        height: 422px;
+        height: calc(var(--hero-tile) * 3 + var(--hero-tile-gap) * 2);
       }
       /* A 2-1-2 stagger rather than a row: it reads as a loose cluster while
          keeping every tile's tap target clear of its neighbours, so the halo
          goes to zero. */
       .hero-tile { position: absolute; --tile-safe: 0px; }
-      .hero-tile--beam  { top: 0;     left: 12px; }
-      .hero-tile--metal { top: 0;     left: calc(100% - 142px); }
-      .hero-tile--orb   { top: 146px; left: calc(50% - 65px); }
-      .hero-tile--gooey { top: 292px; left: 12px; }
-      .hero-tile--image { top: 292px; left: calc(100% - 142px); }
+      .hero-tile--beam  { top: 0; left: 12px; }
+      .hero-tile--metal { top: 0; left: calc(100% - 12px - var(--hero-tile)); }
+      .hero-tile--orb   {
+        top: calc(var(--hero-tile) + var(--hero-tile-gap));
+        left: calc(50% - var(--hero-tile) / 2);
+      }
+      .hero-tile--gooey {
+        top: calc((var(--hero-tile) + var(--hero-tile-gap)) * 2);
+        left: 12px;
+      }
+      .hero-tile--image {
+        top: calc((var(--hero-tile) + var(--hero-tile-gap)) * 2);
+        left: calc(100% - 12px - var(--hero-tile));
+      }
     }
     @media (min-width: 761px) {
       .hero-tiles-row { display: contents; }
@@ -360,6 +388,12 @@
     /* 254 leaves 16px between the stage and the icon — the same gap the
        meta keeps below itself, so the card breathes evenly. */
     .lib-card .card-stage { height: 254px; }
+    /* A full-width card at 344px tall is mostly stage on a phone; a shorter
+       stage keeps the whole card in view and the video still reads. */
+    @media (max-width: 740px) {
+      .lib-card { height: 290px; min-height: 290px; max-height: 290px; }
+      .lib-card .card-stage { height: 200px; }
+    }
     .lib-meta {
       position: absolute; left: 16px; right: 16px; bottom: 16px;
       display: flex; align-items: center; gap: 12px;
@@ -449,6 +483,9 @@
       .pro-quotes { grid-template-columns: minmax(0, 1fr); gap: 12px; }
       .pro-quote { min-height: 0; padding: 24px; gap: 20px; }
       .pro-quote-text { font-size: 15px; line-height: 23px; }
+      /* One per row, so six quotes turn into six screens of scrolling —
+         the first three carry the section on a phone. */
+      .pro-quote:nth-child(n + 4) { display: none; }
     }
 
     /* ── How to use: tall showcase cards under a left-aligned lede.
