@@ -395,16 +395,59 @@ function Locked() {
   );
 }
 
+/* The workbench is a three-column layout of live canvases and dense
+   controls; it has no phone form. Below this width an entitled user gets a
+   notice instead of a squeezed workbench. Same breakpoint at which the
+   library pages drop their "Tune in Studio" button. */
+const DESKTOP_ONLY_QUERY = "(max-width: 900px)";
+
+function useIsNarrow(): boolean {
+  const [narrow, setNarrow] = useState(() => window.matchMedia(DESKTOP_ONLY_QUERY).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(DESKTOP_ONLY_QUERY);
+    const onChange = () => setNarrow(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  return narrow;
+}
+
+function DesktopOnly() {
+  return (
+    <div className="st-gate">
+      <div className="st-locked">
+        <span className="st-lock-glyph" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="4.5" width="18" height="12" rx="2.5" />
+            <path d="M9 20h6M12 16.5V20" />
+          </svg>
+        </span>
+        <h1 className="st-locked-title">Sorry, the Studio is desktop only</h1>
+        <p className="st-locked-sub">
+          The workbench lays out live previews next to a full column of
+          controls, and that needs a wide screen. Open this page on a laptop
+          or desktop to tune the libraries — your Pro access and saved
+          presets are already waiting there.
+        </p>
+        <div className="skill-cta-row">
+          <a className="skill-btn skill-btn--primary" href="/">Browse the libraries</a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function StudioApp() {
   const { gate, email, entitled } = useProGate();
   const [theme, toggleTheme] = useStudioTheme();
+  const narrow = useIsNarrow();
   return (
     <StudioThemeContext.Provider value={{ theme, toggle: toggleTheme }}>
       <div className="st-app">
         <TopBar email={email} pro={entitled} />
         {gate === "pending" && <Skeleton />}
         {gate === "locked" && <Locked />}
-        {gate === "open" && <Workbench theme={theme} />}
+        {gate === "open" && (narrow ? <DesktopOnly /> : <Workbench theme={theme} />)}
       </div>
     </StudioThemeContext.Provider>
   );
