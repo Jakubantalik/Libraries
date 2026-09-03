@@ -217,6 +217,7 @@
       pointer-events: none;
     }
     .hero-tile-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .hero-tile-stage > .vid { position: absolute; inset: 0; }
     .hero-tile-video { width: 100%; height: 100%; object-fit: cover; display: block; }
     .hero-tile-stage::after {
       content: ""; position: absolute; inset: 0; border-radius: inherit;
@@ -801,6 +802,15 @@
             var v = card.querySelector(".lib-video");
             if (!v) return;
             if (!canHover) { v.play().catch(function () {}); return; }
+            /* Blur-up: the wrapper drops its blurred placeholder once the
+               sharp poster has decoded, or once the clip itself has a frame,
+               whichever lands first. */
+            var wrap = v.closest(".vid");
+            if (wrap) {
+              var ready = function () { wrap.setAttribute("data-ready", ""); };
+              if (v.readyState >= 2) ready(); else v.addEventListener("loadeddata", ready, { once: true });
+              if (v.poster) { var img = new Image(); img.onload = ready; img.src = v.poster; }
+            }
             var play = function () { v.play().catch(function () {}); };
             var pause = function () { v.pause(); };
             card.addEventListener("pointerenter", play);
@@ -816,7 +826,7 @@
       <article class="card lib-card" data-lib="beam">
         <a class="lib-card-hit" href="/beam.html" aria-label="Border beam playground"></a>
         <div class="card-stage">
-          <video class="lib-video" src="/assets/videos/beam-main-card.mp4" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
+          <div class="vid" style="--lqip: url(&quot;data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABcQERQRDhcUEhQaGBcbIjklIh8fIkYyNSk5UkhXVVFIUE5bZoNvW2F8Yk5QcptzfIeLkpSSWG2grJ+OqoOPko3/2wBDARgaGiIeIkMlJUONXlBejY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY3/wAARCAALABQDASIAAhEBAxEB/8QAFwABAQEBAAAAAAAAAAAAAAAAAAECBv/EAB0QAAICAQUAAAAAAAAAAAAAAAABEiECETFBUWH/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8A5xRirWpK8MlnkuQI9wJPsAf/2Q==&quot;)"><video class="lib-video" src="/assets/videos/beam-main-card.mp4" poster="/assets/videos/posters/beam-main-card.jpg" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video></div>
         </div>
         <div class="lib-meta">
           <span class="lib-ico"><img src="/assets/icons/tile-beam.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
@@ -830,7 +840,7 @@
       <article class="card lib-card" data-lib="orb">
         <a class="lib-card-hit" href="/orbs.html" aria-label="Thinking orbs playground"></a>
         <div class="card-stage">
-          <video class="lib-video" src="/assets/videos/orb-main-card.mp4" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
+          <div class="vid" style="--lqip: url(&quot;data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABcQERQRDhcUEhQaGBcbIjklIh8fIkYyNSk5UkhXVVFIUE5bZoNvW2F8Yk5QcptzfIeLkpSSWG2grJ+OqoOPko3/2wBDARgaGiIeIkMlJUONXlBejY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY3/wAARCAALABQDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAAAAEG/8QAGhAAAwADAQAAAAAAAAAAAAAAAAERITFBUf/EABQBAQAAAAAAAAAAAAAAAAAAAAD/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwDMqdLzCq9hAm1psABQB//Z&quot;)"><video class="lib-video" src="/assets/videos/orb-main-card.mp4" poster="/assets/videos/posters/orb-main-card.jpg" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video></div>
         </div>
         <div class="lib-meta">
           <span class="lib-ico"><img src="/assets/icons/tile-orbs.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
@@ -844,7 +854,7 @@
       <article class="card lib-card" data-lib="gooey">
         <a class="lib-card-hit" href="/gooey.html" aria-label="Gooey playground"></a>
         <div class="card-stage">
-          <video class="lib-video" src="/assets/videos/gooey-main-card.mp4" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
+          <div class="vid" style="--lqip: url(&quot;data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABcQERQRDhcUEhQaGBcbIjklIh8fIkYyNSk5UkhXVVFIUE5bZoNvW2F8Yk5QcptzfIeLkpSSWG2grJ+OqoOPko3/2wBDARgaGiIeIkMlJUONXlBejY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY3/wAARCAARABQDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAXEAEBAQEAAAAAAAAAAAAAAAAAAREh/8QAFAEBAAAAAAAAAAAAAAAAAAAAAP/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/AJgC2XMmcAAAAAAB/9k=&quot;)"><video class="lib-video" src="/assets/videos/gooey-main-card.mp4" poster="/assets/videos/posters/gooey-main-card.jpg" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video></div>
         </div>
         <div class="lib-meta">
           <span class="lib-ico"><img src="/assets/icons/tile-gooey.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
@@ -858,7 +868,7 @@
       <article class="card lib-card" data-lib="metal">
         <a class="lib-card-hit" href="/metal.html" aria-label="Liquid Metal playground"></a>
         <div class="card-stage">
-          <video class="lib-video" src="/assets/videos/metal-main-card.mp4" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
+          <div class="vid" style="--lqip: url(&quot;data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABcQERQRDhcUEhQaGBcbIjklIh8fIkYyNSk5UkhXVVFIUE5bZoNvW2F8Yk5QcptzfIeLkpSSWG2grJ+OqoOPko3/2wBDARgaGiIeIkMlJUONXlBejY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY3/wAARCAARABQDASIAAhEBAxEB/8QAFwABAQEBAAAAAAAAAAAAAAAAAAECBv/EABoQAQEBAAMBAAAAAAAAAAAAAAABEQISIUH/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8A5nDGu934l5bJMngIACAAAA//2Q==&quot;)"><video class="lib-video" src="/assets/videos/metal-main-card.mp4" poster="/assets/videos/posters/metal-main-card.jpg" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video></div>
         </div>
         <div class="lib-meta">
           <span class="lib-ico"><img src="/assets/icons/tile-metal.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
@@ -872,7 +882,7 @@
       <article class="card lib-card" data-lib="image">
         <a class="lib-card-hit" href="/image.html" aria-label="Image generation playground"></a>
         <div class="card-stage">
-          <video class="lib-video" src="/assets/videos/image-main-card.mp4" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
+          <div class="vid" style="--lqip: url(&quot;data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABcQERQRDhcUEhQaGBcbIjklIh8fIkYyNSk5UkhXVVFIUE5bZoNvW2F8Yk5QcptzfIeLkpSSWG2grJ+OqoOPko3/2wBDARgaGiIeIkMlJUONXlBejY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY3/wAARCAARABQDASIAAhEBAxEB/8QAFwABAQEBAAAAAAAAAAAAAAAAAAIBBv/EAB0QAQEBAAAHAAAAAAAAAAAAAAABAgMRITFhgfD/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8A5rMlnlU4c+qc2TPts1ARelvIL3AAAAAf/9k=&quot;)"><video class="lib-video" src="/assets/videos/image-main-card.mp4" poster="/assets/videos/posters/image-main-card.jpg" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video></div>
         </div>
         <div class="lib-meta">
           <span class="lib-ico"><img class="lib-ico-img--pad" src="/assets/icons/tile-image.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>

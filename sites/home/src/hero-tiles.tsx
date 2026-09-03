@@ -1,12 +1,6 @@
 import { createRoot } from "react-dom/client";
-import {
-  useCallback,
-  useRef,
-  useState,
-  type CSSProperties,
-  type MouseEvent as ReactMouseEvent,
-  type PointerEvent as ReactPointerEvent,
-} from "react";
+import { POSTERS } from "./posters";
+import { useCallback, useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, useEffect } from "react";
 
 /* Hero tiles — the five floating library previews, upgraded from static
    links to draggable cards.
@@ -139,6 +133,16 @@ function HeroTile({ tile, bounds }: { tile: Tile; bounds: () => DOMRect | null }
       ? tile.videos[Math.floor(Math.random() * tile.videos.length)]
       : null,
   );
+  const art = clip ? POSTERS[clip.split("/").pop()!.replace(/\.mp4$/, "")] : undefined;
+  /* Blur-up: ready once the sharp poster has decoded (or the clip has a
+     frame), at which point the wrapper fades its inline placeholder out. */
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    if (!art) return;
+    const img = new Image();
+    img.onload = () => setReady(true);
+    img.src = art.poster;
+  }, [art]);
 
   const moved = pos.x !== 0 || pos.y !== 0;
   /* The offset rides in CSS vars, not a transform: the stylesheet composes
@@ -169,9 +173,16 @@ function HeroTile({ tile, bounds }: { tile: Tile; bounds: () => DOMRect | null }
     >
       <span className="hero-tile-stage">
         {clip && (
+          <span
+            className="vid"
+            data-ready={ready ? "" : undefined}
+            style={art ? ({ ["--lqip" as string]: `url("${art.lqip}")` } as CSSProperties) : undefined}
+          >
           <video
             className="hero-tile-video"
             src={clip}
+            poster={art?.poster}
+            onLoadedData={() => setReady(true)}
             /* React sets `muted` as a property after the element exists,
                and Chrome's autoplay policy reads the attribute at insertion,
                so a React-rendered muted video can still be refused. Set it
@@ -190,6 +201,7 @@ function HeroTile({ tile, bounds }: { tile: Tile; bounds: () => DOMRect | null }
             preload="metadata"
             aria-hidden="true"
           />
+          </span>
         )}
       </span>
       <span className="hero-tile-pill">
