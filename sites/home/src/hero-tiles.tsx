@@ -36,7 +36,7 @@ const TILES: Tile[] = [
   { key: "beam",
     videos: ["/assets/videos/beam-small-card.mp4"], href: "/beam.html", label: "Border beam" },
   { key: "metal", href: "/metal.html", label: "Liquid metal" },
-  { key: "gooey", href: "/gooey.html", label: "Gooey" },
+  { key: "gooey", videos: ["/assets/videos/gooey-small-card.mp4"], href: "/gooey.html", label: "Gooey" },
   { key: "image", href: "/image.html", label: "Image generation" },
 ];
 
