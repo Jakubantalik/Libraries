@@ -67,10 +67,20 @@
   <link rel="stylesheet" href="/assets/playground.css" />
   <link rel="stylesheet" href="/assets/examples.css" />
   <style>
-    /* Detail page: copy-button icon swap + full-width live snippet */
-    .code-copy .icon-check { display: none; }
-    .code-copy[data-copied="true"] .icon-copy { display: none; }
-    .code-copy[data-copied="true"] .icon-check { display: block; }
+    /* Copy-button icon crossfade, as beam and gooey do it. The older
+       display:none swap lost to playground.css's `.code-block .code-copy svg
+       { display: block }` once these buttons moved onto the Studio's stage
+       card, and both icons showed at once; opacity has nothing to fight. */
+    .code-copy svg {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      transition: opacity 0.2s ease, transform 0.2s ease, filter 0.2s ease;
+    }
+    .code-copy .icon-check { opacity: 0; transform: translate(-50%, -50%) scale(0.4); filter: blur(3px); }
+    .code-copy[data-copied="true"] .icon-copy { opacity: 0; transform: translate(-50%, -50%) scale(0.4); filter: blur(3px); }
+    .code-copy[data-copied="true"] .icon-check { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0); }
     .pg-snippet { grid-column: 1 / -1; }
     #playground { margin-top: 0; scroll-margin-top: 24px; }
     .pg { row-gap: 16px; }
@@ -362,23 +372,10 @@ Docs: https://libraries.dev/metal.html
     </footer>
   </main>
 
-  <script>
-    (function () {
-      document.querySelectorAll(".code-copy[data-copy-target]").forEach(function (btn) {
-        var timer = null;
-        btn.addEventListener("click", function () {
-          var src = document.querySelector(btn.getAttribute("data-copy-target"));
-          if (!src) return;
-          if (navigator.clipboard) navigator.clipboard.writeText(src.textContent || "").catch(function () {});
-          btn.setAttribute("data-copied", "true");
-          clearTimeout(timer);
-          timer = setTimeout(function () { btn.removeAttribute("data-copied"); }, 1600);
-        });
-      });
-    })();
-  </script>
   <script src="/assets/site.js" defer></script>
   <script src="/assets/pro-client.js" defer></script>
   <script type="module" src="/src/metal.tsx"></script>
+  <!-- GoatCounter: privacy-friendly page views, no cookies. -->
+  <script data-goatcounter="https://libraries.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>

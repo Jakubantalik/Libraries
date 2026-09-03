@@ -297,6 +297,84 @@
     });
   });
 
+  /* ── Code-block copy buttons (detail pages, how-to-use) ───────
+   * The static <pre> blocks' .code-copy buttons get the same tooltip
+   * and copied state the Studio's CodeCopy renders (controls.tsx): the
+   * label tail cross-blurs "y code" -> "ied" and the pill tweens between
+   * the two measured widths. data-copy-static reads the sibling <pre>;
+   * data-copy-target points at an element by selector. Install & Usage
+   * starts hidden, so widths are re-measured when the block can be
+   * seen and a 0 is never written. */
+  var codeCopyMeasures = [];
+  function remeasureCodeCopies() {
+    /* Synchronously first — the block is already un-hidden by the time this
+       runs, so layout can be forced — then once more on the next frame in
+       case fonts or a transition settle the width. */
+    codeCopyMeasures.forEach(function (m) { m(); });
+    requestAnimationFrame(function () { codeCopyMeasures.forEach(function (m) { m(); }); });
+  }
+  document.querySelectorAll(".code-copy[data-copy-static], .code-copy[data-copy-target]").forEach(function (btn) {
+    if (btn.querySelector(".code-copy-tooltip")) return;
+    var label = btn.getAttribute("aria-label") || "Copy";
+    var tip = document.createElement("span");
+    tip.className = "code-copy-tooltip";
+    tip.setAttribute("aria-hidden", "true");
+    tip.innerHTML =
+      '<span class="tt-text">Cop<span class="tt-swap"><span class="tt-label tt-a">y code</span><span class="tt-label tt-b">ied</span></span></span>';
+    btn.appendChild(tip);
+    var swap = tip.querySelector(".tt-swap");
+    var a = tip.querySelector(".tt-a");
+    var b = tip.querySelector(".tt-b");
+    function measure() {
+      var wa = a.getBoundingClientRect().width;
+      if (!wa) return;
+      var prevPos = b.style.position;
+      b.style.position = "static";
+      a.style.display = "none";
+      var wb = b.getBoundingClientRect().width;
+      a.style.display = "";
+      b.style.position = prevPos;
+      swap.style.setProperty("--tt-w-a", wa + "px");
+      swap.style.setProperty("--tt-w-b", wb + "px");
+    }
+    requestAnimationFrame(measure);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+    if (window.ResizeObserver) new ResizeObserver(measure).observe(swap);
+    /* The panel these live in starts hidden and the observer does not
+       always catch it opening, so measure again at the moments that
+       matter: when the tab or platform switch reveals the block, and on
+       the way into the button. */
+    codeCopyMeasures.push(measure);
+    btn.addEventListener("mouseenter", measure);
+    btn.addEventListener("focus", measure);
+
+    var timer = null;
+    btn.addEventListener("click", function () {
+      measure();
+      var text = "";
+      var sel = btn.getAttribute("data-copy-target");
+      if (sel) {
+        var src = document.querySelector(sel);
+        if (src) text = src.textContent || "";
+      } else {
+        var block = btn.closest(".code-block");
+        var pre = block && block.querySelector("pre");
+        if (pre) text = pre.textContent || "";
+      }
+      if (!text) return;
+      if (navigator.clipboard) navigator.clipboard.writeText(text).catch(function () {});
+      btn.setAttribute("data-copied", "true");
+      btn.setAttribute("aria-label", "Copied");
+      swap.setAttribute("data-state", "copied");
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        btn.removeAttribute("data-copied");
+        btn.setAttribute("aria-label", label);
+        swap.removeAttribute("data-state");
+      }, 1600);
+    });
+  });
+
   /* ── Platform row under Install & Usage ───────────────────
    * Beam and Orb ship ports, so the row swaps the whole install+usage
    * pair — the same thing the Studio's StageBar does with its platform
@@ -317,6 +395,7 @@
         if (panel.getAttribute("data-platform") === id) panel.removeAttribute("hidden");
         else panel.setAttribute("hidden", "");
       });
+      remeasureCodeCopies();
     };
 
     pTabs.forEach(function (t) {
@@ -353,6 +432,7 @@
         if (p.getAttribute("data-detail-panel") === name) p.removeAttribute("hidden");
         else p.setAttribute("hidden", "");
       });
+      remeasureCodeCopies();
     }
 
     tabs.forEach(function (t) {
