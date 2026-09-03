@@ -792,7 +792,7 @@
       <script>
         /* Library cards play on hover and hold their frame on leave, so a
            second hover picks up where the first stopped. Without a hover
-           (touch), they simply autoplay as before. */
+           (touch), a clip plays while it is on screen and pauses off it. */
         (function () {
           /* This script sits in the hero, above the cards in source order,
              so it has to wait for the rest of the document to parse. */
@@ -801,6 +801,35 @@
             return;
           }
           var canHover = window.matchMedia("(hover: hover)").matches;
+          /* Touch devices have no hover to start a clip, so every one of them
+             would run at once — ten decoders on a phone. Play what's in the
+             viewport (plus a quarter-screen margin, so a clip is rolling by
+             the time it scrolls in) and pause the rest. Watches the document
+             for clips that mount later: React renders the hero tiles after
+             this runs. */
+          if (!canHover && "IntersectionObserver" in window) {
+            var inView = new IntersectionObserver(function (entries) {
+              entries.forEach(function (e) {
+                if (e.isIntersecting) e.target.play().catch(function () {});
+                else e.target.pause();
+              });
+            }, { rootMargin: "25% 0px" });
+            var watch = function (vid) {
+              if (vid.dataset.inView) return;
+              vid.dataset.inView = "1";
+              inView.observe(vid);
+            };
+            document.querySelectorAll("video").forEach(watch);
+            new MutationObserver(function (muts) {
+              muts.forEach(function (m) {
+                m.addedNodes.forEach(function (n) {
+                  if (n.nodeType !== 1) return;
+                  if (n.tagName === "VIDEO") watch(n);
+                  else if (n.querySelectorAll) n.querySelectorAll("video").forEach(watch);
+                });
+              });
+            }).observe(document.body, { childList: true, subtree: true });
+          }
           document.querySelectorAll(".lib-card").forEach(function (card) {
             var v = card.querySelector(".lib-video");
             if (!v) return;
@@ -815,7 +844,8 @@
               if (v.readyState >= 2) ready(); else v.addEventListener("loadeddata", ready, { once: true });
               if (v.poster) { var img = new Image(); img.onload = ready; img.src = v.poster; }
             }
-            if (!canHover) { v.play().catch(function () {}); return; }
+            /* Touch: the viewport observer above owns playback. */
+            if (!canHover) return;
             var play = function () { v.play().catch(function () {}); };
             var pause = function () { v.pause(); };
             card.addEventListener("pointerenter", play);
