@@ -801,16 +801,18 @@
           document.querySelectorAll(".lib-card").forEach(function (card) {
             var v = card.querySelector(".lib-video");
             if (!v) return;
-            if (!canHover) { v.play().catch(function () {}); return; }
             /* Blur-up: the wrapper drops its blurred placeholder once the
                sharp poster has decoded, or once the clip itself has a frame,
-               whichever lands first. */
+               whichever lands first. This has to run for every card, ahead
+               of the hover split below: a touch device has no hover, but
+               its blur still has to clear. */
             var wrap = v.closest(".vid");
             if (wrap) {
               var ready = function () { wrap.setAttribute("data-ready", ""); };
               if (v.readyState >= 2) ready(); else v.addEventListener("loadeddata", ready, { once: true });
               if (v.poster) { var img = new Image(); img.onload = ready; img.src = v.poster; }
             }
+            if (!canHover) { v.play().catch(function () {}); return; }
             var play = function () { v.play().catch(function () {}); };
             var pause = function () { v.pause(); };
             card.addEventListener("pointerenter", play);
