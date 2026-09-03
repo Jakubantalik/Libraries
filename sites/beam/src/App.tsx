@@ -316,7 +316,7 @@ const PLATFORM_OPTIONS: { value: Platform; label: string }[] = [
 
 const INSTALL_BY_PLATFORM: Record<Platform, string> = {
   react: 'npm install border-beam',
-  swiftui: '.package(url: "https://github.com/Jakubantalik/Libraries.git", from: "1.4.0")',
+  swiftui: '.package(url: "https://github.com/Jakubantalik/Libraries.dev.git", from: "1.4.0")',
   native: 'npm install @shopify/react-native-skia react-native-reanimated',
 };
 
@@ -547,7 +547,7 @@ export default function App() {
                 </span>
               </button>
             )}
-            <a className="icon-btn" href="https://github.com/Jakubantalik/Libraries" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+            <a className="icon-btn" href="https://github.com/Jakubantalik/Libraries.dev" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
               <GitHubIcon />
             </a>
             <a className="icon-btn" href="https://x.com/jakubantalik" target="_blank" rel="noopener noreferrer" aria-label="Follow on X (Twitter)">
