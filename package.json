@@ -17,6 +17,6 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "build:metal": "npm run build -w metal-fx",
     "build:image": "npm run build -w img-fx",
-    "build:site-home": "npm run build -w @sites/home"
+    "build:site-home": "npm run build:beam && npm run build:orbs && npm run build:gooey && npm run build:metal && npm run build:image && npm run build -w @sites/home"
   }
 }
