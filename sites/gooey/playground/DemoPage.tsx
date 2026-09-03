@@ -14,6 +14,8 @@ import { SHADOWS, getSystemTheme, type Theme } from './theme'
  * owns `.header`), and the img-fx shader cards are replaced by the
  * library's own liquid demos. */
 
+const DEV = new URLSearchParams(window.location.search).has('dev')
+
 function CopyIcon(): JSX.Element {
   return (
     <svg
@@ -352,7 +354,10 @@ const TYPE_OPTIONS: Array<{ value: EffectType; label: string }> = [
 ]
 
 export function DemoPage(): JSX.Element {
-  const [theme, setTheme] = useState<Theme>(getSystemTheme)
+  // ?dev is a DARK recording ground: it paints the page #101010, and the
+  // light theme's logo is a JPG with a white field — left to the system
+  // preference it drew a white box behind the icon. Force dark.
+  const [theme, setTheme] = useState<Theme>(() => (DEV ? 'dark' : getSystemTheme()))
   const userOverrodeThemeRef = useRef(false)
   const [effect, setEffect] = useState<EffectType>('morph')
   const [gooBlur, setGooBlur] = useState(6)

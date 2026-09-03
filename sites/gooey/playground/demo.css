@@ -1526,3 +1526,10 @@ html[data-dev] .example-cell {
   background: transparent;
   box-shadow: none;
 }
+
+/* The logo is an opaque JPG with the normal page colour baked in — an
+   invisible seam on the real page, a visible box on the #101010 ground.
+   There is no transparent variant, so the recording ground hides it. */
+html[data-dev] .header-icon {
+  visibility: hidden;
+}
