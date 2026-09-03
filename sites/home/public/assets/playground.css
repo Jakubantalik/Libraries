@@ -809,31 +809,53 @@ html[data-theme="light"] .st-preset-save:active { background: #fafafa; }
 
 @media (max-width: 900px) {
   .docs { grid-template-columns: minmax(0, 1fr); padding-top: 16px; row-gap: 24px; }
+  /* The sidebar collapses into one horizontal chip strip, as on
+     transitions.dev's detail page: the library links scroll sideways,
+     the edges fade only on the side that has more strip past it
+     (site.js sets --fade-start/--fade-end from the scroll position), and
+     the page's own link is scrolled into the middle on load. */
   .docs-sidebar {
     position: static;
     max-height: none;
     flex-direction: row;
-    gap: 8px;
+    align-items: center;
+    gap: 6px;
     overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 var(--fade-start, 0px),
+      #000 calc(100% - var(--fade-end, 0px)),
+      transparent 100%);
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 var(--fade-start, 0px),
+      #000 calc(100% - var(--fade-end, 0px)),
+      transparent 100%);
   }
   /* Only the library list travels to mobile — the "Getting started"
      links repeat what the nav and footer already carry. */
   .docs-group--links { display: none; }
-  .docs-list { flex-direction: row; gap: 6px; }
   .docs-group-label { display: none; }
-  /* The row scrolls sideways instead of squeezing: every link keeps its
-     natural width (the desktop rule stretches it to 100% and ellipsises),
-     so five labels overflow the sidebar and the overflow-x above takes
-     over. The row bleeds to the viewport edge so a half-visible last pill
-     reads as "more this way" and the scroll runs edge to edge. */
-  .docs-sidebar {
-    margin: 0 calc(-1 * var(--app-gutter, 24px));
-    padding: 0 var(--app-gutter, 24px) 8px;
-    scroll-padding: 0 var(--app-gutter, 24px);
-    -webkit-overflow-scrolling: touch;
+  .docs-group, .docs-list { flex-direction: row; gap: 6px; flex: 0 0 auto; }
+  /* Chips: natural width (the desktop rule stretches a link to 100% and
+     ellipsises it), a filled body, and no icon — the label is the chip. */
+  .docs-link {
+    flex: 0 0 auto;
+    width: auto;
+    height: 36px;
+    padding: 0 14px;
+    overflow: visible;
+    text-overflow: clip;
+    background: var(--chip-bg);
   }
-  .docs-group, .docs-list { flex: none; }
-  .docs-link { flex: none; width: auto; overflow: visible; text-overflow: clip; }
+  .docs-link-ico { display: none; }
+  .docs-link.is-active { background: rgba(255, 255, 255, 0.16); color: var(--text); }
+  html[data-theme="light"] .docs-link.is-active { background: rgba(0, 0, 0, 0.12); }
   .detail-topbar { display: none; }
   /* Studio is desktop-only, so its entry point leaves the library header
      on phones. Scoped to the header: the paywall teaser reuses
