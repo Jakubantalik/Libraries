@@ -5,9 +5,10 @@ import type { DemoProps } from '../App'
 /** The plus menu's sibling, stripped to the motion itself: one blank
  *  circle that, on click, divides into two circles side by side — the
  *  liquid necks, stretches and lets go between them — and merges back on
- *  the next click. No icons: the morph is the whole content. Timing is the
- *  plus menu's exactly (bouncy open, snappy close, anticipation nudge on
- *  the way back), so the two read as one family. */
+ *  the next click. No icons: the morph is the whole content. Same curves as
+ *  the plus menu (bouncy open, snappy close, anticipation nudge on the way
+ *  back) at 1.5x its durations, so the two read as one family with the
+ *  blank one giving its neck time to be seen. */
 
 const EASES = {
   open: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
@@ -15,8 +16,11 @@ const EASES = {
 }
 
 const DEFAULTS = {
-  openDur: 550,
-  closeDur: 250,
+  // 50% slower than the plus menu's 550 / 250: with nothing inside the
+  // circles, the neck stretching and letting go IS the content, and it
+  // deserves the extra time to be read.
+  openDur: 825,
+  closeDur: 375,
   /** Half the resting gap between the two circles' centres, px. */
   spread: 34,
   anticipDist: 5,
