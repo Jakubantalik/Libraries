@@ -3,6 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <!-- First-paint guard. Firefox has painted a frame before the stylesheets
+       applied on cached navigations (brand mark at full width, skip link in
+       view, menus open). These few rules make that frame harmless; site.css
+       overrides every one of them once it lands. -->
+  <style>
+    .skip-link { position: absolute; left: -9999px; }
+    .brand-mark svg, .footer-brand-logo svg { width: 22px; height: 14px; }
+    .mobile-menu, .mobile-menu-backdrop, .tl-menu, .t-dropdown { display: none; }
+  </style>
+  <!-- Paint gate. Firefox has painted before the external stylesheets applied
+       on navigation, so the body stays invisible on the site's ground until
+       every local sheet has loaded (script below); a 1.5s timeout reveals it
+       regardless, so a failed sheet can never leave the page blank. -->
+  <style>
+    html { background: #121212; }
+    html:not(.css-ready) body { visibility: hidden; }
+  </style>
   <meta name="color-scheme" content="dark" />
 
   <title>How to use · Libraries.dev</title>
@@ -42,22 +59,30 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
     rel="preload"
-    as="style"
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
-  />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
-    rel="stylesheet"
-  />
-  <link
-    rel="preload"
     as="font"
     type="font/woff2"
     href="/assets/fonts/Saans-Medium.woff2"
     crossorigin
   />
   <link rel="stylesheet" href="/assets/site.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/assets/playground.css" />
+  <script>
+    (function () {
+      var h = document.documentElement;
+      var links = [].slice.call(document.querySelectorAll('link[rel="stylesheet"][href^="/assets/"]'));
+      var reveal = function () { h.classList.add("css-ready"); };
+      if (!links.length) return reveal();
+      var pending = links.length;
+      var done = function () { if (--pending <= 0) reveal(); };
+      links.forEach(function (l) {
+        if (l.sheet) return done();
+        l.addEventListener("load", done);
+        l.addEventListener("error", done);
+      });
+      setTimeout(reveal, 1500);
+    })();
+  </script>
   <style>
     /* How to use — page-specific layout. Cards, code blocks and the FAQ
        accordion all reuse the shared design system. */
