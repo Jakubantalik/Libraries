@@ -1663,16 +1663,19 @@ html[data-theme="dark"] .btn-animate:disabled:hover {
 .footer-muted { color: var(--text-faint); }
 .footer-name {
   color: var(--text-footer-name);
-  text-decoration: none;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: color-mix(in srgb, currentColor 50%, transparent);
+  transition: color 150ms ease, text-decoration-color 180ms ease;
   margin-left: 4px;
 }
 .footer-name:hover {
   color: #0d0d0d;
-  text-decoration: none;
+  text-decoration-color: currentColor;
 }
 html[data-theme="dark"] .footer-name:hover {
   color: #ffffff;
-  text-decoration: none;
+  text-decoration-color: currentColor;
 }
 .footer-byline { display: flex; flex-direction: column; gap: 6px; }
 /* A second, quieter line under the byline: 11px in the faint ink, the

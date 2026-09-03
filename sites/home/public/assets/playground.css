@@ -2050,20 +2050,3 @@ html[data-theme="light"] .st-core-restore {
 .st-core-restore:hover,
 html[data-theme="dark"] .st-core-restore:hover { background: rgba(255, 255, 255, 0.04); }
 html[data-theme="light"] .st-core-restore:hover { background: rgba(0, 0, 0, 0.04); }
-
-/* A quiet credit under a playground: subtle ink, the site's inline-link
-   underline on the name. Rendered by the orbs playground only. */
-.detail-credit {
-  margin: 12px 0 0;
-  font-size: 13px;
-  line-height: 20px;
-  color: var(--text-subtle);
-}
-.detail-credit a {
-  color: var(--text-muted);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  text-decoration-color: color-mix(in srgb, currentColor 50%, transparent);
-  transition: text-decoration-color 180ms ease, color 180ms ease;
-}
-.detail-credit a:hover { color: var(--text); text-decoration-color: currentColor; }

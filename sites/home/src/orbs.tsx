@@ -195,12 +195,6 @@ function OrbPlayground() {
       </div>
 
       <CodeBlock code={snippet} label="Copy playground snippet" className="pg-snippet" />
-      {/* Credit line, orbs only. The handle is the one the orbs demo site's
-          own footer links to. */}
-      <p className="detail-credit">
-        Made as a collaboration with{" "}
-        <a href="https://x.com/a_brinza" target="_blank" rel="noopener noreferrer">Alexandr Brinza</a>
-      </p>
     </>
   );
 }
