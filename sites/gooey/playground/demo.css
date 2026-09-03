@@ -1501,3 +1501,28 @@ html[data-theme='light'] .footer-name:hover {
 .dgc-card > :nth-child(2) { --dgc-arc: 1; --dgc-rot: 0; --dgc-sqy: 0.01; }
 
 .dgc-card > :nth-child(3) { --dgc-arc: 0.6; --dgc-rot: -1.6; }
+
+/* ---- Split pair: the plus menu's blank sibling ---- */
+
+.sp-btn {
+  /* The two circles are the whole content, so they carry the surface
+     themselves rather than sitting transparent over the liquid — otherwise
+     a blank button on the goo is invisible until it moves. */
+  width: 44px;
+  height: 44px;
+}
+
+/* ---- Dev / recording mode (?dev) ----
+   Strips the hero of its card fills and sets the page to a flat #101010, so
+   the liquid pieces can be captured against a clean, uniform ground. */
+
+html[data-dev][data-page='demo'],
+html[data-dev][data-page='demo'] body {
+  background-color: #101010;
+}
+
+html[data-dev] .example-row-full,
+html[data-dev] .example-cell {
+  background: transparent;
+  box-shadow: none;
+}

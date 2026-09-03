@@ -5,6 +5,7 @@ import { EmailInput } from './demos/EmailInput'
 import { MeltPair } from './demos/MeltPair'
 import { PlusMenu } from './demos/PlusMenu'
 import { Slider } from './demos/Slider'
+import { SplitPair } from './demos/SplitPair'
 import { SHADOWS, getSystemTheme, type Theme } from './theme'
 
 /* Structure, classes and behaviors ported 1:1 from the img-fx demo page
@@ -531,6 +532,11 @@ export function SliderThumb({ x }: { x: number }) {
             <div className="example-cell">
               <EmailInput {...heroProps} />
             </div>
+          </div>
+          {/* The plus menu's sibling: the same morph, reduced to one blank
+              circle dividing into two. */}
+          <div className="example-row-full example-row-short">
+            <SplitPair {...heroProps} />
           </div>
           {/* Melt's showcase: two photos running molten into each other —
               the full-width slot, since the effect needs room to be dragged. */}
