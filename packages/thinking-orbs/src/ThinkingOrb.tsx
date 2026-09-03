@@ -6,7 +6,7 @@
 
 import { useEffect, useRef } from 'react';
 import { paintFrame, type OrbTint } from './engine/core';
-import { scaleCounts } from './engine/profiles';
+import { scaleCounts, scaleRadii } from './engine/profiles';
 import { MODE_FRAMES } from './engine/registry';
 import { resolvePreset } from './presets';
 import { useReducedMotion, useResolvedDark } from './theme';
@@ -48,11 +48,15 @@ export function ThinkingOrb({
   paused = false,
   color,
   dots = 1,
+  dotSize = 1,
+  opts: optsOverride,
+  frame: customFrame,
   style,
   'aria-label': ariaLabel,
   ...rest
 }: ThinkingOrbProps) {
   const ref = useRef<HTMLCanvasElement | null>(null);
+  const optsKey = optsOverride ? JSON.stringify(optsOverride) : '';
   const dark = useResolvedDark(theme, ref);
   const reduced = useReducedMotion();
 
@@ -69,8 +73,11 @@ export function ThinkingOrb({
     // `dots` rescales every count knob of the resolved preset with the same
     // sqrt-paired scaler the presets themselves use, so density changes keep
     // the mode's balance. resolvePreset caches — never mutate its result.
-    const opts = dots !== 1 ? scaleCounts(presetOpts, Math.max(0.1, dots)) : presetOpts;
-    const frameFn = MODE_FRAMES[mode];
+    let opts = dots !== 1 ? scaleCounts(presetOpts, Math.max(0.1, dots)) : presetOpts;
+    if (dotSize !== 1) opts = scaleRadii(opts, Math.max(0.1, dotSize));
+    // raw overrides land last, over everything the preset and multipliers set
+    if (optsOverride) opts = { ...opts, ...optsOverride };
+    const frameFn = customFrame ?? MODE_FRAMES[mode];
     const tint = parseTint(color);
     const effSpeed = baseSpeed * speed;
 
@@ -128,7 +135,10 @@ export function ThinkingOrb({
       io?.disconnect();
       document.removeEventListener('visibilitychange', onVis);
     };
-  }, [state, size, dark, speed, paused, reduced, color, dots]);
+    // the override object is compared by content, so an inline literal
+    // does not restart the loop every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state, size, dark, speed, paused, reduced, color, dots, dotSize, optsKey, customFrame]);
 
   return (
     <canvas

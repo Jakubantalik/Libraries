@@ -3,6 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <!-- First-paint guard. Firefox has painted a frame before the stylesheets
+       applied on cached navigations (brand mark at full width, skip link in
+       view, menus open). These few rules make that frame harmless; site.css
+       overrides every one of them once it lands. -->
+  <style>
+    .skip-link { position: absolute; left: -9999px; }
+    .brand-mark svg, .footer-brand-logo svg { width: 22px; height: 14px; }
+    .mobile-menu, .mobile-menu-backdrop, .tl-menu, .t-dropdown { display: none; }
+  </style>
+  <!-- Paint gate. Firefox has painted before the external stylesheets applied
+       on navigation, so the body stays invisible on the site's ground until
+       every local sheet has loaded (script below); a 1.5s timeout reveals it
+       regardless, so a failed sheet can never leave the page blank. -->
+  <style>
+    html { background: #121212; }
+    html:not(.css-ready) body { visibility: hidden; }
+  </style>
+  <script>document.documentElement.classList.add("css-ready");</script>
   <meta name="color-scheme" content="dark" />
 
   <title>Account · Libraries.dev</title>
@@ -29,21 +47,21 @@
   <meta property="og:title" content="Account · Libraries.dev" />
   <meta property="og:description" content="Manage your Libraries Pro plan — billing, team seats, and downloads." />
 
-  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta property="og:image" content="https://libraries.dev/assets/og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:image" content="https://libraries.dev/assets/og-image.jpg" />
   <meta name="twitter:title" content="Account · Libraries.dev" />
   <meta name="twitter:description" content="Manage your Libraries Pro plan — billing, team seats, and downloads." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    rel="preload"
-    as="style"
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
-  />
-  <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
     rel="stylesheet"
   />
+
   <link
     rel="preload"
     as="font"
@@ -60,7 +78,7 @@
        production. Installs a fetch() shim (before pro-client.js runs)
        that answers the Pro API from static data — so the whole normal
        code path renders signed-in and survives reloads, with no Worker
-       / magic-link login needed. Runs on localhost only.
+       / sign-in code needed. Runs on localhost only.
        ───────────────────────────────────────────────────────────── */
     (function () {
       var mock = new URLSearchParams(location.search).get("mock");
@@ -138,6 +156,15 @@
     /* Design tokens — light (default) and dark                      */
     /* ============================================================ */
     :root {
+      /* Pro accents share the CTA blue (#0071fc): the nav Get Pro pill and the
+         Pro chips are tints and inks of that one hue. */
+      --pro-tint-bg: rgba(0, 113, 252, 0.10);
+      --pro-tint-bg-hover: rgba(0, 113, 252, 0.16);
+      --pro-tint-ink: #0062d6;
+      /* Inline code in prose: a chip with its own hairline (ported by value;
+         this page links no shared stylesheet). */
+      --code-chip-bg: rgba(0, 0, 0, 0.04);
+      --code-chip-ring: rgba(0, 0, 0, 0.08);
       color-scheme: light;
 
       --bg: #fdfdfd;
@@ -370,6 +397,11 @@
     }
 
     html[data-theme="dark"] {
+      --pro-tint-bg: rgba(0, 113, 252, 0.18);
+      --pro-tint-bg-hover: rgba(0, 113, 252, 0.26);
+      --pro-tint-ink: #7db4ff;
+      --code-chip-bg: rgba(255, 255, 255, 0.05);
+      --code-chip-ring: rgba(255, 255, 255, 0.09);
       color-scheme: dark;
 
       --bg: #121212;
@@ -439,6 +471,11 @@
       min-height: 100dvh;
     }
 
+    /* Headings balance their lines so a short last line never dangles; body
+       text uses `pretty`, which guards the orphan without equalising lengths
+       (ported by value: this page links no shared stylesheet). */
+    h1, h2, h3, h4 { text-wrap: balance; }
+    p, li, figcaption, blockquote { text-wrap: pretty; }
     body {
       background: var(--bg);
       color: var(--text);
@@ -528,6 +565,47 @@
       color: var(--icon-color-muted);
       transition: color 0.15s ease;
     }
+    /* (ported by value from site.css: this page links no shared sheet) */
+    /* Signed-in avatar — the 3-dot "More" button swaps to the user's initial
+       (Figma 1425:38996: #2a2a2a chip, 12px Inter Medium initial, material ring).
+       The dots stay in the DOM; the class just hides them and shows the letter. */
+    /* Light: the same raised white control every other light surface here
+       wears (tabs, the active nav row, Copy prompt) - white on the black-6%
+       ring with dark ink - rather than a black disc, which read as a hole
+       in the white top bar. Dark keeps its own block below. */
+    .icon-btn--avatar {
+      background: #ffffff;
+      color: #17181c;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.1),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+    }
+    .icon-btn--avatar:hover { background: #fafafa; }
+    .icon-btn--avatar:active { background: #f1f1f1; }
+    html[data-theme="dark"] .icon-btn--avatar {
+      background: #2a2a2a;
+      color: #e8e8e8;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+    }
+    html[data-theme="dark"] .icon-btn--avatar:hover { background: #323232; }
+    html[data-theme="dark"] .icon-btn--avatar:active { background: #262626; }
+    .icon-btn--avatar svg { display: none !important; }
+    .nav-avatar-initial {
+      display: none;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 13px;
+      text-transform: uppercase;
+    }
+    .icon-btn--avatar .nav-avatar-initial { display: block; }
     .icon-btn svg.icon-x {
       width: 16px;
       height: 17px;
@@ -677,7 +755,7 @@
       align-items: center;
       justify-content: center;
       height: 36px;
-      padding: 0 13px;
+      padding: 0 14px;
       border-radius: 50px;
       font-family: var(--font-sans);
       font-size: 13px;
@@ -689,6 +767,32 @@
       transition: background-color 0.15s ease, color 0.15s ease;
       -webkit-tap-highlight-color: transparent;
     }
+    /* Small Pro tag riding the Studio pill (ported by value: this page links
+       no shared stylesheet). Matches site.css .nav-pill-pro. */
+    .nav-pill-pro {
+      display: inline-flex;
+      align-items: center;
+      height: 18px;
+      margin-left: 6px;
+      padding: 0 6px;
+      border-radius: 50px;
+      background: var(--pro-tint-bg);
+      color: var(--pro-tint-ink);
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 14px;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+    }
+
+    /* The Studio pill carries the Pro chip, whose own rounded fill reads as
+       padding — so its right side comes in to 9px against the 14px the text-only pills
+       carry on both sides. */
+    .nav-pill:has(.nav-pill-pro) { padding-right: 9px; }
     .nav-pill:hover { color: var(--text); background: rgba(0, 0, 0, 0.03); }
     html[data-theme="dark"] .nav-pill:hover { background: rgba(255, 255, 255, 0.06); }
     .nav-pill--active {
@@ -745,6 +849,7 @@
        the menu list but above page content; the top bar stays clickable
        on top of it (.site-nav-inner z-index). */
     .mobile-menu-backdrop {
+      display: block; /* explicit, so the first-paint guard's display:none is overridden */
       position: fixed;
       inset: 0;
       z-index: 1;
@@ -1406,14 +1511,13 @@
       line-height: 1.4;
       color: var(--text);
     }
+    /* No underline at rest; it appears on hover, like every other link. */
+    /* 50% of the text colour at rest, 100% on hover; color-mix with
+       currentColor keeps it theme-agnostic, like transitions.dev's. */
     .course-cta-headline a {
       color: inherit;
       text-decoration: underline;
       text-underline-offset: 2px;
-      /* 50% of the text color at rest, 100% on hover. Using
-         color-mix with currentColor keeps it theme-agnostic — the
-         underline tracks light/dark text without an explicit
-         dark-mode override. */
       text-decoration-color: color-mix(in srgb, currentColor 50%, transparent);
       transition: text-decoration-color 180ms ease;
     }
@@ -3657,15 +3761,16 @@
     .nav-get-pro {
       display: inline-flex; align-items: center; justify-content: center;
       height: 36px; padding: 0 16px; border: 0; border-radius: 50px;
-      background: rgba(0, 115, 255, 0.08); color: #0053e3;
+      background: var(--pro-tint-bg); color: var(--pro-tint-ink);
       font-family: var(--font-sans); font-size: 13px; font-weight: 500;
       text-decoration: none; white-space: nowrap; cursor: pointer;
       transition: background 150ms var(--ease-smooth-out);
       -webkit-tap-highlight-color: transparent;
     }
-    .nav-get-pro:hover { background: rgba(0, 115, 255, 0.14); }
-    html[data-theme="dark"] .nav-get-pro { background: rgba(85, 207, 255, 0.14); color: #7cd4ff; }
-    html[data-theme="dark"] .nav-get-pro:hover { background: rgba(85, 207, 255, 0.22); }
+    .nav-get-pro:hover { background: var(--pro-tint-bg-hover); }
+    /* The pill sets its own display, which outranks the UA's [hidden] rule —
+       pro-client.js hides it by attribute once a signed-in user is entitled. */
+    .nav-get-pro[hidden] { display: none; }
 
     /* ── 3-dot dropdown — exact Refine tool component ──────────── */
     :root {
@@ -3677,12 +3782,14 @@
     html[data-theme="dark"] { --tl-menu-line: #262626; }
     .pm-anchor { position: relative; display: inline-flex; }
     .tl-menu {
+      display: block; /* explicit, so the first-paint guard's display:none is overridden */
       position: absolute; top: calc(100% + 6px); right: 0; width: 240px; box-sizing: border-box;
       background: #fff; border-radius: 12px; padding: 6px; box-shadow: var(--menu-shadow); z-index: 120;
     }
     html[data-theme="dark"] .tl-menu { background: #202020;
       box-shadow: var(--menu-shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.03); }
     .t-dropdown {
+      display: block; /* explicit, so the first-paint guard's display:none is overridden */
       transform-origin: top right; transform: scale(var(--dropdown-pre-scale)); opacity: 0; pointer-events: none;
       transition: transform var(--dropdown-open-dur) var(--dropdown-ease), opacity var(--dropdown-open-dur) var(--dropdown-ease);
       will-change: transform, opacity;
@@ -4356,9 +4463,19 @@
       transition: opacity var(--acc-expand) var(--acc-ease), filter var(--acc-expand) var(--acc-ease);
     }
     .t-acc-panel-inner p { margin: 0 0 16px; padding-right: 28px; font-size: 14px; line-height: 22px; color: var(--text-muted); }
-    .t-acc-panel-inner code { font-family: var(--font-mono); font-size: 12px; line-height: 18px; padding: 1px 6px; border-radius: 6px; background: rgba(0, 0, 0, 0.04); color: var(--text); }
-    html[data-theme="dark"] .t-acc-panel-inner code { background: rgba(255, 255, 255, 0.06); }
-    .t-acc-panel-inner a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
+    .t-acc-panel-inner code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 18px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: var(--code-chip-bg);
+      box-shadow: inset 0 0 0 1px var(--code-chip-ring);
+      color: var(--text);
+    }
+    /* Inline links: a 50% underline at rest that reaches full ink on hover, like transitions.dev. */
+    .t-acc-panel-inner a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, currentColor 50%, transparent); transition: text-decoration-color 180ms ease; }
+    .t-acc-panel-inner a:hover { text-decoration-color: currentColor; }
     @media (prefers-reduced-motion: reduce) {
       .t-acc-panel, .t-acc-panel-inner, .t-acc-chevron { transition: none !important; }
     }
@@ -4532,6 +4649,12 @@
     }
     .settings-label { font-size: 13px; color: var(--text); }
     .settings-value { font-size: 13px; color: var(--text-muted, #6c6c6c); }
+    /* A row whose label needs a sentence of explanation under it. */
+    .settings-row:has(.settings-sub) { align-items: flex-start; padding: 12px 0; }
+    .settings-sub {
+      display: block; margin-top: 3px; max-width: 52ch;
+      font-size: 12px; line-height: 1.5; color: var(--text-muted, #6c6c6c);
+    }
 
     .account-note { margin: 16px 0 0; font-size: 13px; line-height: 1.4; }
     .account-note[data-kind="ok"] { color: #16a34a; }
@@ -4710,8 +4833,9 @@
             <span class="brand-word"><span class="brand-word-strong">Libraries</span><span class="brand-word-dim">.dev</span></span>
           </a>
           <nav class="site-nav-menu" aria-label="Primary">
-            <a class="nav-pill" href="/#components">Libraries</a>
-            <a class="nav-pill" href="/studio.html">Studio</a>
+            <a class="nav-pill" href="/beam.html">Libraries</a>
+            <a class="nav-pill" href="/how-to-use.html">How to use</a>
+            <a class="nav-pill" href="/studio.html">Studio <span class="nav-pill-pro">Pro</span></a>
           </nav>
         </div>
         <div class="site-nav-right">
@@ -4730,23 +4854,9 @@
             </svg>
             <span class="pill-label" id="gh-stars-count">—</span>
           </a>
-          <a
-            class="icon-btn"
-            href="https://x.com/jakubantalik"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="X (Twitter)"
-          >
-            <svg class="icon-x" aria-hidden="true" viewBox="0 0 16 17" xmlns="http://www.w3.org/2000/svg">
-              <path
-                fill="currentColor"
-                d="M12.4041 1.39726H14.6953L9.69087 7.2591L15.5781 15.2368H10.9696L7.35741 10.3996L3.22921 15.2368H0.934687L6.28641 8.96575L0.642598 1.39726H5.36795L8.62962 5.81859L12.4041 1.39726ZM11.5992 13.8329H12.8682L4.67667 2.72798H3.31359L11.5992 13.8329Z"
-              />
-            </svg>
-          </a>
           <div class="pm-anchor" id="more-anchor">
             <button type="button" class="icon-btn" id="more-btn" aria-label="More" aria-haspopup="menu" aria-expanded="false">
-              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block">
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 8C6.66667 7.26362 7.26362 6.66667 8 6.66667C8.73638 6.66667 9.33333 7.26362 9.33333 8C9.33333 8.73638 8.73638 9.33333 8 9.33333C7.26362 9.33333 6.66667 8.73638 6.66667 8Z" fill="currentColor"/>
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 3.33333C6.66667 2.59695 7.26362 2 8 2C8.73638 2 9.33333 2.59695 9.33333 3.33333C9.33333 4.06971 8.73638 4.66667 8 4.66667C7.26362 4.66667 6.66667 4.06971 6.66667 3.33333Z" fill="currentColor"/>
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 12.6667C6.66667 11.9303 7.26362 11.3333 8 11.3333C8.73638 11.3333 9.33333 11.9303 9.33333 12.6667C9.33333 13.403 8.73638 14 8 14C7.26362 14 6.66667 13.403 6.66667 12.6667Z" fill="currentColor"/>
@@ -4781,9 +4891,10 @@
       <div class="mobile-menu-backdrop" id="mobile-menu-backdrop"></div>
       <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile">
         <ul class="mobile-menu-list">
-          <li><a class="mobile-menu-link mobile-menu-link--1" href="/#components">Libraries</a></li>
-          <li><a class="mobile-menu-link mobile-menu-link--2" href="/studio.html">Studio</a></li>
-          <li><a class="mobile-menu-link mobile-menu-link--3 mobile-menu-link--pro" href="/pro.html">Get Pro</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--1" href="/beam.html">Libraries</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--2" href="/how-to-use.html">How to use</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--3" href="/studio.html">Studio</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--4 mobile-menu-link--pro" href="/pro.html">Get Pro</a></li>
         </ul>
         <a class="mobile-menu-cta" id="mobile-signin" href="/pro.html">Sign in</a>
       </nav>
@@ -4840,6 +4951,13 @@
             <div class="settings-row">
               <span class="settings-label">Email</span>
               <span class="settings-value" id="acc-email"></span>
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">
+                Studio agent analytics
+                <span class="settings-sub" id="acc-analytics-sub">Your Studio agent requests are stored anonymised, with personal details removed, to improve the agent. They carry no identifier and are deleted after three months.</span>
+              </span>
+              <button type="button" class="row-btn" id="acc-analytics">Turn off</button>
             </div>
             <div class="settings-row">
               <span class="settings-label">Log out of all devices</span>
@@ -4917,7 +5035,7 @@
                   <code id="acc-cmd-skill">npx libraries-pro skill</code>
                   <button type="button" class="card-copy" aria-label="Copy Pro skill install command" data-copy-target="#acc-cmd-skill">
                     <svg class="icon-copy" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
-                    <svg class="icon-check" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                    <svg class="icon-check" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.46889L6.26923 11.58L12.5 4.58" /></svg>
                   </button>
                 </div>
                 <p class="skill-section-note">Installs the Libraries Pro agent skill (all five libraries, React, TypeScript) into <code>~/.claude/skills/libraries-pro/</code>.</p>
@@ -4927,7 +5045,7 @@
                   <code id="acc-cmd-recipes">npx libraries-pro add --pro</code>
                   <button type="button" class="card-copy" aria-label="Copy Pro recipes install command" data-copy-target="#acc-cmd-recipes">
                     <svg class="icon-copy" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
-                    <svg class="icon-check" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                    <svg class="icon-check" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.46889L6.26923 11.58L12.5 4.58" /></svg>
                   </button>
                 </div>
                 <p class="skill-section-note">Copies every Pro preset and recipe straight into your project's <code>./libraries/</code>.</p>
@@ -4955,8 +5073,8 @@
         <nav class="footer-cols" aria-label="Footer">
           <div class="footer-col">
             <p class="footer-col-title">Libraries</p>
-            <a href="/beam.html">Beam</a>
-            <a href="/orbs.html">Orb</a>
+            <a href="/beam.html">Border beam</a>
+            <a href="/orbs.html">Thinking orbs</a>
             <a href="/gooey.html">Gooey</a>
             <a href="/metal.html">Metal</a>
             <a href="/image.html">Image</a>
@@ -4965,6 +5083,7 @@
             <p class="footer-col-title">Product</p>
             <a href="/">Home</a>
             <a href="/studio.html">Studio</a>
+            <a href="/how-to-use.html">How to use</a>
             <a href="/pro.html">Get Pro</a>
           </div>
           <div class="footer-col">
@@ -5323,6 +5442,30 @@
       el("acc-cancel").addEventListener("click", portal);
       el("acc-portal").addEventListener("click", portal);
 
+      // Studio agent analytics opt-out. Kept in this browser (no account
+      // field): the record it governs carries no identifier, so there is
+      // nothing server-side to attach the choice to. The Studio reads this
+      // same key when it sends a turn (sites/home/src/studio/controls.tsx).
+      var ANALYTICS_KEY = "ldev:studio:agent-analytics";
+      function analyticsOn() {
+        try { return localStorage.getItem(ANALYTICS_KEY) !== "off"; } catch (e) { return true; }
+      }
+      function paintAnalytics() {
+        var on = analyticsOn();
+        el("acc-analytics").textContent = on ? "Turn off" : "Turn on";
+        el("acc-analytics-sub").textContent = on
+          ? "Your Studio agent requests are stored anonymised, with personal details removed, to improve the agent. They carry no identifier and are deleted after three months."
+          : "Your Studio agent requests are not stored. Only this browser remembers the choice.";
+      }
+      paintAnalytics();
+      el("acc-analytics").addEventListener("click", function () {
+        try {
+          if (analyticsOn()) localStorage.setItem(ANALYTICS_KEY, "off");
+          else localStorage.removeItem(ANALYTICS_KEY);
+        } catch (e) { /* private mode — nothing to persist */ }
+        paintAnalytics();
+      });
+
       el("acc-logout-all").addEventListener("click", function () {
         TP.logout(true).then(function () { location.href = "/"; });
       });
@@ -5372,5 +5515,7 @@
       // handler (same as the install page) — no bespoke copy wiring needed here.
     });
   </script>
+  <!-- GoatCounter: privacy-friendly page views, no cookies. -->
+  <script data-goatcounter="https://libraries.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>

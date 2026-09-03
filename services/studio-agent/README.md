@@ -29,6 +29,14 @@ binding = "STUDIO_USAGE"
 id = "<namespace id>"
 ```
 
+   Optionally, for prompt analytics:
+
+```toml
+[[analytics_engine_datasets]]
+binding = "STUDIO_ANALYTICS"
+dataset = "studio_agent_prompts"
+```
+
 4. Route it, passing the Worker's own session resolver:
 
 ```ts
@@ -105,3 +113,30 @@ Write a `LibrarySpec` for it, add it to `SPECS`, and pass `agent={{…}}` from
 that library's studio component the way
 [beam.tsx](../../sites/home/src/studio/beam.tsx) does. Until then its Agent tab
 says the controls aren't reachable, which is true, instead of pretending.
+
+## Prompt analytics and the GDPR
+
+With `STUDIO_ANALYTICS` bound, every turn writes one Workers Analytics Engine
+point so we can see what people ask the agent for and where it falls short.
+It is built to not be personal data, not merely to protect it:
+
+- **No identifier.** No user id, session, IP, or hashed stand-in — nothing
+  ties a point to a person or two points to each other. A pseudonymous id
+  would still be personal data; no id is not.
+- **Redacted text, 300 characters.** Emails, URLs, phone numbers, long digit
+  runs, @handles and key-shaped tokens are replaced before the write. The
+  agent's reply, the transcript and any rebuilt core are never written.
+- **Opt-out, honoured first.** A `Sec-GPC: 1` or `DNT: 1` header, or
+  `analytics: false` in the request (the panel's own opt-out, kept in the
+  browser), skips the point entirely — the text is not even redacted.
+- **Retention** is Analytics Engine's fixed window (three months at the time
+  of writing). There is no per-person query because there is nothing to
+  query by, which is also why there is no per-person delete.
+
+Per point: library, outcome (`applied` / `declined` / `core` / `error`),
+counts of applied and rejected parameters, whether a core was rebuilt and
+whether the previous one had failed, latency and cost.
+
+Say so in the privacy policy: "When you use the Studio agent, the text of
+your request is stored for three months, anonymised and with personal details
+removed, to improve the agent. You can turn this off in the Agent panel."

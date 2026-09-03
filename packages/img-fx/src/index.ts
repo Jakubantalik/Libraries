@@ -44,6 +44,8 @@ export {
   setInstanceStrength,
   setInstanceVisible,
   setMaxDpr,
+  setSharedFragmentShader,
+  IMAGE_FRAGMENT_SHADER,
   updateInstanceSize,
   type CreateInstanceOptions,
   type CreateRevealOptions,

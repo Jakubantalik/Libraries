@@ -16,6 +16,9 @@ export default defineConfig({
     rollupOptions: {
       input: {
         index: resolve(__dirname, "index.html"),
+        "how-to-use": resolve(__dirname, "how-to-use.html"),
+        introduction: resolve(__dirname, "introduction.html"),
+        accessibility: resolve(__dirname, "accessibility.html"),
         beam: resolve(__dirname, "beam.html"),
         orbs: resolve(__dirname, "orbs.html"),
         gooey: resolve(__dirname, "gooey.html"),

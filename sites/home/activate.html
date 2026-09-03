@@ -3,6 +3,24 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- First-paint guard. Firefox has painted a frame before the stylesheets
+       applied on cached navigations (brand mark at full width, skip link in
+       view, menus open). These few rules make that frame harmless; site.css
+       overrides every one of them once it lands. -->
+  <style>
+    .skip-link { position: absolute; left: -9999px; }
+    .brand-mark svg, .footer-brand-logo svg { width: 22px; height: 14px; }
+    .mobile-menu, .mobile-menu-backdrop, .tl-menu, .t-dropdown { display: none; }
+  </style>
+  <!-- Paint gate. Firefox has painted before the external stylesheets applied
+       on navigation, so the body stays invisible on the site's ground until
+       every local sheet has loaded (script below); a 1.5s timeout reveals it
+       regardless, so a failed sheet can never leave the page blank. -->
+  <style>
+    html { background: #121212; }
+    html:not(.css-ready) body { visibility: hidden; }
+  </style>
+  <script>document.documentElement.classList.add("css-ready");</script>
   <meta name="robots" content="noindex" />
   <title>Sign in · Libraries.dev</title>
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
@@ -12,8 +30,8 @@
       • Plain sign-in:    /activate.html
       • Checkout return:  /activate.html?checkout=success&session_id=...
       • Device activate:  /activate.html?code=WXYZ-WXYZ   (from `npx libraries-pro skill` / `add --pro`)
-    Redirect states from the API's magic-link callback:
-      ?signed_in=1 · ?device=approved · ?device=denied · ?error=link_invalid
+    Redirect states (device-approval flow):
+      ?signed_in=1 · ?device=approved · ?device=denied
   -->
   <link rel="preload" href="/assets/fonts/Saans-Medium.woff2" as="font" type="font/woff2" crossorigin />
   <style>
@@ -242,8 +260,8 @@
       line-height: 16px;
       color: #17181c;
     }
-    .card-foot a { color: inherit; font-weight: 500; text-decoration: none; }
-    .card-foot a:hover { text-decoration: underline; }
+    .card-foot a { color: inherit; font-weight: 500; text-decoration: underline; text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, currentColor 50%, transparent); transition: text-decoration-color 180ms ease; }
+    .card-foot a:hover { text-decoration-color: currentColor; }
     html[data-theme="dark"] .card-foot { color: #e5e5e5; }
 
     .card-note { margin: 0; font-size: 13px; line-height: 1.4; }
@@ -321,12 +339,12 @@
 
     <div class="signin-card">
       <p class="card-intro" id="a-desc">Enter your email you used at checkout.
-        <span class="muted">We’ll send you a sign-in link.</span></p>
+        <span class="muted">We’ll send you a sign-in code.</span></p>
 
       <!-- Device code display (device flow) -->
       <span class="device-code" id="a-code" hidden></span>
 
-      <!-- Sign-in form (email → magic link) -->
+      <!-- Sign-in form (email → one-time code) -->
       <form id="a-signin" novalidate>
         <div class="field">
           <label class="field-label" for="a-email">Your email</label>
@@ -335,13 +353,13 @@
           <p class="field-error" id="a-email-error" role="alert" hidden>Please enter a valid email.</p>
         </div>
         <div style="height:24px"></div>
-        <button class="btn-primary" type="submit" id="a-signin-btn">Send login link</button>
+        <button class="btn-primary" type="submit" id="a-signin-btn">Send code</button>
       </form>
 
-      <!-- Typed sign-in code (shown after a link is sent; rescues in-app-browser opens) -->
+      <!-- Typed sign-in code (shown once the email is sent) -->
       <form id="a-codeform" novalidate hidden>
         <div class="field">
-          <label class="field-label" for="a-signin-code">Or enter the code from the email</label>
+          <label class="field-label" for="a-signin-code">Enter the code from the email</label>
           <input class="field-input" type="text" id="a-signin-code" placeholder="XXXX-XXXX"
                  autocomplete="one-time-code" spellcheck="false" style="text-transform:uppercase" />
           <p class="field-error" id="a-code-error" role="alert" hidden>That code didn’t work — check it and try again.</p>
@@ -376,8 +394,8 @@
         <nav class="footer-cols" aria-label="Footer">
           <div class="footer-col">
             <p class="footer-col-title">Libraries</p>
-            <a href="/beam.html">Beam</a>
-            <a href="/orbs.html">Orb</a>
+            <a href="/beam.html">Border beam</a>
+            <a href="/orbs.html">Thinking orbs</a>
             <a href="/gooey.html">Gooey</a>
             <a href="/metal.html">Metal</a>
             <a href="/image.html">Image</a>
@@ -386,6 +404,7 @@
             <p class="footer-col-title">Product</p>
             <a href="/">Home</a>
             <a href="/studio.html">Studio</a>
+            <a href="/how-to-use.html">How to use</a>
             <a href="/pro.html">Get Pro</a>
           </div>
           <div class="footer-col">
@@ -444,8 +463,7 @@
       emailInput.addEventListener("input", function () { setEmailError(false); });
       function show(node, on) { if (node) node.hidden = !on; }
 
-      // Redirect states from the magic-link callback.
-      if (q.get("error") === "link_invalid") setNote("That sign-in link was invalid or expired. Try again below.", "err");
+      // Redirect states from the device-approval flow.
       if (q.get("device") === "approved") setNote("Device approved — you can return to your terminal.", "ok");
       if (q.get("device") === "denied") setNote("This account doesn't have an active Pro plan, so the device wasn't approved.", "err");
 
@@ -466,17 +484,18 @@
                       "If you bought Pro with a different address, use that one.", "err");
               return;
             }
-            setNote("Check your email — click the link, or type the code below.", "ok");
+            // One question per step: the email form gives way to the code form.
+            setNote("We sent a code to " + email + " — enter it below.", "ok");
+            signinForm.hidden = true;
             var cf = document.getElementById("a-codeform");
             if (cf) { cf.hidden = false; document.getElementById("a-signin-code").focus(); }
           })
-          .catch(function () { setNote("Couldn't send the link. Please try again.", "err"); })
-          .finally(function () { signinBtn.disabled = false; signinBtn.textContent = "Send login link"; });
+          .catch(function () { setNote("Couldn't send the code. Please try again.", "err"); })
+          .finally(function () { signinBtn.disabled = false; signinBtn.textContent = "Send code"; });
       });
 
-      // Typed-code sign-in: works even when the emailed link opened in a mail
-      // app's in-app browser (the cookie lands there, not here). The code signs
-      // THIS browser in, and carries the same device/invite side effects.
+      // Typed-code sign-in — the only path: the code signs THIS browser in and
+      // carries the same device/invite side effects.
       document.getElementById("a-codeform").addEventListener("submit", function (e) {
         e.preventDefault();
         var cInput = document.getElementById("a-signin-code");
@@ -494,7 +513,7 @@
           .then(function (r) {
             if (!r || !r.ok) {
               cErr.textContent = r && r.error === "too_many_attempts"
-                ? "Too many tries — request a fresh link and use its new code."
+                ? "Too many tries — request a fresh code."
                 : "That code didn’t work — check it and try again.";
               cErr.hidden = false;
               cInput.classList.remove("is-shaking"); void cInput.offsetWidth; cInput.classList.add("is-shaking");
@@ -593,5 +612,7 @@
       });
     });
   </script>
+  <!-- GoatCounter: privacy-friendly page views, no cookies. -->
+  <script data-goatcounter="https://libraries.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>

@@ -253,6 +253,14 @@ export interface ImageGenerationProps extends Omit<HTMLAttributes<HTMLDivElement
   /** Freezes the shader and the auto-reveal scheduler. @default false */
   paused?: boolean;
 
+  /**
+   * Escape hatch: a replacement fragment shader (GLSL 1.00 syntax, as the
+   * bundled one — `gl_FragColor`, `texture2D`). Every uniform the engine
+   * uploads keeps its name; the shader is free to interpret them however it
+   * likes. The material is shared, so this applies page-wide while set.
+   */
+  fragmentShader?: string;
+
   /** Phase event hook for the auto-reveal cycle. */
   onCycle?: (event: ImageGenerationCycleEvent) => void;
 

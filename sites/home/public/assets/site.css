@@ -5,7 +5,7 @@
 /* blocks below always apply.                                   */
 /* ============================================================ */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
   --bg: #fdfdfd;
   --text: #0d0d0d;
@@ -41,6 +41,15 @@
   --muted: #5e6073;
 
   --material-bg: #ffffff;
+  /* Inline code in prose: a chip with its own hairline, so a term like
+     prefers-reduced-motion reads as a key rather than a highlight. */
+  /* Pro accents share the CTA blue (#0071fc): the nav Get Pro pill and the
+     Pro chips are tints and inks of that one hue. */
+  --pro-tint-bg: rgba(0, 113, 252, 0.10);
+  --pro-tint-bg-hover: rgba(0, 113, 252, 0.16);
+  --pro-tint-ink: #0062d6;
+  --code-chip-bg: rgba(0, 0, 0, 0.04);
+  --code-chip-ring: rgba(0, 0, 0, 0.08);
   --material-shadow:
     0 4px 42px 0 rgba(0, 0, 0, 0.06),
     0 2px 6px 0 rgba(0, 0, 0, 0.05),
@@ -82,6 +91,10 @@
   --blur-small:  2px;
   --blur-medium: 3px;
   --blur-large:  8px;
+
+  /* Card resize (transitions.dev 01-card-resize). */
+  --resize-dur: 300ms;
+  --resize-ease: cubic-bezier(0.22, 1, 0.36, 1);
 
   /* Modal timing (used by the command palette). */
   --p7-open-dur: var(--duration-fast);
@@ -129,6 +142,11 @@ html[data-theme="dark"] {
   --muted: #767676;
 
   --material-bg: #181818;
+  --pro-tint-bg: rgba(0, 113, 252, 0.18);
+  --pro-tint-bg-hover: rgba(0, 113, 252, 0.26);
+  --pro-tint-ink: #7db4ff;
+  --code-chip-bg: rgba(255, 255, 255, 0.05);
+  --code-chip-ring: rgba(255, 255, 255, 0.09);
   --material-shadow:
     0 1px 3px 0 rgba(0, 0, 0, 0.04),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
@@ -151,12 +169,22 @@ html[data-theme="dark"] {
   --dropdown-open-dur: 250ms; --dropdown-close-dur: 150ms;
   --dropdown-pre-scale: 0.97; --dropdown-closing-scale: 0.99;
   --dropdown-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Sliding-tab pills, values taken from transitions.dev's detail tabs. */
+  --p16-bar-bg: #f1f1f1; --p16-pill-bg: #ffffff;
+  --p16-text-muted: rgba(15, 15, 15, 0.8); --p16-text-active: #0f0f0f;
+  --p16-dur: 250ms; --p16-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Sliding tabs read the same pair (transitions.dev tabs-sliding). */
+  --tabs-dur: var(--p16-dur); --tabs-ease: var(--p16-ease);
   --tl-menu-line: #f0f0f0; --nav-line: #eeeeee;
 }
 html[data-theme="dark"] {
   --accent: #55cfff; --accent-hover: #74d8ff;
   --accent-soft: rgba(85, 207, 255, 0.12); --accent-soft-hover: rgba(85, 207, 255, 0.2);
   --menu-shadow: 0 0 0 1px rgba(0,0,0,0.06), 0 2px 6px rgba(0,0,0,0.05), 0 4px 42px rgba(0,0,0,0.24);
+  /* Dark counterparts: the bar recedes, the pill lifts. Same relationship
+     transitions.dev has in light, inverted for this site's one theme. */
+  --p16-bar-bg: rgba(255, 255, 255, 0.05); --p16-pill-bg: #2a2a2a;
+  --p16-text-muted: rgba(237, 237, 237, 0.55); --p16-text-active: #ffffff;
   --tl-menu-line: #262626; --nav-line: rgba(255, 255, 255, 0.08);
 }
 
@@ -191,7 +219,17 @@ body {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+/* Headings balance their lines so a short last line never dangles; body text
+   uses `pretty`, which only guards the orphan without equalising lengths.
+   `balance` is capped at six lines in Chromium, so it is deliberately kept
+   off paragraphs, where it would be silently ignored. */
+h1, h2, h3, h4 { text-wrap: balance; }
+p, li, figcaption, blockquote { text-wrap: pretty; }
+
 html {
+  /* In-page anchors glide rather than jump. Honoured site-wide; the
+     reduced-motion block below puts the instant jump back. */
+  scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-smooth: always;
@@ -264,11 +302,53 @@ html {
   color: var(--icon-color-muted);
   transition: color 0.15s ease;
 }
+/* Signed-in avatar — the 3-dot "More" button swaps to the user's initial
+   (Figma 1425:38996: #2a2a2a chip, 12px Inter Medium initial, material ring).
+   The dots stay in the DOM; the class just hides them and shows the letter. */
+/* Light: the same raised white control every other light surface here
+   wears (tabs, the active nav row, Copy prompt) - white on the black-6%
+   ring with dark ink - rather than a black disc, which read as a hole
+   in the white top bar. Dark keeps its own block below. */
+.icon-btn--avatar {
+  background: #ffffff;
+  color: #17181c;
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.04),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.1),
+    inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+}
+.icon-btn--avatar:hover { background: #fafafa; }
+.icon-btn--avatar:active { background: #f1f1f1; }
+html[data-theme="dark"] .icon-btn--avatar {
+  background: #2a2a2a;
+  color: #e8e8e8;
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+    inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+}
+html[data-theme="dark"] .icon-btn--avatar:hover { background: #323232; }
+html[data-theme="dark"] .icon-btn--avatar:active { background: #262626; }
+.icon-btn--avatar svg { display: none !important; }
+.nav-avatar-initial {
+  display: none;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 13px;
+  text-transform: uppercase;
+}
+.icon-btn--avatar .nav-avatar-initial { display: block; }
+
 .icon-btn svg.icon-x {
   width: 16px;
   height: 17px;
 }
 .icon-btn:hover svg { color: var(--icon-color); }
+
 
 .icon-btn-pill {
   display: inline-flex;
@@ -381,6 +461,10 @@ html {
   to   { stroke-dashoffset: -200; }
 }
 @media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
   .brand, .brand-mark { transition: none; }
   .brand:hover { transform: none; }
   .brand:hover .brand-draw, .footer-brand-logo:hover .brand-draw { animation: none; }
@@ -404,7 +488,7 @@ html {
   align-items: center;
   justify-content: center;
   height: 36px;
-  padding: 0 13px;
+  padding: 0 14px;
   border-radius: 50px;
   font-family: var(--font-sans);
   font-size: 13px;
@@ -416,6 +500,27 @@ html {
   transition: background-color 0.15s ease, color 0.15s ease;
   -webkit-tap-highlight-color: transparent;
 }
+/* Small Pro tag riding the Studio pill — the Studio app's own .st-top-chip
+   at nav scale: same blue wash, ink and raised-surface ring. */
+.nav-pill-pro {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 50px;
+  background: var(--pro-tint-bg);
+  color: var(--pro-tint-ink);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 14px;
+  box-shadow: var(--material-shadow);
+}
+
+/* The Studio pill carries the Pro chip, whose own rounded fill reads as
+   padding — so its right side comes in to 9px against the 14px the text-only pills
+   carry on both sides. */
+.nav-pill:has(.nav-pill-pro) { padding-right: 9px; }
 .nav-pill:hover { color: var(--text); background: rgba(0, 0, 0, 0.03); }
 html[data-theme="dark"] .nav-pill:hover { background: rgba(255, 255, 255, 0.06); }
 .nav-pill--active {
@@ -464,6 +569,7 @@ html[data-theme="dark"] .nav-pill--active { background: rgba(255, 255, 255, 0.06
 
 /* ─── Mobile menu overlay ─────────────────────────────────── */
 .mobile-menu-backdrop {
+  display: block; /* explicit, so the first-paint guard's display:none is overridden */
   position: fixed;
   inset: 0;
   z-index: 1;
@@ -542,7 +648,7 @@ body.menu-open .mobile-menu { pointer-events: auto; }
 .mobile-menu-link--6 { transition-delay: 200ms; }
 .mobile-menu-link--7 { transition-delay: 240ms; }
 .mobile-menu-link--pro { color: #0053e3; }
-html[data-theme="dark"] .mobile-menu-link--pro { color: #7cd4ff; }
+html[data-theme="dark"] .mobile-menu-link--pro { color: var(--pro-tint-ink); }
 .mobile-menu-link--pro[data-state="account"] { color: var(--text); }
 html[data-theme="dark"] .mobile-menu-link--pro[data-state="account"] { color: var(--text); }
 body.menu-open .mobile-menu-link {
@@ -634,14 +740,15 @@ html[data-theme="dark"] .nav-search-kbd { color: rgba(154, 154, 154, 0.7); }
 .nav-get-pro {
   display: inline-flex; align-items: center; justify-content: center;
   height: 36px; padding: 0 16px; border: 0; border-radius: 50px;
-  background: rgba(0, 115, 255, 0.08); color: #0053e3;
+  background: var(--pro-tint-bg); color: var(--pro-tint-ink);
   font-family: var(--font-sans); font-size: 13px; font-weight: 500;
   text-decoration: none; white-space: nowrap; cursor: pointer;
   transition: background 150ms var(--nav-ease); -webkit-tap-highlight-color: transparent;
 }
-.nav-get-pro:hover { background: rgba(0, 115, 255, 0.14); }
-html[data-theme="dark"] .nav-get-pro { background: rgba(85, 207, 255, 0.14); color: #7cd4ff; }
-html[data-theme="dark"] .nav-get-pro:hover { background: rgba(85, 207, 255, 0.22); }
+.nav-get-pro:hover { background: var(--pro-tint-bg-hover); }
+/* The pill sets its own display, which outranks the UA's [hidden] rule —
+   pro-client.js hides it by attribute once a signed-in user is entitled. */
+.nav-get-pro[hidden] { display: none; }
 .nav-get-pro[data-state="account"] { background: var(--chip-bg); color: var(--text); }
 .nav-get-pro[data-state="account"]:hover { background: var(--chip-bg-hover); }
 html[data-theme="dark"] .nav-get-pro[data-state="account"] { background: var(--chip-bg); color: var(--text); }
@@ -649,12 +756,14 @@ html[data-theme="dark"] .nav-get-pro[data-state="account"]:hover { background: v
 
 .pm-anchor { position: relative; display: inline-flex; }
 .tl-menu {
+  display: block; /* explicit, so the first-paint guard's display:none is overridden */
   position: absolute; top: calc(100% + 6px); right: 0; width: 240px; box-sizing: border-box;
   background: #fff; border-radius: 12px; padding: 6px; box-shadow: var(--menu-shadow); z-index: 120;
 }
 html[data-theme="dark"] .tl-menu { background: #202020;
   box-shadow: var(--menu-shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.03); }
 .t-dropdown {
+  display: block; /* explicit, so the first-paint guard's display:none is overridden */
   transform-origin: top right; transform: scale(var(--dropdown-pre-scale)); opacity: 0; pointer-events: none;
   transition: transform var(--dropdown-open-dur) var(--dropdown-ease), opacity var(--dropdown-open-dur) var(--dropdown-ease);
   will-change: transform, opacity;
@@ -871,12 +980,22 @@ html[data-theme="dark"] .skill-btn--secondary:active {
 /* ─── Cards grid ──────────────────────────────────────────── */
 .cards {
   width: 100%;
+  max-width: 1008px;
+  margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(3, 320px);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   justify-content: center;
   gap: 24px;
   align-items: start;
 }
+/* Beam and Orb lead on a row of two; the other three follow at the old
+   width. The cards drop their fixed 320px so the tracks size them. */
+.cards > .lib-card { width: auto; }
+.cards > .lib-card:nth-child(-n + 2) { grid-column: span 3; }
+.cards > .lib-card:nth-child(n + 3) { grid-column: span 2; }
+/* The stage is absolutely placed, so it needs both insets to follow a
+   card that is no longer a fixed width. */
+.cards > .lib-card .card-stage { right: 12px; width: auto; max-width: none; }
 .card[hidden] { display: none; }
 
 /* ─── Card ────────────────────────────────────────────────── */
@@ -892,7 +1011,7 @@ html[data-theme="dark"] .skill-btn--secondary:active {
     var(--card-shadow),
     inset 0 0 0 1px var(--card-border),
     inset 0 -1px 0 0 var(--card-border);
-  transition: box-shadow 0.15s ease, background-color 0.2s ease;
+  transition: box-shadow 0.15s ease, background-color 0.15s ease;
 }
 
 .card:hover {
@@ -908,23 +1027,37 @@ html[data-theme="dark"] .card {
     inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
     inset 0 0 0 1px rgba(196, 196, 196, 0.07);
 }
+/* Hover lifts the fill to #1c1c1c, exactly what the hero tiles do - the
+   0.5% mix it used before was a change no eye could catch. */
 html[data-theme="dark"] .card:hover {
-  background-color: color-mix(in srgb, #181818 99.5%, #fff 0.5%);
+  background-color: #1c1c1c;
 }
 
-/* The testimonial and how-to-use cards wear the gallery card's own fill and
-   shadow, so the homepage reads as one surface family rather than three
-   near-misses. Fill and shadow only — unlike .card these size themselves,
-   and they are laid out by their own grids in index.html. */
+/* The testimonial cards take Figma 1411:37077: a #1a1a1a fill under a
+   single hairline ring with a brighter top edge, and no drop shadow.
+   Fill and shadow only; unlike .card they size themselves and are laid
+   out by their own grid in index.html. */
 .pro-quote,
+/* The accessibility/docs statement cards wear the same quote-card material,
+   so every card family on the site reads as one. */
+html[data-theme="dark"] .docs-card {
+  background-color: #1a1a1a;
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.02),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+/* The how-to-use steps wear the gallery card's surface instead, so the
+   two card families on the homepage read as one. Surface only — the
+   steps size themselves from their own grid. */
 .howto-step {
   background-color: var(--card-bg);
   box-shadow:
     var(--card-shadow),
     inset 0 0 0 1px var(--card-border),
     inset 0 -1px 0 0 var(--card-border);
+  transition: box-shadow 0.15s ease, background-color 0.2s ease;
 }
-html[data-theme="dark"] .pro-quote,
 html[data-theme="dark"] .howto-step {
   background-color: #181818;
   box-shadow:
@@ -933,6 +1066,25 @@ html[data-theme="dark"] .howto-step {
     inset 0 0 0 1px rgba(0, 0, 0, 0.06),
     inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
     inset 0 0 0 1px rgba(196, 196, 196, 0.07);
+}
+/* The gallery card's inner panel: its stage sits 12px in on a darker fill
+   behind its own hairline, so the card reads as a panel within a panel.
+   The steps have no stage element, so the panel is drawn directly and the
+   content rides on top of it. */
+.howto-step { position: relative; }
+.howto-step::before {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border-radius: 14px;
+  background: var(--stage-bg);
+  box-shadow: inset 0 0 0 1px var(--stage-border);
+  pointer-events: none;
+  z-index: 0;
+}
+html[data-theme="dark"] .howto-step::before {
+  background: #131313;
+  box-shadow: inset 0 0 0 1px rgba(191, 192, 203, 0.08);
 }
 
 .card-stage {
@@ -962,8 +1114,13 @@ html[data-theme="dark"] .howto-step {
 html[data-theme="dark"] .card-stage {
   background: #131313;
 }
+/* The hero tile's stage ring, to the value: a white-2% lift under the
+   191/192/203 hairline. A single 8% pass read as no border at all
+   against the video inside. */
 html[data-theme="dark"] .card-stage::after {
-  box-shadow: inset 0 0 0 1px rgba(191, 192, 203, 0.08);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02),
+    inset 0 0 0 1px rgba(191, 192, 203, 0.1);
 }
 
 .card-meta {
@@ -1110,8 +1267,11 @@ html[data-theme="dark"] .card-copy:active {
   z-index: 10;
   opacity: 0;
   visibility: hidden;
+  /* Opens and closes on a 3px cross blur, not a plain fade. */
+  filter: blur(var(--blur-medium));
   transition:
     opacity 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 150ms cubic-bezier(0.22, 1, 0.36, 1),
     visibility 0s linear 150ms;
   background: #ffffff;
   color: #17181c;
@@ -1138,13 +1298,16 @@ html[data-theme="dark"] .card-copy-tooltip {
   .card-copy[data-copied="true"] .card-copy-tooltip {
     opacity: 1;
     visibility: visible;
+    filter: blur(0);
     transition:
       opacity 150ms cubic-bezier(0.22, 1, 0.36, 1) 50ms,
+      filter 150ms cubic-bezier(0.22, 1, 0.36, 1) 50ms,
       visibility 0s linear 50ms;
   }
   .card-copy[data-copied="true"] .card-copy-tooltip {
     transition:
       opacity 150ms cubic-bezier(0.22, 1, 0.36, 1),
+      filter 150ms cubic-bezier(0.22, 1, 0.36, 1),
       visibility 0s linear;
   }
 }
@@ -1196,12 +1359,129 @@ html[data-theme="dark"] .card-copy-tooltip {
   filter: blur(0);
 }
 
+/* Same tooltip on the Studio's snippet copy button. */
+/* ─── Copy-button tooltip ─────────────────────────────────── */
+.code-copy-tooltip {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(100% + 8px);
+  box-sizing: border-box;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 40px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: 0;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+  visibility: hidden;
+  /* Opens and closes on a 3px cross blur, not a plain fade. */
+  filter: blur(var(--blur-medium));
+  transition:
+    opacity 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear 150ms;
+  background: #ffffff;
+  color: #17181c;
+  box-shadow:
+    0 2px 8px 0 rgba(0, 0, 0, 0.04),
+    0 0 0 1px rgba(0, 0, 0, 0.06),
+    0 1px 1px 0 rgba(0, 0, 0, 0.04);
+}
+
+html[data-theme="dark"] .code-copy-tooltip {
+  background: #181818;
+  color: #e3e3e3;
+  box-shadow:
+    0 1px 16px 0 rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+    inset 0 0 0 1px rgba(196, 196, 196, 0.08);
+}
+
+@media (hover: hover) {
+  .code-copy:hover .code-copy-tooltip,
+  .code-copy:focus-visible .code-copy-tooltip,
+  .code-copy[data-copied="true"] .code-copy-tooltip {
+    opacity: 1;
+    visibility: visible;
+    filter: blur(0);
+    transition:
+      opacity 150ms cubic-bezier(0.22, 1, 0.36, 1) 50ms,
+      filter 150ms cubic-bezier(0.22, 1, 0.36, 1) 50ms,
+      visibility 0s linear 50ms;
+  }
+  .code-copy[data-copied="true"] .code-copy-tooltip {
+    transition:
+      opacity 150ms cubic-bezier(0.22, 1, 0.36, 1),
+      filter 150ms cubic-bezier(0.22, 1, 0.36, 1),
+      visibility 0s linear;
+  }
+}
+.code-copy-tooltip .tt-text {
+  display: inline-flex;
+  align-items: baseline;
+  line-height: 16px;
+}
+
+.code-copy-tooltip .tt-swap {
+  position: relative;
+  display: inline-block;
+  vertical-align: baseline;
+  line-height: 16px;
+  width: var(--tt-w-a, auto);
+  transition: width 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.code-copy-tooltip .tt-swap[data-state="copied"] {
+  width: var(--tt-w-b, auto);
+}
+
+.code-copy-tooltip .tt-label {
+  white-space: pre;
+  transition:
+    opacity 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, filter;
+}
+
+.code-copy-tooltip .tt-a {
+  display: inline-block;
+}
+
+.code-copy-tooltip .tt-b {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.code-copy-tooltip .tt-swap .tt-a { opacity: 1; filter: blur(0); }
+.code-copy-tooltip .tt-swap .tt-b { opacity: 0; filter: blur(2px); }
+.code-copy-tooltip .tt-swap[data-state="copied"] .tt-a {
+  opacity: 0;
+  filter: blur(2px);
+}
+.code-copy-tooltip .tt-swap[data-state="copied"] .tt-b {
+  opacity: 1;
+  filter: blur(0);
+}
+
 @media (hover: none) {
   .card-copy[data-copied="true"] .card-copy-tooltip {
     opacity: 1;
     visibility: visible;
+    filter: blur(0);
     transition:
       opacity 150ms cubic-bezier(0.22, 1, 0.36, 1),
+      filter 150ms cubic-bezier(0.22, 1, 0.36, 1),
       visibility 0s linear;
   }
   .card-copy-tooltip .tt-swap {
@@ -1352,6 +1632,9 @@ html[data-theme="dark"] .btn-animate:disabled:hover {
 .footer-tagline {
   margin: 0;
   color: var(--text-muted);
+  /* Evens the two lines instead of dropping "React" alone on the second.
+     Ignored by browsers without it, which just fall back to normal wrapping. */
+  text-wrap: balance;
 }
 .footer-cols {
   display: flex;
@@ -1395,7 +1678,9 @@ html[data-theme="dark"] .footer-name:hover {
 
 /* ─── Responsive ──────────────────────────────────────────── */
 @media (max-width: 1100px) {
-  .cards { grid-template-columns: repeat(2, 320px); }
+  .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 664px; }
+  .cards > .lib-card:nth-child(-n + 2),
+  .cards > .lib-card:nth-child(n + 3) { grid-column: span 1; }
   .footer { max-width: 664px; }
 }
 @media (max-width: 900px) {
@@ -1408,7 +1693,7 @@ html[data-theme="dark"] .footer-name:hover {
   .cmdk-overlay { padding: 8vh 12px 12px; }
 }
 @media (max-width: 740px) {
-  .cards { grid-template-columns: 320px; gap: 16px; }
+  .cards { grid-template-columns: minmax(0, 1fr); gap: 16px; max-width: 320px; }
 }
 @media (max-width: 639px) {
   .app { padding: 0 12px 48px; }

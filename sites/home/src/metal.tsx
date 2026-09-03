@@ -1,15 +1,21 @@
-import { StrictMode, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { MetalFx, type MetalFxPreset, type MetalFxVariant } from "metal-fx";
+import { CodeBlock } from "./examples/CodeCopy";
+import { MetalExamples } from "./examples/metal-examples";
+import { StudioTeaser } from "./examples/StudioTeaser";
+import { MetalFx, type MetalFxPreset, type MetalFxVariant } from "metal-fx-v1";
 
 /* Metal detail page — playground island (stage + controls + live snippet).
-   Mirrors the live playground at packages/metal-fx/demo/components/Playground.tsx:
-   button/circle type tabs, chromatic/silver/gold color tabs, 0–100 strength
-   slider (default 90), No Glow / No Reflection toggles, starts paused.
+   Button/circle type tabs and the No Glow / No Reflection toggles; the
+   preset and strength stay at the demo's own baseline (chromatic at 90%)
+   rather than being exposed here, since the Studio tunes them in full.
    The preview pairs a search-input pill (reflection target) with the
    MetalFx-wrapped button, like the live demo. */
 
-const PRESETS: MetalFxPreset[] = ["chromatic", "silver", "gold"];
+/* The demo's baseline, fixed for this page. */
+const PRESET: MetalFxPreset = "chromatic";
+const STRENGTH = 90;
+
 const VARIANTS: MetalFxVariant[] = ["button", "circle"];
 
 function buildSnippet(
@@ -41,9 +47,7 @@ function CopyIcon() {
 
 function CheckIcon() {
   return (
-    <svg className="icon-check" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
+    <svg className="icon-check" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3.5 8.46889L6.26923 11.58L12.5 4.58" /></svg>
   );
 }
 
@@ -65,67 +69,8 @@ function SearchIcon() {
   );
 }
 
-function CopyButton({ getText, label }: { getText: () => string; label: string }) {
-  const [copied, setCopied] = useState(false);
-  const timerRef = useRef<number | undefined>(undefined);
-  const onClick = () => {
-    if (navigator.clipboard) void navigator.clipboard.writeText(getText()).catch(() => {});
-    setCopied(true);
-    window.clearTimeout(timerRef.current);
-    timerRef.current = window.setTimeout(() => setCopied(false), 1600);
-  };
-  return (
-    <button type="button" className="code-copy" data-copied={copied ? "true" : undefined} aria-label={label} onClick={onClick}>
-      <CopyIcon />
-      <CheckIcon />
-    </button>
-  );
-}
-
-function Slider({
-  min,
-  max,
-  step,
-  value,
-  onChange,
-  format,
-  ariaLabel,
-}: {
-  min: number;
-  max: number;
-  step: number;
-  value: number;
-  onChange: (value: number) => void;
-  format: (value: number) => string;
-  ariaLabel: string;
-}) {
-  const pct = ((value - min) / (max - min)) * 100;
-  return (
-    <div className="pg-slider-row">
-      <div className="pg-slider">
-        <div className="pg-slider-track">
-          <div className="pg-slider-fill" style={{ width: `${pct}%` }} />
-          <div className="pg-slider-thumb" style={{ left: `${pct}%` }} />
-        </div>
-        <input
-          type="range"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          aria-label={ariaLabel}
-        />
-      </div>
-      <span className="pg-slider-value">{format(value)}</span>
-    </div>
-  );
-}
-
 function MetalPlayground() {
   const [variant, setVariant] = useState<MetalFxVariant>("button");
-  const [preset, setPreset] = useState<MetalFxPreset>("chromatic");
-  const [strength, setStrength] = useState(90);
   // Starts paused so the page loads quietly (same as the live playground).
   const [paused, setPaused] = useState(true);
   const [disableGlow, setDisableGlow] = useState(false);
@@ -133,11 +78,16 @@ function MetalPlayground() {
   const playPauseRef = useRef<HTMLButtonElement>(null);
   const searchRef = useRef<HTMLLabelElement>(null);
 
-  const snippet = buildSnippet(variant, preset, strength / 100, disableGlow, disableReflection);
+  const snippet = buildSnippet(variant, PRESET, STRENGTH / 100, disableGlow, disableReflection);
   const reflectionTargets = disableReflection ? undefined : [searchRef, playPauseRef];
 
   return (
     <>
+      <MetalExamples strength={STRENGTH / 100} />
+
+      <p className="detail-playground-label">Playground</p>
+
+      <div className="pg">
       <div className="pg-stage">
         <div className="metal-stage-row">
           <label ref={searchRef} className="metal-search">
@@ -151,13 +101,13 @@ function MetalPlayground() {
             />
           </label>
 
-          {/* key remounts the WebGL instance on variant/preset change, matching the live demo */}
+          {/* key remounts the WebGL instance on variant change, matching the live demo */}
           <MetalFx
-            key={`${variant}-${preset}`}
-            preset={preset}
+            key={variant}
+            preset={PRESET}
             variant={variant}
             theme="dark"
-            strength={strength / 100}
+            strength={STRENGTH / 100}
             paused={paused}
             disableGlow={disableGlow}
             reflectionTargets={reflectionTargets}
@@ -205,38 +155,6 @@ function MetalPlayground() {
           </div>
         </div>
 
-        <div className="pg-field" role="radiogroup" aria-label="Color preset">
-          <span className="pg-label">Color</span>
-          <div className="pg-tabs">
-            {PRESETS.map((p) => (
-              <button
-                key={p}
-                type="button"
-                className="pg-tab"
-                role="radio"
-                aria-checked={preset === p}
-                data-active={preset === p}
-                onClick={() => setPreset(p)}
-              >
-                {p.charAt(0).toUpperCase() + p.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="pg-field">
-          <span className="pg-label">Strength</span>
-          <Slider
-            min={0}
-            max={100}
-            step={1}
-            value={strength}
-            onChange={setStrength}
-            format={(v) => `${v}%`}
-            ariaLabel="Effect strength"
-          />
-        </div>
-
         <div className="pg-field">
           <span className="pg-label">Options</span>
           <div className="pg-tabs">
@@ -260,12 +178,19 @@ function MetalPlayground() {
             </button>
           </div>
         </div>
+        <StudioTeaser
+          rows={[
+            { kind: "tabs", label: "Color", options: ["Chromatic", "Silver", "Gold"] },
+            { kind: "slider", label: "Strength", value: "90%", fill: 90 },
+            { kind: "slider", label: "Glow strength", value: "100%", fill: 100 },
+            { kind: "slider", label: "Shader scale", value: "1.6\u00d7", fill: 42 },
+          ]}
+        />
       </div>
 
-      <div className="code-block pg-snippet">
-        <pre>{snippet}</pre>
-        <CopyButton getText={() => snippet} label="Copy playground snippet" />
       </div>
+
+      <CodeBlock code={snippet} label="Copy playground snippet" className="pg-snippet" />
     </>
   );
 }
@@ -273,8 +198,10 @@ function MetalPlayground() {
 const el = document.getElementById("playground-root");
 if (el) {
   createRoot(el).render(
-    <StrictMode>
-      <MetalPlayground />
-    </StrictMode>
+    /* No StrictMode: metal-fx v1 keeps one shared renderer, and the
+       simulated double-mount destroys it in a state its loop never
+       recovers from — everything paints one frame and freezes. The
+       library's own demo mounts without StrictMode too. */
+    <MetalPlayground />
   );
 }

@@ -1,5 +1,7 @@
 import { StrictMode, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { CodeBlock } from "./examples/CodeCopy";
+import { StudioTeaser } from "./examples/StudioTeaser";
 import {
   ImageGeneration,
   type ImageGenerationCycleEvent,
@@ -15,8 +17,8 @@ import {
    labels to match visual character), labels here map directly to values. */
 
 const PRESET_OPTIONS: Array<{ value: ImageGenerationPreset; label: string }> = [
-  { value: "pixels-organic", label: "Pixel Organic" },
-  { value: "pixels-mechanic", label: "Pixel Mechanic" },
+  { value: "pixels-organic", label: "Organic" },
+  { value: "pixels-mechanic", label: "Mechanic" },
   { value: "sweep-gradient", label: "Gradient Sweep" },
 ];
 
@@ -50,26 +52,7 @@ function CopyIcon() {
 
 function CheckIcon() {
   return (
-    <svg className="icon-check" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  );
-}
-
-function CopyButton({ getText, label }: { getText: () => string; label: string }) {
-  const [copied, setCopied] = useState(false);
-  const timerRef = useRef<number | undefined>(undefined);
-  const onClick = () => {
-    if (navigator.clipboard) void navigator.clipboard.writeText(getText()).catch(() => {});
-    setCopied(true);
-    window.clearTimeout(timerRef.current);
-    timerRef.current = window.setTimeout(() => setCopied(false), 1600);
-  };
-  return (
-    <button type="button" className="code-copy" data-copied={copied ? "true" : undefined} aria-label={label} onClick={onClick}>
-      <CopyIcon />
-      <CheckIcon />
-    </button>
+    <svg className="icon-check" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3.5 8.46889L6.26923 11.58L12.5 4.58" /></svg>
   );
 }
 
@@ -92,23 +75,19 @@ function Slider({
 }) {
   const pct = ((value - min) / (max - min)) * 100;
   return (
-    <div className="pg-slider-row">
-      <div className="pg-slider">
-        <div className="pg-slider-track">
-          <div className="pg-slider-fill" style={{ width: `${pct}%` }} />
-          <div className="pg-slider-thumb" style={{ left: `${pct}%` }} />
-        </div>
-        <input
-          type="range"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          aria-label={ariaLabel}
-        />
-      </div>
-      <span className="pg-slider-value">{format(value)}</span>
+    <div className="pg-vslider">
+      <div className="pg-vslider-fill" style={{ width: `${pct}%` }} />
+      <span className="pg-vslider-label">{ariaLabel}</span>
+      <span className="pg-vslider-value">{format(value)}</span>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        aria-label={ariaLabel}
+      />
     </div>
   );
 }
@@ -141,6 +120,31 @@ function ImagePlayground() {
 
   return (
     <>
+      {/* The demo page's own examples first: the loader resolving into real
+          images at the card sizes it was drawn for, before any knobs. */}
+      <div className="detail-examples">
+        <div className="example-row-full">
+          <ImageGeneration preset="pixels-organic" theme="dark" cardBg="#1B1B1B" images={IMAGE_POOL} autoReveal>
+            <div className="ex-image-card" />
+          </ImageGeneration>
+        </div>
+        <div className="example-row-split">
+          <div className="example-cell">
+            <ImageGeneration preset="pixels-mechanic" theme="dark" cardBg="#1B1B1B" images={IMAGE_POOL} autoReveal>
+              <div className="ex-image-card ex-image-card--sm" />
+            </ImageGeneration>
+          </div>
+          <div className="example-cell">
+            <ImageGeneration preset="sweep-gradient" theme="dark" cardBg="#1B1B1B" images={IMAGE_POOL} autoReveal>
+              <div className="ex-image-card ex-image-card--sm" />
+            </ImageGeneration>
+          </div>
+        </div>
+      </div>
+
+      <p className="detail-playground-label">Playground</p>
+
+      <div className="pg">
       <div className="pg-stage">
         <ImageGeneration
           ref={handleRef}
@@ -215,7 +219,6 @@ function ImagePlayground() {
         </div>
 
         <div className="pg-field">
-          <span className="pg-label">Strength</span>
           <Slider
             min={0}
             max={100}
@@ -223,15 +226,22 @@ function ImagePlayground() {
             value={strength}
             onChange={setStrength}
             format={(v) => `${v}%`}
-            ariaLabel="Effect strength"
+            ariaLabel="Strength"
           />
         </div>
+        <StudioTeaser
+          rows={[
+            { kind: "slider", label: "Speed", value: "1\u00d7", fill: 31 },
+            { kind: "tabs", label: "Palette", options: ["Preset", "Ocean", "Ember"] },
+            { kind: "slider", label: "Pixel scale", value: "1\u00d7", fill: 33 },
+            { kind: "tabs", label: "Card background", options: ["Charcoal", "Ink", "Navy"] },
+          ]}
+        />
       </div>
 
-      <div className="code-block pg-snippet">
-        <pre>{snippet}</pre>
-        <CopyButton getText={() => snippet} label="Copy playground snippet" />
       </div>
+
+      <CodeBlock code={snippet} label="Copy playground snippet" className="pg-snippet" />
     </>
   );
 }

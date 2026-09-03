@@ -64,9 +64,11 @@ export const BorderBeam = forwardRef<HTMLDivElement, BorderBeamProps>(
       brightness: brightnessProp,
       saturation,
       hueRange = 30,
+      glowSize = 1,
       strength = 1,
       className,
       style,
+      css: extraCss,
       onActivate,
       onDeactivate,
       onAnimationEnd: consumerOnAnimationEnd,
@@ -226,6 +228,7 @@ export const BorderBeam = forwardRef<HTMLDivElement, BorderBeamProps>(
           hueRange: finalHueRange,
           theme: resolvedTheme,
           hairlineOpacity: themeConfig.hairlineOpacity,
+          glowSize,
         }),
       [
         id,
@@ -243,6 +246,7 @@ export const BorderBeam = forwardRef<HTMLDivElement, BorderBeamProps>(
         finalBrightness,
         finalSaturation,
         finalHueRange,
+        glowSize,
         resolvedTheme,
       ]
     );
@@ -297,7 +301,7 @@ export const BorderBeam = forwardRef<HTMLDivElement, BorderBeamProps>(
 
     return (
       <>
-        <style>{cssStyles}</style>
+        <style>{extraCss ? `${cssStyles}\n${extraCss.split('{id}').join(id)}` : cssStyles}</style>
         <div
           {...props}
           ref={setRefs}

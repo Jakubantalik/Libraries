@@ -23,6 +23,7 @@ import {
   setInstanceSpeed,
   setInstanceStrength,
   setInstanceVisible,
+  setSharedFragmentShader,
   updateInstanceSize,
   type Cycle,
   type Instance,
@@ -145,6 +146,7 @@ export const ImageGeneration = forwardRef<ImageGenerationHandle, ImageGeneration
     revealFadeOutMs = 300,
     borderRadius,
     paused = false,
+    fragmentShader,
     onCycle,
     excludeSrcs,
     className,
@@ -531,6 +533,14 @@ export const ImageGeneration = forwardRef<ImageGenerationHandle, ImageGeneration
   }, [pixelScale]);
 
   // Sync paused.
+  // Custom fragment stage: page-wide while set, back to the bundled one when
+  // this instance drops it or unmounts.
+  useEffect(() => {
+    if (!fragmentShader) return;
+    setSharedFragmentShader(fragmentShader);
+    return () => setSharedFragmentShader(null);
+  }, [fragmentShader]);
+
   useEffect(() => {
     const i = instanceRef.current;
     if (i) setInstancePaused(i, paused);

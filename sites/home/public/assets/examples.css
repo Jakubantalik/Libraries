@@ -1,0 +1,750 @@
+/* Detail-page examples — the real UI each library's own demo page shows,
+   sitting above the mini playground. Ported from those pages so the two
+   stay the same thing; the light-theme rules are dropped, since this site
+   is dark-only.
+
+   The mock chrome reads these tokens; without them every fill, border and
+   label resolved to nothing and the mocks rendered as empty boxes. Values
+   are the beam site's dark theme. */
+:root {
+  --c-mock-bg: #1d1d1d;
+  --c-mock-border: rgba(44, 47, 54, 0.52);
+  --c-mock-chip-bg: rgba(255, 255, 255, 0.04);
+  --c-mock-chip-line: rgba(255, 255, 255, 0.02);
+  --c-mock-chip-top: rgba(255, 255, 255, 0.04);
+  --c-mock-glow: rgba(255, 255, 255, 0.02);
+  --c-mock-placeholder: #4e4e4e;
+  --c-mock-search-text: #565656;
+  --c-mock-square: rgba(217, 217, 217, 0.8);
+  --c-mock-tag-text: #caccd2;
+  --c-mock-text: #c0c0c0;
+  --c-mock-text-strong: #ffffff;
+  --shimmer-band: 400%;
+  --shimmer-base: #6f6c6c;
+  --shimmer-dur: 2000ms;
+  --shimmer-ease: linear;
+  --shimmer-highlight: #ededed;
+}
+
+/* The examples block and the playground beneath it. */
+.detail-examples {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.detail-playground-label {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 14px;
+  color: #fbfbfb;
+  margin-bottom: 12px;
+}
+
+/* ── Beam (ported from sites/beam/src/styles.css) ── */
+.example-row-full {
+  width: 100%;
+  height: 370px;
+  border-radius: 16px;
+  background: #171717;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 40px;
+  overflow: hidden;
+  position: relative;
+}
+
+
+.example-row-split {
+  display: grid;
+  grid-template-columns: 271fr 552fr;
+  gap: 12px;
+  width: 100%;
+}
+
+.example-cell {
+  border-radius: 16px;
+  background: #171717;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 40px;
+  min-height: 314px;
+  overflow: hidden;
+}
+
+
+/* ─── Mock UI: Chat input ──────────────────────────────────── */
+
+.mock-chat {
+  width: 348px;
+  max-width: 100%;
+  border-radius: 20px;
+  border: none;
+  background: var(--c-mock-bg);
+  box-shadow:
+    inset 0 0 0 1px var(--c-mock-border),
+    inset 0 0 50px 0 var(--c-mock-glow);
+  overflow: hidden;
+  position: relative;
+}
+
+.mock-chat-inner {
+  padding: 7px 7px 8px;
+  display: flex;
+  flex-direction: column;
+  height: 122px;
+}
+
+.mock-chat .pill {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  height: 24px;
+  padding: 0 4px;
+  margin-left: 1px;
+  border-radius: 36px;
+  background: var(--c-mock-chip-bg);
+  box-shadow:
+    inset 0 0 0 1px var(--c-mock-chip-line),
+    inset 0 1px 0 0 var(--c-mock-chip-top);
+}
+
+.mock-chat .pill svg {
+  width: 16px;
+  height: 16px;
+}
+
+.mock-chat .placeholder {
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--c-mock-placeholder);
+  padding: 16px 4px 0;
+}
+
+.mock-chat .bottom-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.mock-chat .tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 6px 0 8px;
+  border-radius: 36px;
+  background: var(--c-mock-chip-bg);
+  box-shadow:
+    inset 0 0 0 1px var(--c-mock-chip-line),
+    inset 0 1px 0 0 var(--c-mock-chip-top);
+  font-size: 12px;
+  line-height: 14px;
+  color: var(--c-mock-tag-text);
+}
+
+/* Keep the Agent/Auto cluster inset symmetric with the bottom inset (8px). */
+.mock-chat .bottom-row .tag:first-child {
+  margin-left: 1px;
+}
+
+.mock-chat .tag svg {
+  width: 16px;
+  height: 16px;
+}
+
+.mock-chat .send-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 36px;
+  background: var(--c-mock-chip-bg);
+  box-shadow:
+    inset 0 0 0 1px var(--c-mock-chip-line),
+    inset 0 1px 0 0 var(--c-mock-chip-top);
+  margin-left: auto;
+  cursor: default;
+  padding: 0 8px;
+}
+
+.mock-chat .send-btn svg {
+  width: 16px;
+  height: 16px;
+  opacity: 0.5;
+}
+
+/* ─── Mock UI: Working task list ───────────────────────────── */
+
+.mock-working {
+  width: 295px;
+  max-width: 100%;
+  border-radius: 20px;
+  border: none;
+  background: var(--c-mock-bg);
+  box-shadow:
+    inset 0 0 0 1px var(--c-mock-border),
+    inset 0 0 50px 0 var(--c-mock-glow);
+  padding: 18px 20px 20px;
+  position: relative;
+}
+
+.mock-working-header {
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--shimmer-base);
+}
+
+/* transitions.dev — shimmer text (loading "Working..." label) */
+.t-shimmer {
+  position: relative;
+  display: inline-block;
+  color: var(--shimmer-base);
+}
+.t-shimmer::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(
+    90deg,
+    transparent          0%,
+    transparent         40%,
+    var(--shimmer-highlight) 50%,
+    transparent         60%,
+    transparent        100%
+  );
+  background-size: var(--shimmer-band) 100%;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: t-shimmer var(--shimmer-dur) var(--shimmer-ease) infinite;
+}
+@keyframes t-shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: 0% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-shimmer::before { animation: none !important; }
+}
+
+.mock-working-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 24px;
+}
+
+.mock-working-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mock-working-row svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.mock-working-row span {
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--c-mock-text);
+  white-space: nowrap;
+}
+
+/* ─── Mock UI: Subscribe button ────────────────────────────── */
+
+.mock-subscribe {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 20px;
+  border-radius: 48px;
+  border: none;
+  background: var(--c-mock-bg);
+  box-shadow:
+    inset 0 0 0 1px var(--c-mock-border),
+    inset 0 0 50px 0 var(--c-mock-glow);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+  color: var(--c-mock-text-strong);
+}
+
+/* ─── Mock UI: Icon button ─────────────────────────────────── */
+
+.mock-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 20px;
+  border: none;
+  background: var(--c-mock-bg);
+  box-shadow:
+    inset 0 0 0 1px var(--c-mock-border),
+    inset 0 0 50px 0 var(--c-mock-glow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mock-icon-btn-square {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--c-mock-square);
+}
+
+/* ─── Mock UI: Search bar ──────────────────────────────────── */
+
+.mock-search {
+  width: 366px;
+  max-width: 100%;
+  height: 42px;
+  border-radius: 64px;
+  overflow: hidden;
+  position: relative;
+}
+
+.mock-search-inner {
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  border: none;
+  background: var(--c-mock-bg);
+  box-shadow:
+    inset 0 0 0 1px var(--c-mock-border),
+    inset 0 0 50px 0 var(--c-mock-glow);
+  display: flex;
+  align-items: center;
+  padding: 0 13px;
+  gap: 10px;
+}
+
+.mock-search svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  opacity: 0.4;
+}
+
+.mock-search span {
+  font-size: 15px;
+  line-height: 18px;
+  color: var(--c-mock-search-text);
+}
+
+/* ─── Light theme: match the Figma playground mock UI precisely ─
+   Floating white cards with a 1px near-black ring + soft drop
+   shadows, neutral-gray text and raised white pills. */
+/* The drop shadow lives on the BorderBeam wrapper (.beam-host) rather than the
+   inner card: the wrapper's overflow:hidden clips a child's box-shadow, but
+   never an element's own. The inner cards stay flat white in light mode. */
+
+
+/* Pill-style host (e.g. Subscribe) uses the lighter chip shadow, not the
+   bigger floating-card shadow. */
+
+/* Pulse-outside tuning preset (mirrors the subscribe controls defaults):
+   X=2px, Y=1px, core blur=7px, bloom blur=19px, glow opacity=200%. */
+
+/* ── Orb / Metal / Image example mocks ────────────────────────
+   Their own demo pages are Tailwind-based and this site is not, so
+   these are the same mocks rebuilt in plain CSS rather than a verbatim
+   port: the status pills and chat chrome those pages show, on the
+   example chrome above. */
+.ex-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  height: 74px;
+  padding: 0 32px 0 9px;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+    inset 0 0 0 1px rgba(196, 196, 196, 0.08);
+  color: #ededed;
+  font-size: 18px;
+  line-height: 24px;
+}
+.ex-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px 0 8px;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+    inset 0 0 0 1px rgba(196, 196, 196, 0.08);
+  color: #cfcfcf;
+  font-size: 13px;
+  line-height: 14px;
+}
+.ex-stack { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: center; }
+
+/* Orb showcase: the demo page's full nine-state layout (sites/orbs/
+   components/Examples.tsx). Two hero pills on top, then a grid whose
+   151px auto-rows let the large states span two rows and the compact
+   chips one, so the mixed heights tile with no gaps. Row spans rather
+   than CSS multi-column: Safari mishandles break-inside on fixed-height
+   multicol items. */
+.ex-orb-heroes,
+.ex-orb-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+.ex-orb-grid { grid-auto-rows: 151px; }
+.ex-orb-cell {
+  border-radius: 16px;
+  background: #171717;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  overflow: hidden;
+}
+.ex-orb-cell--hero { height: 314px; padding: 48px 40px; }
+.ex-orb-cell--lg { grid-row: span 2; }
+@media (max-width: 860px) {
+  .ex-orb-heroes,
+  .ex-orb-grid { grid-template-columns: minmax(0, 1fr); grid-auto-rows: auto; }
+  .ex-orb-cell,
+  .ex-orb-cell--lg { grid-row: auto; min-height: 200px; height: auto; }
+}
+
+/* Metal: the demo page's pill and circle controls. */
+.ex-metal-pill {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 140px; height: 40px;
+  border-radius: 20px;
+  background: #1d1d1d;
+  color: #ededed;
+  font-size: 14px; font-weight: 500;
+}
+.ex-metal-circle {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px;
+  border-radius: 20px;
+  background: #1d1d1d;
+  color: #ededed;
+}
+
+/* Image: the loader's card slot, at the demo page's proportions. */
+.ex-image-card { width: 320px; max-width: 100%; aspect-ratio: 1 / 1; border-radius: 20px; overflow: hidden; }
+.ex-image-card--sm { width: 180px; }
+
+/* ── Gooey demos: the live demo page's prototypes, verbatim ──
+   Ported from sites/gooey/playground (styles.css + demo.css) with the
+   dark-theme token values inlined; --gd-ink (set by the island) stands
+   in for --btn-text so light fills flip the ink. */
+
+/* Morph: plus menu (live .pm). */
+.pm { position: relative; width: 200px; height: 140px; }
+.pm-slot { position: absolute; left: 80px; top: 80px; }
+.pm-btn {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: var(--gd-ink, #fbfbfb);
+  -webkit-tap-highlight-color: transparent;
+}
+.pm-btn:focus-visible { outline: 2px solid #ededed; outline-offset: 2px; }
+.pm-sat { pointer-events: none; }
+.pm-open .pm-sat { pointer-events: auto; }
+.pm-open .pm-sat:hover { background: rgba(255, 255, 255, 0.06); }
+/* Icons hold back while the blob is merged, then materialise with a soft
+   cross-blur as the satellite pulls clear. */
+.pm-sat-icon {
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  filter: blur(2px);
+  transition: opacity 120ms ease, filter 120ms ease;
+}
+.pm-open .pm-sat-icon {
+  opacity: 1;
+  filter: blur(0);
+  transition-duration: var(--pm-icon-dur, 180ms);
+}
+/* Close anticipation: the whole liquid layer — and the main button riding
+   it — dips toward the returning satellites' momentum, then settles.
+   Longhands on purpose: WebKit mis-parses var() inside the `animation`
+   shorthand and falls back to 0s. */
+@keyframes pm-anticipate {
+  0% { transform: translateY(0); }
+  30% { transform: translateY(var(--pm-anticip, 5px)); }
+  100% { transform: translateY(0); }
+}
+.pm-anticipating [data-gooey-svg],
+.pm-anticipating .pm-main {
+  animation-name: pm-anticipate;
+  animation-duration: var(--pm-anticip-dur, 700ms);
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-fill-mode: both;
+}
+.pm-plus {
+  display: grid;
+  place-items: center;
+  transform: rotate(0deg);
+  transition: transform 250ms ease-in-out;
+}
+.pm-open .pm-plus { transform: rotate(45deg); }
+
+/* Move: liquid slider (live .sl). */
+.sl { position: relative; width: 240px; height: 80px; }
+.sl-track {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  top: 38px;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(115, 115, 115, 0.2);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  /* Below the goo layer (svg sits at z -1): the liquid thumb and its
+     tail must paint OVER the track, not be sliced by it. */
+  z-index: -2;
+}
+/* The thumb element itself must stay unstyled: its surface AND shadow
+   are the liquid blob below. */
+.sl-thumb {
+  position: absolute;
+  left: 14px;
+  top: 30px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.sl-thumb:active { cursor: grabbing; }
+.sl-thumb:focus-visible { outline: 2px solid #ededed; outline-offset: 4px; }
+
+/* Bend: drag card (live .dgc — Figma 1221:5117 "Dropdown", 261×46 r54).
+   The pill VISUAL is the liquid blob; this box only sizes and lays out
+   the crisp content. */
+.dgc {
+  width: 100%;
+  max-width: 640px;
+  height: 210px;
+  position: relative;
+  margin: 0 auto;
+}
+.dgc-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 261px;
+  height: 46px;
+  margin: -23px 0 0 -130.5px;
+  border-radius: 54px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px 0 8px;
+  color: var(--gd-ink, #fbfbfb);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.dgc-card:active { cursor: grabbing; }
+.dgc-chip {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 40px;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dgc-chip svg { width: 16px; height: 16px; display: block; }
+.dgc-title { font-size: 13px; font-weight: 500; white-space: nowrap; }
+.dgc-count { font-size: 13px; opacity: 0.5; white-space: nowrap; }
+/* Content DEFORMS with the liquid bend: each piece rides the arc
+   (translate, middle most), rotates onto the arc's local tangent and
+   shears with the horizontal cap deformation — driven by the engine's
+   --lg-bend vars, scaled by the Content bend knob (--dgc-cb). */
+.dgc-card > * {
+  --dgc-k: calc(var(--dgc-cb, 0) * var(--dgc-arc, 1));
+  transform: translate(
+      calc(var(--lg-bend-x, 0px) * var(--dgc-k) * 2.4),
+      calc(var(--lg-bend-y, 0px) * var(--dgc-k) * 2.4)
+    )
+    rotate(calc(var(--lg-bend-yn, 0) * var(--dgc-rot, 0) * var(--dgc-cb, 0) * 1deg))
+    skewX(calc(var(--lg-bend-xn, 0) * var(--dgc-cb, 0) * -0.55deg))
+    scaleX(calc(1 - var(--lg-bend-xn, 0) * var(--dgc-cb, 0) * var(--dgc-sqx, 0.006)))
+    scaleY(calc(1 + var(--lg-bend-yn, 0) * var(--dgc-cb, 0) * var(--dgc-sqy, 0)));
+  transform-origin: center;
+}
+.dgc-card > :nth-child(1) { --dgc-arc: 0.45; --dgc-rot: 1.6; --dgc-sqx: 0.014; }
+.dgc-card > :nth-child(2) { --dgc-arc: 1; --dgc-rot: 0; --dgc-sqy: 0.01; }
+.dgc-card > :nth-child(3) { --dgc-arc: 0.6; --dgc-rot: -1.6; }
+
+/* Melt: two draggable photos running molten together (live .mp). */
+.mp { position: relative; margin: 0 auto; }
+.mp-card {
+  position: absolute;
+  /* width/height come from the component — see MeltDemo. */
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.mp-card:active { cursor: grabbing; }
+.mp-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pm-plus,
+  .pm-sat-icon {
+    transition: none !important;
+  }
+  .pm-anticipating [data-gooey-svg],
+  .pm-anticipating .pm-main {
+    animation: none !important;
+  }
+}
+
+/* ── Metal examples: the metal-fx demo page's rows (mx-*) ─────
+   Translated from that demo's Tailwind; values are its dark tokens. */
+.mx-row { height: 314px; position: relative; }
+.mx-row--toolbar { height: 370px; padding-left: 40px; padding-right: 80px; }
+.mx-chat {
+  width: 448px;
+  max-width: 100%;
+  border-radius: 20px;
+  background: rgba(29, 29, 29, 0.7);
+  padding: 20px 16px 16px;
+  display: flex;
+  flex-direction: column;
+}
+.mx-chat-input {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 16px;
+  outline: none;
+  width: 100%;
+  padding: 0;
+  margin-bottom: 16px;
+  resize: none;
+  overflow: hidden;
+}
+.mx-chat-input::placeholder { color: #4e4e4e; }
+.mx-chat-bottom { display: flex; align-items: center; gap: 12px; margin-top: auto; }
+.mx-spacer { flex: 1; }
+.mx-plus {
+  width: 36px; height: 36px; min-width: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+  color: #caccd2;
+  display: flex; align-items: center; justify-content: center;
+  cursor: default;
+}
+.mx-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 36px; padding: 0 10px 0 14px;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+  color: #caccd2;
+  font-size: 12px; line-height: 14px;
+  cursor: default;
+}
+.mx-chip svg { width: 16px; height: 16px; color: #8e8e8e; transform: rotate(90deg); }
+.mx-circle,
+.mx-dots {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px;
+  border: 1px solid rgba(44, 47, 54, 0.52);
+  border-radius: 50%;
+  background: #1d1d1d;
+  box-shadow: inset 0 0 50px 0 rgba(255, 255, 255, 0.02);
+  color: #f8f8f8;
+  cursor: pointer;
+  padding: 0;
+}
+.mx-dots svg { width: 20px; height: 20px; opacity: 0.7; transition: opacity 200ms; }
+.mx-dots:hover svg { opacity: 1; }
+.mx-toolbar-backdrop {
+  position: absolute;
+  left: -22px;
+  top: 144px;
+  width: 663px;
+  height: 234px;
+  border-radius: 20px;
+  background: rgba(29, 29, 29, 0.7);
+  border: 1px solid rgba(44, 47, 54, 0.52);
+  pointer-events: none;
+}
+.mx-toolbar { position: relative; z-index: 10; display: flex; align-items: center; gap: 12px; }
+.mx-search {
+  position: relative;
+  display: flex; align-items: center; gap: 6px;
+  width: 235px; height: 40px;
+  border-radius: 999px;
+  padding: 10px 2px 10px 12px;
+  background: #1d1d1d;
+  border: 1px solid rgba(44, 47, 54, 0.52);
+  box-shadow: inset 0 0 50px 0 rgba(255, 255, 255, 0.02);
+  color: #f8f8f8;
+  font-size: 14px; font-weight: 500; line-height: 17.938px;
+  cursor: text;
+}
+.mx-search svg { width: 18px; height: 18px; flex-shrink: 0; stroke: #8b8b8b; fill: none; }
+.mx-search-input {
+  flex: 1; min-width: 0;
+  border: none; background: transparent;
+  font: inherit; color: inherit;
+  outline: none;
+}
+.mx-search-input::placeholder { color: currentColor; opacity: 0.3; }
+.mx-pill {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 140px; height: 40px;
+  border: 1px solid rgba(44, 47, 54, 0.52);
+  border-radius: 20px;
+  background: #1d1d1d;
+  box-shadow: inset 0 0 50px 0 rgba(255, 255, 255, 0.02);
+  color: #f8f8f8;
+  font-family: var(--font-sans);
+  font-size: 14px; font-weight: 500; line-height: 17.938px;
+  white-space: nowrap;
+  cursor: pointer;
+  padding: 0;
+}

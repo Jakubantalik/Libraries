@@ -3,12 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <!-- First-paint guard. Firefox has painted a frame before the stylesheets
+       applied on cached navigations (brand mark at full width, skip link in
+       view, menus open). These few rules make that frame harmless; site.css
+       overrides every one of them once it lands. -->
+  <style>
+    .skip-link { position: absolute; left: -9999px; }
+    .brand-mark svg, .footer-brand-logo svg { width: 22px; height: 14px; }
+    .mobile-menu, .mobile-menu-backdrop, .tl-menu, .t-dropdown { display: none; }
+  </style>
+  <!-- Paint gate. Firefox has painted before the external stylesheets applied
+       on navigation, so the body stays invisible on the site's ground until
+       every local sheet has loaded (script below); a 1.5s timeout reveals it
+       regardless, so a failed sheet can never leave the page blank. -->
+  <style>
+    html { background: #121212; }
+    html:not(.css-ready) body { visibility: hidden; }
+  </style>
   <meta name="color-scheme" content="dark" />
 
-  <title>Libraries.dev — High-crafted UI libraries for AI agents</title>
+  <title>Libraries.dev: High-crafted UI libraries for AI agents</title>
   <meta
     name="description"
-    content="Home of Jakub Antalik's UI effect libraries — Beam, Orb, Gooey, Metal and Image. Production-ready React effects you can install from npm."
+    content="Home of Jakub Antalik's UI effect libraries: Beam, Orb, Gooey, Metal and Image. Production-ready React effects you can install from npm."
   />
   <meta
     name="keywords"
@@ -34,24 +51,19 @@
   <meta property="og:site_name" content="Libraries.dev" />
   <meta property="og:url" content="https://libraries.dev/" />
   <meta property="og:locale" content="en_US" />
-  <meta property="og:title" content="Libraries.dev — High-crafted UI libraries for AI agents" />
-  <meta property="og:description" content="Home of Jakub Antalik's UI effect libraries — Beam, Orb, Gooey, Metal and Image." />
+  <meta property="og:title" content="Libraries.dev: High-crafted UI libraries for AI agents" />
+  <meta property="og:description" content="Home of Jakub Antalik's UI effect libraries: Beam, Orb, Gooey, Metal and Image." />
 
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Libraries.dev — High-crafted UI libraries for AI agents" />
-  <meta name="twitter:description" content="Home of Jakub Antalik's UI effect libraries — Beam, Orb, Gooey, Metal and Image." />
+  <meta property="og:image" content="https://libraries.dev/assets/og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:image" content="https://libraries.dev/assets/og-image.jpg" />
+  <meta name="twitter:title" content="Libraries.dev: High-crafted UI libraries for AI agents" />
+  <meta name="twitter:description" content="Home of Jakub Antalik's UI effect libraries: Beam, Orb, Gooey, Metal and Image." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    rel="preload"
-    as="style"
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
-  />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
-    rel="stylesheet"
-  />
   <link
     rel="preload"
     as="font"
@@ -60,6 +72,23 @@
     crossorigin
   />
   <link rel="stylesheet" href="/assets/site.css" />
+  <script>
+    (function () {
+      var h = document.documentElement;
+      var links = [].slice.call(document.querySelectorAll('link[rel="stylesheet"][href^="/assets/"]'));
+      var reveal = function () { h.classList.add("css-ready"); };
+      if (!links.length) return reveal();
+      var pending = links.length;
+      var done = function () { if (--pending <= 0) reveal(); };
+      links.forEach(function (l) {
+        if (l.sheet) return done();
+        l.addEventListener("load", done);
+        l.addEventListener("error", done);
+      });
+      setTimeout(reveal, 1500);
+    })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     /* Homepage-only: library preview stages */
     .lib-stage { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
@@ -75,7 +104,7 @@
     .card-subtitle--mono { font-family: var(--font-mono); font-size: 12px; }
 
     /* ── Hero (Figma 1292-3184): installs badge + floating tiles ── */
-    .header { padding-top: 40px; padding-bottom: 96px; }
+    .header { padding-top: 40px; padding-bottom: 128px; }
     .hero-badge {
       position: relative; z-index: 6;
       display: inline-flex; align-items: center; height: 28px; padding: 0 12px;
@@ -100,36 +129,95 @@
     }
     .header .subtitle { margin-top: 12px; max-width: 560px; color: #9e9e9e; }
     .header .skill-cta-row { margin-top: 20px; }
+    /* Below ~900px the scatter's inner tiles reach into the copy's column.
+       The badge already sat above them; the rest of the hero copy joins it,
+       so a tile slides behind the headline as depth instead of colliding
+       with it. Keeps the CTAs clickable at every width, too. */
+    .header .title,
+    .header .subtitle,
+    .header .skill-cta-row { position: relative; z-index: 6; }
     @media (max-width: 639px) {
       .header .title { font-size: 30px; line-height: 34px; }
+      /* Tracks `.app`'s narrower gutter at this width. */
+      .header { --app-gutter: 12px; }
     }
-    @media (min-width: 981px) {
+    @media (min-width: 761px) {
       /* Clear the orb tile floating above the headline (Figma order:
          tile, badge, title). */
       .header { padding-top: 0; }
-      .hero-badge { margin-top: 178px; }
+      .hero-badge { margin-top: 210px; }
     }
     /* Floating preview tiles (Figma 1413-37491): 130px card chrome,
        108px inner stage, hover lightens + reveals a label pill. */
     .hero-tile {
       position: absolute; width: 130px; height: 130px; display: block;
       border-radius: 24px; background: #181818; text-decoration: none;
+      /* The gallery card's surface, to the value — the tiles sat a shade
+         brighter on the last ring (0.1 against 0.07), which read as a
+         different material at a glance. */
       box-shadow:
         0 1px 3px 0 rgba(0, 0, 0, 0.04),
         inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
         inset 0 0 0 1px rgba(0, 0, 0, 0.06),
         inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
-        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
-      transition: background-color 0.15s ease;
+        inset 0 0 0 1px rgba(196, 196, 196, 0.07);
+      /* Drag offset lives in vars, not an inline transform, so the hover
+         lift below can compose with a dropped tile's position instead of
+         being shadowed by it. */
+      transform: translate(var(--drag-x, 0px), var(--drag-y, 0px));
+      transition:
+        background-color 0.15s ease,
+        transform var(--tile-lift-dur, var(--duration-medium))
+                  var(--tile-lift-ease, cubic-bezier(0.34, 1.85, 0.64, 1));
       z-index: 5;
     }
-    .hero-tile:hover { background: #1c1c1c; }
+    /* Mid-drag the transform must track the pointer raw — the 350ms bounce
+       above would trail it by a third of a second. */
+    .hero-tile[data-dragging="true"] { transition: background-color 0.15s ease; }
+    /* Hover lifts the tile 6px over 350ms on a softened bounce curve, so it
+       overshoots a little and settles. The curve sits between --ease-bounce
+       and --ease-bounce-strong, so it's spelled out rather than tokenised.
+       The three vars are what the dev-only motion tuner writes to (see the
+       bottom of this file); the fallbacks are the shipped values. */
+    .hero-tile:hover,
+    .hero-tile:focus-visible {
+      background: #1c1c1c;
+      transform: translate(
+        var(--drag-x, 0px),
+        calc(var(--drag-y, 0px) - var(--tile-lift-y, 6px))
+      );
+    }
+    /* Invisible margin around each tile: a 130px target scattered in open
+       space is easy to miss, and the label reads better if it opens just
+       before the pointer lands on the art. A transparent pseudo-element
+       still hit-tests, and events on it target the <a>, so this widens both
+       the click target and :hover with no extra markup.
+       The size is set per-breakpoint below — halos must never overlap, or
+       one tile starts swallowing its neighbour's clicks. */
+    .hero-tile::before {
+      content: "";
+      position: absolute;
+      inset: calc(-1 * var(--tile-safe, 0px));
+      border-radius: calc(24px + var(--tile-safe, 0px));
+    }
+    /* The island wraps the tiles in a real box, so the row goes
+       display:contents at every breakpoint and this takes over both the
+       desktop scatter and the wrapped mobile row. It spans the whole hero on
+       desktop, so it stays transparent to the pointer — only the tiles take
+       input, or it would swallow the CTA clicks behind it. */
+    /* The group's own SVG layers span the whole hero box, so they must stay
+       transparent to the pointer or they swallow the CTA clicks behind them.
+       Only the tiles take input — and they sit under GooeyItem's
+       display:contents span, so this can't be a child combinator. */
+    .hero-tiles-box { pointer-events: none; }
+    .hero-tiles-box .hero-tile { pointer-events: auto; }
     .hero-tile-stage {
       position: absolute; inset: 11px; border-radius: 14px; background: #101010;
       overflow: hidden; display: flex; align-items: center; justify-content: center;
       pointer-events: none;
     }
     .hero-tile-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .hero-tile-video { width: 100%; height: 100%; object-fit: cover; display: block; }
     .hero-tile-stage::after {
       content: ""; position: absolute; inset: 0; border-radius: inherit;
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), inset 0 0 0 1px rgba(191, 192, 203, 0.1);
@@ -172,43 +260,105 @@
         opacity var(--dropdown-open-dur) var(--dropdown-ease);
     }
     @media (prefers-reduced-motion: reduce) {
-      .hero-tile-pill { transition: none; }
-    }
-    /* Scatter positions around the centered hero copy — desktop only,
-       so the static-row fallback below 981px keeps untouched tiles. */
-    @media (min-width: 981px) {
-      .hero-tile--orb   { top: 0;     left: calc(50% - 7px); }
-      .hero-tile--beam  { top: 147px; left: calc(50% - 481px); }
-      .hero-tile--metal { top: 171px; left: calc(50% + 317px); }
-      .hero-tile--gooey { top: 432px; left: calc(50% - 351px); }
-      .hero-tile--image { top: 475px; left: calc(50% + 90px); }
-    }
-    @media (min-width: 981px) and (max-width: 1160px) {
-      .hero-tile--beam  { left: calc(50% - 440px); }
-      .hero-tile--metal { left: calc(50% + 300px); }
-      .hero-tile--gooey { left: calc(50% - 330px); }
-    }
-    @media (max-width: 980px) {
-      .header { padding-top: 40px; padding-bottom: 72px; }
-      .hero-tile { position: static; flex: none; }
-      .hero-tile-pill { display: none; }
-      .hero-tiles-row {
-        display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
-        margin-top: 40px; width: 100%;
+      .hero-tile-pill, .hero-tile { transition: none; }
+      .hero-tile:hover, .hero-tile:focus-visible {
+        transform: translate(var(--drag-x, 0px), var(--drag-y, 0px));
       }
-      .hero-tile { position: relative; }
     }
-    @media (min-width: 981px) {
+    /* Scatter positions around the centered hero copy, held down to 761px;
+       below that the static-row fallback takes over. */
+    /* Offsets are the Figma spacings expressed as a share of the viewport,
+       capped at their design values, so the composition contracts smoothly
+       instead of stepping through breakpoint tiers. Each min() reaches its
+       px cap at 1280px, the width the layout was drawn at. */
+    @media (min-width: 761px) {
+      .hero-tile { --tile-safe: 18px; }
+      .hero-tile--orb   { top: 0;     left: calc(50% - 7px); }
+      .hero-tile--beam  { top: 147px; left: calc(50% - min(481px, 37.6vw)); }
+      .hero-tile--metal { top: 171px; left: calc(50% + min(317px, 24.8vw)); }
+      .hero-tile--gooey { top: 432px; left: calc(50% - min(351px, 27.4vw)); }
+      .hero-tile--image { top: 475px; left: calc(50% + min(90px, 7vw)); }
+    }
+    /* The halo can only widen once the tiles are far enough apart for two
+       of them never to overlap. */
+    @media (min-width: 1161px) {
+      .hero-tile { --tile-safe: 30px; }
+    }
+    /* Mobile hero: the tiles cluster at the top and the copy is pushed to
+       the foot of the viewport, so the headline reads last and the CTAs land
+       in thumb reach. The header becomes a column and the tile box takes
+       order -1 to lead, since it comes last in the DOM (the copy should stay
+       first for reading order and for the no-JS render). */
+    @media (max-width: 760px) {
+      .header {
+        display: flex;
+        flex-direction: column;
+        /* Left-ragged on mobile: centred copy over a full-bleed tile cluster
+           reads as a poster, and the CTAs are easier to hit from one edge. */
+        align-items: flex-start;
+        text-align: left;
+        min-height: calc(100dvh - var(--nav-h, 68px));
+        padding-top: 24px;
+        padding-bottom: 32px;
+      }
+      /* .title and .subtitle set their own centring in site.css, so the
+         header's text-align alone does not reach them. */
+      .header .title,
+      .header .subtitle { text-align: left; }
+      .header .skill-cta-row { justify-content: flex-start; }
+
+      /* The copy sits 32px from the viewport edge while the tile cluster
+         stays full-bleed. `.app` already contributes a gutter — 24px, or
+         12px below 639px — so the inset is measured from the viewport edge
+         and that gutter subtracted, rather than stacking on top of it.
+         Stretching the text items first means the padding eats into their
+         width instead of widening them past the column. The badge is a pill,
+         so it takes a margin — padding would stretch the chip itself. */
+      .header { --hero-copy-inset: calc(32px - var(--app-gutter, 24px)); }
+      .hero-badge { margin-left: var(--hero-copy-inset); }
+      .header .title,
+      .header .subtitle {
+        align-self: stretch;
+        box-sizing: border-box;
+        padding-left: var(--hero-copy-inset);
+      }
+      .header .skill-cta-row { padding-left: var(--hero-copy-inset); }
+      /* Absorbs the slack, which drops everything below it to the bottom. */
+      .hero-badge { order: 1; margin-top: auto; }
+      .header .title { order: 2; }
+      .header .subtitle { order: 3; }
+      .header .skill-cta-row { order: 4; }
+
+      .hero-tile-pill { display: none; }
       .hero-tiles-row { display: contents; }
-      .header { min-height: 625px; }
+      .hero-tiles-box {
+        order: -1;
+        position: relative;
+        flex: none;
+        width: 100%;
+        height: 422px;
+      }
+      /* A 2-1-2 stagger rather than a row: it reads as a loose cluster while
+         keeping every tile's tap target clear of its neighbours, so the halo
+         goes to zero. */
+      .hero-tile { position: absolute; --tile-safe: 0px; }
+      .hero-tile--beam  { top: 0;     left: 12px; }
+      .hero-tile--metal { top: 0;     left: calc(100% - 142px); }
+      .hero-tile--orb   { top: 146px; left: calc(50% - 65px); }
+      .hero-tile--gooey { top: 292px; left: 12px; }
+      .hero-tile--image { top: 292px; left: calc(100% - 142px); }
+    }
+    @media (min-width: 761px) {
+      .hero-tiles-row { display: contents; }
+      .hero-tiles-box { position: absolute; inset: 0; }
+      .header { min-height: 689px; }
     }
 
     /* ── Library grid cards (Figma 1413-37519): icon + meta row ── */
     .lib-card-hit { position: absolute; inset: 0; z-index: 6; border-radius: 24px; }
     .lib-video { width: 100%; height: 100%; object-fit: cover; display: block; }
-    /* 254 not 245: the meta row is inset 16px from the card's bottom, and
-       the gap above it should read the same. Card height is fixed at
-       344px, so the stage takes up the 9px difference. */
+    /* 254 leaves 16px between the stage and the icon — the same gap the
+       meta keeps below itself, so the card breathes evenly. */
     .lib-card .card-stage { height: 254px; }
     .lib-meta {
       position: absolute; left: 16px; right: 16px; bottom: 16px;
@@ -219,6 +369,7 @@
     /* The image-generation export carries its drop shadow in the bitmap
        (52px canvas for a 46px tile) — render at natural size, recentered. */
     .lib-ico img.lib-ico-img--pad { width: 52px; height: 52px; max-width: none; margin: -3px; }
+    .lib-ico:has(.lib-ico-img--pad) { overflow: visible; }
     .lib-meta-text { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
     .lib-name { font-size: 14px; font-weight: 500; line-height: 13px; color: #ededed; }
     .lib-desc {
@@ -244,6 +395,27 @@
       display: flex; flex-direction: column; gap: 24px; min-width: 0;
       min-height: 240px; padding: 32px; border-radius: 24px;
     }
+    /* A quiet X mark in the card's top-right corner, so the quotes read as
+       posts. Linked where the card already links to the author's profile;
+       decorative otherwise. */
+    .pro-quote { position: relative; }
+    .pro-quote-x {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      width: 14px;
+      height: 14px;
+      display: block;
+      color: rgba(255, 255, 255, 0.22);
+      text-decoration: none;
+      transition: color 150ms ease;
+    }
+    .pro-quote-x svg { width: 100%; height: 100%; display: block; }
+    /* The quote never runs under the mark. */
+    .pro-quote-text { padding-right: 28px; }
+    a.pro-quote-x:hover { color: rgba(255, 255, 255, 0.6); }
+    html[data-theme="light"] .pro-quote-x { color: rgba(0, 0, 0, 0.18); }
+    html[data-theme="light"] a.pro-quote-x:hover { color: rgba(0, 0, 0, 0.55); }
     .pro-quote-text { margin: 0; flex: 1 1 auto; font-size: 16px; line-height: 24.2px; color: #c9c9c9; overflow-wrap: anywhere; }
     .pro-quote-author { display: flex; align-items: center; gap: 11px; min-width: 0; }
     .pro-quote-avatar-link { flex: none; display: inline-flex; border-radius: 50px; text-decoration: none; transition: opacity 150ms var(--ease-smooth-out); }
@@ -254,9 +426,18 @@
       background: rgba(255, 255, 255, 0.06); color: var(--text-muted);
       font-size: 13px; font-weight: 500; overflow: hidden;
     }
+    /* Real photo when one is installed; the initial stays underneath as the
+       fallback, and a missing file drops the img so the initial shows. */
+    .pro-quote-avatar { position: relative; }
+    .pro-quote-avatar-img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; border-radius: inherit; display: block;
+    }
     .pro-quote-id { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
     .pro-quote-name { align-self: flex-start; font-size: 13px; line-height: 16px; font-weight: 500; color: #ededed; text-decoration: none; }
-    a.pro-quote-name:hover { text-decoration: underline; text-underline-offset: 2px; }
+    /* Only the ones that link out are underlined; a plain name is not a link. */
+    a.pro-quote-name { text-decoration: underline; text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, currentColor 50%, transparent); transition: text-decoration-color 180ms ease; }
+    a.pro-quote-name:hover { text-decoration-color: currentColor; }
     .pro-quote-role { font-size: 13px; line-height: 16px; color: #737373; overflow-wrap: anywhere; }
     @media (max-width: 900px) {
       .pro-quotes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -270,43 +451,83 @@
       .pro-quote-text { font-size: 15px; line-height: 23px; }
     }
 
-    /* ── How to use (same card material as the pro quotes) ──────── */
+    /* ── How to use: tall showcase cards under a left-aligned lede.
+       Each step carries a mock of the moment itself (terminal, diff,
+       Studio panel) with the copy at the foot of the card. ── */
+    .howto-head { max-width: 640px; margin-bottom: 40px; }
+    .howto-title {
+      margin: 0;
+      font-family: "Saans", var(--font-sans);
+      font-size: 38px; font-weight: 500; line-height: 1.16;
+      letter-spacing: -0.01em; color: var(--text);
+    }
+    .howto-title-dim { opacity: 0.6; }
+    .howto-lede { margin: 14px 0 0; font-size: 16px; line-height: 24px; color: var(--text-muted); max-width: 46ch; }
     .howto-steps {
-      list-style: none; margin: 0; padding: 0; counter-reset: none;
+      list-style: none; margin: 0; padding: 0;
       display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 18px; align-items: stretch;
     }
+    /* Fill and shadow come from the gallery card surface in site.css. */
     .howto-step {
-      display: flex; flex-direction: column; gap: 12px; min-width: 0;
+      display: flex; flex-direction: column; gap: 6px; min-width: 0;
       padding: 32px; border-radius: 24px;
     }
+    .howto-step > * { position: relative; z-index: 2; }
+    /* Badge above the title, matching the How to use cards: the halo needs
+       room, so align-items keeps the badge at its own width rather than
+       stretching it across the column. */
+    .howto-step-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+    }
     .howto-step-num {
-      width: 28px; height: 28px; border-radius: 50px;
+      position: relative;
+      /* Own stacking context, or the halo's z-index -1 sinks behind the card. */
+      isolation: isolate;
+      flex: none; width: 21px; height: 21px; border-radius: 50px;
       display: inline-flex; align-items: center; justify-content: center;
-      margin-bottom: 8px;
-      background: #3e3e3e;
+      background: #0071fc;
       box-shadow:
         0 1px 3px 0 rgba(0, 0, 0, 0.04),
         inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
-        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
-        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
-        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
-      color: rgba(237, 237, 237, 0.8);
-      font-size: 12px;
-      line-height: 13px;
-      font-weight: 500;
+        inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      font-size: 11px; line-height: 12px; font-weight: 500;
+    }
+    /* The halo behind the disc (Figma 1418:38284): the same blue at
+       20 percent, reaching past each edge in the design's 3:2 ratio. */
+    .howto-step-num::before {
+      content: "";
+      position: absolute;
+      inset: -5.25px;
+      border-radius: 50px;
+      background: #0071fc;
+      opacity: 0.2;
+      z-index: -1;
     }
     .howto-step-title { margin: 0; font-size: 15px; font-weight: 500; line-height: 20px; color: #ededed; }
     .howto-step-text { margin: 0; font-size: 14px; line-height: 22px; color: var(--text-muted); overflow-wrap: anywhere; }
     .howto-step-text code {
-      font-family: var(--font-mono); font-size: 12px; line-height: 18px;
-      padding: 1px 6px; border-radius: 6px;
-      background: rgba(255, 255, 255, 0.06); color: var(--text); white-space: nowrap;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 18px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: var(--code-chip-bg);
+      box-shadow: inset 0 0 0 1px var(--code-chip-ring);
+      color: var(--text);
     }
-    .howto-step-text a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
+    /* Inline links: a 50% underline at rest that reaches full ink on hover, like transitions.dev. */
+    .howto-step-text a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, currentColor 50%, transparent); transition: text-decoration-color 180ms ease; }
+    .howto-step-text a:hover { text-decoration-color: currentColor; }
     @media (max-width: 900px) {
+      .howto-title { font-size: 30px; }
       .howto-steps { grid-template-columns: minmax(0, 1fr); gap: 12px; }
-      .howto-step { padding: 24px; }
+      .howto-step { padding: 24px; gap: 20px; }
     }
 
     /* ── FAQ accordion (styling from transitions.dev/pro) ───────── */
@@ -343,8 +564,19 @@
       transition: opacity var(--acc-expand) var(--acc-ease), filter var(--acc-expand) var(--acc-ease);
     }
     .t-acc-panel-inner p { margin: 0 0 16px; padding-right: 28px; font-size: 14px; line-height: 22px; color: var(--text-muted); }
-    .t-acc-panel-inner code { font-family: var(--font-mono); font-size: 12px; line-height: 18px; padding: 1px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.06); color: var(--text); }
-    .t-acc-panel-inner a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
+    .t-acc-panel-inner code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 18px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: var(--code-chip-bg);
+      box-shadow: inset 0 0 0 1px var(--code-chip-ring);
+      color: var(--text);
+    }
+    /* Inline links: a 50% underline at rest that reaches full ink on hover, like transitions.dev. */
+    .t-acc-panel-inner a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, currentColor 50%, transparent); transition: text-decoration-color 180ms ease; }
+    .t-acc-panel-inner a:hover { text-decoration-color: currentColor; }
     @media (prefers-reduced-motion: reduce) {
       .t-acc-panel, .t-acc-panel-inner, .t-acc-chevron, .hero-tile { transition: none !important; }
     }
@@ -358,20 +590,18 @@
       line-height: 13px;
       font-weight: 500;
     }
-    .skill-cta-row .skill-btn--primary {
-      background: #e9e9e9;
-      color: #17181c;
-      padding: 0 16px;
-      border-radius: 26px;
-      box-shadow: none;
-    }
-    .skill-cta-row .skill-btn--primary:hover { background: #ffffff; }
-    .skill-cta-row .skill-btn--primary:active { background: #dcdcdc; }
-    .skill-cta-row .skill-btn--secondary {
-      background: #2a2a2a;
-      color: #ffffff;
+    /* Figma 1292:4277 Button/Small/Select/Primary/Token: both pills share
+       the body; Browse wears the grey token surface, Get Pro access the blue.
+       The class is doubled so these outrank site.css's theme-scoped
+       .skill-btn--* rules, which carry an attribute selector. */
+    .skill-cta-row .skill-btn.skill-btn--primary,
+    .skill-cta-row .skill-btn.skill-btn--secondary {
       padding: 0 12px;
       border-radius: 24px;
+      color: #ffffff;
+    }
+    .skill-cta-row .skill-btn.skill-btn--primary {
+      background: #2a2a2a;
       box-shadow:
         0 1px 3px 0 rgba(0, 0, 0, 0.04),
         inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
@@ -379,8 +609,18 @@
         inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
         inset 0 0 0 1px rgba(196, 196, 196, 0.1);
     }
-    .skill-cta-row .skill-btn--secondary:hover { background: #323232; }
-    .skill-cta-row .skill-btn--secondary:active { background: #262626; }
+    .skill-cta-row .skill-btn.skill-btn--primary:hover { background: #323232; }
+    .skill-cta-row .skill-btn.skill-btn--primary:active { background: #262626; }
+    .skill-cta-row .skill-btn.skill-btn--secondary {
+      background: #0071fc;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+    }
+    .skill-cta-row .skill-btn.skill-btn--secondary:hover { background: #1a7dff; }
+    .skill-cta-row .skill-btn.skill-btn--secondary:active { background: #0063e0; }
   </style>
 </head>
 <body>
@@ -398,8 +638,9 @@
             <span class="brand-word"><span class="brand-word-strong">Libraries</span><span class="brand-word-dim">.dev</span></span>
           </a>
           <nav class="site-nav-menu" aria-label="Primary">
-            <a class="nav-pill nav-pill--active" href="/#components">Libraries</a>
-            <a class="nav-pill" href="/studio.html">Studio</a>
+            <a class="nav-pill" href="/beam.html">Libraries</a>
+            <a class="nav-pill" href="/how-to-use.html">How to use</a>
+            <a class="nav-pill" href="/studio.html">Studio <span class="nav-pill-pro">Pro</span></a>
           </nav>
         </div>
         <div class="site-nav-right">
@@ -410,7 +651,7 @@
             href="https://github.com/Jakubantalik/Libraries"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="GitHub repository — star count"
+            aria-label="GitHub repository star count"
             data-loading="true"
           >
             <svg aria-hidden="true" viewBox="0 0 16 16" fill="currentColor">
@@ -418,23 +659,9 @@
             </svg>
             <span class="pill-label" id="gh-stars-count">—</span>
           </a>
-          <a
-            class="icon-btn"
-            href="https://x.com/jakubantalik"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="X (Twitter)"
-          >
-            <svg class="icon-x" aria-hidden="true" viewBox="0 0 16 17" xmlns="http://www.w3.org/2000/svg">
-              <path
-                fill="currentColor"
-                d="M12.4041 1.39726H14.6953L9.69087 7.2591L15.5781 15.2368H10.9696L7.35741 10.3996L3.22921 15.2368H0.934687L6.28641 8.96575L0.642598 1.39726H5.36795L8.62962 5.81859L12.4041 1.39726ZM11.5992 13.8329H12.8682L4.67667 2.72798H3.31359L11.5992 13.8329Z"
-              />
-            </svg>
-          </a>
           <div class="pm-anchor" id="more-anchor">
             <button type="button" class="icon-btn" id="more-btn" aria-label="More" aria-haspopup="menu" aria-expanded="false">
-              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block">
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 8C6.66667 7.26362 7.26362 6.66667 8 6.66667C8.73638 6.66667 9.33333 7.26362 9.33333 8C9.33333 8.73638 8.73638 9.33333 8 9.33333C7.26362 9.33333 6.66667 8.73638 6.66667 8Z" fill="currentColor"/>
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 3.33333C6.66667 2.59695 7.26362 2 8 2C8.73638 2 9.33333 2.59695 9.33333 3.33333C9.33333 4.06971 8.73638 4.66667 8 4.66667C7.26362 4.66667 6.66667 4.06971 6.66667 3.33333Z" fill="currentColor"/>
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 12.6667C6.66667 11.9303 7.26362 11.3333 8 11.3333C8.73638 11.3333 9.33333 11.9303 9.33333 12.6667C9.33333 13.403 8.73638 14 8 14C7.26362 14 6.66667 13.403 6.66667 12.6667Z" fill="currentColor"/>
@@ -469,56 +696,85 @@
       <div class="mobile-menu-backdrop" id="mobile-menu-backdrop"></div>
       <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile">
         <ul class="mobile-menu-list">
-          <li><a class="mobile-menu-link mobile-menu-link--1" href="/#components">Libraries</a></li>
-          <li><a class="mobile-menu-link mobile-menu-link--2" href="/studio.html">Studio</a></li>
-          <li><a class="mobile-menu-link mobile-menu-link--3 mobile-menu-link--pro" href="/pro.html">Get Pro</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--1" href="/beam.html">Libraries</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--2" href="/how-to-use.html">How to use</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--3" href="/studio.html">Studio</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--4 mobile-menu-link--pro" href="/pro.html">Get Pro</a></li>
         </ul>
         <a class="mobile-menu-cta" id="mobile-signin" href="/pro.html">Sign in</a>
       </nav>
     </header>
 
     <header class="header">
-      <p class="hero-badge" id="installs-badge"><span id="installs-count">1,400,000+</span><span class="hero-badge-dim">installs</span></p>
+      <p class="hero-badge" id="installs-badge"><span id="installs-count">2,300,000+</span><span class="hero-badge-dim">installs</span></p>
       <h1 class="title">High-crafted UI libraries for AI agents</h1>
       <p class="subtitle">UI effects for modern apps, ready to use with your coding agents.</p>
       <div class="skill-cta-row">
         <a class="skill-btn skill-btn--primary" href="#components">Browse</a>
         <a class="skill-btn skill-btn--secondary" href="/pro.html">Get Pro access</a>
       </div>
-      <div class="hero-tiles-row">
+      <div class="hero-tiles-row" id="hero-tiles">
+        <div class="hero-tiles-box">
         <a class="hero-tile hero-tile--orb" href="/orbs.html" aria-label="Thinking orbs">
-          <span class="hero-tile-stage"><img class="hero-tile-img" src="/assets/previews/orbs.png" alt="" loading="lazy" decoding="async" /></span>
+          <span class="hero-tile-stage"></span>
           <span class="hero-tile-pill">Thinking orbs <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.47 6.22a.75.75 0 0 1 1.06 0L8 8.69l2.47-2.47a.75.75 0 1 1 1.06 1.06l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 0 1 0-1.06Z" fill="currentColor"/></svg></span>
         </a>
         <a class="hero-tile hero-tile--beam" href="/beam.html" aria-label="Border beam">
-          <span class="hero-tile-stage"><img class="hero-tile-img" src="/assets/previews/beam.jpg" alt="" loading="lazy" decoding="async" /></span>
+          <span class="hero-tile-stage"></span>
           <span class="hero-tile-pill">Border beam <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.47 6.22a.75.75 0 0 1 1.06 0L8 8.69l2.47-2.47a.75.75 0 1 1 1.06 1.06l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 0 1 0-1.06Z" fill="currentColor"/></svg></span>
         </a>
         <a class="hero-tile hero-tile--metal" href="/metal.html" aria-label="Liquid metal">
-          <span class="hero-tile-stage"><img class="hero-tile-img" src="/assets/previews/metal.jpg" alt="" loading="lazy" decoding="async" /></span>
+          <span class="hero-tile-stage"></span>
           <span class="hero-tile-pill">Liquid metal <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.47 6.22a.75.75 0 0 1 1.06 0L8 8.69l2.47-2.47a.75.75 0 1 1 1.06 1.06l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 0 1 0-1.06Z" fill="currentColor"/></svg></span>
         </a>
         <a class="hero-tile hero-tile--gooey" href="/gooey.html" aria-label="Gooey">
-          <span class="hero-tile-stage"><img class="hero-tile-img" src="/assets/previews/gooey.jpg" alt="" loading="lazy" decoding="async" /></span>
+          <span class="hero-tile-stage"></span>
           <span class="hero-tile-pill">Gooey <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.47 6.22a.75.75 0 0 1 1.06 0L8 8.69l2.47-2.47a.75.75 0 1 1 1.06 1.06l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 0 1 0-1.06Z" fill="currentColor"/></svg></span>
         </a>
         <a class="hero-tile hero-tile--image" href="/image.html" aria-label="Image generation">
-          <span class="hero-tile-stage"><img class="hero-tile-img" src="/assets/previews/image.jpg" alt="" loading="lazy" decoding="async" /></span>
+          <span class="hero-tile-stage"></span>
           <span class="hero-tile-pill">Image generation <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.47 6.22a.75.75 0 0 1 1.06 0L8 8.69l2.47-2.47a.75.75 0 1 1 1.06 1.06l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 0 1 0-1.06Z" fill="currentColor"/></svg></span>
         </a>
+        </div>
       </div>
+      <script type="module" src="/src/hero-tiles.tsx"></script>
+      <script>
+        /* Library cards play on hover and hold their frame on leave, so a
+           second hover picks up where the first stopped. Without a hover
+           (touch), they simply autoplay as before. */
+        (function () {
+          /* This script sits in the hero, above the cards in source order,
+             so it has to wait for the rest of the document to parse. */
+          if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", arguments.callee);
+            return;
+          }
+          var canHover = window.matchMedia("(hover: hover)").matches;
+          document.querySelectorAll(".lib-card").forEach(function (card) {
+            var v = card.querySelector(".lib-video");
+            if (!v) return;
+            if (!canHover) { v.play().catch(function () {}); return; }
+            var play = function () { v.play().catch(function () {}); };
+            var pause = function () { v.pause(); };
+            card.addEventListener("pointerenter", play);
+            card.addEventListener("pointerleave", pause);
+            card.addEventListener("focusin", play);
+            card.addEventListener("focusout", pause);
+          });
+        })();
+      </script>
     </header>
 
     <section class="cards" id="components" aria-label="Effect libraries" style="scroll-margin-top: 24px;">
       <article class="card lib-card" data-lib="beam">
-        <a class="lib-card-hit" href="/beam.html" aria-label="Border Beam playground"></a>
+        <a class="lib-card-hit" href="/beam.html" aria-label="Border beam playground"></a>
         <div class="card-stage">
-          <video class="lib-video" src="/assets/videos/beam.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
+          <video class="lib-video" src="/assets/videos/beam-main-card.mp4" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
         </div>
         <div class="lib-meta">
           <span class="lib-ico"><img src="/assets/icons/tile-beam.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
           <span class="lib-meta-text">
-            <span class="lib-name">Border Beam</span>
+            <span class="lib-name">Border beam</span>
             <span class="lib-desc">Animated rainbow glow riding any border</span>
           </span>
         </div>
@@ -527,7 +783,7 @@
       <article class="card lib-card" data-lib="orb">
         <a class="lib-card-hit" href="/orbs.html" aria-label="Thinking orbs playground"></a>
         <div class="card-stage">
-          <video class="lib-video" src="/assets/videos/orb.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
+          <video class="lib-video" src="/assets/videos/orb-main-card.mp4" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
         </div>
         <div class="lib-meta">
           <span class="lib-ico"><img src="/assets/icons/tile-orbs.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
@@ -541,13 +797,13 @@
       <article class="card lib-card" data-lib="gooey">
         <a class="lib-card-hit" href="/gooey.html" aria-label="Gooey playground"></a>
         <div class="card-stage">
-          <video class="lib-video" src="/assets/videos/gooey.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
+          <video class="lib-video" src="/assets/videos/gooey.mp4" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
         </div>
         <div class="lib-meta">
           <span class="lib-ico"><img src="/assets/icons/tile-gooey.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
           <span class="lib-meta-text">
             <span class="lib-name">Gooey</span>
-            <span class="lib-desc">Liquid UI — pieces merge and morph like goo</span>
+            <span class="lib-desc">Liquid UI: pieces merge and morph like goo</span>
           </span>
         </div>
       </article>
@@ -555,7 +811,7 @@
       <article class="card lib-card" data-lib="metal">
         <a class="lib-card-hit" href="/metal.html" aria-label="Liquid Metal playground"></a>
         <div class="card-stage">
-          <video class="lib-video" src="/assets/videos/metal.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
+          <video class="lib-video" src="/assets/videos/metal.mp4" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
         </div>
         <div class="lib-meta">
           <span class="lib-ico"><img src="/assets/icons/tile-metal.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
@@ -569,7 +825,7 @@
       <article class="card lib-card" data-lib="image">
         <a class="lib-card-hit" href="/image.html" aria-label="Image generation playground"></a>
         <div class="card-stage">
-          <video class="lib-video" src="/assets/videos/image.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
+          <video class="lib-video" src="/assets/videos/image.mp4" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
         </div>
         <div class="lib-meta">
           <span class="lib-ico"><img class="lib-ico-img--pad" src="/assets/icons/tile-image.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
@@ -586,29 +842,32 @@
       <h2 class="home-section-title" id="kind-words-title">Kind words from X</h2>
       <ul class="pro-quotes">
         <li class="pro-quote">
+          <span class="pro-quote-x" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span>
           <p class="pro-quote-text">Generational cook!</p>
           <div class="pro-quote-author">
-            <span class="pro-quote-avatar" aria-hidden="true">H</span>
+            <span class="pro-quote-avatar" aria-hidden="true">G<img class="pro-quote-avatar-img" src="/assets/avatars/rauchg.jpg" alt="" onerror="this.remove()" /></span>
             <span class="pro-quote-id">
-              <span class="pro-quote-name">Harsh</span>
+              <span class="pro-quote-name">Guillermo Rauch</span>
               <span class="pro-quote-role">CEO, Vercel</span>
             </span>
           </div>
         </li>
         <li class="pro-quote">
+          <span class="pro-quote-x" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span>
           <p class="pro-quote-text">Very cool</p>
           <div class="pro-quote-author">
-            <span class="pro-quote-avatar" aria-hidden="true">D</span>
+            <span class="pro-quote-avatar" aria-hidden="true">D<img class="pro-quote-avatar-img" src="/assets/avatars/destraynor.jpg" alt="" onerror="this.remove()" /></span>
             <span class="pro-quote-id">
-              <span class="pro-quote-name">Des</span>
+              <span class="pro-quote-name">Des Traynor</span>
               <span class="pro-quote-role">Co-founder of Intercom</span>
             </span>
           </div>
         </li>
         <li class="pro-quote">
+          <span class="pro-quote-x" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span>
           <p class="pro-quote-text">INSANELY AMAZING</p>
           <div class="pro-quote-author">
-            <span class="pro-quote-avatar" aria-hidden="true">K</span>
+            <span class="pro-quote-avatar" aria-hidden="true">K<img class="pro-quote-avatar-img" src="/assets/avatars/krispuckett.jpg" alt="" onerror="this.remove()" /></span>
             <span class="pro-quote-id">
               <span class="pro-quote-name">Kris Puckett</span>
               <span class="pro-quote-role">Design manager at Stripe</span>
@@ -616,6 +875,7 @@
           </div>
         </li>
         <li class="pro-quote">
+          <a class="pro-quote-x" href="https://x.com/witsdev" target="_blank" rel="noopener noreferrer" aria-label="wits on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
           <p class="pro-quote-text">Thank you for building an awesome library! :)</p>
           <div class="pro-quote-author">
             <a class="pro-quote-avatar-link" href="https://x.com/witsdev" target="_blank" rel="noopener noreferrer" aria-label="wits on X" tabindex="-1">
@@ -623,12 +883,13 @@
             </a>
             <span class="pro-quote-id">
               <a class="pro-quote-name" href="https://x.com/witsdev" target="_blank" rel="noopener noreferrer">wits</a>
-              <span class="pro-quote-role">Engineer at Vercel — after shipping Border Beam in the Vercel dashboard</span>
+              <span class="pro-quote-role">Engineer at Vercel, after shipping Border Beam in the Vercel dashboard</span>
             </span>
           </div>
         </li>
         <li class="pro-quote">
-          <p class="pro-quote-text">Your AI agent&rsquo;s &ldquo;thinking...&rdquo; state doesn&rsquo;t have to be a boring spinner. 6 animated orb types, zero dependencies, light + dark mode built in — npm install and you&rsquo;re done.</p>
+          <a class="pro-quote-x" href="https://x.com/tranmautritam" target="_blank" rel="noopener noreferrer" aria-label="Tran Mau Tri Tam on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+          <p class="pro-quote-text">Your AI agent&rsquo;s &ldquo;thinking...&rdquo; state doesn&rsquo;t have to be a boring spinner. 6 animated orb types, zero dependencies, light + dark mode built in. npm install and you&rsquo;re done.</p>
           <div class="pro-quote-author">
             <a class="pro-quote-avatar-link" href="https://x.com/tranmautritam" target="_blank" rel="noopener noreferrer" aria-label="Tran Mau Tri Tam on X" tabindex="-1">
               <span class="pro-quote-avatar" aria-hidden="true">T</span>
@@ -640,6 +901,7 @@
           </div>
         </li>
         <li class="pro-quote">
+          <a class="pro-quote-x" href="https://x.com/jakubantalik" target="_blank" rel="noopener noreferrer" aria-label="Jakub Antalik on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
           <p class="pro-quote-text">Using Beam, Orb, Gooey, Metal or Image somewhere nice? Tell me on X and I&rsquo;ll feature it here.</p>
           <div class="pro-quote-author">
             <a class="pro-quote-avatar-link" href="https://x.com/jakubantalik" target="_blank" rel="noopener noreferrer" aria-label="Jakub Antalik on X" tabindex="-1">
@@ -655,22 +917,31 @@
     </section>
 
     <section class="home-section" aria-labelledby="how-to-use-title">
-      <h2 class="home-section-title" id="how-to-use-title">How to use</h2>
+      <div class="howto-head">
+        <h2 class="howto-title" id="how-to-use-title">Copy the prompt.<br /><span class="howto-title-dim">Paste it to coding agent</span></h2>
+        <p class="howto-lede">Every library ships as a prompt. One copy, and your coding agent builds it in: Claude Code, Cursor or Codex.</p>
+      </div>
       <ol class="howto-steps">
         <li class="howto-step">
-          <span class="howto-step-num" aria-hidden="true">1</span>
-          <h3 class="howto-step-title">Install</h3>
-          <p class="howto-step-text">Every library is a standalone npm package — grab only what you need: <code>npm install border-beam</code>, <code>thinking-orbs</code>, <code>liquid-gooey</code>, <code>metal-fx</code> or <code>img-fx</code>.</p>
+          <div class="howto-step-meta">
+            <span class="howto-step-num" aria-hidden="true">1</span>
+            <h3 class="howto-step-title">Copy the prompt</h3>
+          </div>
+          <p class="howto-step-text">One button packs the install line, usage and every prop into a single paste.</p>
         </li>
         <li class="howto-step">
-          <span class="howto-step-num" aria-hidden="true">2</span>
-          <h3 class="howto-step-title">Drop it in</h3>
-          <p class="howto-step-text">Import the component and wrap your UI — React 18+, zero runtime dependencies, light and dark mode built in. Works from Cursor, Claude Code and Codex out of the box.</p>
+          <div class="howto-step-meta">
+            <span class="howto-step-num" aria-hidden="true">2</span>
+            <h3 class="howto-step-title">Paste it in your agent</h3>
+          </div>
+          <p class="howto-step-text">Claude Code, Cursor or Codex installs it and wires it into your app.</p>
         </li>
         <li class="howto-step">
-          <span class="howto-step-num" aria-hidden="true">3</span>
-          <h3 class="howto-step-title">Make it yours</h3>
-          <p class="howto-step-text">Tune the effect in each library&rsquo;s playground, or go deeper in the <a href="/studio.html">Studio</a> with Pro and export the exact configuration as props.</p>
+          <div class="howto-step-meta">
+            <span class="howto-step-num" aria-hidden="true">3</span>
+            <h3 class="howto-step-title">Make it yours</h3>
+          </div>
+          <p class="howto-step-text">Tune it in the playground, or go deeper in the <a href="/studio.html">Studio</a> with Pro.</p>
         </li>
       </ol>
     </section>
@@ -684,7 +955,7 @@
             <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
           </button>
           <div class="t-acc-panel"><div class="t-acc-panel-inner">
-            <p>Yes. All five libraries — Beam, Orb, Gooey, Metal and Image — are MIT-licensed and free on npm. Install any of them with <code>npm install border-beam</code>, <code>thinking-orbs</code>, <code>liquid-gooey</code>, <code>metal-fx</code> or <code>img-fx</code>.</p>
+            <p>Yes. All five libraries (Beam, Orb, Gooey, Metal and Image) are MIT-licensed and free on npm. Install any of them with <code>npm install border-beam</code>, <code>thinking-orbs</code>, <code>liquid-gooey</code>, <code>metal-fx</code> or <code>img-fx</code>.</p>
           </div></div>
         </div>
 
@@ -704,7 +975,7 @@
             <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
           </button>
           <div class="t-acc-panel"><div class="t-acc-panel-inner">
-            <p>One plan across every library. Pro unlocks the <a href="/studio.html">Studio</a> — deep, per-library customization beyond the public playgrounds, with export of the exact configuration — plus Pro presets and every future library and update. See <a href="/pro.html">pricing</a>.</p>
+            <p>One plan across every library. Pro unlocks the <a href="/studio.html">Studio</a>: deep, per-library customization beyond the public playgrounds, with export of the exact configuration — plus Pro presets and every future library and update. See <a href="/pro.html">pricing</a>.</p>
           </div></div>
         </div>
 
@@ -714,17 +985,7 @@
             <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
           </button>
           <div class="t-acc-panel"><div class="t-acc-panel-inner">
-            <p>Yes — that is the point. Every library installs and configures cleanly from Cursor, Claude Code, Codex and similar tools, and the effects are designed so agent-built apps stop looking generic. Pro adds skills that teach your agent each library&rsquo;s full parameter vocabulary.</p>
-          </div></div>
-        </div>
-
-        <div class="t-acc" data-open="false">
-          <button class="t-acc-head" type="button" aria-expanded="false">
-            <span>Can I use them in commercial projects?</span>
-            <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
-          </button>
-          <div class="t-acc-panel"><div class="t-acc-panel-inner">
-            <p>The free libraries are MIT — use them anywhere, including commercial work. Pro content (Studio exports, Pro presets and recipes) is licensed to you or your team under the plan you buy, for unlimited projects.</p>
+            <p>Yes, that is the point. Every library installs and configures cleanly from Cursor, Claude Code, Codex and similar tools, and the effects are designed so agent-built apps stop looking generic. Pro adds skills that teach your agent each library&rsquo;s full parameter vocabulary.</p>
           </div></div>
         </div>
 
@@ -734,7 +995,7 @@
             <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
           </button>
           <div class="t-acc-panel"><div class="t-acc-panel-inner">
-            <p>Officially the packages target React. Community ports exist — Expo and React Native for the orbs, Svelte and Vue ports of Beam and Gooey — and SwiftUI plus React Native ports for Beam and Orb live in the main repository.</p>
+            <p>Every package targets React. Beam and Orb also ship SwiftUI and React Native versions. Support for the remaining libraries is coming soon.</p>
           </div></div>
         </div>
       </div>
@@ -756,8 +1017,8 @@
         <nav class="footer-cols" aria-label="Footer">
           <div class="footer-col">
             <p class="footer-col-title">Libraries</p>
-            <a href="/beam.html">Beam</a>
-            <a href="/orbs.html">Orb</a>
+            <a href="/beam.html">Border beam</a>
+            <a href="/orbs.html">Thinking orbs</a>
             <a href="/gooey.html">Gooey</a>
             <a href="/metal.html">Metal</a>
             <a href="/image.html">Image</a>
@@ -766,6 +1027,7 @@
             <p class="footer-col-title">Product</p>
             <a href="/">Home</a>
             <a href="/studio.html">Studio</a>
+            <a href="/how-to-use.html">How to use</a>
             <a href="/pro.html">Get Pro</a>
           </div>
           <div class="footer-col">
@@ -794,24 +1056,60 @@
         });
       });
 
-      /* Hero badge: live combined npm installs (last month), cached 1h. */
+      /* Hero badge: live combined npm installs, all-time, cached 1h.
+       *
+       * npm has no all-time endpoint — /point/last-year caps at 365 days,
+       * which is the whole history today but would start undercounting the
+       * moment the oldest package turns one. So this walks /downloads/range
+       * from before the first publish to today. That endpoint allows at most
+       * 18 months per call, hence the chunking; days before a package existed
+       * come back as zero, which is why one shared start date works for all
+       * five. */
       var badge = document.getElementById("installs-count");
       if (!badge) return;
-      var KEY = "ldev:installs";
+      var KEY = "ldev:installs-total";
       var TTL = 60 * 60 * 1000;
       var PKGS = ["border-beam", "thinking-orbs", "liquid-gooey", "metal-fx", "img-fx"];
+      var START = "2026-01-01"; // earlier than the first package (2026-04-12)
+      var MAX_MONTHS = 17;      // one under npm's limit, to stay clear of edges
+
       function paint(n) {
         badge.textContent = n.toLocaleString("en-US");
       }
+      function iso(d) {
+        return d.toISOString().slice(0, 10);
+      }
+
       try {
         var c = JSON.parse(sessionStorage.getItem(KEY) || "null");
         if (c && Date.now() - c.t < TTL) { paint(c.n); return; }
       } catch (e) {}
+
+      /* Windows are built once and reused for every package. */
+      var windows = [];
+      var cursor = new Date(START + "T00:00:00Z");
+      var today = new Date();
+      while (cursor < today) {
+        var end = new Date(cursor);
+        end.setUTCMonth(end.getUTCMonth() + MAX_MONTHS);
+        if (end > today) end = today;
+        windows.push(iso(cursor) + ":" + iso(end));
+        cursor = new Date(end);
+        cursor.setUTCDate(cursor.getUTCDate() + 1);
+      }
+
       Promise.all(PKGS.map(function (p) {
-        return fetch("https://api.npmjs.org/downloads/point/last-month/" + p)
-          .then(function (r) { return r.json(); })
-          .then(function (d) { return d.downloads || 0; })
-          .catch(function () { return 0; });
+        return Promise.all(windows.map(function (w) {
+          return fetch("https://api.npmjs.org/downloads/range/" + w + "/" + p)
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+              if (!d || !d.downloads) return 0;
+              return d.downloads.reduce(function (a, day) { return a + (day.downloads || 0); }, 0);
+            })
+            .catch(function () { return 0; });
+        })).then(function (parts) {
+          return parts.reduce(function (a, b) { return a + b; }, 0);
+        });
       })).then(function (counts) {
         var total = counts.reduce(function (a, b) { return a + b; }, 0);
         if (total > 0) {
@@ -821,7 +1119,322 @@
       });
     })();
   </script>
+  <script>
+    /* Dev-only motion tuner for the hero-tile hover lift.
+       Renders only on localhost or with ?motion in the URL, and builds its
+       own DOM — nothing ships to a production page but this script. Easing
+       and duration start from the transitions.dev motion tokens the site
+       defines in site.css, and either can be overridden with custom values:
+       the four cubic-bezier control points are editable (with a live curve
+       preview) and the duration takes any millisecond value. */
+    (function () {
+      var isDev = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+      if (!isDev && !new URLSearchParams(location.search).has("motion")) return;
+
+      var DURATIONS = [
+        ["--duration-stagger", 40], ["--duration-micro", 80],
+        ["--duration-quick", 150], ["--duration-fast", 250],
+        ["--duration-medium", 350], ["--duration-slow", 400],
+        ["--duration-very-slow", 500]
+      ];
+      /* Bezier tokens carry their control points so a token can seed the
+         custom fields; the keyword easings have none. */
+      var EASINGS = [
+        ["--ease-bounce", "cubic-bezier(0.34, 1.36, 0.64, 1)", [0.34, 1.36, 0.64, 1]],
+        ["--ease-bounce-strong", "cubic-bezier(0.34, 3.85, 0.64, 1)", [0.34, 3.85, 0.64, 1]],
+        ["--ease-smooth-out", "cubic-bezier(0.22, 1, 0.36, 1)", [0.22, 1, 0.36, 1]],
+        ["--ease-in-out", "ease-in-out", null],
+        ["--ease-out", "ease-out", null],
+        ["--ease-linear", "linear", null]
+      ];
+      var DISTANCES = [
+        ["--distance-micro", "4px"], ["--distance-small", "6px"],
+        ["--distance-base", "8px"], ["--distance-medium", "12px"],
+        ["--distance-large", "30px"]
+      ];
+      /* Shipped defaults — Reset returns here, and these are what the CSS
+         fallbacks use when the tuner never runs. */
+      var DEFAULTS = {
+        dur: "var(--duration-medium)",
+        ease: "cubic-bezier(0.34, 1.85, 0.64, 1)",
+        y: "6px"
+      };
+      var DEFAULT_PTS = [0.34, 1.85, 0.64, 1];
+      var state = Object.assign({}, DEFAULTS);
+      var pts = DEFAULT_PTS.slice();
+
+      var css = document.createElement("style");
+      css.textContent = [
+        ".mt { position: fixed; right: 16px; bottom: 16px; z-index: 300; width: 268px;",
+        "  max-height: calc(100dvh - 32px); overflow-y: auto;",
+        "  background: #181818; border-radius: 16px; padding: 14px;",
+        "  box-shadow: 0 8px 32px rgba(0,0,0,.5), inset 0 0 0 1px rgba(196,196,196,.1);",
+        "  font-family: var(--font-sans); color: #ededed; }",
+        ".mt[hidden] { display: none; }",
+        ".mt-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }",
+        ".mt-title { font-size: 12px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; color: #8a8a8a; }",
+        ".mt-x { border: 0; background: rgba(255,255,255,.07); color: #ededed; width: 22px; height: 22px;",
+        "  border-radius: 50px; cursor: pointer; font-size: 13px; line-height: 1; }",
+        ".mt-f { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }",
+        /* display:flex above would otherwise beat the UA [hidden] rule. */
+        ".mt-f[hidden] { display: none; }",
+        ".mt-l { font-size: 11px; font-weight: 500; color: #8a8a8a; display: flex; justify-content: space-between; }",
+        ".mt-l b { font-weight: 400; color: #cfcfcf; font-family: var(--font-mono); font-size: 10px; }",
+        ".mt select, .mt input[type=number] { width: 100%; height: 30px; border: 0; border-radius: 8px;",
+        "  background: rgba(255,255,255,.07); color: #ededed; font-family: var(--font-sans);",
+        "  font-size: 12px; padding: 0 8px; cursor: pointer; }",
+        ".mt input[type=number] { cursor: text; font-family: var(--font-mono); }",
+        ".mt input[type=range] { width: 100%; accent-color: #ededed; }",
+        ".mt-row { display: flex; gap: 6px; }",
+        /* Bezier editor: curve preview beside a 2x2 grid of control points. */
+        ".mt-bez { display: flex; gap: 10px; align-items: center; }",
+        ".mt-bez svg { flex: none; width: 68px; height: 68px; border-radius: 8px; background: #131313; }",
+        ".mt-bez-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }",
+        ".mt-pt { display: flex; flex-direction: column; gap: 3px; }",
+        ".mt-pt span { font-size: 9px; color: #767676; font-family: var(--font-mono); }",
+        ".mt-pt input { height: 26px !important; font-size: 11px !important; }",
+        ".mt-note { font-size: 10px; line-height: 14px; color: #767676; }",
+        ".mt-btn { flex: 1; height: 30px; border: 0; border-radius: 8px; background: rgba(255,255,255,.07);",
+        "  color: #ededed; font-family: var(--font-sans); font-size: 12px; font-weight: 500; cursor: pointer; }",
+        ".mt-btn:hover { background: rgba(255,255,255,.12); }",
+        ".mt-out { margin-top: 10px; font-family: var(--font-mono); font-size: 10px; line-height: 15px;",
+        "  color: #9a9a9a; background: #131313; border-radius: 8px; padding: 8px; word-break: break-all; }",
+        ".mt-open { position: fixed; right: 16px; bottom: 16px; z-index: 300; height: 32px; padding: 0 12px;",
+        "  border: 0; border-radius: 50px; background: #181818; color: #ededed; font-family: var(--font-sans);",
+        "  font-size: 12px; font-weight: 500; cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,.4), inset 0 0 0 1px rgba(196,196,196,.1); }",
+        ".mt-open[hidden] { display: none; }"
+      ].join("\n");
+      document.head.appendChild(css);
+
+      function durOpts() {
+        return DURATIONS.map(function (o) {
+          return '<option value="var(' + o[0] + ')">' + o[0].replace("--", "") + " · " + o[1] + "ms</option>";
+        }).join("") + '<option value="custom">custom…</option>';
+      }
+      function easeOpts() {
+        return EASINGS.map(function (o) {
+          return '<option value="var(' + o[0] + ')">' + o[0].replace("--", "") + " · " + o[1] + "</option>";
+        }).join("") + '<option value="custom">custom…</option>';
+      }
+      function distOpts() {
+        return '<option value="">custom…</option>' + DISTANCES.map(function (o) {
+          return '<option value="var(' + o[0] + ')">' + o[0].replace("--", "") + " · " + o[1] + "</option>";
+        }).join("");
+      }
+      function ptField(i, label) {
+        return '<label class="mt-pt"><span>' + label + '</span>' +
+               '<input type="number" data-pt="' + i + '" step="0.01" value="' + pts[i] + '" /></label>';
+      }
+
+      var panel = document.createElement("div");
+      panel.className = "mt";
+      panel.innerHTML =
+        '<div class="mt-head"><span class="mt-title">Tile hover</span>' +
+        '<button class="mt-x" type="button" aria-label="Close">×</button></div>' +
+
+        '<div class="mt-f"><span class="mt-l">Duration</span>' +
+        '<select id="mt-dur">' + durOpts() + "</select></div>" +
+        '<div class="mt-f" id="mt-durc" hidden><span class="mt-l">Duration (ms)</span>' +
+        '<input id="mt-durms" type="number" min="0" max="3000" step="10" value="350" /></div>' +
+
+        '<div class="mt-f"><span class="mt-l">Easing</span>' +
+        '<select id="mt-ease">' + easeOpts() + "</select></div>" +
+        '<div class="mt-f"><span class="mt-l">Control points</span>' +
+        '<div class="mt-bez">' +
+        '<svg id="mt-curve" viewBox="0 0 100 100" aria-hidden="true"></svg>' +
+        '<div class="mt-bez-grid">' + ptField(0, "x1") + ptField(1, "y1") + ptField(2, "x2") + ptField(3, "y2") +
+        "</div></div>" +
+        '<p class="mt-note" id="mt-bez-note"></p></div>' +
+
+        '<div class="mt-f"><span class="mt-l">Lift <b id="mt-yv">6px</b></span>' +
+        '<input id="mt-y" type="range" min="0" max="30" step="1" value="6" /></div>' +
+        '<div class="mt-f"><span class="mt-l">Token distances</span>' +
+        '<select id="mt-yt">' + distOpts() + "</select></div>" +
+
+        '<div class="mt-row"><button class="mt-btn" id="mt-reset" type="button">Reset</button>' +
+        '<button class="mt-btn" id="mt-copy" type="button">Copy CSS</button></div>' +
+        '<div class="mt-out" id="mt-out"></div>';
+
+      var openBtn = document.createElement("button");
+      openBtn.className = "mt-open";
+      openBtn.type = "button";
+      openBtn.textContent = "Tile hover";
+      openBtn.hidden = true;
+
+      document.body.appendChild(panel);
+      document.body.appendChild(openBtn);
+
+      var durSel = panel.querySelector("#mt-dur");
+      var durCustom = panel.querySelector("#mt-durc");
+      var durMs = panel.querySelector("#mt-durms");
+      var easeSel = panel.querySelector("#mt-ease");
+      var ptInputs = [].slice.call(panel.querySelectorAll("[data-pt]"));
+      var curve = panel.querySelector("#mt-curve");
+      var bezNote = panel.querySelector("#mt-bez-note");
+      var ySlider = panel.querySelector("#mt-y");
+      var yTokens = panel.querySelector("#mt-yt");
+      var yVal = panel.querySelector("#mt-yv");
+      var out = panel.querySelector("#mt-out");
+      durSel.value = DEFAULTS.dur;
+      easeSel.value = "custom";
+
+      function bezOf(easeValue) {
+        var m = /^var\((--[a-z-]+)\)$/.exec(easeValue);
+        if (m) {
+          var row = EASINGS.filter(function (e) { return e[0] === m[1]; })[0];
+          return row ? row[2] : null;
+        }
+        var c = /^cubic-bezier\(([^)]+)\)$/.exec(easeValue);
+        return c ? c[1].split(",").map(Number) : null;
+      }
+
+      /* Curve preview: the unit bezier drawn into a 100x100 box, y flipped.
+         The box is padded so overshoot past 1 (the bounce curves) stays
+         visible instead of clipping at the top edge. */
+      function drawCurve(b) {
+        if (!b) { curve.innerHTML = ""; return; }
+        var ys = [0, b[1], b[3], 1];
+        var lo = Math.min.apply(null, ys), hi = Math.max.apply(null, ys);
+        var pad = 10;
+        var span = Math.max(hi - lo, 1);
+        function X(x) { return pad + x * (100 - 2 * pad); }
+        function Y(y) { return 100 - pad - ((y - lo) / span) * (100 - 2 * pad); }
+        curve.innerHTML =
+          '<line x1="' + X(0) + '" y1="' + Y(0) + '" x2="' + X(1) + '" y2="' + Y(0) +
+          '" stroke="rgba(255,255,255,.10)" stroke-width="1"/>' +
+          '<line x1="' + X(0) + '" y1="' + Y(1) + '" x2="' + X(1) + '" y2="' + Y(1) +
+          '" stroke="rgba(255,255,255,.10)" stroke-width="1"/>' +
+          '<path d="M' + X(0) + " " + Y(0) + " C" + X(b[0]) + " " + Y(b[1]) + ", " +
+          X(b[2]) + " " + Y(b[3]) + ", " + X(1) + " " + Y(1) +
+          '" fill="none" stroke="#ededed" stroke-width="2" stroke-linecap="round"/>' +
+          '<circle cx="' + X(b[0]) + '" cy="' + Y(b[1]) + '" r="2.5" fill="#7cd4ff"/>' +
+          '<circle cx="' + X(b[2]) + '" cy="' + Y(b[3]) + '" r="2.5" fill="#7cd4ff"/>';
+      }
+
+      function syncBezUI() {
+        var b = bezOf(state.ease);
+        var editable = !!b;
+        ptInputs.forEach(function (inp, i) {
+          inp.disabled = !editable;
+          inp.style.opacity = editable ? "1" : ".4";
+          if (b) inp.value = b[i];
+        });
+        if (b) pts = b.slice();
+        bezNote.textContent = editable
+          ? "Edit a point to switch to a custom curve."
+          : "Keyword easing — no control points to edit.";
+        drawCurve(b);
+      }
+
+      function cssText() {
+        return ".hero-tile { transition: transform " + state.dur + " " + state.ease + "; }\n" +
+               ".hero-tile:hover { transform: translateY(-" + state.y + "); }\n\n" +
+               "/* hero-tiles.tsx */\n" +
+               "BEND_TUNING = { vertical: " + state.bv + ", horizontal: " + state.bh + " }\n\n" +
+               ".hero-tiles-box .hero-tile-pill {\n" +
+               "  --bend-skew: " + state.skew + ";\n" +
+               "  --bend-stretch: " + state.stretch + ";\n" +
+               "  --bend-squash: " + state.squash + ";\n}";
+      }
+      function apply() {
+        var r = document.documentElement.style;
+        r.setProperty("--tile-lift-dur", state.dur);
+        r.setProperty("--tile-lift-ease", state.ease);
+        r.setProperty("--tile-lift-y", state.y);
+        yVal.textContent = state.y;
+        out.textContent = cssText();
+      }
+
+
+      durSel.addEventListener("change", function () {
+        if (durSel.value === "custom") {
+          durCustom.hidden = false;
+          state.dur = durMs.value + "ms";
+        } else {
+          durCustom.hidden = true;
+          state.dur = durSel.value;
+          /* Keep the custom field showing whatever the token resolves to,
+             so switching to custom starts from the current value. */
+          var row = DURATIONS.filter(function (d) { return "var(" + d[0] + ")" === durSel.value; })[0];
+          if (row) durMs.value = row[1];
+        }
+        apply();
+      });
+      durMs.addEventListener("input", function () {
+        state.dur = (durMs.value || 0) + "ms";
+        apply();
+      });
+
+      easeSel.addEventListener("change", function () {
+        if (easeSel.value === "custom") {
+          state.ease = "cubic-bezier(" + pts.join(", ") + ")";
+        } else {
+          state.ease = easeSel.value;
+        }
+        syncBezUI();
+        apply();
+      });
+
+      ptInputs.forEach(function (inp) {
+        inp.addEventListener("input", function () {
+          var i = Number(inp.dataset.pt);
+          var v = parseFloat(inp.value);
+          if (isNaN(v)) return;
+          /* x must stay in 0..1 for a valid cubic-bezier; y may overshoot. */
+          if (i === 0 || i === 2) v = Math.min(1, Math.max(0, v));
+          pts[i] = v;
+          state.ease = "cubic-bezier(" + pts.join(", ") + ")";
+          easeSel.value = "custom";
+          bezNote.textContent = "Custom curve.";
+          ptInputs.forEach(function (o) { o.disabled = false; o.style.opacity = "1"; });
+          drawCurve(pts);
+          apply();
+        });
+      });
+
+      ySlider.addEventListener("input", function () {
+        state.y = ySlider.value + "px"; yTokens.value = ""; apply();
+      });
+      yTokens.addEventListener("change", function () {
+        if (!yTokens.value) return;
+        state.y = yTokens.value;
+        var px = parseInt(getComputedStyle(document.documentElement)
+          .getPropertyValue(yTokens.value.slice(4, -1)).trim(), 10);
+        if (!isNaN(px)) ySlider.value = px;
+        apply();
+      });
+
+      panel.querySelector("#mt-reset").addEventListener("click", function () {
+        state = Object.assign({}, DEFAULTS);
+        pts = DEFAULT_PTS.slice();
+        durSel.value = DEFAULTS.dur;
+        durCustom.hidden = true;
+        durMs.value = 350;
+        easeSel.value = "custom";
+        ySlider.value = 6; yTokens.value = "";
+        syncBezUI();
+        apply();
+      });
+      panel.querySelector("#mt-copy").addEventListener("click", function () {
+        if (navigator.clipboard) navigator.clipboard.writeText(cssText()).catch(function () {});
+        var b = panel.querySelector("#mt-copy");
+        b.textContent = "Copied";
+        setTimeout(function () { b.textContent = "Copy CSS"; }, 1400);
+      });
+      panel.querySelector(".mt-x").addEventListener("click", function () {
+        panel.hidden = true; openBtn.hidden = false;
+      });
+      openBtn.addEventListener("click", function () {
+        panel.hidden = false; openBtn.hidden = true;
+      });
+
+      syncBezUI();
+      apply();
+    })();
+  </script>
   <script src="/assets/site.js" defer></script>
   <script src="/assets/pro-client.js" defer></script>
+  <!-- GoatCounter: privacy-friendly page views, no cookies. -->
+  <script data-goatcounter="https://libraries.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>

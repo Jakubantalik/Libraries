@@ -3,10 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <!-- First-paint guard. Firefox has painted a frame before the stylesheets
+       applied on cached navigations (brand mark at full width, skip link in
+       view, menus open). These few rules make that frame harmless; site.css
+       overrides every one of them once it lands. -->
+  <style>
+    .skip-link { position: absolute; left: -9999px; }
+    .brand-mark svg, .footer-brand-logo svg { width: 22px; height: 14px; }
+    .mobile-menu, .mobile-menu-backdrop, .tl-menu, .t-dropdown { display: none; }
+  </style>
+  <!-- Paint gate. Firefox has painted before the external stylesheets applied
+       on navigation, so the body stays invisible on the site's ground until
+       every local sheet has loaded (script below); a 1.5s timeout reveals it
+       regardless, so a failed sheet can never leave the page blank. -->
+  <style>
+    html { background: #121212; }
+    html:not(.css-ready) body { visibility: hidden; }
+  </style>
+  <script>document.documentElement.classList.add("css-ready");</script>
   <meta name="color-scheme" content="dark" />
 
   <title>Libraries Pro: Unlock the Studio for every library</title>
-  <meta name="description" content="Libraries Pro unlocks the Studio: deep customization of all five UI effect libraries (Beam, Orb, Gooey, Metal and Image), plus Pro content and every future update." />
+  <meta name="description" content="Libraries Pro unlocks the Studio: deep customization of all five UI effect libraries (Beam, Orb, Gooey, Metal and Image), plus Pro variants and every future update." />
   <meta name="keywords" content="Libraries Pro, Studio, UI effect libraries, React effects, WebGL, Beam, Orb, Gooey, Metal, Image" />
   <meta name="author" content="Libraries.dev" />
   <meta name="robots" content="index, follow, max-image-preview:large" />
@@ -29,23 +47,23 @@
   <meta property="og:url" content="https://libraries.dev/pro.html" />
   <meta property="og:locale" content="en_US" />
   <meta property="og:title" content="Libraries Pro: Unlock the Studio for every library" />
-  <meta property="og:description" content="Libraries Pro unlocks the Studio: deep customization of all five UI effect libraries (Beam, Orb, Gooey, Metal and Image), plus Pro content and every future update." />
+  <meta property="og:description" content="Libraries Pro unlocks the Studio: deep customization of all five UI effect libraries (Beam, Orb, Gooey, Metal and Image), plus Pro variants and every future update." />
 
-  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta property="og:image" content="https://libraries.dev/assets/og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:image" content="https://libraries.dev/assets/og-image.jpg" />
   <meta name="twitter:title" content="Libraries Pro: Unlock the Studio for every library" />
-  <meta name="twitter:description" content="Libraries Pro unlocks the Studio: deep customization of all five UI effect libraries (Beam, Orb, Gooey, Metal and Image), plus Pro content and every future update." />
+  <meta name="twitter:description" content="Libraries Pro unlocks the Studio: deep customization of all five UI effect libraries (Beam, Orb, Gooey, Metal and Image), plus Pro variants and every future update." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    rel="preload"
-    as="style"
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
-  />
-  <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
     rel="stylesheet"
   />
+
   <link
     rel="preload"
     as="font"
@@ -94,6 +112,15 @@
     /* Design tokens — light (default) and dark                      */
     /* ============================================================ */
     :root {
+      /* Pro accents share the CTA blue (#0071fc): the nav Get Pro pill and the
+         Pro chips are tints and inks of that one hue. */
+      --pro-tint-bg: rgba(0, 113, 252, 0.10);
+      --pro-tint-bg-hover: rgba(0, 113, 252, 0.16);
+      --pro-tint-ink: #0062d6;
+      /* Inline code in prose: a chip with its own hairline (ported by value;
+         this page links no shared stylesheet). */
+      --code-chip-bg: rgba(0, 0, 0, 0.04);
+      --code-chip-ring: rgba(0, 0, 0, 0.08);
       color-scheme: light;
 
       --bg: #fdfdfd;
@@ -354,6 +381,11 @@
     }
 
     html[data-theme="dark"] {
+      --pro-tint-bg: rgba(0, 113, 252, 0.18);
+      --pro-tint-bg-hover: rgba(0, 113, 252, 0.26);
+      --pro-tint-ink: #7db4ff;
+      --code-chip-bg: rgba(255, 255, 255, 0.05);
+      --code-chip-ring: rgba(255, 255, 255, 0.09);
       color-scheme: dark;
 
       --bg: #121212;
@@ -423,6 +455,11 @@
       min-height: 100dvh;
     }
 
+    /* Headings balance their lines so a short last line never dangles; body
+       text uses `pretty`, which guards the orphan without equalising lengths
+       (ported by value: this page links no shared stylesheet). */
+    h1, h2, h3, h4 { text-wrap: balance; }
+    p, li, figcaption, blockquote { text-wrap: pretty; }
     body {
       background: var(--bg);
       color: var(--text);
@@ -512,6 +549,47 @@
       color: var(--icon-color-muted);
       transition: color 0.15s ease;
     }
+    /* (ported by value from site.css: this page links no shared sheet) */
+    /* Signed-in avatar — the 3-dot "More" button swaps to the user's initial
+       (Figma 1425:38996: #2a2a2a chip, 12px Inter Medium initial, material ring).
+       The dots stay in the DOM; the class just hides them and shows the letter. */
+    /* Light: the same raised white control every other light surface here
+       wears (tabs, the active nav row, Copy prompt) - white on the black-6%
+       ring with dark ink - rather than a black disc, which read as a hole
+       in the white top bar. Dark keeps its own block below. */
+    .icon-btn--avatar {
+      background: #ffffff;
+      color: #17181c;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.1),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+    }
+    .icon-btn--avatar:hover { background: #fafafa; }
+    .icon-btn--avatar:active { background: #f1f1f1; }
+    html[data-theme="dark"] .icon-btn--avatar {
+      background: #2a2a2a;
+      color: #e8e8e8;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+    }
+    html[data-theme="dark"] .icon-btn--avatar:hover { background: #323232; }
+    html[data-theme="dark"] .icon-btn--avatar:active { background: #262626; }
+    .icon-btn--avatar svg { display: none !important; }
+    .nav-avatar-initial {
+      display: none;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 13px;
+      text-transform: uppercase;
+    }
+    .icon-btn--avatar .nav-avatar-initial { display: block; }
     .icon-btn svg.icon-x {
       width: 16px;
       height: 17px;
@@ -661,7 +739,7 @@
       align-items: center;
       justify-content: center;
       height: 36px;
-      padding: 0 13px;
+      padding: 0 14px;
       border-radius: 50px;
       font-family: var(--font-sans);
       font-size: 13px;
@@ -673,6 +751,32 @@
       transition: background-color 0.15s ease, color 0.15s ease;
       -webkit-tap-highlight-color: transparent;
     }
+    /* Small Pro tag riding the Studio pill (ported by value: this page links
+       no shared stylesheet). Matches site.css .nav-pill-pro. */
+    .nav-pill-pro {
+      display: inline-flex;
+      align-items: center;
+      height: 18px;
+      margin-left: 6px;
+      padding: 0 6px;
+      border-radius: 50px;
+      background: var(--pro-tint-bg);
+      color: var(--pro-tint-ink);
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 14px;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06),
+        inset 0 0 0 1px rgba(196, 196, 196, 0.1);
+    }
+
+    /* The Studio pill carries the Pro chip, whose own rounded fill reads as
+       padding — so its right side comes in to 9px against the 14px the text-only pills
+       carry on both sides. */
+    .nav-pill:has(.nav-pill-pro) { padding-right: 9px; }
     .nav-pill:hover { color: var(--text); background: rgba(0, 0, 0, 0.03); }
     html[data-theme="dark"] .nav-pill:hover { background: rgba(255, 255, 255, 0.06); }
     .nav-pill--active {
@@ -729,6 +833,7 @@
        the menu list but above page content; the top bar stays clickable
        on top of it (.site-nav-inner z-index). */
     .mobile-menu-backdrop {
+      display: block; /* explicit, so the first-paint guard's display:none is overridden */
       position: fixed;
       inset: 0;
       z-index: 1;
@@ -807,7 +912,7 @@
     .mobile-menu-link--4 { transition-delay: 120ms; }
     /* "Get Pro" reads as the accent CTA in the list (Figma 2332:82664). */
     .mobile-menu-link--pro { color: #0053e3; }
-    html[data-theme="dark"] .mobile-menu-link--pro { color: #7cd4ff; }
+    html[data-theme="dark"] .mobile-menu-link--pro { color: var(--pro-tint-ink); }
     body.menu-open .mobile-menu-link {
       opacity: 1;
       transform: translateY(0);
@@ -1438,14 +1543,13 @@
       line-height: 1.4;
       color: var(--text);
     }
+    /* No underline at rest; it appears on hover, like every other link. */
+    /* 50% of the text colour at rest, 100% on hover; color-mix with
+       currentColor keeps it theme-agnostic, like transitions.dev's. */
     .course-cta-headline a {
       color: inherit;
       text-decoration: underline;
       text-underline-offset: 2px;
-      /* 50% of the text color at rest, 100% on hover. Using
-         color-mix with currentColor keeps it theme-agnostic — the
-         underline tracks light/dark text without an explicit
-         dark-mode override. */
       text-decoration-color: color-mix(in srgb, currentColor 50%, transparent);
       transition: text-decoration-color 180ms ease;
     }
@@ -3689,15 +3793,16 @@
     .nav-get-pro {
       display: inline-flex; align-items: center; justify-content: center;
       height: 36px; padding: 0 16px; border: 0; border-radius: 50px;
-      background: rgba(0, 115, 255, 0.08); color: #0053e3;
+      background: var(--pro-tint-bg); color: var(--pro-tint-ink);
       font-family: var(--font-sans); font-size: 13px; font-weight: 500;
       text-decoration: none; white-space: nowrap; cursor: pointer;
       transition: background 150ms var(--ease-smooth-out);
       -webkit-tap-highlight-color: transparent;
     }
-    .nav-get-pro:hover { background: rgba(0, 115, 255, 0.14); }
-    html[data-theme="dark"] .nav-get-pro { background: rgba(85, 207, 255, 0.14); color: #7cd4ff; }
-    html[data-theme="dark"] .nav-get-pro:hover { background: rgba(85, 207, 255, 0.22); }
+    .nav-get-pro:hover { background: var(--pro-tint-bg-hover); }
+    /* The pill sets its own display, which outranks the UA's [hidden] rule —
+       pro-client.js hides it by attribute once a signed-in user is entitled. */
+    .nav-get-pro[hidden] { display: none; }
 
     /* ── 3-dot dropdown — exact Refine tool component ──────────── */
     :root {
@@ -3709,12 +3814,14 @@
     html[data-theme="dark"] { --tl-menu-line: #262626; }
     .pm-anchor { position: relative; display: inline-flex; }
     .tl-menu {
+      display: block; /* explicit, so the first-paint guard's display:none is overridden */
       position: absolute; top: calc(100% + 6px); right: 0; width: 240px; box-sizing: border-box;
       background: #fff; border-radius: 12px; padding: 6px; box-shadow: var(--menu-shadow); z-index: 120;
     }
     html[data-theme="dark"] .tl-menu { background: #202020;
       box-shadow: var(--menu-shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.03); }
     .t-dropdown {
+      display: block; /* explicit, so the first-paint guard's display:none is overridden */
       transform-origin: top right; transform: scale(var(--dropdown-pre-scale)); opacity: 0; pointer-events: none;
       transition: transform var(--dropdown-open-dur) var(--dropdown-ease), opacity var(--dropdown-open-dur) var(--dropdown-ease);
       will-change: transform, opacity;
@@ -3957,9 +4064,11 @@
        "Tabs sliding" / p16): JS measures the active tab and sets the
        indicator's transform + width inline; CSS owns the tween. The pill
        sits behind the labels so the text reads on top. */
+    /* The detail pages' tab component (.proto-modal-tabs), ported by
+       value since this page links no stylesheet. */
     .pro-billing {
       position: relative;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 3px;
       padding: 3px;
@@ -3968,37 +4077,40 @@
       width: fit-content;
       margin: 0 auto 20px;
     }
-    html[data-theme="dark"] .pro-billing { background: #202020; }
+    html[data-theme="dark"] .pro-billing { background: rgba(255, 255, 255, 0.05); }
     .pro-billing-opt {
       position: relative;
       z-index: 1;
       border: 0;
       background: transparent;
       height: 30px;
-      padding: 4px 14px;
+      padding: 4px 12px;
       border-radius: 48px;
       font-family: var(--font-sans);
       font-size: 13px;
       font-weight: 500;
       line-height: 1.4;
-      color: var(--text-muted);
+      color: rgba(15, 15, 15, 0.8);
       white-space: nowrap;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
       transition: color 250ms var(--ease-smooth-out);
     }
     .pro-billing-opt:not([data-active="true"]):hover { color: var(--text); }
-    .pro-billing-opt[data-active="true"] { color: var(--text); }
-    .pro-billing-opt:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+    .pro-billing-opt:hover,
+    .pro-billing-opt[data-active="true"] { color: #0f0f0f; }
+    .pro-billing-opt:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; }
+    html[data-theme="dark"] .pro-billing-opt { color: rgba(237, 237, 237, 0.55); }
+    html[data-theme="dark"] .pro-billing-opt:hover,
+    html[data-theme="dark"] .pro-billing-opt[data-active="true"] { color: #ffffff; }
     .pro-billing-indicator {
       position: absolute;
       top: 3px;
       left: 0;
-      height: 30px;
+      height: calc(100% - 6px);
       width: 0;
       background: #ffffff;
       border-radius: 48px;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
       transform: translateX(0);
       transition:
         transform 250ms var(--ease-smooth-out),
@@ -4007,7 +4119,7 @@
       z-index: 0;
       pointer-events: none;
     }
-    html[data-theme="dark"] .pro-billing-indicator { background: #454545; box-shadow: none; }
+    html[data-theme="dark"] .pro-billing-indicator { background: #2a2a2a; box-shadow: none; }
     .pro-annual-note {
       position: absolute;
       left: 100%;
@@ -4328,7 +4440,7 @@
       flex-direction: column;
       gap: 24px;
       min-width: 0;
-      min-height: 293px;
+      min-height: 205px;
       padding: 32px;
       border-radius: 24px;
       background: rgba(246, 246, 246, 0.7);
@@ -4338,6 +4450,27 @@
       background: #141414;
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 -1px 0 0 rgba(255, 255, 255, 0.03);
     }
+    /* A quiet X mark in the card's top-right corner, so the quotes read as
+       posts. Linked where the card already links to the author's profile;
+       decorative otherwise. */
+    .pro-quote { position: relative; }
+    .pro-quote-x {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      width: 14px;
+      height: 14px;
+      display: block;
+      color: rgba(255, 255, 255, 0.22);
+      text-decoration: none;
+      transition: color 150ms ease;
+    }
+    .pro-quote-x svg { width: 100%; height: 100%; display: block; }
+    /* The quote never runs under the mark. */
+    .pro-quote-text { padding-right: 28px; }
+    a.pro-quote-x:hover { color: rgba(255, 255, 255, 0.6); }
+    html[data-theme="light"] .pro-quote-x { color: rgba(0, 0, 0, 0.18); }
+    html[data-theme="light"] a.pro-quote-x:hover { color: rgba(0, 0, 0, 0.55); }
     .pro-quote-text {
       margin: 0;
       /* The author row is pinned to the card's bottom edge in Figma, so
@@ -4378,9 +4511,16 @@
       overflow: hidden;
     }
     html[data-theme="dark"] .pro-quote-avatar { background: rgba(255, 255, 255, 0.06); }
+    /* Real photo when one is installed; the initial stays underneath as the
+       fallback, and a missing file drops the img so the initial shows. */
+    .pro-quote-avatar { position: relative; }
+    .pro-quote-avatar-img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; border-radius: inherit; display: block;
+    }
     .pro-quote-id { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-    /* Name links through to the person's X profile — same "text colour,
-       underline on hover" treatment the docs links use. */
+    /* A name that links through to the person's X profile is underlined;
+       a name that is just a name stays plain text. */
     .pro-quote-name {
       align-self: flex-start;
       font-size: 13px;
@@ -4389,7 +4529,8 @@
       color: #0d0d0d;
       text-decoration: none;
     }
-    a.pro-quote-name:hover { text-decoration: underline; text-underline-offset: 2px; }
+    a.pro-quote-name { text-decoration: underline; text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, currentColor 50%, transparent); transition: text-decoration-color 180ms ease; }
+    a.pro-quote-name:hover { text-decoration-color: currentColor; }
     html[data-theme="dark"] .pro-quote-name { color: #ededed; }
     .pro-quote-role { font-size: 13px; line-height: 16px; color: #737373; overflow-wrap: anywhere; }
     @media (max-width: 900px) {
@@ -4737,43 +4878,18 @@
     /* Refine tool — timeline panel (recreated from Figma refine card).
        A cropped top-left corner of the Refine timeline: Selected header,
        ruler with time ticks, and property rows with drag handles + tracks. */
-    .pro-refine-frame {
-      position: absolute; left: 32px; right: -150px; top: 132px; bottom: -24px;
-      background: #fff; border: 1px solid var(--card-border);
-      border-radius: 10px 0 0 0; box-shadow: var(--card-shadow); overflow: hidden;
-      font-family: var(--font-sans);
+    /* The Studio card sits in the mock's old slot and runs off the card's
+       right and bottom edges; the bento clips it and draws its own ring on
+       top. The export carries its corners and ring, so no chrome here. */
+    /* Right-anchored at the design's 767px render: the panel (the rightmost
+       236px of the shot) sits fully inside the card's padding, the toolbar
+       beside it, and the stage bleeds off the left. The card clips the rest
+       and draws its ring on top. */
+    .pro-studio-shot {
+      position: absolute; right: 32px; top: 132px;
+      width: 767px; height: 604px;
     }
-    html[data-theme="dark"] .pro-refine-frame { background: #191919; border-color: rgba(255,255,255,0.07); }
-    .rf-topbar { display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 10px; border-bottom: 1px solid #f0f0f0; }
-    html[data-theme="dark"] .rf-topbar { border-bottom-color: #2a2a2a; }
-    .rf-tb-label { font-size: 10px; color: #696969; white-space: nowrap; }
-    html[data-theme="dark"] .rf-tb-label { color: #8b8b8b; }
-    .rf-tb-pill { display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 7px; border-radius: 7px;
-      background: rgba(0,0,0,0.03); font-size: 10px; font-weight: 500; color: #1b1b1b; white-space: nowrap; }
-    html[data-theme="dark"] .rf-tb-pill { background: rgba(255,255,255,0.06); color: #fbfbfb; }
-    .rf-tb-pill .rf-dim { color: #979797; }
-    .rf-tb-pill svg { width: 10px; height: 10px; color: #696969; }
-    .rf-tb-count { margin-left: auto; font-size: 10px; color: #9b9b9b; white-space: nowrap; }
-    .rf-rows { position: relative; }
-    .rf-divider { position: absolute; top: 0; bottom: 0; left: 84px; width: 1px; background: #f0f0f0; z-index: 2; }
-    html[data-theme="dark"] .rf-divider { background: #2a2a2a; }
-    .rf-row { display: flex; align-items: center; height: 26px; }
-    .rf-row + .rf-row { box-shadow: inset 0 1px 0 0 #f4f4f4; }
-    html[data-theme="dark"] .rf-row + .rf-row { box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.03); }
-    .rf-row-label { width: 84px; flex: none; display: flex; align-items: center; gap: 7px; padding-left: 10px; font-size: 10px; font-weight: 500; color: #171717; }
-    html[data-theme="dark"] .rf-row-label { color: #e6e6e6; }
-    .rf-dots { width: 8px; height: 8px; flex: none; color: #cfcfcf;
-      background-image: radial-gradient(currentColor 42%, transparent 46%); background-size: 4px 4px; background-position: 0 0; }
-    html[data-theme="dark"] .rf-dots { color: #4a4a4a; }
-    .rf-lane { position: relative; flex: 1; align-self: stretch; }
-    .rf-bar { position: absolute; top: 50%; transform: translateY(-50%); height: 14px; border-radius: 7px;
-      background: #eeeeef; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06), inset 0 -0.5px 0 0 rgba(0,0,0,0.1); }
-    html[data-theme="dark"] .rf-bar { background: rgba(255,255,255,0.1); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06); }
-    .rf-ruler { position: relative; height: 18px; }
-    .rf-ruler-ticks { position: absolute; left: 92px; right: 8px; top: 9px; height: 4px;
-      background-image: repeating-linear-gradient(90deg, #dcdce0 0 1px, transparent 1px 12px); }
-    html[data-theme="dark"] .rf-ruler-ticks { background-image: repeating-linear-gradient(90deg, #333 0 1px, transparent 1px 12px); }
-    .rf-ruler-lbl { position: absolute; top: 4px; font-size: 8px; color: #8b9099; transform: translateX(-1px); }
+    .pro-studio-shot img { display: block; width: 100%; height: 100%; }
 
     @media (max-width: 720px) {
       /* Single column; rows size to their own card (grid-auto-rows:1fr
@@ -4788,28 +4904,10 @@
          card clips) so they always start below the description. */
       .pro-bento-card--sm { display: flex; flex-direction: column; }
       .pro-bento-card--sm .pro-bento-code,
-      .pro-bento-card--sm .pro-refine-frame {
-        position: relative;
-        left: auto;
-        top: auto;
-        bottom: auto;
-        /* basis 0 so the art fills the leftover height rather than its own
-           content height — otherwise the long code snippet stretches this
-           card far taller than its neighbour. Both are already clipped
-           (overflow + fade mask), so showing less of it is fine. */
-        flex: 1 1 0;
-        min-height: 120px;
-        margin-top: 16px;
-      }
       .pro-bento-card--sm .pro-bento-code {
         right: auto;
         margin-right: -32px;
         margin-bottom: -28px;
-      }
-      .pro-bento-card--sm .pro-refine-frame {
-        right: auto;
-        margin-right: -182px;
-        margin-bottom: -52px;
       }
       .pro-bento-title { font-size: 18px; }
       /* Square minis on mobile: 320×320 native (296×296 stage keeps the
@@ -4879,15 +4977,29 @@
       transition: opacity var(--acc-expand) var(--acc-ease), filter var(--acc-expand) var(--acc-ease);
     }
     .t-acc-panel-inner p { margin: 0 0 16px; padding-right: 28px; font-size: 14px; line-height: 22px; color: var(--text-muted); }
-    .t-acc-panel-inner code { font-family: var(--font-mono); font-size: 12px; line-height: 18px; padding: 1px 6px; border-radius: 6px; background: rgba(0, 0, 0, 0.04); color: var(--text); }
-    html[data-theme="dark"] .t-acc-panel-inner code { background: rgba(255, 255, 255, 0.06); }
-    .t-acc-panel-inner a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
+    .t-acc-panel-inner code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 18px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: var(--code-chip-bg);
+      box-shadow: inset 0 0 0 1px var(--code-chip-ring);
+      color: var(--text);
+    }
+    /* Inline links: a 50% underline at rest that reaches full ink on hover, like transitions.dev. */
+    .t-acc-panel-inner a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, currentColor 50%, transparent); transition: text-decoration-color 180ms ease; }
+    .t-acc-panel-inner a:hover { text-decoration-color: currentColor; }
     @media (prefers-reduced-motion: reduce) {
       .t-acc-panel, .t-acc-panel-inner, .t-acc-chevron { transition: none !important; }
     }
 
     /* ── Pro layout spacing ────────────────────────────────────── */
-    .pro-section { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+    /* `.app` is a centred flex column, so a section shrink-wraps its content
+       unless told to fill. Without this the testimonial grid sized to its
+       (short) text instead of the 1040 column, leaving its cards narrower
+       than the bento above them and than the same cards on the homepage. */
+    .pro-section { width: 100%; max-width: 1040px; margin: 0 auto; padding: 0 24px; }
     .pro-section-title { text-align: center; font-family: "Saans", var(--font-sans); font-size: 30px; font-weight: 500; letter-spacing: -0.01em; color: var(--text); margin: 0 0 40px; }
     .pro-block { margin-bottom: 96px; }
     /* Search collapses to an icon-only circle before the nav pills
@@ -4958,8 +5070,9 @@
             <span class="brand-word"><span class="brand-word-strong">Libraries</span><span class="brand-word-dim">.dev</span></span>
           </a>
           <nav class="site-nav-menu" aria-label="Primary">
-            <a class="nav-pill" href="/#components">Libraries</a>
-            <a class="nav-pill" href="/studio.html">Studio</a>
+            <a class="nav-pill" href="/beam.html">Libraries</a>
+            <a class="nav-pill" href="/how-to-use.html">How to use</a>
+            <a class="nav-pill" href="/studio.html">Studio <span class="nav-pill-pro">Pro</span></a>
           </nav>
         </div>
         <div class="site-nav-right">
@@ -4970,7 +5083,7 @@
             href="https://github.com/Jakubantalik/Libraries"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="GitHub repository — star count"
+            aria-label="GitHub repository star count"
             data-loading="true"
           >
             <svg aria-hidden="true" viewBox="0 0 16 16" fill="currentColor">
@@ -4978,23 +5091,9 @@
             </svg>
             <span class="pill-label" id="gh-stars-count">—</span>
           </a>
-          <a
-            class="icon-btn"
-            href="https://x.com/jakubantalik"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="X (Twitter)"
-          >
-            <svg class="icon-x" aria-hidden="true" viewBox="0 0 16 17" xmlns="http://www.w3.org/2000/svg">
-              <path
-                fill="currentColor"
-                d="M12.4041 1.39726H14.6953L9.69087 7.2591L15.5781 15.2368H10.9696L7.35741 10.3996L3.22921 15.2368H0.934687L6.28641 8.96575L0.642598 1.39726H5.36795L8.62962 5.81859L12.4041 1.39726ZM11.5992 13.8329H12.8682L4.67667 2.72798H3.31359L11.5992 13.8329Z"
-              />
-            </svg>
-          </a>
           <div class="pm-anchor" id="more-anchor">
             <button type="button" class="icon-btn" id="more-btn" aria-label="More" aria-haspopup="menu" aria-expanded="false">
-              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block">
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 8C6.66667 7.26362 7.26362 6.66667 8 6.66667C8.73638 6.66667 9.33333 7.26362 9.33333 8C9.33333 8.73638 8.73638 9.33333 8 9.33333C7.26362 9.33333 6.66667 8.73638 6.66667 8Z" fill="currentColor"/>
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 3.33333C6.66667 2.59695 7.26362 2 8 2C8.73638 2 9.33333 2.59695 9.33333 3.33333C9.33333 4.06971 8.73638 4.66667 8 4.66667C7.26362 4.66667 6.66667 4.06971 6.66667 3.33333Z" fill="currentColor"/>
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 12.6667C6.66667 11.9303 7.26362 11.3333 8 11.3333C8.73638 11.3333 9.33333 11.9303 9.33333 12.6667C9.33333 13.403 8.73638 14 8 14C7.26362 14 6.66667 13.403 6.66667 12.6667Z" fill="currentColor"/>
@@ -5029,9 +5128,10 @@
       <div class="mobile-menu-backdrop" id="mobile-menu-backdrop"></div>
       <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile">
         <ul class="mobile-menu-list">
-          <li><a class="mobile-menu-link mobile-menu-link--1" href="/#components">Libraries</a></li>
-          <li><a class="mobile-menu-link mobile-menu-link--2" href="/studio.html">Studio</a></li>
-          <li><a class="mobile-menu-link mobile-menu-link--3 mobile-menu-link--pro" href="/pro.html">Get Pro</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--1" href="/beam.html">Libraries</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--2" href="/how-to-use.html">How to use</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--3" href="/studio.html">Studio</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--4 mobile-menu-link--pro" href="/pro.html">Get Pro</a></li>
         </ul>
         <a class="mobile-menu-cta" id="mobile-signin" href="/pro.html">Sign in</a>
       </nav>
@@ -5041,7 +5141,7 @@
       <h1 class="title">Libraries <span class="title-pro">Pro</span></h1>
       <p class="subtitle">
         Unlock the Studio: deep customization of all five libraries<br />
-        (Beam, Orb, Gooey, Metal and Image), plus Pro content<br />
+        (Beam, Orb, Gooey, Metal and Image), plus Pro variants<br />
         and every future update, right in your browser.
       </p>
     </header>
@@ -5115,11 +5215,10 @@
           </div>
           <div class="pro-price-seat" id="pro-price-seat">Single seat</div>
         </div>
-        <div class="pro-price-divider"></div>
         <ul class="pro-feature-list">
-          <li class="pro-feature"><span class="pro-feature-check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.2l2 2 4-4.4" /></svg></span>Studio access: deep customization of all five libraries</li>
-          <li class="pro-feature"><span class="pro-feature-check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.2l2 2 4-4.4" /></svg></span>Beam, Orb, Gooey, Metal and Image: every Pro preset and variant</li>
-          <li class="pro-feature"><span class="pro-feature-check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.2l2 2 4-4.4" /></svg></span>Pro content: recipes and guides for React, Next.js, TypeScript</li>
+          <li class="pro-feature"><span class="pro-feature-check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.2l2 2 4-4.4" /></svg></span>Studio access: deep customization of all five libraries, with an AI coding agent</li>
+          <li class="pro-feature"><span class="pro-feature-check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.2l2 2 4-4.4" /></svg></span>Pro presets and variants</li>
+          <li class="pro-feature"><span class="pro-feature-check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.2l2 2 4-4.4" /></svg></span>Priority support</li>
           <li class="pro-feature"><span class="pro-feature-check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.2l2 2 4-4.4" /></svg></span>Every future library and update, free</li>
           <li class="pro-feature"><span class="pro-feature-check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.2l2 2 4-4.4" /></svg></span>Commercial license, unlimited projects</li>
         </ul>
@@ -5129,6 +5228,45 @@
            filled by pro-client.js when the visitor's country qualifies. -->
       <div class="pro-ppp" id="pro-ppp" hidden></div>
     </div>
+    <!-- Testimonials: the homepage's first row, three across. -->
+    <section class="pro-section pro-block" aria-label="Kind words">
+      <ul class="pro-quotes">
+        <li class="pro-quote">
+          <span class="pro-quote-x" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span>
+          <p class="pro-quote-text">Generational cook!</p>
+          <div class="pro-quote-author">
+            <span class="pro-quote-avatar" aria-hidden="true">G<img class="pro-quote-avatar-img" src="/assets/avatars/rauchg.jpg" alt="" onerror="this.remove()" /></span>
+            <span class="pro-quote-id">
+              <span class="pro-quote-name">Guillermo Rauch</span>
+              <span class="pro-quote-role">CEO, Vercel</span>
+            </span>
+          </div>
+        </li>
+        <li class="pro-quote">
+          <span class="pro-quote-x" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span>
+          <p class="pro-quote-text">Very cool</p>
+          <div class="pro-quote-author">
+            <span class="pro-quote-avatar" aria-hidden="true">D<img class="pro-quote-avatar-img" src="/assets/avatars/destraynor.jpg" alt="" onerror="this.remove()" /></span>
+            <span class="pro-quote-id">
+              <span class="pro-quote-name">Des Traynor</span>
+              <span class="pro-quote-role">Co-founder of Intercom</span>
+            </span>
+          </div>
+        </li>
+        <li class="pro-quote">
+          <span class="pro-quote-x" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span>
+          <p class="pro-quote-text">INSANELY AMAZING</p>
+          <div class="pro-quote-author">
+            <span class="pro-quote-avatar" aria-hidden="true">K<img class="pro-quote-avatar-img" src="/assets/avatars/krispuckett.jpg" alt="" onerror="this.remove()" /></span>
+            <span class="pro-quote-id">
+              <span class="pro-quote-name">Kris Puckett</span>
+              <span class="pro-quote-role">Design manager at Stripe</span>
+            </span>
+          </div>
+        </li>
+      </ul>
+    </section>
+    </div>
 
     <!-- ─── What you will get ──────────────────────────────────── -->
     <section class="pro-section pro-block" aria-labelledby="pro-get-title">
@@ -5136,7 +5274,7 @@
       <div class="pro-bento">
         <div class="pro-bento-card pro-bento-card--tall">
           <h3 class="pro-bento-title">Full library access</h3>
-          <p class="pro-bento-desc">All five libraries <span class="dim">(Beam, Orb, Gooey, Metal and Image) with every Pro preset, React and TypeScript ready, plus each future drop.</span></p>
+          <p class="pro-bento-desc">All five libraries <span class="dim">(Beam, Orb, Gooey, Metal and Image) with every Pro preset and variant, React and TypeScript ready, under a commercial license for unlimited projects, plus each future drop.</span></p>
           <div class="pro-lib-stage">
             <div class="lib-card" style="left:-148px; top:299px">
               <div class="card">
@@ -5198,47 +5336,18 @@
           </div>
         </div>
 
-        <div class="pro-bento-card pro-bento-card--sm">
-          <h3 class="pro-bento-title">The Studio</h3>
-          <p class="pro-bento-desc">Customize every library in detail: tune parameters live, preview the result, and export the exact configuration.</p>
-          <div class="pro-refine-frame" aria-hidden="true">
-            <div class="rf-topbar">
-              <span class="rf-tb-label">Selected library</span>
-              <span class="rf-tb-pill">Beam <span class="rf-dim">rainbow</span>
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5L8 10.5L12 6.5" /></svg>
-              </span>
-              <span class="rf-tb-count">5 libraries found</span>
-            </div>
-            <div class="rf-rows">
-              <div class="rf-divider"></div>
-              <div class="rf-ruler">
-                <div class="rf-ruler-ticks"></div>
-                <span class="rf-ruler-lbl" style="left:92px">0s</span>
-                <span class="rf-ruler-lbl" style="left:150px">5s</span>
-                <span class="rf-ruler-lbl" style="left:208px">10s</span>
-                <span class="rf-ruler-lbl" style="left:266px">15s</span>
-              </div>
-              <div class="rf-row"><span class="rf-row-label"><span class="rf-dots"></span>Speed</span><span class="rf-lane"><span class="rf-bar" style="left:8px;width:56px"></span></span></div>
-              <div class="rf-row"><span class="rf-row-label"><span class="rf-dots"></span>Glow</span><span class="rf-lane"><span class="rf-bar" style="left:8px;width:182px"></span></span></div>
-              <div class="rf-row"><span class="rf-row-label"><span class="rf-dots"></span>Opacity</span><span class="rf-lane"><span class="rf-bar" style="left:40px;width:66px"></span></span></div>
-              <div class="rf-row"><span class="rf-row-label"><span class="rf-dots"></span>Radius</span><span class="rf-lane"><span class="rf-bar" style="left:8px;width:120px"></span></span></div>
-            </div>
+        <div class="pro-bento-card pro-bento-card--tall">
+          <h3 class="pro-bento-title">Studio access</h3>
+          <p class="pro-bento-desc">Customize every library in detail in the Studio: tune parameters live, preview the result, and export the exact configuration. Plus extended docs, presets and recipes, and the Pro skill for your AI coding agent.</p>
+          <!-- The Studio screenshot itself (not the Studio page's framed card),
+               anchored to the bento's right edge so the control panel is whole
+               and the stage runs off the left. -->
+          <div class="pro-studio-shot" aria-hidden="true">
+            <img src="/assets/shots/studio-shot-1.png" alt="" width="767" height="604" loading="lazy" decoding="async" />
+          </div>
           </div>
         </div>
 
-        <div class="pro-bento-card pro-bento-card--sm">
-          <h3 class="pro-bento-title">Pro content</h3>
-          <p class="pro-bento-desc">Extended docs, presets and recipes for every library, plus the Pro skill for your AI coding agent.</p>
-          <div class="pro-bento-code" aria-hidden="true"><span class="k">---</span>
-name: libraries-pro
-description: Production-ready UI effect
-  libraries for React. Deep-customize
-  Beam, Orb, Gooey, Metal and Image
-  in the Studio, or let your agent
-  apply the Pro presets: border
-  beams, thinking orbs, gooey UI,
-  liquid metal, image loaders…</div>
-        </div>
       </div>
     </section>
 
@@ -5262,7 +5371,7 @@ description: Production-ready UI effect
             <span class="t-acc-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5" /></svg></span>
           </button>
           <div class="t-acc-panel"><div class="t-acc-panel-inner">
-            <p>The free libraries are open source and stay free. Install them from npm and use them anywhere. Pro adds the Studio (deep, per-library customization beyond the public playgrounds), the Pro presets and recipes for every library, and priority updates for the life of your plan.</p>
+            <p>The free libraries are open source and stay free. Install them from npm and use them anywhere. Pro adds the Studio (deep, per-library customization beyond the public playgrounds), the Pro presets and recipes for every library, priority updates for the life of your plan, and a commercial license covering unlimited projects, client work included.</p>
           </div></div>
         </div>
 
@@ -5329,13 +5438,13 @@ description: Production-ready UI effect
             </span>
             <span class="brand-word"><span class="brand-word-strong">Libraries</span><span class="brand-word-dim">.dev</span></span>
           </a>
-          <p class="footer-tagline">Production-ready UI effect libraries for React</p>
+          <p class="footer-tagline">High-crafted UI libraries for AI agents</p>
         </div>
         <nav class="footer-cols" aria-label="Footer">
           <div class="footer-col">
             <p class="footer-col-title">Libraries</p>
-            <a href="/beam.html">Beam</a>
-            <a href="/orbs.html">Orb</a>
+            <a href="/beam.html">Border beam</a>
+            <a href="/orbs.html">Thinking orbs</a>
             <a href="/gooey.html">Gooey</a>
             <a href="/metal.html">Metal</a>
             <a href="/image.html">Image</a>
@@ -5344,6 +5453,7 @@ description: Production-ready UI effect
             <p class="footer-col-title">Product</p>
             <a href="/">Home</a>
             <a href="/studio.html">Studio</a>
+            <a href="/how-to-use.html">How to use</a>
             <a href="/pro.html">Get Pro</a>
           </div>
           <div class="footer-col">
@@ -5589,5 +5699,7 @@ description: Production-ready UI effect
   <script src="/assets/site.js" defer></script>
   <!-- Pro platform client: wires Get access / Sign in / account state to the API. -->
   <script src="/assets/pro-client.js" defer></script>
+  <!-- GoatCounter: privacy-friendly page views, no cookies. -->
+  <script data-goatcounter="https://libraries.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>

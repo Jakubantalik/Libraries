@@ -14,6 +14,9 @@ export default defineConfig({
     })
   ],
   build: {
+    // Left readable: the Studio agent shows a mode's frame function to the
+    // model via Function.prototype.toString, and consumers minify anyway.
+    minify: false,
     lib: {
       // `engine` is the React-free geometry surface the native ports consume.
       entry: {

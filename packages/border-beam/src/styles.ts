@@ -199,6 +199,66 @@ export const colorPalettes = {
     spike: { primary: 'rgb(255, 140, 80)', secondary: 'rgba(255, 100, 60, 0.98)' },
     spikeLt: { primary: 'rgb(200, 80, 40)', secondary: 'rgb(220, 120, 30)' },
   },
+  forest: {
+    border: [
+      { color: 'rgb(46, 160, 90)', pos: '33% -7.4%', size: '70px 40px' },
+      { color: 'rgb(30, 190, 120)', pos: '12% -5%', size: '60px 35px' },
+      { color: 'rgb(70, 180, 70)', pos: '2.1% 68.3%', size: '40px 70px' },
+      { color: 'rgb(20, 150, 130)', pos: '2.1% 68.3%', size: '20px 35px' },
+      { color: 'rgb(90, 200, 80)', pos: '74.4% 100%', size: '180px 32px' },
+      { color: 'rgb(40, 170, 110)', pos: '55% 100%', size: '85px 26px' },
+      { color: 'rgb(120, 210, 70)', pos: '93.9% 0%', size: '74px 32px' },
+      { color: 'rgb(35, 145, 100)', pos: '100% 27.1%', size: '26px 42px' },
+      { color: 'rgb(60, 195, 140)', pos: '100% 27.1%', size: '52px 48px' },
+    ],
+    spike: { primary: 'rgb(46, 160, 90)', secondary: 'rgba(30, 190, 120,, 0.98)' },
+    spikeLt: { primary: 'rgb(33, 115, 65)', secondary: 'rgb(22, 137, 86)' },
+  },
+  candy: {
+    border: [
+      { color: 'rgb(240, 70, 170)', pos: '33% -7.4%', size: '70px 40px' },
+      { color: 'rgb(255, 90, 140)', pos: '12% -5%', size: '60px 35px' },
+      { color: 'rgb(215, 60, 200)', pos: '2.1% 68.3%', size: '40px 70px' },
+      { color: 'rgb(255, 110, 180)', pos: '2.1% 68.3%', size: '20px 35px' },
+      { color: 'rgb(200, 80, 240)', pos: '74.4% 100%', size: '180px 32px' },
+      { color: 'rgb(250, 60, 150)', pos: '55% 100%', size: '85px 26px' },
+      { color: 'rgb(230, 120, 220)', pos: '93.9% 0%', size: '74px 32px' },
+      { color: 'rgb(245, 85, 165)', pos: '100% 27.1%', size: '26px 42px' },
+      { color: 'rgb(210, 70, 230)', pos: '100% 27.1%', size: '52px 48px' },
+    ],
+    spike: { primary: 'rgb(240, 70, 170)', secondary: 'rgba(255, 90, 140,, 0.98)' },
+    spikeLt: { primary: 'rgb(173, 50, 122)', secondary: 'rgb(184, 65, 101)' },
+  },
+  ice: {
+    border: [
+      { color: 'rgb(90, 200, 240)', pos: '33% -7.4%', size: '70px 40px' },
+      { color: 'rgb(60, 175, 230)', pos: '12% -5%', size: '60px 35px' },
+      { color: 'rgb(130, 220, 250)', pos: '2.1% 68.3%', size: '40px 70px' },
+      { color: 'rgb(70, 190, 215)', pos: '2.1% 68.3%', size: '20px 35px' },
+      { color: 'rgb(110, 210, 255)', pos: '74.4% 100%', size: '180px 32px' },
+      { color: 'rgb(50, 165, 220)', pos: '55% 100%', size: '85px 26px' },
+      { color: 'rgb(150, 230, 250)', pos: '93.9% 0%', size: '74px 32px' },
+      { color: 'rgb(85, 195, 235)', pos: '100% 27.1%', size: '26px 42px' },
+      { color: 'rgb(65, 180, 245)', pos: '100% 27.1%', size: '52px 48px' },
+    ],
+    spike: { primary: 'rgb(90, 200, 240)', secondary: 'rgba(60, 175, 230,, 0.98)' },
+    spikeLt: { primary: 'rgb(65, 144, 173)', secondary: 'rgb(43, 126, 166)' },
+  },
+  gold: {
+    border: [
+      { color: 'rgb(240, 190, 60)', pos: '33% -7.4%', size: '70px 40px' },
+      { color: 'rgb(255, 210, 90)', pos: '12% -5%', size: '60px 35px' },
+      { color: 'rgb(225, 165, 40)', pos: '2.1% 68.3%', size: '40px 70px' },
+      { color: 'rgb(250, 200, 70)', pos: '2.1% 68.3%', size: '20px 35px' },
+      { color: 'rgb(255, 225, 120)', pos: '74.4% 100%', size: '180px 32px' },
+      { color: 'rgb(230, 175, 50)', pos: '55% 100%', size: '85px 26px' },
+      { color: 'rgb(245, 205, 85)', pos: '93.9% 0%', size: '74px 32px' },
+      { color: 'rgb(215, 155, 35)', pos: '100% 27.1%', size: '26px 42px' },
+      { color: 'rgb(255, 215, 100)', pos: '100% 27.1%', size: '52px 48px' },
+    ],
+    spike: { primary: 'rgb(240, 190, 60)', secondary: 'rgba(255, 210, 90,, 0.98)' },
+    spikeLt: { primary: 'rgb(173, 137, 43)', secondary: 'rgb(184, 151, 65)' },
+  },
 };
 
 /**
@@ -291,6 +351,94 @@ export const smallColorPalettes = {
       { color: 'rgba(255, 120, 60, 0.4)', pos: '100% 27%', size: '10px 18px' },
       { color: 'rgba(255, 200, 50, 0.3)', pos: '100% 27%', size: '5px 10px' },
       { color: 'rgba(255, 90, 70, 0.3)', pos: '100% 27%', size: '11px 12px' },
+    ],
+  },
+  forest: {
+    border: [
+      { color: 'rgb(46, 160, 90)', pos: '2% 68%', size: '9px 18px' },
+      { color: 'rgb(30, 190, 120)', pos: '2% 68%', size: '4px 8px' },
+      { color: 'rgb(70, 180, 70)', pos: '72% -3%', size: '59px 9px' },
+      { color: 'rgb(20, 150, 130)', pos: '74% 100%', size: '42px 7px' },
+      { color: 'rgb(90, 200, 80)', pos: '100% 27%', size: '10px 17px' },
+      { color: 'rgb(40, 170, 110)', pos: '100% 27%', size: '10px 18px' },
+      { color: 'rgb(120, 210, 70)', pos: '100% 27%', size: '5px 10px' },
+      { color: 'rgb(35, 145, 100)', pos: '100% 27%', size: '11px 12px' },
+    ],
+    inner: [
+      { color: 'rgba(60, 195, 140,, 0.5)', pos: '2% 68%', size: '9px 18px' },
+      { color: 'rgba(46, 160, 90,, 0.45)', pos: '2% 68%', size: '4px 8px' },
+      { color: 'rgba(30, 190, 120,, 0.35)', pos: '72% -3%', size: '59px 9px' },
+      { color: 'rgba(70, 180, 70,, 0.35)', pos: '74% 100%', size: '42px 7px' },
+      { color: 'rgba(20, 150, 130,, 0.3)', pos: '100% 27%', size: '10px 17px' },
+      { color: 'rgba(90, 200, 80,, 0.4)', pos: '100% 27%', size: '10px 18px' },
+      { color: 'rgba(40, 170, 110,, 0.3)', pos: '100% 27%', size: '5px 10px' },
+      { color: 'rgba(120, 210, 70,, 0.3)', pos: '100% 27%', size: '11px 12px' },
+    ],
+  },
+  candy: {
+    border: [
+      { color: 'rgb(240, 70, 170)', pos: '2% 68%', size: '9px 18px' },
+      { color: 'rgb(255, 90, 140)', pos: '2% 68%', size: '4px 8px' },
+      { color: 'rgb(215, 60, 200)', pos: '72% -3%', size: '59px 9px' },
+      { color: 'rgb(255, 110, 180)', pos: '74% 100%', size: '42px 7px' },
+      { color: 'rgb(200, 80, 240)', pos: '100% 27%', size: '10px 17px' },
+      { color: 'rgb(250, 60, 150)', pos: '100% 27%', size: '10px 18px' },
+      { color: 'rgb(230, 120, 220)', pos: '100% 27%', size: '5px 10px' },
+      { color: 'rgb(245, 85, 165)', pos: '100% 27%', size: '11px 12px' },
+    ],
+    inner: [
+      { color: 'rgba(210, 70, 230,, 0.5)', pos: '2% 68%', size: '9px 18px' },
+      { color: 'rgba(240, 70, 170,, 0.45)', pos: '2% 68%', size: '4px 8px' },
+      { color: 'rgba(255, 90, 140,, 0.35)', pos: '72% -3%', size: '59px 9px' },
+      { color: 'rgba(215, 60, 200,, 0.35)', pos: '74% 100%', size: '42px 7px' },
+      { color: 'rgba(255, 110, 180,, 0.3)', pos: '100% 27%', size: '10px 17px' },
+      { color: 'rgba(200, 80, 240,, 0.4)', pos: '100% 27%', size: '10px 18px' },
+      { color: 'rgba(250, 60, 150,, 0.3)', pos: '100% 27%', size: '5px 10px' },
+      { color: 'rgba(230, 120, 220,, 0.3)', pos: '100% 27%', size: '11px 12px' },
+    ],
+  },
+  ice: {
+    border: [
+      { color: 'rgb(90, 200, 240)', pos: '2% 68%', size: '9px 18px' },
+      { color: 'rgb(60, 175, 230)', pos: '2% 68%', size: '4px 8px' },
+      { color: 'rgb(130, 220, 250)', pos: '72% -3%', size: '59px 9px' },
+      { color: 'rgb(70, 190, 215)', pos: '74% 100%', size: '42px 7px' },
+      { color: 'rgb(110, 210, 255)', pos: '100% 27%', size: '10px 17px' },
+      { color: 'rgb(50, 165, 220)', pos: '100% 27%', size: '10px 18px' },
+      { color: 'rgb(150, 230, 250)', pos: '100% 27%', size: '5px 10px' },
+      { color: 'rgb(85, 195, 235)', pos: '100% 27%', size: '11px 12px' },
+    ],
+    inner: [
+      { color: 'rgba(65, 180, 245,, 0.5)', pos: '2% 68%', size: '9px 18px' },
+      { color: 'rgba(90, 200, 240,, 0.45)', pos: '2% 68%', size: '4px 8px' },
+      { color: 'rgba(60, 175, 230,, 0.35)', pos: '72% -3%', size: '59px 9px' },
+      { color: 'rgba(130, 220, 250,, 0.35)', pos: '74% 100%', size: '42px 7px' },
+      { color: 'rgba(70, 190, 215,, 0.3)', pos: '100% 27%', size: '10px 17px' },
+      { color: 'rgba(110, 210, 255,, 0.4)', pos: '100% 27%', size: '10px 18px' },
+      { color: 'rgba(50, 165, 220,, 0.3)', pos: '100% 27%', size: '5px 10px' },
+      { color: 'rgba(150, 230, 250,, 0.3)', pos: '100% 27%', size: '11px 12px' },
+    ],
+  },
+  gold: {
+    border: [
+      { color: 'rgb(240, 190, 60)', pos: '2% 68%', size: '9px 18px' },
+      { color: 'rgb(255, 210, 90)', pos: '2% 68%', size: '4px 8px' },
+      { color: 'rgb(225, 165, 40)', pos: '72% -3%', size: '59px 9px' },
+      { color: 'rgb(250, 200, 70)', pos: '74% 100%', size: '42px 7px' },
+      { color: 'rgb(255, 225, 120)', pos: '100% 27%', size: '10px 17px' },
+      { color: 'rgb(230, 175, 50)', pos: '100% 27%', size: '10px 18px' },
+      { color: 'rgb(245, 205, 85)', pos: '100% 27%', size: '5px 10px' },
+      { color: 'rgb(215, 155, 35)', pos: '100% 27%', size: '11px 12px' },
+    ],
+    inner: [
+      { color: 'rgba(255, 215, 100,, 0.5)', pos: '2% 68%', size: '9px 18px' },
+      { color: 'rgba(240, 190, 60,, 0.45)', pos: '2% 68%', size: '4px 8px' },
+      { color: 'rgba(255, 210, 90,, 0.35)', pos: '72% -3%', size: '59px 9px' },
+      { color: 'rgba(225, 165, 40,, 0.35)', pos: '74% 100%', size: '42px 7px' },
+      { color: 'rgba(250, 200, 70,, 0.3)', pos: '100% 27%', size: '10px 17px' },
+      { color: 'rgba(255, 225, 120,, 0.4)', pos: '100% 27%', size: '10px 18px' },
+      { color: 'rgba(230, 175, 50,, 0.3)', pos: '100% 27%', size: '5px 10px' },
+      { color: 'rgba(245, 205, 85,, 0.3)', pos: '100% 27%', size: '11px 12px' },
     ],
   },
 };
@@ -434,6 +582,102 @@ export const lineColorPalettes = {
       { color: 'rgb(180, 50, 50)', sizeW: 30, sizeH: 30, offsetX: -110, offsetY: -1 },
     ],
   },
+  forest: {
+    dark: [
+      { color: 'rgb(46, 160, 90)', sizeW: 36, sizeH: 36, offsetX: 0, offsetY: 2 },
+      { color: 'rgb(30, 190, 120)', sizeW: 30, sizeH: 32, offsetX: 39, offsetY: 0 },
+      { color: 'rgb(70, 180, 70)', sizeW: 33, sizeH: 28, offsetX: -36, offsetY: 2 },
+      { color: 'rgb(20, 150, 130)', sizeW: 29, sizeH: 34, offsetX: -54, offsetY: 0 },
+      { color: 'rgb(90, 200, 80)', sizeW: 27, sizeH: 30, offsetX: 51, offsetY: -1 },
+      { color: 'rgb(40, 170, 110)', sizeW: 36, sizeH: 24, offsetX: 21, offsetY: 1 },
+      { color: 'rgb(120, 210, 70)', sizeW: 30, sizeH: 22, offsetX: -21, offsetY: 0 },
+      { color: 'rgb(35, 145, 100)', sizeW: 25, sizeH: 28, offsetX: 66, offsetY: 1 },
+      { color: 'rgb(60, 195, 140)', sizeW: 23, sizeH: 30, offsetX: -66, offsetY: -1 },
+    ],
+    light: [
+      { color: 'rgb(33, 115, 65)', sizeW: 45, sizeH: 36, offsetX: 0, offsetY: 2 },
+      { color: 'rgb(22, 137, 86)', sizeW: 35, sizeH: 32, offsetX: 65, offsetY: 0 },
+      { color: 'rgb(50, 130, 50)', sizeW: 40, sizeH: 28, offsetX: -60, offsetY: 2 },
+      { color: 'rgb(14, 108, 94)', sizeW: 35, sizeH: 34, offsetX: -90, offsetY: 0 },
+      { color: 'rgb(65, 144, 58)', sizeW: 38, sizeH: 30, offsetX: 85, offsetY: -1 },
+      { color: 'rgb(29, 122, 79)', sizeW: 50, sizeH: 24, offsetX: 35, offsetY: 1 },
+      { color: 'rgb(86, 151, 50)', sizeW: 40, sizeH: 22, offsetX: -35, offsetY: 0 },
+      { color: 'rgb(25, 104, 72)', sizeW: 35, sizeH: 28, offsetX: 110, offsetY: 1 },
+      { color: 'rgb(43, 140, 101)', sizeW: 30, sizeH: 30, offsetX: -110, offsetY: -1 },
+    ],
+  },
+  candy: {
+    dark: [
+      { color: 'rgb(240, 70, 170)', sizeW: 36, sizeH: 36, offsetX: 0, offsetY: 2 },
+      { color: 'rgb(255, 90, 140)', sizeW: 30, sizeH: 32, offsetX: 39, offsetY: 0 },
+      { color: 'rgb(215, 60, 200)', sizeW: 33, sizeH: 28, offsetX: -36, offsetY: 2 },
+      { color: 'rgb(255, 110, 180)', sizeW: 29, sizeH: 34, offsetX: -54, offsetY: 0 },
+      { color: 'rgb(200, 80, 240)', sizeW: 27, sizeH: 30, offsetX: 51, offsetY: -1 },
+      { color: 'rgb(250, 60, 150)', sizeW: 36, sizeH: 24, offsetX: 21, offsetY: 1 },
+      { color: 'rgb(230, 120, 220)', sizeW: 30, sizeH: 22, offsetX: -21, offsetY: 0 },
+      { color: 'rgb(245, 85, 165)', sizeW: 25, sizeH: 28, offsetX: 66, offsetY: 1 },
+      { color: 'rgb(210, 70, 230)', sizeW: 23, sizeH: 30, offsetX: -66, offsetY: -1 },
+    ],
+    light: [
+      { color: 'rgb(173, 50, 122)', sizeW: 45, sizeH: 36, offsetX: 0, offsetY: 2 },
+      { color: 'rgb(184, 65, 101)', sizeW: 35, sizeH: 32, offsetX: 65, offsetY: 0 },
+      { color: 'rgb(155, 43, 144)', sizeW: 40, sizeH: 28, offsetX: -60, offsetY: 2 },
+      { color: 'rgb(184, 79, 130)', sizeW: 35, sizeH: 34, offsetX: -90, offsetY: 0 },
+      { color: 'rgb(144, 58, 173)', sizeW: 38, sizeH: 30, offsetX: 85, offsetY: -1 },
+      { color: 'rgb(180, 43, 108)', sizeW: 50, sizeH: 24, offsetX: 35, offsetY: 1 },
+      { color: 'rgb(166, 86, 158)', sizeW: 40, sizeH: 22, offsetX: -35, offsetY: 0 },
+      { color: 'rgb(176, 61, 119)', sizeW: 35, sizeH: 28, offsetX: 110, offsetY: 1 },
+      { color: 'rgb(151, 50, 166)', sizeW: 30, sizeH: 30, offsetX: -110, offsetY: -1 },
+    ],
+  },
+  ice: {
+    dark: [
+      { color: 'rgb(90, 200, 240)', sizeW: 36, sizeH: 36, offsetX: 0, offsetY: 2 },
+      { color: 'rgb(60, 175, 230)', sizeW: 30, sizeH: 32, offsetX: 39, offsetY: 0 },
+      { color: 'rgb(130, 220, 250)', sizeW: 33, sizeH: 28, offsetX: -36, offsetY: 2 },
+      { color: 'rgb(70, 190, 215)', sizeW: 29, sizeH: 34, offsetX: -54, offsetY: 0 },
+      { color: 'rgb(110, 210, 255)', sizeW: 27, sizeH: 30, offsetX: 51, offsetY: -1 },
+      { color: 'rgb(50, 165, 220)', sizeW: 36, sizeH: 24, offsetX: 21, offsetY: 1 },
+      { color: 'rgb(150, 230, 250)', sizeW: 30, sizeH: 22, offsetX: -21, offsetY: 0 },
+      { color: 'rgb(85, 195, 235)', sizeW: 25, sizeH: 28, offsetX: 66, offsetY: 1 },
+      { color: 'rgb(65, 180, 245)', sizeW: 23, sizeH: 30, offsetX: -66, offsetY: -1 },
+    ],
+    light: [
+      { color: 'rgb(65, 144, 173)', sizeW: 45, sizeH: 36, offsetX: 0, offsetY: 2 },
+      { color: 'rgb(43, 126, 166)', sizeW: 35, sizeH: 32, offsetX: 65, offsetY: 0 },
+      { color: 'rgb(94, 158, 180)', sizeW: 40, sizeH: 28, offsetX: -60, offsetY: 2 },
+      { color: 'rgb(50, 137, 155)', sizeW: 35, sizeH: 34, offsetX: -90, offsetY: 0 },
+      { color: 'rgb(79, 151, 184)', sizeW: 38, sizeH: 30, offsetX: 85, offsetY: -1 },
+      { color: 'rgb(36, 119, 158)', sizeW: 50, sizeH: 24, offsetX: 35, offsetY: 1 },
+      { color: 'rgb(108, 166, 180)', sizeW: 40, sizeH: 22, offsetX: -35, offsetY: 0 },
+      { color: 'rgb(61, 140, 169)', sizeW: 35, sizeH: 28, offsetX: 110, offsetY: 1 },
+      { color: 'rgb(47, 130, 176)', sizeW: 30, sizeH: 30, offsetX: -110, offsetY: -1 },
+    ],
+  },
+  gold: {
+    dark: [
+      { color: 'rgb(240, 190, 60)', sizeW: 36, sizeH: 36, offsetX: 0, offsetY: 2 },
+      { color: 'rgb(255, 210, 90)', sizeW: 30, sizeH: 32, offsetX: 39, offsetY: 0 },
+      { color: 'rgb(225, 165, 40)', sizeW: 33, sizeH: 28, offsetX: -36, offsetY: 2 },
+      { color: 'rgb(250, 200, 70)', sizeW: 29, sizeH: 34, offsetX: -54, offsetY: 0 },
+      { color: 'rgb(255, 225, 120)', sizeW: 27, sizeH: 30, offsetX: 51, offsetY: -1 },
+      { color: 'rgb(230, 175, 50)', sizeW: 36, sizeH: 24, offsetX: 21, offsetY: 1 },
+      { color: 'rgb(245, 205, 85)', sizeW: 30, sizeH: 22, offsetX: -21, offsetY: 0 },
+      { color: 'rgb(215, 155, 35)', sizeW: 25, sizeH: 28, offsetX: 66, offsetY: 1 },
+      { color: 'rgb(255, 215, 100)', sizeW: 23, sizeH: 30, offsetX: -66, offsetY: -1 },
+    ],
+    light: [
+      { color: 'rgb(173, 137, 43)', sizeW: 45, sizeH: 36, offsetX: 0, offsetY: 2 },
+      { color: 'rgb(184, 151, 65)', sizeW: 35, sizeH: 32, offsetX: 65, offsetY: 0 },
+      { color: 'rgb(162, 119, 29)', sizeW: 40, sizeH: 28, offsetX: -60, offsetY: 2 },
+      { color: 'rgb(180, 144, 50)', sizeW: 35, sizeH: 34, offsetX: -90, offsetY: 0 },
+      { color: 'rgb(184, 162, 86)', sizeW: 38, sizeH: 30, offsetX: 85, offsetY: -1 },
+      { color: 'rgb(166, 126, 36)', sizeW: 50, sizeH: 24, offsetX: 35, offsetY: 1 },
+      { color: 'rgb(176, 148, 61)', sizeW: 40, sizeH: 22, offsetX: -35, offsetY: 0 },
+      { color: 'rgb(155, 112, 25)', sizeW: 35, sizeH: 28, offsetX: 110, offsetY: 1 },
+      { color: 'rgb(184, 155, 72)', sizeW: 30, sizeH: 30, offsetX: -110, offsetY: -1 },
+    ],
+  },
 };
 
 function getLineColorGradients(colorVariant: BorderBeamColorVariant, isDark: boolean, id: string): string {
@@ -492,6 +736,50 @@ export const lineInnerGradientData = {
     { color: 'rgba(255, 160, 80, 0.40)', sizeW: 25, sizeH: 18, offsetX: -21, offsetY: -2 },
     { color: 'rgba(255, 90, 60, 0.45)', sizeW: 21, sizeH: 24, offsetX: 66, offsetY: 0 },
     { color: 'rgba(255, 70, 70, 0.52)', sizeW: 18, sizeH: 26, offsetX: -66, offsetY: -1 },
+  ],
+  forest: [
+    { color: 'rgba(46, 160, 90,, 0.48)', sizeW: 33, sizeH: 30, offsetX: 0, offsetY: 0 },
+    { color: 'rgba(30, 190, 120,, 0.42)', sizeW: 24, sizeH: 26, offsetX: 39, offsetY: -3 },
+    { color: 'rgba(70, 180, 70,, 0.48)', sizeW: 27, sizeH: 24, offsetX: -36, offsetY: 0 },
+    { color: 'rgba(20, 150, 130,, 0.42)', sizeW: 23, sizeH: 28, offsetX: -54, offsetY: -2 },
+    { color: 'rgba(90, 200, 80,, 0.50)', sizeW: 24, sizeH: 24, offsetX: 51, offsetY: -1 },
+    { color: 'rgba(40, 170, 110,, 0.45)', sizeW: 30, sizeH: 20, offsetX: 21, offsetY: 0 },
+    { color: 'rgba(120, 210, 70,, 0.40)', sizeW: 25, sizeH: 18, offsetX: -21, offsetY: -2 },
+    { color: 'rgba(35, 145, 100,, 0.45)', sizeW: 21, sizeH: 24, offsetX: 66, offsetY: 0 },
+    { color: 'rgba(60, 195, 140,, 0.52)', sizeW: 18, sizeH: 26, offsetX: -66, offsetY: -1 },
+  ],
+  candy: [
+    { color: 'rgba(240, 70, 170,, 0.48)', sizeW: 33, sizeH: 30, offsetX: 0, offsetY: 0 },
+    { color: 'rgba(255, 90, 140,, 0.42)', sizeW: 24, sizeH: 26, offsetX: 39, offsetY: -3 },
+    { color: 'rgba(215, 60, 200,, 0.48)', sizeW: 27, sizeH: 24, offsetX: -36, offsetY: 0 },
+    { color: 'rgba(255, 110, 180,, 0.42)', sizeW: 23, sizeH: 28, offsetX: -54, offsetY: -2 },
+    { color: 'rgba(200, 80, 240,, 0.50)', sizeW: 24, sizeH: 24, offsetX: 51, offsetY: -1 },
+    { color: 'rgba(250, 60, 150,, 0.45)', sizeW: 30, sizeH: 20, offsetX: 21, offsetY: 0 },
+    { color: 'rgba(230, 120, 220,, 0.40)', sizeW: 25, sizeH: 18, offsetX: -21, offsetY: -2 },
+    { color: 'rgba(245, 85, 165,, 0.45)', sizeW: 21, sizeH: 24, offsetX: 66, offsetY: 0 },
+    { color: 'rgba(210, 70, 230,, 0.52)', sizeW: 18, sizeH: 26, offsetX: -66, offsetY: -1 },
+  ],
+  ice: [
+    { color: 'rgba(90, 200, 240,, 0.48)', sizeW: 33, sizeH: 30, offsetX: 0, offsetY: 0 },
+    { color: 'rgba(60, 175, 230,, 0.42)', sizeW: 24, sizeH: 26, offsetX: 39, offsetY: -3 },
+    { color: 'rgba(130, 220, 250,, 0.48)', sizeW: 27, sizeH: 24, offsetX: -36, offsetY: 0 },
+    { color: 'rgba(70, 190, 215,, 0.42)', sizeW: 23, sizeH: 28, offsetX: -54, offsetY: -2 },
+    { color: 'rgba(110, 210, 255,, 0.50)', sizeW: 24, sizeH: 24, offsetX: 51, offsetY: -1 },
+    { color: 'rgba(50, 165, 220,, 0.45)', sizeW: 30, sizeH: 20, offsetX: 21, offsetY: 0 },
+    { color: 'rgba(150, 230, 250,, 0.40)', sizeW: 25, sizeH: 18, offsetX: -21, offsetY: -2 },
+    { color: 'rgba(85, 195, 235,, 0.45)', sizeW: 21, sizeH: 24, offsetX: 66, offsetY: 0 },
+    { color: 'rgba(65, 180, 245,, 0.52)', sizeW: 18, sizeH: 26, offsetX: -66, offsetY: -1 },
+  ],
+  gold: [
+    { color: 'rgba(240, 190, 60,, 0.48)', sizeW: 33, sizeH: 30, offsetX: 0, offsetY: 0 },
+    { color: 'rgba(255, 210, 90,, 0.42)', sizeW: 24, sizeH: 26, offsetX: 39, offsetY: -3 },
+    { color: 'rgba(225, 165, 40,, 0.48)', sizeW: 27, sizeH: 24, offsetX: -36, offsetY: 0 },
+    { color: 'rgba(250, 200, 70,, 0.42)', sizeW: 23, sizeH: 28, offsetX: -54, offsetY: -2 },
+    { color: 'rgba(255, 225, 120,, 0.50)', sizeW: 24, sizeH: 24, offsetX: 51, offsetY: -1 },
+    { color: 'rgba(230, 175, 50,, 0.45)', sizeW: 30, sizeH: 20, offsetX: 21, offsetY: 0 },
+    { color: 'rgba(245, 205, 85,, 0.40)', sizeW: 25, sizeH: 18, offsetX: -21, offsetY: -2 },
+    { color: 'rgba(215, 155, 35,, 0.45)', sizeW: 21, sizeH: 24, offsetX: 66, offsetY: 0 },
+    { color: 'rgba(255, 215, 100,, 0.52)', sizeW: 18, sizeH: 26, offsetX: -66, offsetY: -1 },
   ],
 };
 
@@ -584,6 +872,86 @@ export const lineBloomColors = {
         { color1: 'rgb(180, 40, 20)', color2: 'rgba(180, 40, 20, 0.82)' },
         { color1: 'rgb(210, 80, 10)', color2: 'rgba(210, 80, 10, 0.7)' },
         { color1: 'rgb(190, 70, 30)', color2: 'rgba(190, 70, 30, 0.78)' },
+      ],
+    },
+  },
+  forest: {
+    dark: {
+      spikes: [
+        { color1: 'rgb(46, 160, 90)', color2: 'rgb(30, 190, 120)' },
+        { color1: 'rgba(70, 180, 70,, 0.59)', color2: 'rgba(20, 150, 130,, 0.29)' },
+        { color1: 'rgb(90, 200, 80)', color2: 'rgb(40, 170, 110)' },
+        { color1: 'rgba(120, 210, 70,, 0.91)', color2: 'rgba(35, 145, 100,, 0.45)' },
+        { color1: 'rgb(60, 195, 140)', color2: 'rgb(46, 160, 90)' },
+      ],
+    },
+    light: {
+      spikes: [
+        { color1: 'rgb(33, 115, 65)', color2: 'rgba(22, 137, 86,, 0.8)' },
+        { color1: 'rgba(50, 130, 50,, 0.7)', color2: 'rgba(14, 108, 94,, 0.46)' },
+        { color1: 'rgb(65, 144, 58)', color2: 'rgba(29, 122, 79,, 0.82)' },
+        { color1: 'rgb(86, 151, 50)', color2: 'rgba(25, 104, 72,, 0.7)' },
+        { color1: 'rgb(43, 140, 101)', color2: 'rgba(33, 115, 65,, 0.78)' },
+      ],
+    },
+  },
+  candy: {
+    dark: {
+      spikes: [
+        { color1: 'rgb(240, 70, 170)', color2: 'rgb(255, 90, 140)' },
+        { color1: 'rgba(215, 60, 200,, 0.59)', color2: 'rgba(255, 110, 180,, 0.29)' },
+        { color1: 'rgb(200, 80, 240)', color2: 'rgb(250, 60, 150)' },
+        { color1: 'rgba(230, 120, 220,, 0.91)', color2: 'rgba(245, 85, 165,, 0.45)' },
+        { color1: 'rgb(210, 70, 230)', color2: 'rgb(240, 70, 170)' },
+      ],
+    },
+    light: {
+      spikes: [
+        { color1: 'rgb(173, 50, 122)', color2: 'rgba(184, 65, 101,, 0.8)' },
+        { color1: 'rgba(155, 43, 144,, 0.7)', color2: 'rgba(184, 79, 130,, 0.46)' },
+        { color1: 'rgb(144, 58, 173)', color2: 'rgba(180, 43, 108,, 0.82)' },
+        { color1: 'rgb(166, 86, 158)', color2: 'rgba(176, 61, 119,, 0.7)' },
+        { color1: 'rgb(151, 50, 166)', color2: 'rgba(173, 50, 122,, 0.78)' },
+      ],
+    },
+  },
+  ice: {
+    dark: {
+      spikes: [
+        { color1: 'rgb(90, 200, 240)', color2: 'rgb(60, 175, 230)' },
+        { color1: 'rgba(130, 220, 250,, 0.59)', color2: 'rgba(70, 190, 215,, 0.29)' },
+        { color1: 'rgb(110, 210, 255)', color2: 'rgb(50, 165, 220)' },
+        { color1: 'rgba(150, 230, 250,, 0.91)', color2: 'rgba(85, 195, 235,, 0.45)' },
+        { color1: 'rgb(65, 180, 245)', color2: 'rgb(90, 200, 240)' },
+      ],
+    },
+    light: {
+      spikes: [
+        { color1: 'rgb(65, 144, 173)', color2: 'rgba(43, 126, 166,, 0.8)' },
+        { color1: 'rgba(94, 158, 180,, 0.7)', color2: 'rgba(50, 137, 155,, 0.46)' },
+        { color1: 'rgb(79, 151, 184)', color2: 'rgba(36, 119, 158,, 0.82)' },
+        { color1: 'rgb(108, 166, 180)', color2: 'rgba(61, 140, 169,, 0.7)' },
+        { color1: 'rgb(47, 130, 176)', color2: 'rgba(65, 144, 173,, 0.78)' },
+      ],
+    },
+  },
+  gold: {
+    dark: {
+      spikes: [
+        { color1: 'rgb(240, 190, 60)', color2: 'rgb(255, 210, 90)' },
+        { color1: 'rgba(225, 165, 40,, 0.59)', color2: 'rgba(250, 200, 70,, 0.29)' },
+        { color1: 'rgb(255, 225, 120)', color2: 'rgb(230, 175, 50)' },
+        { color1: 'rgba(245, 205, 85,, 0.91)', color2: 'rgba(215, 155, 35,, 0.45)' },
+        { color1: 'rgb(255, 215, 100)', color2: 'rgb(240, 190, 60)' },
+      ],
+    },
+    light: {
+      spikes: [
+        { color1: 'rgb(173, 137, 43)', color2: 'rgba(184, 151, 65,, 0.8)' },
+        { color1: 'rgba(162, 119, 29,, 0.7)', color2: 'rgba(180, 144, 50,, 0.46)' },
+        { color1: 'rgb(184, 162, 86)', color2: 'rgba(166, 126, 36,, 0.82)' },
+        { color1: 'rgb(176, 148, 61)', color2: 'rgba(155, 112, 25,, 0.7)' },
+        { color1: 'rgb(184, 155, 72)', color2: 'rgba(173, 137, 43,, 0.78)' },
       ],
     },
   },
@@ -1023,6 +1391,14 @@ interface GenerateStylesOptions {
   theme: 'dark' | 'light';
   /** Opacity of the 1px hairline outline (pulse-outside only). Falls back to 0. */
   hairlineOpacity?: number;
+  /** Multiplies every glow blur radius. Falls back to 1 (the tuned defaults). */
+  glowSize?: number;
+}
+
+/** Scales a tuned blur radius by `glowSize`, rounded to a sensible px step.
+ *  Kept above 0 so a glow layer never collapses to a hard edge. */
+function scaleBlur(px: number, glowSize = 1): number {
+  return Math.max(0.5, Math.round(px * glowSize * 100) / 100);
 }
 
 /**
@@ -1066,6 +1442,7 @@ function generateSmallVariantCSS(options: GenerateStylesOptions): string {
     saturation,
     hueRange,
     theme,
+    glowSize = 1,
   } = options;
 
   const innerRadius = Math.max(0, borderRadius - borderWidth);
@@ -1260,7 +1637,7 @@ function generateSmallVariantCSS(options: GenerateStylesOptions): string {
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask-composite: exclude;
   padding: ${borderWidth}px;
-  filter: blur(8px) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)});
+  filter: blur(${scaleBlur(8, glowSize)}px) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)});
   pointer-events: none;
   z-index: 3;
   opacity: 0;
@@ -1305,6 +1682,7 @@ function generateBorderVariantCSS(options: GenerateStylesOptions): string {
     saturation,
     hueRange,
     theme,
+    glowSize = 1,
   } = options;
 
   const innerRadius = Math.max(0, borderRadius - borderWidth);
@@ -1510,7 +1888,7 @@ function generateBorderVariantCSS(options: GenerateStylesOptions): string {
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask-composite: exclude;
   padding: ${borderWidth}px;
-  filter: blur(8px) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)});
+  filter: blur(${scaleBlur(8, glowSize)}px) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)});
   pointer-events: none;
   z-index: 3;
   opacity: 0;
@@ -1549,6 +1927,7 @@ function generatePulseInnerVariantCSS(options: GenerateStylesOptions): string {
     id, borderRadius, borderWidth, duration,
     strokeOpacity, innerOpacity, bloomOpacity,
     colorVariant, staticColors, brightness, saturation, hueRange, theme,
+    glowSize = 1,
   } = options;
 
   const isDark = theme === 'dark';
@@ -1562,7 +1941,7 @@ function generatePulseInnerVariantCSS(options: GenerateStylesOptions): string {
   // (see getPulseDriverConfig / pulseDriver.ts); only `op` is needed here to set
   // the frozen bloom's average alpha.
   const { op } = pulseParams('pulse-inner', theme, duration);
-  const bloomBlur = 8;
+  const bloomBlur = scaleBlur(8, glowSize);
 
   const b = brightness.toFixed(2);
   const s = saturation.toFixed(2);
@@ -1703,6 +2082,7 @@ function generatePulseOuterVariantCSS(options: GenerateStylesOptions): string {
     strokeOpacity, innerOpacity, bloomOpacity,
     colorVariant, staticColors, brightness, saturation, hueRange, theme,
     hairlineOpacity = 0,
+    glowSize = 1,
   } = options;
 
   const isDark = theme === 'dark';
@@ -1728,8 +2108,8 @@ function generatePulseOuterVariantCSS(options: GenerateStylesOptions): string {
   // Theme-dependent outward-glow constants (ported from v5 c6 defaults).
   const sw = 0.95; // glow width size
   const sh = 0.9; // glow height size (same in both themes)
-  const glowBlur = isDark ? 3 : 6;
-  const bloomBlur = isDark ? 22.5 : 15;
+  const glowBlur = scaleBlur(isDark ? 3 : 6, glowSize);
+  const bloomBlur = scaleBlur(isDark ? 22.5 : 15, glowSize);
 
   const b = brightness.toFixed(2);
   const s = saturation.toFixed(2);
@@ -1890,6 +2270,7 @@ function generateLineVariantCSS(options: GenerateStylesOptions): string {
     saturation,
     hueRange,
     theme,
+    glowSize = 1,
   } = options;
 
   const innerRadius = Math.max(0, borderRadius - borderWidth);
@@ -1915,9 +2296,9 @@ function generateLineVariantCSS(options: GenerateStylesOptions): string {
 }
 
 @keyframes beam-hue-shift-bloom-${id} {
-  0% { filter: blur(8px) hue-rotate(calc(var(--beam-hue-base, 0deg) - ${hueRange + 10}deg)) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
-  50% { filter: blur(8px) hue-rotate(calc(var(--beam-hue-base, 0deg) + ${hueRange + 10}deg)) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
-  100% { filter: blur(8px) hue-rotate(calc(var(--beam-hue-base, 0deg) - ${hueRange + 10}deg)) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
+  0% { filter: blur(${scaleBlur(8, glowSize)}px) hue-rotate(calc(var(--beam-hue-base, 0deg) - ${hueRange + 10}deg)) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
+  50% { filter: blur(${scaleBlur(8, glowSize)}px) hue-rotate(calc(var(--beam-hue-base, 0deg) + ${hueRange + 10}deg)) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
+  100% { filter: blur(${scaleBlur(8, glowSize)}px) hue-rotate(calc(var(--beam-hue-base, 0deg) - ${hueRange + 10}deg)) brightness(${brightness.toFixed(2)}) saturate(${saturation.toFixed(2)}); }
 }`;
 
   const whiteHighlight = isDark

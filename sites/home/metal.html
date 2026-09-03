@@ -3,9 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <!-- First-paint guard. Firefox has painted a frame before the stylesheets
+       applied on cached navigations (brand mark at full width, skip link in
+       view, menus open). These few rules make that frame harmless; site.css
+       overrides every one of them once it lands. -->
+  <style>
+    .skip-link { position: absolute; left: -9999px; }
+    .brand-mark svg, .footer-brand-logo svg { width: 22px; height: 14px; }
+    .mobile-menu, .mobile-menu-backdrop, .tl-menu, .t-dropdown { display: none; }
+  </style>
+  <!-- Paint gate. Firefox has painted before the external stylesheets applied
+       on navigation, so the body stays invisible on the site's ground until
+       every local sheet has loaded (script below); a 1.5s timeout reveals it
+       regardless, so a failed sheet can never leave the page blank. -->
+  <style>
+    html { background: #121212; }
+    html:not(.css-ready) body { visibility: hidden; }
+  </style>
   <meta name="color-scheme" content="dark" />
 
-  <title>Metal — metal-fx playground | Libraries.dev</title>
+  <title>Metal: metal-fx playground | Libraries.dev</title>
   <meta
     name="description"
     content="A real-time WebGL liquid-metal ring that wraps any button or icon in animated chrome. Try it live and install metal-fx from npm."
@@ -34,24 +51,19 @@
   <meta property="og:site_name" content="Libraries.dev" />
   <meta property="og:url" content="https://libraries.dev/metal.html" />
   <meta property="og:locale" content="en_US" />
-  <meta property="og:title" content="Metal — metal-fx playground | Libraries.dev" />
+  <meta property="og:title" content="Metal: metal-fx playground | Libraries.dev" />
   <meta property="og:description" content="A real-time WebGL liquid-metal ring that wraps any button or icon in animated chrome. Try it live and install metal-fx from npm." />
 
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Metal — metal-fx playground | Libraries.dev" />
+  <meta property="og:image" content="https://libraries.dev/assets/og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:image" content="https://libraries.dev/assets/og-image.jpg" />
+  <meta name="twitter:title" content="Metal: metal-fx playground | Libraries.dev" />
   <meta name="twitter:description" content="A real-time WebGL liquid-metal ring that wraps any button or icon in animated chrome. Try it live and install metal-fx from npm." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    rel="preload"
-    as="style"
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
-  />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
-    rel="stylesheet"
-  />
   <link
     rel="preload"
     as="font"
@@ -61,12 +73,40 @@
   />
   <link rel="stylesheet" href="/assets/site.css" />
   <link rel="stylesheet" href="/assets/playground.css" />
+  <link rel="stylesheet" href="/assets/examples.css" />
+  <script>
+    (function () {
+      var h = document.documentElement;
+      var links = [].slice.call(document.querySelectorAll('link[rel="stylesheet"][href^="/assets/"]'));
+      var reveal = function () { h.classList.add("css-ready"); };
+      if (!links.length) return reveal();
+      var pending = links.length;
+      var done = function () { if (--pending <= 0) reveal(); };
+      links.forEach(function (l) {
+        if (l.sheet) return done();
+        l.addEventListener("load", done);
+        l.addEventListener("error", done);
+      });
+      setTimeout(reveal, 1500);
+    })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
-    /* Detail page: copy-button icon swap + full-width live snippet */
-    .code-copy .icon-check { display: none; }
-    .code-copy[data-copied="true"] .icon-copy { display: none; }
-    .code-copy[data-copied="true"] .icon-check { display: block; }
-    .pg-snippet { grid-column: 1 / -1; margin-top: 0; }
+    /* Copy-button icon crossfade, as beam and gooey do it. The older
+       display:none swap lost to playground.css's `.code-block .code-copy svg
+       { display: block }` once these buttons moved onto the Studio's stage
+       card, and both icons showed at once; opacity has nothing to fight. */
+    .code-copy svg {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      transition: opacity 0.2s ease, transform 0.2s ease, filter 0.2s ease;
+    }
+    .code-copy .icon-check { opacity: 0; transform: translate(-50%, -50%) scale(0.4); filter: blur(3px); }
+    .code-copy[data-copied="true"] .icon-copy { opacity: 0; transform: translate(-50%, -50%) scale(0.4); filter: blur(3px); }
+    .code-copy[data-copied="true"] .icon-check { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0); }
+    .pg-snippet { grid-column: 1 / -1; }
     #playground { margin-top: 0; scroll-margin-top: 24px; }
     .pg { row-gap: 16px; }
     /* Metal-only: preview pills (search field reflection target + demo button) */
@@ -112,8 +152,9 @@
             <span class="brand-word"><span class="brand-word-strong">Libraries</span><span class="brand-word-dim">.dev</span></span>
           </a>
           <nav class="site-nav-menu" aria-label="Primary">
-            <a class="nav-pill nav-pill--active" href="/#components">Libraries</a>
-            <a class="nav-pill" href="/studio.html">Studio</a>
+            <a class="nav-pill nav-pill--active" href="/beam.html">Libraries</a>
+            <a class="nav-pill" href="/how-to-use.html">How to use</a>
+            <a class="nav-pill" href="/studio.html">Studio <span class="nav-pill-pro">Pro</span></a>
           </nav>
         </div>
         <div class="site-nav-right">
@@ -132,23 +173,9 @@
             </svg>
             <span class="pill-label" id="gh-stars-count">—</span>
           </a>
-          <a
-            class="icon-btn"
-            href="https://x.com/jakubantalik"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="X (Twitter)"
-          >
-            <svg class="icon-x" aria-hidden="true" viewBox="0 0 16 17" xmlns="http://www.w3.org/2000/svg">
-              <path
-                fill="currentColor"
-                d="M12.4041 1.39726H14.6953L9.69087 7.2591L15.5781 15.2368H10.9696L7.35741 10.3996L3.22921 15.2368H0.934687L6.28641 8.96575L0.642598 1.39726H5.36795L8.62962 5.81859L12.4041 1.39726ZM11.5992 13.8329H12.8682L4.67667 2.72798H3.31359L11.5992 13.8329Z"
-              />
-            </svg>
-          </a>
           <div class="pm-anchor" id="more-anchor">
             <button type="button" class="icon-btn" id="more-btn" aria-label="More" aria-haspopup="menu" aria-expanded="false">
-              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block">
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 8C6.66667 7.26362 7.26362 6.66667 8 6.66667C8.73638 6.66667 9.33333 7.26362 9.33333 8C9.33333 8.73638 8.73638 9.33333 8 9.33333C7.26362 9.33333 6.66667 8.73638 6.66667 8Z" fill="currentColor"/>
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 3.33333C6.66667 2.59695 7.26362 2 8 2C8.73638 2 9.33333 2.59695 9.33333 3.33333C9.33333 4.06971 8.73638 4.66667 8 4.66667C7.26362 4.66667 6.66667 4.06971 6.66667 3.33333Z" fill="currentColor"/>
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66667 12.6667C6.66667 11.9303 7.26362 11.3333 8 11.3333C8.73638 11.3333 9.33333 11.9303 9.33333 12.6667C9.33333 13.403 8.73638 14 8 14C7.26362 14 6.66667 13.403 6.66667 12.6667Z" fill="currentColor"/>
@@ -183,9 +210,10 @@
       <div class="mobile-menu-backdrop" id="mobile-menu-backdrop"></div>
       <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile">
         <ul class="mobile-menu-list">
-          <li><a class="mobile-menu-link mobile-menu-link--1" href="/#components">Libraries</a></li>
-          <li><a class="mobile-menu-link mobile-menu-link--2" href="/studio.html">Studio</a></li>
-          <li><a class="mobile-menu-link mobile-menu-link--3 mobile-menu-link--pro" href="/pro.html">Get Pro</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--1" href="/beam.html">Libraries</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--2" href="/how-to-use.html">How to use</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--3" href="/studio.html">Studio</a></li>
+          <li><a class="mobile-menu-link mobile-menu-link--4 mobile-menu-link--pro" href="/pro.html">Get Pro</a></li>
         </ul>
         <a class="mobile-menu-cta" id="mobile-signin" href="/pro.html">Sign in</a>
       </nav>
@@ -195,18 +223,17 @@
       <aside class="docs-sidebar">
         <div class="docs-group docs-group--links">
           <div class="docs-group-label">Getting started</div>
-          <a class="docs-link docs-link--muted" href="/#components">Introduction</a>
-          <a class="docs-link docs-link--muted" href="/studio.html">Studio</a>
-          <a class="docs-link docs-link--muted" href="/pro.html">Get Pro</a>
+          <a class="docs-link docs-link--muted" href="/introduction.html">Introduction</a>
+          <a class="docs-link docs-link--muted" href="/accessibility.html">Accessibility</a>
         </div>
         <div class="docs-group">
           <div class="docs-group-label">Libraries</div>
           <nav class="docs-list" aria-label="Libraries">
-            <a class="docs-link" href="/beam.html"><img class="docs-link-icon" src="/assets/icons/tile-beam.png" alt="" width="18" height="18" loading="lazy" decoding="async" />Beam</a>
-            <a class="docs-link" href="/orbs.html"><img class="docs-link-icon" src="/assets/icons/tile-orbs.png" alt="" width="18" height="18" loading="lazy" decoding="async" />Orb</a>
-            <a class="docs-link" href="/gooey.html"><img class="docs-link-icon" src="/assets/icons/tile-gooey.png" alt="" width="18" height="18" loading="lazy" decoding="async" />Gooey</a>
-            <a class="docs-link is-active" href="/metal.html" aria-current="page"><img class="docs-link-icon" src="/assets/icons/tile-metal.png" alt="" width="18" height="18" loading="lazy" decoding="async" />Metal</a>
-            <a class="docs-link" href="/image.html"><img class="docs-link-icon" src="/assets/icons/tile-image.png" alt="" width="18" height="18" loading="lazy" decoding="async" />Image</a>
+            <a class="docs-link" href="/beam.html"><span class="docs-link-ico"><img class="docs-link-icon" src="/assets/icons/figma-beam.png" alt="" width="18" height="18" loading="lazy" decoding="async" /></span>Border beam</a>
+            <a class="docs-link" href="/orbs.html"><span class="docs-link-ico"><img class="docs-link-icon" src="/assets/icons/figma-orbs.svg" alt="" width="18" height="18" loading="lazy" decoding="async" /></span>Thinking orbs</a>
+            <a class="docs-link" href="/gooey.html"><span class="docs-link-ico"><img class="docs-link-icon" src="/assets/icons/figma-gooey.svg" alt="" width="18" height="18" loading="lazy" decoding="async" /></span>Gooey</a>
+            <a class="docs-link is-active" href="/metal.html" aria-current="page"><span class="docs-link-ico"><img class="docs-link-icon" src="/assets/icons/figma-metal.png" alt="" width="18" height="18" loading="lazy" decoding="async" /></span>Metal</a>
+            <a class="docs-link" href="/image.html"><span class="docs-link-ico"><img class="docs-link-icon" src="/assets/icons/figma-image.png" alt="" width="18" height="18" loading="lazy" decoding="async" /></span>Image</a>
           </nav>
         </div>
       </aside>
@@ -225,54 +252,63 @@
           <div class="detail-titles">
             <span class="detail-icon" aria-hidden="true"><img src="/assets/icons/tile-metal.png" alt="" width="46" height="46" decoding="async" /></span>
             <h1 class="detail-title">Metal</h1>
-            <p class="detail-sub">A real-time WebGL liquid-metal ring around buttons and icons — animated chrome with a wandering halo.</p>
+            <p class="detail-sub">A real-time WebGL liquid-metal ring around buttons and icons, with a wandering halo of animated chrome.</p>
           </div>
 
           <div class="detail-head-row">
             <div class="detail-tabs proto-modal-tabs" data-detail-tabs role="tablist" aria-label="View">
               <span class="proto-modal-tabs-indicator" aria-hidden="true"></span>
               <button type="button" class="proto-modal-tab" role="tab" data-detail-tab="preview" aria-selected="true">Preview</button>
-              <button type="button" class="proto-modal-tab" role="tab" data-detail-tab="install" aria-selected="false">Install</button>
-              <button type="button" class="proto-modal-tab" role="tab" data-detail-tab="usage" aria-selected="false">Usage</button>
+              <button type="button" class="proto-modal-tab" role="tab" data-detail-tab="code" aria-selected="false">Install &amp; Usage</button>
             </div>
 
-            <button type="button" class="detail-prompt" data-prompt-target="#agent-prompt" aria-label="Copy agent prompt">
-              <span class="detail-prompt-icons" aria-hidden="true">
-                <svg class="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </svg>
-                <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              </span>
-              <span class="detail-prompt-label">Copy prompt</span>
-            </button>
+            <div class="detail-head-actions">
+              <a class="t-pro-btn detail-studio" href="/studio/app.html#metal">
+                <img src="/assets/icons/magic-wand.svg" alt="" width="16" height="16" decoding="async" />
+                <span class="detail-studio-sparks" aria-hidden="true"><i style="--ox: -1px; --oy: -3px; --sx: 0px; --sy: -11px; --sd: 900ms; --sdelay: 0ms;"></i><i style="--ox: 2px; --oy: -2px; --sx: 9px; --sy: -9px; --sd: 1000ms; --sdelay: 120ms;"></i><i style="--ox: 2px; --oy: 5px; --sx: 9px; --sy: 9px; --sd: 950ms; --sdelay: 240ms;"></i><i style="--ox: -5px; --oy: -2px; --sx: -9px; --sy: -9px; --sd: 1000ms; --sdelay: 360ms;"></i><i style="--ox: 3px; --oy: 1px; --sx: 12px; --sy: 1px; --sd: 920ms; --sdelay: 480ms;"></i><i style="--ox: -1px; --oy: -3px; --sx: 0px; --sy: -11px; --sd: 950ms; --sdelay: 520ms;"></i><i style="--ox: 2px; --oy: -2px; --sx: 9px; --sy: -9px; --sd: 900ms; --sdelay: 650ms;"></i><i style="--ox: 2px; --oy: 5px; --sx: 9px; --sy: 9px; --sd: 1000ms; --sdelay: 760ms;"></i><i style="--ox: -5px; --oy: -2px; --sx: -9px; --sy: -9px; --sd: 930ms; --sdelay: 180ms;"></i><i style="--ox: 3px; --oy: 1px; --sx: 12px; --sy: 1px; --sd: 980ms; --sdelay: 300ms;"></i></span>
+                <span class="t-pro-btn-label">Tune in Studio</span>
+              </a>
+
+              <button type="button" class="detail-prompt" data-prompt-target="#agent-prompt" aria-label="Copy agent prompt">
+                <span class="detail-prompt-ico" aria-hidden="true">
+                  <!-- copy-03, exported from Figma 1419:38547. -->
+                  <svg class="icon-copy" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5.6 5.6V3.92C5.6 3.24794 5.6 2.91191 5.73079 2.65521C5.84584 2.42942 6.02942 2.24584 6.25521 2.13079C6.51191 2 6.84794 2 7.52 2H12.08C12.7521 2 13.0881 2 13.3448 2.13079C13.5706 2.24584 13.7542 2.42942 13.8692 2.65521C14 2.91191 14 3.24794 14 3.92V8.48C14 9.15206 14 9.4881 13.8692 9.74479C13.7542 9.97058 13.5706 10.1542 13.3448 10.2692C13.0881 10.4 12.7521 10.4 12.08 10.4H10.4M3.92 14H8.48C9.15206 14 9.48809 14 9.74479 13.8692C9.97058 13.7542 10.1542 13.5706 10.2692 13.3448C10.4 13.0881 10.4 12.7521 10.4 12.08V7.52C10.4 6.84794 10.4 6.51191 10.2692 6.25521C10.1542 6.02942 9.97058 5.84584 9.74479 5.73079C9.48809 5.6 9.15206 5.6 8.48 5.6H3.92C3.24794 5.6 2.91191 5.6 2.65521 5.73079C2.42942 5.84584 2.24584 6.02942 2.13079 6.25521C2 6.51191 2 6.84794 2 7.52V12.08C2 12.7521 2 13.0881 2.13079 13.3448C2.24584 13.5706 2.42942 13.7542 2.65521 13.8692C2.91191 14 3.24794 14 3.92 14Z" />
+                  </svg>
+                  <svg class="icon-check" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.46889L6.26923 11.58L12.5 4.58" /></svg>
+                </span>
+                <span class="detail-prompt-label">Copy prompt</span>
+              </button>
+            </div>
           </div>
         </header>
 
         <div class="detail-body">
           <div class="detail-panel" id="playground" data-detail-panel="preview">
-            <div class="pg" id="playground-root"></div>
+            <div id="playground-root"></div>
           </div>
 
-          <div class="detail-panel" data-detail-panel="install" hidden>
-            <div class="code-block">
+          <!-- One tab, both blocks: the install line and the usage snippet read
+               together under their own titles, as the Studio's Install & Usage does. -->
+          <div class="detail-panel detail-panel--code" data-detail-panel="code" hidden>
+          <div class="st-stage-panel">
+          
+            <div class="st-code-group">
+              <span class="st-code-title">Installation</span>
+              <div class="code-block">
               <pre id="install-code">npm install metal-fx</pre>
               <button type="button" class="code-copy" data-copy-target="#install-code" aria-label="Copy install command">
                 <svg class="icon-copy" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                   <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                 </svg>
-                <svg class="icon-check" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
+                <svg class="icon-check" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.46889L6.26923 11.58L12.5 4.58" /></svg>
               </button>
             </div>
-          </div>
-
-          <div class="detail-panel" data-detail-panel="usage" hidden>
-            <div class="code-block">
+            </div>
+            <div class="st-code-group">
+              <span class="st-code-title">Usage</span>
+              <div class="code-block">
               <pre id="usage-code">import { MetalFx } from 'metal-fx';
 
 &lt;MetalFx preset="chromatic" strength={1}&gt;
@@ -283,13 +319,13 @@
                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                   <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                 </svg>
-                <svg class="icon-check" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
+                <svg class="icon-check" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.46889L6.26923 11.58L12.5 4.58" /></svg>
               </button>
+            </div>
             </div>
           </div>
         </div>
+</div>
       </div>
     </div>
 
@@ -335,8 +371,8 @@ Docs: https://libraries.dev/metal.html
         <nav class="footer-cols" aria-label="Footer">
           <div class="footer-col">
             <p class="footer-col-title">Libraries</p>
-            <a href="/beam.html">Beam</a>
-            <a href="/orbs.html">Orb</a>
+            <a href="/beam.html">Border beam</a>
+            <a href="/orbs.html">Thinking orbs</a>
             <a href="/gooey.html">Gooey</a>
             <a href="/metal.html">Metal</a>
             <a href="/image.html">Image</a>
@@ -345,6 +381,7 @@ Docs: https://libraries.dev/metal.html
             <p class="footer-col-title">Product</p>
             <a href="/">Home</a>
             <a href="/studio.html">Studio</a>
+            <a href="/how-to-use.html">How to use</a>
             <a href="/pro.html">Get Pro</a>
           </div>
           <div class="footer-col">
@@ -360,23 +397,10 @@ Docs: https://libraries.dev/metal.html
     </footer>
   </main>
 
-  <script>
-    (function () {
-      document.querySelectorAll(".code-copy[data-copy-target]").forEach(function (btn) {
-        var timer = null;
-        btn.addEventListener("click", function () {
-          var src = document.querySelector(btn.getAttribute("data-copy-target"));
-          if (!src) return;
-          if (navigator.clipboard) navigator.clipboard.writeText(src.textContent || "").catch(function () {});
-          btn.setAttribute("data-copied", "true");
-          clearTimeout(timer);
-          timer = setTimeout(function () { btn.removeAttribute("data-copied"); }, 1600);
-        });
-      });
-    })();
-  </script>
   <script src="/assets/site.js" defer></script>
   <script src="/assets/pro-client.js" defer></script>
   <script type="module" src="/src/metal.tsx"></script>
+  <!-- GoatCounter: privacy-friendly page views, no cookies. -->
+  <script data-goatcounter="https://libraries.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>

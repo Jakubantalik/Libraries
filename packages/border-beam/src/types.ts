@@ -25,8 +25,20 @@ export type BorderBeamTheme = 'dark' | 'light' | 'auto';
  * - 'mono': Monochromatic grayscale
  * - 'ocean': Blue and purple tones
  * - 'sunset': Warm orange, yellow, and red tones
+ * - 'forest': Green and teal tones
+ * - 'candy': Pink and magenta tones
+ * - 'ice': Cyan and pale blue tones
+ * - 'gold': Amber and yellow tones
  */
-export type BorderBeamColorVariant = 'colorful' | 'mono' | 'ocean' | 'sunset';
+export type BorderBeamColorVariant =
+  | 'colorful'
+  | 'mono'
+  | 'ocean'
+  | 'sunset'
+  | 'forest'
+  | 'candy'
+  | 'ice'
+  | 'gold';
 
 /**
  * Configuration for a size preset
@@ -128,6 +140,15 @@ export interface BorderBeamProps extends Omit<HTMLAttributes<HTMLDivElement>, 'c
   saturation?: number;
 
   /**
+   * Multiplies the blur radius of every glow layer, so the halo reads
+   * tighter (< 1) or wider and softer (> 1). Each layer keeps its own
+   * tuned proportion — the core stays tighter than the bloom — because
+   * this scales the presets rather than replacing them.
+   * @default 1
+   */
+  glowSize?: number;
+
+  /**
    * Hue rotation range in degrees for the hue-shift animation
    * @default 30
    */
@@ -149,6 +170,15 @@ export interface BorderBeamProps extends Omit<HTMLAttributes<HTMLDivElement>, 'c
    * Additional inline styles for the container
    */
   style?: CSSProperties;
+
+  /**
+   * Extra CSS appended after the beam's own generated stylesheet, so it can
+   * override or add layers and keyframes. Write `{id}` wherever the
+   * instance id belongs — the root is `[data-beam="{id}"]`, its layers are
+   * the `::before` / `::after` pseudo-elements and `[data-beam-bloom]`, and
+   * keyframes are named `*-{id}` — and it is substituted per instance.
+   */
+  css?: string;
 
   /**
    * Callback when fade-in animation completes

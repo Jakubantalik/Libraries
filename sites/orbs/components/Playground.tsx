@@ -17,7 +17,7 @@ const STATES: OrbState[] = [
   'breathing',
   'shaping'
 ];
-const SIZES: OrbSize[] = [64, 20];
+const SIZES: OrbSize[] = [64, 32, 20];
 
 const SPEED_MIN = 25;
 const SPEED_MAX = 300;
