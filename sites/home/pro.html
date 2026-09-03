@@ -4529,8 +4529,11 @@
       color: #0d0d0d;
       text-decoration: none;
     }
-    a.pro-quote-name { text-decoration: underline; text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, currentColor 50%, transparent); transition: text-decoration-color 180ms ease; }
-    a.pro-quote-name:hover { text-decoration-color: currentColor; }
+    /* A name in a byline is not a link inside a sentence: no underline at
+       rest, so it does not compete with the quote. It still appears on
+       hover, so the ones that link out stay discoverable. */
+    a.pro-quote-name { text-decoration: none; text-underline-offset: 2px; transition: text-decoration-color 180ms ease; }
+    a.pro-quote-name:hover { text-decoration: underline; text-decoration-color: currentColor; }
     html[data-theme="dark"] .pro-quote-name { color: #ededed; }
     .pro-quote-role { font-size: 13px; line-height: 16px; color: #737373; overflow-wrap: anywhere; }
     @media (max-width: 900px) {
