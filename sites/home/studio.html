@@ -215,16 +215,18 @@
        mounted on top at the measured spot. Positions are in the card's 1x
        frame; the raster is 2x, so its samples halve. */
     .studio-live { position: absolute; overflow: hidden; }
+    /* Both patches start 1px in: at left:0 their solid fill covered the
+       1px ring the raster carries down the card's left edge. */
     .studio-live--status {
-      left: 0; top: 160px; width: 260px; height: 40px;
+      left: 1px; top: 160px; width: 259px; height: 40px;
       background: #1b1b1b;
     }
     .studio-live--status .st-chat-thinking { position: absolute; left: 8px; top: 6px; }
     .studio-live--beam {
-      left: 0; top: 195px; width: 112px; height: 106px;
+      left: 1px; top: 195px; width: 111px; height: 106px;
       background: #171717;
     }
-    #studio-beam-live { position: absolute; left: -96px; top: 14px; width: 200px; height: 84px; }
+    #studio-beam-live { position: absolute; left: -97px; top: 14px; width: 200px; height: 84px; }
     #studio-beam-live > * { width: 100%; height: 100%; border-radius: 16px; }
     .st-beam-mock {
       position: relative; width: 100%; height: 100%;
@@ -597,7 +599,10 @@
           </div>
         </nav>
       </div>
-      <p class="footer-credit"><span class="footer-muted">Created by</span><a class="footer-name" href="https://x.com/jakubantalik" target="_blank" rel="noopener noreferrer">Jakub Antalik</a></p>
+      <div class="footer-byline">
+        <p class="footer-credit"><span class="footer-muted">Created by</span><a class="footer-name" href="https://x.com/jakubantalik" target="_blank" rel="noopener noreferrer">Jakub Antalik</a></p>
+        <p class="footer-thanks">Made with help from <a href="https://x.com/a_brinza" target="_blank" rel="noopener noreferrer">Alexandr Brinza</a> (Orbs) and <a href="https://x.com/mpetercak" target="_blank" rel="noopener noreferrer">Martin Petercak</a> (Metal)</p>
+      </div>
     </footer>
   </main>
 

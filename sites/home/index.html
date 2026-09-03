@@ -25,7 +25,7 @@
   <title>Libraries.dev: High-crafted UI libraries for AI agents</title>
   <meta
     name="description"
-    content="Home of Jakub Antalik's UI effect libraries: Beam, Orb, Gooey, Metal and Image. Production-ready React effects you can install from npm."
+    content="Home of the UI effect libraries Beam, Orb, Gooey, Metal and Image. Production-ready React effects you can install from npm."
   />
   <meta
     name="keywords"
@@ -52,7 +52,7 @@
   <meta property="og:url" content="https://libraries.dev/" />
   <meta property="og:locale" content="en_US" />
   <meta property="og:title" content="Libraries.dev: High-crafted UI libraries for AI agents" />
-  <meta property="og:description" content="Home of Jakub Antalik's UI effect libraries: Beam, Orb, Gooey, Metal and Image." />
+  <meta property="og:description" content="Home of the UI effect libraries Beam, Orb, Gooey, Metal and Image." />
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta property="og:image" content="https://libraries.dev/assets/og-image.jpg" />
@@ -60,7 +60,7 @@
   <meta property="og:image:height" content="630" />
   <meta name="twitter:image" content="https://libraries.dev/assets/og-image.jpg" />
   <meta name="twitter:title" content="Libraries.dev: High-crafted UI libraries for AI agents" />
-  <meta name="twitter:description" content="Home of Jakub Antalik's UI effect libraries: Beam, Orb, Gooey, Metal and Image." />
+  <meta name="twitter:description" content="Home of the UI effect libraries Beam, Orb, Gooey, Metal and Image." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -217,6 +217,7 @@
       pointer-events: none;
     }
     .hero-tile-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .hero-tile-stage > .vid { position: absolute; inset: 0; }
     .hero-tile-video { width: 100%; height: 100%; object-fit: cover; display: block; }
     .hero-tile-stage::after {
       content: ""; position: absolute; inset: 0; border-radius: inherit;
@@ -297,7 +298,10 @@
            reads as a poster, and the CTAs are easier to hit from one edge. */
         align-items: flex-start;
         text-align: left;
-        min-height: calc(100dvh - var(--nav-h, 68px));
+        /* svh, not dvh: dvh tracks Safari's collapsing chrome, so the hero
+           and its tiles would resize mid-scroll. svh is the viewport with
+           the chrome up — the size the page first paints at. */
+        min-height: calc(100svh - var(--nav-h, 68px));
         padding-top: 24px;
         padding-bottom: 32px;
       }
@@ -331,22 +335,50 @@
 
       .hero-tile-pill { display: none; }
       .hero-tiles-row { display: contents; }
+      /* The tile size follows the viewport height so the whole hero — cluster,
+         copy and CTAs — fits above the fold even with the browser chrome
+         open. 130px is the desktop size; three rows of 130px tiles plus the
+         copy need ~810px, which Safari and Firefox on a phone do not have.
+         The 420px is the space the copy, paddings and nav take; whatever
+         height is left is split across the three tile rows, floored at 84px
+         so the previews stay legible. */
+      .header {
+        --hero-tile: clamp(84px, calc((100svh - 420px) / 3), 130px);
+        --hero-tile-gap: 16px;
+      }
+      .hero-tile {
+        width: var(--hero-tile); height: var(--hero-tile);
+        border-radius: calc(var(--hero-tile) * 24 / 130);
+      }
+      .hero-tile-stage {
+        inset: calc(var(--hero-tile) * 11 / 130);
+        border-radius: calc(var(--hero-tile) * 14 / 130);
+      }
       .hero-tiles-box {
         order: -1;
         position: relative;
         flex: none;
         width: 100%;
-        height: 422px;
+        height: calc(var(--hero-tile) * 3 + var(--hero-tile-gap) * 2);
       }
       /* A 2-1-2 stagger rather than a row: it reads as a loose cluster while
          keeping every tile's tap target clear of its neighbours, so the halo
          goes to zero. */
       .hero-tile { position: absolute; --tile-safe: 0px; }
-      .hero-tile--beam  { top: 0;     left: 12px; }
-      .hero-tile--metal { top: 0;     left: calc(100% - 142px); }
-      .hero-tile--orb   { top: 146px; left: calc(50% - 65px); }
-      .hero-tile--gooey { top: 292px; left: 12px; }
-      .hero-tile--image { top: 292px; left: calc(100% - 142px); }
+      .hero-tile--beam  { top: 0; left: 12px; }
+      .hero-tile--metal { top: 0; left: calc(100% - 12px - var(--hero-tile)); }
+      .hero-tile--orb   {
+        top: calc(var(--hero-tile) + var(--hero-tile-gap));
+        left: calc(50% - var(--hero-tile) / 2);
+      }
+      .hero-tile--gooey {
+        top: calc((var(--hero-tile) + var(--hero-tile-gap)) * 2);
+        left: 12px;
+      }
+      .hero-tile--image {
+        top: calc((var(--hero-tile) + var(--hero-tile-gap)) * 2);
+        left: calc(100% - 12px - var(--hero-tile));
+      }
     }
     @media (min-width: 761px) {
       .hero-tiles-row { display: contents; }
@@ -357,9 +389,22 @@
     /* ── Library grid cards (Figma 1413-37519): icon + meta row ── */
     .lib-card-hit { position: absolute; inset: 0; z-index: 6; border-radius: 24px; }
     .lib-video { width: 100%; height: 100%; object-fit: cover; display: block; }
+    /* The beam and orb clips are 1.66:1, wider than the small card's 1.17
+       slot, so below the wide grid they crop at the sides. Their subject
+       sits at the left edge - anchor there rather than centring, which was
+       cutting the composer in half. At the wide size nothing crops
+       horizontally, so this is a no-op there. */
+    .lib-card[data-lib="beam"] .lib-video,
+    .lib-card[data-lib="orb"] .lib-video { object-position: left center; }
     /* 254 leaves 16px between the stage and the icon — the same gap the
        meta keeps below itself, so the card breathes evenly. */
     .lib-card .card-stage { height: 254px; }
+    /* A full-width card at 344px tall is mostly stage on a phone; a shorter
+       stage keeps the whole card in view and the video still reads. */
+    @media (max-width: 740px) {
+      .lib-card { height: 290px; min-height: 290px; max-height: 290px; }
+      .lib-card .card-stage { height: 200px; }
+    }
     .lib-meta {
       position: absolute; left: 16px; right: 16px; bottom: 16px;
       display: flex; align-items: center; gap: 12px;
@@ -436,8 +481,11 @@
     .pro-quote-id { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
     .pro-quote-name { align-self: flex-start; font-size: 13px; line-height: 16px; font-weight: 500; color: #ededed; text-decoration: none; }
     /* Only the ones that link out are underlined; a plain name is not a link. */
-    a.pro-quote-name { text-decoration: underline; text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, currentColor 50%, transparent); transition: text-decoration-color 180ms ease; }
-    a.pro-quote-name:hover { text-decoration-color: currentColor; }
+    /* A name in a byline is not a link inside a sentence: no underline at
+       rest, so it does not compete with the quote. It still appears on
+       hover, so the ones that link out stay discoverable. */
+    a.pro-quote-name { text-decoration: none; text-underline-offset: 2px; transition: text-decoration-color 180ms ease; }
+    a.pro-quote-name:hover { text-decoration: underline; text-decoration-color: currentColor; }
     .pro-quote-role { font-size: 13px; line-height: 16px; color: #737373; overflow-wrap: anywhere; }
     @media (max-width: 900px) {
       .pro-quotes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -449,6 +497,9 @@
       .pro-quotes { grid-template-columns: minmax(0, 1fr); gap: 12px; }
       .pro-quote { min-height: 0; padding: 24px; gap: 20px; }
       .pro-quote-text { font-size: 15px; line-height: 23px; }
+      /* One per row, so six quotes turn into six screens of scrolling —
+         the first three carry the section on a phone. */
+      .pro-quote:nth-child(n + 4) { display: none; }
     }
 
     /* ── How to use: tall showcase cards under a left-aligned lede.
@@ -527,7 +578,7 @@
     @media (max-width: 900px) {
       .howto-title { font-size: 30px; }
       .howto-steps { grid-template-columns: minmax(0, 1fr); gap: 12px; }
-      .howto-step { padding: 24px; gap: 20px; }
+      .howto-step { padding: 24px; }
     }
 
     /* ── FAQ accordion (styling from transitions.dev/pro) ───────── */
@@ -741,7 +792,7 @@
       <script>
         /* Library cards play on hover and hold their frame on leave, so a
            second hover picks up where the first stopped. Without a hover
-           (touch), they simply autoplay as before. */
+           (touch), a clip plays while it is on screen and pauses off it. */
         (function () {
           /* This script sits in the hero, above the cards in source order,
              so it has to wait for the rest of the document to parse. */
@@ -750,10 +801,51 @@
             return;
           }
           var canHover = window.matchMedia("(hover: hover)").matches;
+          /* Touch devices have no hover to start a clip, so every one of them
+             would run at once — ten decoders on a phone. Play what's in the
+             viewport (plus a quarter-screen margin, so a clip is rolling by
+             the time it scrolls in) and pause the rest. Watches the document
+             for clips that mount later: React renders the hero tiles after
+             this runs. */
+          if (!canHover && "IntersectionObserver" in window) {
+            var inView = new IntersectionObserver(function (entries) {
+              entries.forEach(function (e) {
+                if (e.isIntersecting) e.target.play().catch(function () {});
+                else e.target.pause();
+              });
+            }, { rootMargin: "25% 0px" });
+            var watch = function (vid) {
+              if (vid.dataset.inView) return;
+              vid.dataset.inView = "1";
+              inView.observe(vid);
+            };
+            document.querySelectorAll("video").forEach(watch);
+            new MutationObserver(function (muts) {
+              muts.forEach(function (m) {
+                m.addedNodes.forEach(function (n) {
+                  if (n.nodeType !== 1) return;
+                  if (n.tagName === "VIDEO") watch(n);
+                  else if (n.querySelectorAll) n.querySelectorAll("video").forEach(watch);
+                });
+              });
+            }).observe(document.body, { childList: true, subtree: true });
+          }
           document.querySelectorAll(".lib-card").forEach(function (card) {
             var v = card.querySelector(".lib-video");
             if (!v) return;
-            if (!canHover) { v.play().catch(function () {}); return; }
+            /* Blur-up: the wrapper drops its blurred placeholder once the
+               sharp poster has decoded, or once the clip itself has a frame,
+               whichever lands first. This has to run for every card, ahead
+               of the hover split below: a touch device has no hover, but
+               its blur still has to clear. */
+            var wrap = v.closest(".vid");
+            if (wrap) {
+              var ready = function () { wrap.setAttribute("data-ready", ""); };
+              if (v.readyState >= 2) ready(); else v.addEventListener("loadeddata", ready, { once: true });
+              if (v.poster) { var img = new Image(); img.onload = ready; img.src = v.poster; }
+            }
+            /* Touch: the viewport observer above owns playback. */
+            if (!canHover) return;
             var play = function () { v.play().catch(function () {}); };
             var pause = function () { v.pause(); };
             card.addEventListener("pointerenter", play);
@@ -769,7 +861,7 @@
       <article class="card lib-card" data-lib="beam">
         <a class="lib-card-hit" href="/beam.html" aria-label="Border beam playground"></a>
         <div class="card-stage">
-          <video class="lib-video" src="/assets/videos/beam-main-card.mp4" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
+          <div class="vid" style="--lqip: url(&quot;data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABcQERQRDhcUEhQaGBcbIjklIh8fIkYyNSk5UkhXVVFIUE5bZoNvW2F8Yk5QcptzfIeLkpSSWG2grJ+OqoOPko3/2wBDARgaGiIeIkMlJUONXlBejY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY3/wAARCAALABQDASIAAhEBAxEB/8QAFwABAQEBAAAAAAAAAAAAAAAAAAECBv/EAB0QAAICAQUAAAAAAAAAAAAAAAABEiECETFBUWH/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8A5xRirWpK8MlnkuQI9wJPsAf/2Q==&quot;)"><video class="lib-video" src="/assets/videos/beam-main-card.mp4" poster="/assets/videos/posters/beam-main-card.jpg" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video></div>
         </div>
         <div class="lib-meta">
           <span class="lib-ico"><img src="/assets/icons/tile-beam.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
@@ -783,7 +875,7 @@
       <article class="card lib-card" data-lib="orb">
         <a class="lib-card-hit" href="/orbs.html" aria-label="Thinking orbs playground"></a>
         <div class="card-stage">
-          <video class="lib-video" src="/assets/videos/orb-main-card.mp4" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
+          <div class="vid" style="--lqip: url(&quot;data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABcQERQRDhcUEhQaGBcbIjklIh8fIkYyNSk5UkhXVVFIUE5bZoNvW2F8Yk5QcptzfIeLkpSSWG2grJ+OqoOPko3/2wBDARgaGiIeIkMlJUONXlBejY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY3/wAARCAALABQDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAAAAEG/8QAGhAAAwADAQAAAAAAAAAAAAAAAAERITFBUf/EABQBAQAAAAAAAAAAAAAAAAAAAAD/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwDMqdLzCq9hAm1psABQB//Z&quot;)"><video class="lib-video" src="/assets/videos/orb-main-card.mp4" poster="/assets/videos/posters/orb-main-card.jpg" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video></div>
         </div>
         <div class="lib-meta">
           <span class="lib-ico"><img src="/assets/icons/tile-orbs.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
@@ -797,7 +889,7 @@
       <article class="card lib-card" data-lib="gooey">
         <a class="lib-card-hit" href="/gooey.html" aria-label="Gooey playground"></a>
         <div class="card-stage">
-          <video class="lib-video" src="/assets/videos/gooey.mp4" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
+          <div class="vid" style="--lqip: url(&quot;data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABcQERQRDhcUEhQaGBcbIjklIh8fIkYyNSk5UkhXVVFIUE5bZoNvW2F8Yk5QcptzfIeLkpSSWG2grJ+OqoOPko3/2wBDARgaGiIeIkMlJUONXlBejY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY3/wAARCAARABQDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAXEAEBAQEAAAAAAAAAAAAAAAAAAREh/8QAFAEBAAAAAAAAAAAAAAAAAAAAAP/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/AJgC2XMmcAAAAAAB/9k=&quot;)"><video class="lib-video" src="/assets/videos/gooey-main-card.mp4" poster="/assets/videos/posters/gooey-main-card.jpg" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video></div>
         </div>
         <div class="lib-meta">
           <span class="lib-ico"><img src="/assets/icons/tile-gooey.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
@@ -811,7 +903,7 @@
       <article class="card lib-card" data-lib="metal">
         <a class="lib-card-hit" href="/metal.html" aria-label="Liquid Metal playground"></a>
         <div class="card-stage">
-          <video class="lib-video" src="/assets/videos/metal.mp4" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
+          <div class="vid" style="--lqip: url(&quot;data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABcQERQRDhcUEhQaGBcbIjklIh8fIkYyNSk5UkhXVVFIUE5bZoNvW2F8Yk5QcptzfIeLkpSSWG2grJ+OqoOPko3/2wBDARgaGiIeIkMlJUONXlBejY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY3/wAARCAARABQDASIAAhEBAxEB/8QAFwABAQEBAAAAAAAAAAAAAAAAAAECBv/EABoQAQEBAAMBAAAAAAAAAAAAAAABEQISIUH/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8A5nDGu934l5bJMngIACAAAA//2Q==&quot;)"><video class="lib-video" src="/assets/videos/metal-main-card.mp4" poster="/assets/videos/posters/metal-main-card.jpg" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video></div>
         </div>
         <div class="lib-meta">
           <span class="lib-ico"><img src="/assets/icons/tile-metal.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
@@ -825,7 +917,7 @@
       <article class="card lib-card" data-lib="image">
         <a class="lib-card-hit" href="/image.html" aria-label="Image generation playground"></a>
         <div class="card-stage">
-          <video class="lib-video" src="/assets/videos/image.mp4" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video>
+          <div class="vid" style="--lqip: url(&quot;data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABcQERQRDhcUEhQaGBcbIjklIh8fIkYyNSk5UkhXVVFIUE5bZoNvW2F8Yk5QcptzfIeLkpSSWG2grJ+OqoOPko3/2wBDARgaGiIeIkMlJUONXlBejY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY3/wAARCAARABQDASIAAhEBAxEB/8QAFwABAQEBAAAAAAAAAAAAAAAAAAIBBv/EAB0QAQEBAAAHAAAAAAAAAAAAAAABAgMRITFhgfD/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8A5rMlnlU4c+qc2TPts1ARelvIL3AAAAAf/9k=&quot;)"><video class="lib-video" src="/assets/videos/image-main-card.mp4" poster="/assets/videos/posters/image-main-card.jpg" muted loop playsinline preload="auto" aria-hidden="true" onerror="this.style.display=&quot;none&quot;"></video></div>
         </div>
         <div class="lib-meta">
           <span class="lib-ico"><img class="lib-ico-img--pad" src="/assets/icons/tile-image.png" alt="" width="46" height="46" loading="lazy" decoding="async" /></span>
@@ -842,74 +934,74 @@
       <h2 class="home-section-title" id="kind-words-title">Kind words from X</h2>
       <ul class="pro-quotes">
         <li class="pro-quote">
-          <span class="pro-quote-x" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span>
+          <a class="pro-quote-x" href="https://x.com/rauchg" target="_blank" rel="noopener noreferrer" aria-label="Guillermo Rauch on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
           <p class="pro-quote-text">Generational cook!</p>
           <div class="pro-quote-author">
-            <span class="pro-quote-avatar" aria-hidden="true">G<img class="pro-quote-avatar-img" src="/assets/avatars/rauchg.jpg" alt="" onerror="this.remove()" /></span>
+            <a class="pro-quote-avatar-link" href="https://x.com/rauchg" target="_blank" rel="noopener noreferrer" aria-label="Guillermo Rauch on X" tabindex="-1">
+              <span class="pro-quote-avatar" aria-hidden="true">G<img class="pro-quote-avatar-img" src="/assets/avatars/rauchg.jpg" alt="" onerror="this.remove()" /></span>
+            </a>
             <span class="pro-quote-id">
-              <span class="pro-quote-name">Guillermo Rauch</span>
+              <a class="pro-quote-name" href="https://x.com/rauchg" target="_blank" rel="noopener noreferrer">Guillermo Rauch</a>
               <span class="pro-quote-role">CEO, Vercel</span>
             </span>
           </div>
         </li>
         <li class="pro-quote">
-          <span class="pro-quote-x" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span>
+          <a class="pro-quote-x" href="https://x.com/destraynor" target="_blank" rel="noopener noreferrer" aria-label="Des Traynor on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
           <p class="pro-quote-text">Very cool</p>
           <div class="pro-quote-author">
-            <span class="pro-quote-avatar" aria-hidden="true">D<img class="pro-quote-avatar-img" src="/assets/avatars/destraynor.jpg" alt="" onerror="this.remove()" /></span>
+            <a class="pro-quote-avatar-link" href="https://x.com/destraynor" target="_blank" rel="noopener noreferrer" aria-label="Des Traynor on X" tabindex="-1">
+              <span class="pro-quote-avatar" aria-hidden="true">D<img class="pro-quote-avatar-img" src="/assets/avatars/destraynor.jpg" alt="" onerror="this.remove()" /></span>
+            </a>
             <span class="pro-quote-id">
-              <span class="pro-quote-name">Des Traynor</span>
+              <a class="pro-quote-name" href="https://x.com/destraynor" target="_blank" rel="noopener noreferrer">Des Traynor</a>
               <span class="pro-quote-role">Co-founder of Intercom</span>
             </span>
           </div>
         </li>
         <li class="pro-quote">
-          <span class="pro-quote-x" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span>
+          <a class="pro-quote-x" href="https://x.com/krispuckett" target="_blank" rel="noopener noreferrer" aria-label="Kris Puckett on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
           <p class="pro-quote-text">INSANELY AMAZING</p>
           <div class="pro-quote-author">
-            <span class="pro-quote-avatar" aria-hidden="true">K<img class="pro-quote-avatar-img" src="/assets/avatars/krispuckett.jpg" alt="" onerror="this.remove()" /></span>
+            <a class="pro-quote-avatar-link" href="https://x.com/krispuckett" target="_blank" rel="noopener noreferrer" aria-label="Kris Puckett on X" tabindex="-1">
+              <span class="pro-quote-avatar" aria-hidden="true">K<img class="pro-quote-avatar-img" src="/assets/avatars/krispuckett.jpg" alt="" onerror="this.remove()" /></span>
+            </a>
             <span class="pro-quote-id">
-              <span class="pro-quote-name">Kris Puckett</span>
+              <a class="pro-quote-name" href="https://x.com/krispuckett" target="_blank" rel="noopener noreferrer">Kris Puckett</a>
               <span class="pro-quote-role">Design manager at Stripe</span>
             </span>
           </div>
         </li>
         <li class="pro-quote">
-          <a class="pro-quote-x" href="https://x.com/witsdev" target="_blank" rel="noopener noreferrer" aria-label="wits on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
-          <p class="pro-quote-text">Thank you for building an awesome library! :)</p>
+          <span class="pro-quote-x" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span>
+          <p class="pro-quote-text">Real nice.</p>
           <div class="pro-quote-author">
-            <a class="pro-quote-avatar-link" href="https://x.com/witsdev" target="_blank" rel="noopener noreferrer" aria-label="wits on X" tabindex="-1">
-              <span class="pro-quote-avatar" aria-hidden="true">W</span>
-            </a>
+            <span class="pro-quote-avatar" aria-hidden="true">A<img class="pro-quote-avatar-img" src="/assets/avatars/adam-whitcroft.jpg" alt="" onerror="this.remove()" /></span>
             <span class="pro-quote-id">
-              <a class="pro-quote-name" href="https://x.com/witsdev" target="_blank" rel="noopener noreferrer">wits</a>
-              <span class="pro-quote-role">Engineer at Vercel, after shipping Border Beam in the Vercel dashboard</span>
+              <span class="pro-quote-name">Adam Whitcroft</span>
+              <span class="pro-quote-role">Design @owner</span>
             </span>
           </div>
         </li>
         <li class="pro-quote">
-          <a class="pro-quote-x" href="https://x.com/tranmautritam" target="_blank" rel="noopener noreferrer" aria-label="Tran Mau Tri Tam on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
-          <p class="pro-quote-text">Your AI agent&rsquo;s &ldquo;thinking...&rdquo; state doesn&rsquo;t have to be a boring spinner. 6 animated orb types, zero dependencies, light + dark mode built in. npm install and you&rsquo;re done.</p>
+          <span class="pro-quote-x" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span>
+          <p class="pro-quote-text">love these!</p>
           <div class="pro-quote-author">
-            <a class="pro-quote-avatar-link" href="https://x.com/tranmautritam" target="_blank" rel="noopener noreferrer" aria-label="Tran Mau Tri Tam on X" tabindex="-1">
-              <span class="pro-quote-avatar" aria-hidden="true">T</span>
-            </a>
+            <span class="pro-quote-avatar" aria-hidden="true">Y<img class="pro-quote-avatar-img" src="/assets/avatars/yasir.jpg" alt="" onerror="this.remove()" /></span>
             <span class="pro-quote-id">
-              <a class="pro-quote-name" href="https://x.com/tranmautritam" target="_blank" rel="noopener noreferrer">Tran Mau Tri Tam</a>
-              <span class="pro-quote-role">Designer · on Thinking orbs</span>
+              <span class="pro-quote-name">Yasir</span>
+              <span class="pro-quote-role">Designer at Apple</span>
             </span>
           </div>
         </li>
         <li class="pro-quote">
-          <a class="pro-quote-x" href="https://x.com/jakubantalik" target="_blank" rel="noopener noreferrer" aria-label="Jakub Antalik on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
-          <p class="pro-quote-text">Using Beam, Orb, Gooey, Metal or Image somewhere nice? Tell me on X and I&rsquo;ll feature it here.</p>
+          <span class="pro-quote-x" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span>
+          <p class="pro-quote-text">So good! :)</p>
           <div class="pro-quote-author">
-            <a class="pro-quote-avatar-link" href="https://x.com/jakubantalik" target="_blank" rel="noopener noreferrer" aria-label="Jakub Antalik on X" tabindex="-1">
-              <span class="pro-quote-avatar" aria-hidden="true">J</span>
-            </a>
+            <span class="pro-quote-avatar" aria-hidden="true">T<img class="pro-quote-avatar-img" src="/assets/avatars/tran-mau-tri-tam.jpg" alt="" onerror="this.remove()" /></span>
             <span class="pro-quote-id">
-              <a class="pro-quote-name" href="https://x.com/jakubantalik" target="_blank" rel="noopener noreferrer">Jakub Antalik</a>
-              <span class="pro-quote-role">Creator of Libraries.dev</span>
+              <span class="pro-quote-name">Tran Mau Tri Tam</span>
+              <span class="pro-quote-role">Designer</span>
             </span>
           </div>
         </li>
@@ -1039,7 +1131,10 @@
           </div>
         </nav>
       </div>
-      <p class="footer-credit"><span class="footer-muted">Created by</span><a class="footer-name" href="https://x.com/jakubantalik" target="_blank" rel="noopener noreferrer">Jakub Antalik</a></p>
+      <div class="footer-byline">
+        <p class="footer-credit"><span class="footer-muted">Created by</span><a class="footer-name" href="https://x.com/jakubantalik" target="_blank" rel="noopener noreferrer">Jakub Antalik</a></p>
+        <p class="footer-thanks">Made with help from <a href="https://x.com/a_brinza" target="_blank" rel="noopener noreferrer">Alexandr Brinza</a> (Orbs) and <a href="https://x.com/mpetercak" target="_blank" rel="noopener noreferrer">Martin Petercak</a> (Metal)</p>
+      </div>
     </footer>
   </main>
 

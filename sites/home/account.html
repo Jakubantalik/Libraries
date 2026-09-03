@@ -11,6 +11,12 @@
     .skip-link { position: absolute; left: -9999px; }
     .brand-mark svg, .footer-brand-logo svg { width: 22px; height: 14px; }
     .mobile-menu, .mobile-menu-backdrop, .tl-menu, .t-dropdown { display: none; }
+      .footer-byline { display: flex; flex-direction: column; gap: 6px; }
+    /* A second, quieter line under the byline: 11px in the faint ink, the
+       linked name only a shade brighter on hover. */
+    .footer-thanks { margin: 0; font-size: 11px; line-height: 16px; color: color-mix(in srgb, var(--text-faint) 80%, transparent); }
+    .footer-thanks a { color: var(--text-faint); text-decoration: underline; text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, currentColor 50%, transparent); transition: text-decoration-color 180ms ease; }
+    .footer-thanks a:hover { text-decoration-color: currentColor; }
   </style>
   <!-- Paint gate. Firefox has painted before the external stylesheets applied
        on navigation, so the body stays invisible on the site's ground until
@@ -1669,18 +1675,21 @@
     .footer-col a:hover { color: var(--text); }
     .footer-credit { margin: 0; }
     .footer-muted { color: var(--text-faint); }
-    .footer-name {
+    .footer-name { text-decoration: underline; text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, currentColor 50%, transparent); transition: color 150ms ease, text-decoration-color 180ms ease;
       color: var(--text-footer-name);
-      text-decoration: none;
+      text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-color: color-mix(in srgb, currentColor 50%, transparent);
+    transition: color 150ms ease, text-decoration-color 180ms ease;
       margin-left: 4px;
     }
     .footer-name:hover {
       color: #0d0d0d;
-      text-decoration: none;
+      text-decoration-color: currentColor; text-decoration-color: currentColor;
     }
     html[data-theme="dark"] .footer-name:hover {
       color: #ffffff;
-      text-decoration: none;
+      text-decoration-color: currentColor; text-decoration-color: currentColor;
     }
     @media (max-width: 720px) {
       .footer-top { flex-direction: column; gap: 32px; }
@@ -5020,7 +5029,10 @@
           </div>
         </nav>
       </div>
-      <p class="footer-credit"><span class="footer-muted">Created by</span><a class="footer-name" href="https://x.com/jakubantalik" target="_blank" rel="noopener noreferrer">Jakub Antalik</a></p>
+      <div class="footer-byline">
+        <p class="footer-credit"><span class="footer-muted">Created by</span><a class="footer-name" href="https://x.com/jakubantalik" target="_blank" rel="noopener noreferrer">Jakub Antalik</a></p>
+        <p class="footer-thanks">Made with help from <a href="https://x.com/a_brinza" target="_blank" rel="noopener noreferrer">Alexandr Brinza</a> (Orbs) and <a href="https://x.com/mpetercak" target="_blank" rel="noopener noreferrer">Martin Petercak</a> (Metal)</p>
+      </div>
     </footer>
   </main>
 

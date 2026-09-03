@@ -1,10 +1,66 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { resolve } from "node:path";
+import { createHash } from "node:crypto";
+import { readdirSync, readFileSync, writeFileSync, statSync } from "node:fs";
+
+/* The shared scripts and stylesheets live in public/, so Vite copies them
+   through untouched and their URLs never change. Cloudflare serves static
+   assets with a 4-hour browser cache, which left visitors pairing new HTML
+   with an old site.css until it expired.
+
+   The HTML itself is served max-age=0, so stamping each reference with a
+   hash of the file's own bytes is enough: the URL changes the moment the
+   file does, and never otherwise. Long caching then costs nothing. */
+const SHARED = [
+  "site.css",
+  "playground.css",
+  "examples.css",
+  "site.js",
+  "pro-client.js",
+];
+
+function stampSharedAssets() {
+  return {
+    name: "stamp-shared-assets",
+    apply: "build" as const,
+    closeBundle() {
+      const dist = resolve(__dirname, "dist");
+      const version: Record<string, string> = {};
+      for (const name of SHARED) {
+        const file = resolve(dist, "assets", name);
+        try {
+          version[name] = createHash("sha1")
+            .update(readFileSync(file))
+            .digest("hex")
+            .slice(0, 8);
+        } catch {
+          /* Not every asset ships on every build; skip what is absent. */
+        }
+      }
+
+      const walk = (dir: string): string[] =>
+        readdirSync(dir).flatMap((entry) => {
+          const full = resolve(dir, entry);
+          if (statSync(full).isDirectory()) return walk(full);
+          return full.endsWith(".html") ? [full] : [];
+        });
+
+      for (const page of walk(dist)) {
+        const before = readFileSync(page, "utf8");
+        let after = before;
+        for (const [name, hash] of Object.entries(version)) {
+          after = after.split(`/assets/${name}"`).join(`/assets/${name}?v=${hash}"`);
+        }
+        if (after !== before) writeFileSync(page, after);
+      }
+    },
+  };
+}
 
 // Multi-page static site: every top-level .html file is an entry.
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), stampSharedAssets()],
   server: {
     // Honour PORT so a busy 5173 reassigns cleanly — several sites in this
     // repo are often run side by side (matches the gooey site's config).

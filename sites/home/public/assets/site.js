@@ -509,3 +509,49 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();
 })();
+
+/* ── Docs strip (library pages, ≤900px) ───────────────────────
+ * The sidebar becomes a horizontal chip strip on phones. Two jobs, both
+ * from transitions.dev's detail page: fade the edge that has more strip
+ * past it (a fully scrolled end stays crisp), and start with the current
+ * page's chip in the middle so landing on Metal shows Metal, not the
+ * first three chips. */
+(function () {
+  "use strict";
+  var sidebar = document.querySelector(".docs-sidebar");
+  if (!sidebar) return;
+  var mq = window.matchMedia("(max-width: 900px)");
+  var SIZE = 24;
+
+  function update() {
+    if (!mq.matches) {
+      sidebar.style.removeProperty("--fade-start");
+      sidebar.style.removeProperty("--fade-end");
+      return;
+    }
+    var max = Math.max(sidebar.scrollWidth - sidebar.clientWidth, 0);
+    var pos = sidebar.scrollLeft;
+    if (max <= 1) {
+      sidebar.style.setProperty("--fade-start", "0px");
+      sidebar.style.setProperty("--fade-end", "0px");
+      return;
+    }
+    sidebar.style.setProperty("--fade-start", Math.min(pos, SIZE) + "px");
+    sidebar.style.setProperty("--fade-end", Math.min(max - pos, SIZE) + "px");
+  }
+
+  function centerActive() {
+    if (!mq.matches) return;
+    var active = sidebar.querySelector(".docs-link.is-active");
+    if (!active) return;
+    var left = active.offsetLeft - (sidebar.clientWidth - active.offsetWidth) / 2;
+    sidebar.scrollLeft = Math.max(left, 0);
+  }
+
+  sidebar.addEventListener("scroll", update, { passive: true });
+  window.addEventListener("resize", update);
+  if (mq.addEventListener) mq.addEventListener("change", function () { centerActive(); update(); });
+  if (window.ResizeObserver) new ResizeObserver(update).observe(sidebar);
+  centerActive();
+  update();
+})();

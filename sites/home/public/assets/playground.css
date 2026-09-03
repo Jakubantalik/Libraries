@@ -160,6 +160,18 @@ html[data-theme="light"] .st-lib-ico img[src*="figma-image"] { content: url("/as
 /* Effect icon sits above the name, at the tile art's natural 46px. */
 .detail-icon { width: 46px; height: 46px; display: block; }
 .detail-icon img { width: 100%; height: 100%; object-fit: contain; display: block; border-radius: 12px; }
+/* The image-generation export carries its drop shadow in the bitmap (a
+   52px canvas for a 46px tile), so scaled into the box it rendered a size
+   smaller than its siblings and the 12px clip cut its shadow. Same fix
+   the homepage card uses: natural size, recentred, and no clip - its
+   corners come rounded already. */
+.detail-icon img[src*="tile-image"] {
+  width: 52px;
+  height: 52px;
+  max-width: none;
+  margin: -3px;
+  border-radius: 0;
+}
 .detail-title { margin: 0; font-family: "Saans", var(--font-sans); font-size: 36px; font-weight: 500; line-height: 42px; letter-spacing: -0.18px; color: var(--text); }
 .detail-sub { margin: 0; font-size: 16px; line-height: 24.2px; color: var(--text-muted); }
 
@@ -797,19 +809,58 @@ html[data-theme="light"] .st-preset-save:active { background: #fafafa; }
 
 @media (max-width: 900px) {
   .docs { grid-template-columns: minmax(0, 1fr); padding-top: 16px; row-gap: 24px; }
+  /* The sidebar collapses into one horizontal chip strip, as on
+     transitions.dev's detail page: the library links scroll sideways,
+     the edges fade only on the side that has more strip past it
+     (site.js sets --fade-start/--fade-end from the scroll position), and
+     the page's own link is scrolled into the middle on load. */
   .docs-sidebar {
     position: static;
     max-height: none;
     flex-direction: row;
-    gap: 8px;
+    align-items: center;
+    gap: 6px;
     overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 var(--fade-start, 0px),
+      #000 calc(100% - var(--fade-end, 0px)),
+      transparent 100%);
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 var(--fade-start, 0px),
+      #000 calc(100% - var(--fade-end, 0px)),
+      transparent 100%);
   }
   /* Only the library list travels to mobile — the "Getting started"
      links repeat what the nav and footer already carry. */
   .docs-group--links { display: none; }
-  .docs-list { flex-direction: row; gap: 6px; }
   .docs-group-label { display: none; }
+  .docs-group, .docs-list { flex-direction: row; gap: 6px; flex: 0 0 auto; }
+  /* Chips: natural width (the desktop rule stretches a link to 100% and
+     ellipsises it), a filled body, and no icon — the label is the chip. */
+  .docs-link {
+    flex: 0 0 auto;
+    width: auto;
+    height: 36px;
+    padding: 0 14px;
+    overflow: visible;
+    text-overflow: clip;
+    background: var(--chip-bg);
+  }
+  .docs-link-ico { display: none; }
+  .docs-link.is-active { background: rgba(255, 255, 255, 0.16); color: var(--text); }
+  html[data-theme="light"] .docs-link.is-active { background: rgba(0, 0, 0, 0.12); }
   .detail-topbar { display: none; }
+  /* Studio is desktop-only, so its entry point leaves the library header
+     on phones. Scoped to the header: the paywall teaser reuses
+     .detail-studio for its Get access pill and keeps it. */
+  .detail-head-actions .detail-studio { display: none; }
 }
 
 /* ── Studio teaser (Figma 1425:38896) ──────────────────────────
