@@ -214,6 +214,19 @@
        covering the static version of the element, with the real component
        mounted on top at the measured spot. Positions are in the card's 1x
        frame; the raster is 2x, so its samples halve. */
+    /* Every overlay is measured in the design's pixel frame. The frame is
+       laid at the card's top-left at that size and scaled to whatever
+       width the card renders at (--studio-k, set by studio-live.tsx from a
+       ResizeObserver; 1 on the desktop grid), so the overlays land on the
+       same spot of the screenshot at any width and the live components
+       scale with it instead of being hidden below 900px. */
+    .studio-live-frame {
+      position: absolute; left: 0; top: 0;
+      width: var(--frame-w); height: var(--frame-h);
+      transform: scale(var(--studio-k, 1));
+      transform-origin: 0 0;
+      pointer-events: none;
+    }
     .studio-live { position: absolute; overflow: hidden; }
     /* Both patches start 1px in: at left:0 their solid fill covered the
        1px ring the raster carries down the card's left edge. */
@@ -239,11 +252,6 @@
     }
     .st-beam-mock i:first-child { top: 32px; width: 64px; }
     .st-beam-mock i:last-child { top: 46px; width: 40px; }
-    @media (max-width: 900px) {
-      /* The overlays are pinned to the design's fixed card frame; once the
-         cards scale, the screenshot alone carries them. */
-      .studio-live { display: none; }
-    }
     @media (max-width: 900px) {
       .studio-shot-grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; }
       .studio-card--tall { grid-row: auto; aspect-ratio: 497 / 521; }
@@ -465,15 +473,19 @@
         <div class="studio-card studio-card--tall">
           <img src="/assets/shots/studio-card-tall.png" alt="The Studio's manual controls: family, type, colour theme, motion and glow styling for Border beam." />
           <!-- Live BorderBeam over the screenshot's demo card (studio-live.tsx). -->
+          <div class="studio-live-frame" style="--frame-w: 497px; --frame-h: 520px" aria-hidden="true">
           <div class="studio-live studio-live--beam" aria-hidden="true">
             <div id="studio-beam-live"></div>
+          </div>
           </div>
         </div>
         <div class="studio-card studio-card--agent">
           <img src="/assets/shots/studio-card-agent.png" alt="The Studio's agent tab answering a request to make an effect more subtle." aria-hidden="true" />
           <!-- Live ThinkingStatus over the screenshot's status row (studio-live.tsx). -->
+          <div class="studio-live-frame" style="--frame-w: 334px; --frame-h: 248px" aria-hidden="true">
           <div class="studio-live studio-live--status" aria-hidden="true">
             <div id="studio-agent-live"></div>
+          </div>
           </div>
         </div>
         <div class="studio-card studio-card--presets">
