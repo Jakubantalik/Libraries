@@ -4589,6 +4589,16 @@
       letter-spacing: -0.01em; color: var(--text); margin: 0 0 10px;
     }
     .pro-bento-desc { font-size: 15px; line-height: 22px; color: var(--text-muted); margin: 0; max-width: 42ch; }
+    /* The two tall cards: the art used to be pinned to the card's top at a
+       fixed offset that assumed two lines of copy, so a longer description
+       ran underneath it. The card is now a column - text, a 32px gap, then
+       an art box that takes whatever height is left (and clips), with the
+       art positioned inside that box instead of the card. */
+    .pro-bento-card--tall { display: flex; flex-direction: column; }
+    .pro-bento-card--tall .pro-bento-desc { margin-bottom: 32px; }
+    .pro-bento-card--tall .pro-lib-stage,
+    .pro-bento-card--tall .pro-studio-shot-box { position: relative; inset: auto; flex: 1 1 0; min-height: 0; margin: 0 -32px -28px; }
+    .pro-studio-shot-box { overflow: hidden; }
 
     /* Pro skill — SKILL.md code snippet */
     .pro-bento-code {
@@ -4622,6 +4632,9 @@
       transition: none;
     }
     .stage-inner--no-btn { padding-bottom: 0; }
+    /* Each mini plays its library's main-card clip, filling the stage. */
+    .lib-card .card-stage { position: relative; overflow: hidden; }
+    .pro-mini-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 
     /* Card stack (pro2) — three 78×78 photo squares that fan on hover. */
     .pro2-stack { position: relative; width: 120px; height: 120px; flex-shrink: 0; }
@@ -4892,7 +4905,7 @@
        beside it, and the stage bleeds off the left. The card clips the rest
        and draws its ring on top. */
     .pro-studio-shot {
-      position: absolute; right: 32px; top: 132px;
+      position: absolute; right: 32px; top: 0;
       width: 767px; height: 604px;
     }
     .pro-studio-shot img { display: block; width: 100%; height: 100%; }
@@ -4902,6 +4915,8 @@
          would stretch the small cards to the tall card's height). */
       .pro-bento { grid-template-columns: 1fr; grid-auto-rows: auto; }
       .pro-bento-card--tall { grid-row: auto; min-height: 360px; }
+      .pro-bento-card--tall { display: block; }
+      .pro-bento-card--tall .pro-lib-stage { position: absolute; inset: 0; margin: 0; }
       .pro-bento-card--sm { min-height: 300px; }
       /* The two mockups are absolutely positioned at a fixed top offset
          that assumes ~2 lines of copy. Narrow screens wrap the text to 4,
@@ -5282,61 +5297,24 @@
           <h3 class="pro-bento-title">Full library access</h3>
           <p class="pro-bento-desc">All five libraries <span class="dim">(Beam, Orb, Gooey, Metal and Image) with every Pro preset and variant, React and TypeScript ready, under a commercial license for unlimited projects, plus each future drop.</span></p>
           <div class="pro-lib-stage">
-            <div class="lib-card" style="left:-148px; top:299px">
+            <div class="lib-card" style="left:-116px; top:113px">
               <div class="card">
-                <div class="card-stage">
-                  <div class="stage-inner">
-                    <div class="p4-card" data-lib-resize>
-                      <div class="sk sk-1"></div>
-                      <div class="sk sk-2"></div>
-                      <div class="sk sk-3"></div>
-                      <div class="sk sk-4"></div>
-                      <div class="sk sk-5"></div>
-                      <div class="sk sk-6"></div>
-                    </div>
-                  </div>
-                  <button type="button" class="btn-animate" data-lib-proto="resize">Animate</button>
-                </div>
+                <div class="card-stage"><video class="pro-mini-video" src="/assets/videos/gooey-main-card.mp4" poster="/assets/videos/posters/gooey-main-card.jpg" autoplay muted loop playsinline preload="metadata" aria-hidden="true"></video></div>
               </div>
             </div>
-            <div class="lib-card" style="left:99px; top:174px">
+            <div class="lib-card" style="left:131px; top:0px">
               <div class="card">
-                <div class="card-stage">
-                  <div class="stage-inner stage-inner--no-btn">
-                    <h4 class="lib-pro-heading"><span class="title-pro">Studio</span></h4>
-                  </div>
-                </div>
+                <div class="card-stage"><video class="pro-mini-video" src="/assets/videos/beam-main-card.mp4" poster="/assets/videos/posters/beam-main-card.jpg" autoplay muted loop playsinline preload="metadata" aria-hidden="true"></video></div>
               </div>
             </div>
-            <div class="lib-card" style="left:346px; top:285px">
+            <div class="lib-card" style="left:378px; top:99px">
               <div class="card">
-                <div class="card-stage">
-                  <div class="stage-inner stage-inner--no-btn">
-                    <div class="pro3-square" data-playing="true" aria-hidden="true">
-                      <span class="pro3-shimmer"><span class="pro3-shimmer-band"></span></span>
-                      <span class="pro3-edge">
-                        <span class="pro3-edge-bloom"></span>
-                        <span class="pro3-edge-glow"></span>
-                        <span class="pro3-edge-ring"></span>
-                      </span>
-                    </div>
-                    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-                      <filter id="pro3-warp-band" x="-40%" y="-40%" width="180%" height="180%">
-                        <feTurbulence type="fractalNoise" baseFrequency="0.009 0.015" numOctaves="2" seed="7" result="n"/>
-                        <feDisplacementMap in="SourceGraphic" in2="n" scale="46" xChannelSelector="R" yChannelSelector="G"/>
-                      </filter>
-                    </svg>
-                  </div>
-                </div>
+                <div class="card-stage"><video class="pro-mini-video" src="/assets/videos/orb-main-card.mp4" poster="/assets/videos/posters/orb-main-card.jpg" autoplay muted loop playsinline preload="metadata" aria-hidden="true"></video></div>
               </div>
             </div>
-            <div class="lib-card" style="left:99px; top:395.5px">
+            <div class="lib-card" style="left:131px; top:210px">
               <div class="card">
-                <div class="card-stage">
-                  <div class="stage-inner stage-inner--no-btn">
-                    <h4 class="lib-pro-heading"><span class="title-pro">Pro</span></h4>
-                  </div>
-                </div>
+                <div class="card-stage"><video class="pro-mini-video" src="/assets/videos/metal-main-card.mp4" poster="/assets/videos/posters/metal-main-card.jpg" autoplay muted loop playsinline preload="metadata" aria-hidden="true"></video></div>
               </div>
             </div>
           </div>
@@ -5348,8 +5326,10 @@
           <!-- The Studio screenshot itself (not the Studio page's framed card),
                anchored to the bento's right edge so the control panel is whole
                and the stage runs off the left. -->
-          <div class="pro-studio-shot" aria-hidden="true">
+          <div class="pro-studio-shot-box" aria-hidden="true">
+          <div class="pro-studio-shot">
             <img src="/assets/shots/studio-shot-1.png" alt="" width="767" height="604" loading="lazy" decoding="async" />
+          </div>
           </div>
           </div>
         </div>
