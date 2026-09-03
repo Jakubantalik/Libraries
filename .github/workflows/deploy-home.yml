@@ -1,0 +1,55 @@
+# libraries.dev is a direct-upload Pages project — it has no Git provider
+# attached, so pushing to main publishes nothing on its own. Every deploy
+# before this workflow was a `wrangler pages deploy` run by hand from a
+# working copy, which is why the dashboard shows branch and commit metadata
+# it never fetched itself. This runs that same command on the runner.
+name: Deploy home site to Cloudflare Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'sites/home/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/deploy-home.yml'
+  workflow_dispatch:
+
+# One deploy at a time, and a superseded run stops rather than racing a
+# newer commit to production.
+concurrency:
+  group: pages-home
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install workspace dependencies
+        run: npm ci
+
+      # The home site imports all five libraries from the workspace, so they
+      # have to be built before Vite resolves them.
+      - name: Build home site
+        run: npm run build:site-home
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy sites/home/dist --project-name libraries-home --branch main --commit-dirty=true
