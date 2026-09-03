@@ -1112,8 +1112,13 @@ html[data-theme="dark"] .howto-step::before {
 html[data-theme="dark"] .card-stage {
   background: #131313;
 }
+/* The hero tile's stage ring, to the value: a white-2% lift under the
+   191/192/203 hairline. A single 8% pass read as no border at all
+   against the video inside. */
 html[data-theme="dark"] .card-stage::after {
-  box-shadow: inset 0 0 0 1px rgba(191, 192, 203, 0.08);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02),
+    inset 0 0 0 1px rgba(191, 192, 203, 0.1);
 }
 
 .card-meta {
