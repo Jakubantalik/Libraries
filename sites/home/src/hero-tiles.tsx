@@ -37,7 +37,7 @@ const TILES: Tile[] = [
     videos: ["/assets/videos/beam-small-card.mp4"], href: "/beam.html", label: "Border beam" },
   { key: "metal", videos: ["/assets/videos/metal-small-card.mp4"], href: "/metal.html", label: "Liquid metal" },
   { key: "gooey", videos: ["/assets/videos/gooey-small-card.mp4"], href: "/gooey.html", label: "Gooey" },
-  { key: "image", href: "/image.html", label: "Image generation" },
+  { key: "image", videos: ["/assets/videos/image-small-card.mp4"], href: "/image.html", label: "Image generation" },
 ];
 
 /* Past this the gesture is a drag, and the click that follows it is not a
