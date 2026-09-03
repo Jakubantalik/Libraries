@@ -51,3 +51,6 @@ packages/border-beam/ports/ios/BorderBeamShowcase/BorderBeamShowcase.xcodeproj/
 
 # Fundraising material: kept out of the public repo.
 docs/vc-pitch.md
+
+# Compiled by scripts/posters/build.sh on demand; macOS-only.
+sites/home/scripts/posters/extract
