@@ -298,7 +298,10 @@
            reads as a poster, and the CTAs are easier to hit from one edge. */
         align-items: flex-start;
         text-align: left;
-        min-height: calc(100dvh - var(--nav-h, 68px));
+        /* svh, not dvh: dvh tracks Safari's collapsing chrome, so the hero
+           and its tiles would resize mid-scroll. svh is the viewport with
+           the chrome up — the size the page first paints at. */
+        min-height: calc(100svh - var(--nav-h, 68px));
         padding-top: 24px;
         padding-bottom: 32px;
       }
@@ -340,7 +343,7 @@
          height is left is split across the three tile rows, floored at 84px
          so the previews stay legible. */
       .header {
-        --hero-tile: clamp(84px, calc((100dvh - 420px) / 3), 130px);
+        --hero-tile: clamp(84px, calc((100svh - 420px) / 3), 130px);
         --hero-tile-gap: 16px;
       }
       .hero-tile {
