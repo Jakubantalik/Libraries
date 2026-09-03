@@ -157,8 +157,15 @@
         color: #cacaca;
         opacity: 0.7;
       }
-      .subtitle a { color: #ededed; text-decoration: none; }
-      .subtitle a:hover { text-decoration: underline; text-underline-offset: 2px; }
+      .subtitle a {
+        color: #ededed;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        text-decoration-thickness: 1px;
+        text-decoration-color: rgba(237, 237, 237, 0.5);
+        transition: text-decoration-color 150ms ease;
+      }
+      .subtitle a:hover { text-decoration-color: #ededed; }
 
       /* Button/Small/Select/Primary/Token from the design system. */
       .btn-go {
