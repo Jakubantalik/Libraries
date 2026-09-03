@@ -409,27 +409,10 @@ Docs: https://libraries.dev/gooey.html
     </footer>
   </main>
 
-  <script>
-    /* Copy buttons on the static Installation / Usage blocks. The React
-       playground renders (and wires) its own snippet copy button. */
-    document.addEventListener("DOMContentLoaded", function () {
-      document.querySelectorAll(".code-copy[data-copy-static]").forEach(function (btn) {
-        var timer = null;
-        btn.addEventListener("click", function () {
-          var block = btn.closest(".code-block");
-          var pre = block && block.querySelector("pre");
-          if (!pre) return;
-          var text = pre.textContent || "";
-          if (navigator.clipboard) navigator.clipboard.writeText(text).catch(function () {});
-          btn.setAttribute("data-copied", "true");
-          clearTimeout(timer);
-          timer = setTimeout(function () { btn.removeAttribute("data-copied"); }, 1600);
-        });
-      });
-    });
-  </script>
   <script src="/assets/site.js" defer></script>
   <script src="/assets/pro-client.js" defer></script>
   <script type="module" src="/src/gooey.tsx"></script>
+  <!-- GoatCounter: privacy-friendly page views, no cookies. -->
+  <script data-goatcounter="https://libraries.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>
