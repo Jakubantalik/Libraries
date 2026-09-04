@@ -65,7 +65,7 @@ function useProGate(): { gate: GateState; email: string | null; entitled: boolea
   useEffect(() => {
     /* Sticky gate: once we've left the skeleton, an unresolved /me
        re-dispatch (network retry, tab un-freeze) must not drop the app
-       back to the skeleton. */
+       back to the skeleton; only the fallback below may still run. */
     let settled = false;
     const render = (s: ProState | undefined) => {
       const isPro = !!(s && s.pro);
@@ -75,10 +75,12 @@ function useProGate(): { gate: GateState; email: string | null; entitled: boolea
       /* With the gate off the workbench is already showing — /me still
          runs, but only to fill in the email and the "Get Pro" chip. */
       if (gateOff) return;
-      if (!resolved && !isPro && settled) return;
-      if (resolved || isPro) settled = true;
-      if (isPro) setGate("open");
-      else if (resolved) setGate("locked");
+      /* Only an answered /me opens the gate: the optimistic localStorage
+         cache paints the chrome early but is the visitor's to edit, so it
+         may not unlock the workbench on its own. */
+      if (!resolved) return;
+      settled = true;
+      setGate(isPro ? "open" : "locked");
     };
 
     const onMe = (e: Event) => render((e as CustomEvent<ProState>).detail);
@@ -89,7 +91,7 @@ function useProGate(): { gate: GateState; email: string | null; entitled: boolea
        visitors on the skeleton — fall through to the locked hero. */
     const fallback = window.setTimeout(() => {
       const s = window.LibrariesPro?.state;
-      if (!(s && (s.resolved || s.pro))) render({ resolved: true, pro: false });
+      if (!settled && !(s && s.resolved)) render({ resolved: true, pro: false });
     }, 4000);
 
     return () => {

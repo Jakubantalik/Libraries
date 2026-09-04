@@ -619,12 +619,12 @@
   </main>
 
   <script>
-    /* Studio CTA follows auth state: signed-in visitors open the Studio,
-       signed-out ones go to the Pro page to read the offer before buying.
+    /* Studio CTA follows entitlement: signed-in Pro users open the Studio,
+       everyone else goes to the Pro page to read the offer before buying.
        Both states are plain links, so the CTA works with JS off too.
-       The markup ships the signed-out state: an unauthenticated visitor who
-       has no cached session (or whose /me never answers) must not be sent to
-       a Studio that will only bounce them. */
+       The markup ships the signed-out state: a visitor who has no cached
+       Pro session (or whose /me never answers) must not be sent to a Studio
+       that will only bounce them. */
     (function () {
       var ctas = document.querySelectorAll("[data-studio-cta]");
       if (!ctas.length) return;
@@ -640,7 +640,7 @@
           if (!raw) return null;
           var c = JSON.parse(raw);
           if (!c || typeof c.t !== "number" || Date.now() - c.t > AUTH_CACHE_TTL) return null;
-          return !!c.a;
+          return !!(c.a && c.p);
         } catch (e) { return null; }
       }
 
@@ -656,7 +656,7 @@
 
       document.addEventListener("pro:me", function (e) {
         var st = e.detail;
-        if (st && st.resolved) paint(!!st.authenticated);
+        if (st && st.resolved) paint(!!(st.authenticated && st.pro));
       });
     })();
   </script>
