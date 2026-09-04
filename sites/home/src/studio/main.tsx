@@ -16,13 +16,13 @@ import { StudioThemeContext } from "./controls";
    early from its optimistic cache. `?dev` unlocks locally so the app can
    be developed without the API Worker.
 
-   GATE_ENABLED is the switch: it's off while the Studio is open to
-   everyone (the API Worker that answers /me isn't deployed yet). Flip it
-   to true to make the Studio Pro-only — the gate below is otherwise
-   complete, and /me entitlement still drives the "Get Pro" chip either
+   GATE_ENABLED is the switch. It was off while the Studio was open to
+   everyone (before the API Worker that answers /me was deployed); now
+   the Studio is Pro-only. Flip it to false to open the workbench to
+   everyone again: /me entitlement still drives the "Get Pro" chip either
    way, so nothing else has to change. */
 
-const GATE_ENABLED = false;
+const GATE_ENABLED = true;
 
 type GateState = "pending" | "locked" | "open";
 
@@ -50,7 +50,11 @@ declare global {
   }
 }
 
-const DEV_UNLOCK = new URLSearchParams(window.location.search).has("dev");
+/* `?dev` opens the gate on a local dev server only, so the Studio can be
+   worked on without the API Worker; on the live site the flag is inert. */
+const DEV_UNLOCK =
+  new URLSearchParams(window.location.search).has("dev") &&
+  /^(localhost|127\.0\.0\.1|\[::1\])$/.test(window.location.hostname);
 
 function useProGate(): { gate: GateState; email: string | null; entitled: boolean } {
   const gateOff = !GATE_ENABLED || DEV_UNLOCK;
@@ -381,7 +385,7 @@ function Locked() {
         </span>
         <h1 className="st-locked-title">The Studio is a Pro feature</h1>
         <p className="st-locked-sub">
-          Deep customization of all five libraries — Beam, Orb, Gooey, Metal
+          Deep customization of all five libraries: Beam, Orb, Gooey, Metal
           and Image. Tune every parameter live, preview the result, and export
           the exact configuration for your project. Get Libraries Pro to
           unlock it, or sign in if you already have access.
